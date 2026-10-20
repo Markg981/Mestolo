@@ -1,0 +1,53 @@
+name: E2E
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright (Supabase staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW1teQ==
+    steps:
+      - name: Verifica secret di staging
+        id: secrets
+        run: |
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Secret STAGING_SUPABASE_* non configurati: test E2E saltati."
+          fi
+      - uses: actions/checkout@v4.2.2
+        if: steps.secrets.outputs.available == 'true'
+      - uses: actions/setup-node@v4.4.0
+        if: steps.secrets.outputs.available == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.secrets.outputs.available == 'true'
+      - run: npx playwright install --with-deps chromium
+        if: steps.secrets.outputs.available == 'true'
+      - run: npm run test:e2e
+        if: steps.secrets.outputs.available == 'true'
+      - uses: actions/upload-artifact@v4.6.2
+        if: ${{ !cancelled() && steps.secrets.outputs.available == 'true' }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
