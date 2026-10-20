@@ -66,6 +66,9 @@ export interface RecipeRow extends RecipeContent {
   version: number;
   content_hash: string;
   is_hidden: boolean;
+  /** Aggregati delle valutazioni (mantenuti da trigger): mostrarli solo se showRating(). */
+  rating_avg: number | null;
+  rating_count: number;
   created_at: string;
   updated_at: string;
 }

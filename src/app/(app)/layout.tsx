@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!profile) redirect('/login');
   const { supabaseUrl, supabaseAnonKey } = env();
   return (
-    <AppShell username={profile.username} isModerator={profile.is_moderator}>
+    <AppShell username={profile.username} isModerator={profile.is_moderator} userId={user.id} hasAvatar={!!profile.avatar_path}>
       <UserCacheSync userId={user.id} />
       <MealReminderSync />
       <RealtimeSync userId={user.id} supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} />
