@@ -1041,7 +1041,22 @@
     "listening": "À l’écoute : dites « suivant » ou « retour »",
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
-    "noSteps": "Cette recette n’a pas encore d’étapes."
+    "noSteps": "Cette recette n’a pas encore d’étapes.",
+    "assistOpen": "Demander à l’assistant",
+    "assistTitle": "Demander à l’assistant",
+    "assistClose": "Fermer l’assistant",
+    "assistEmpty": "Posez une question sur cette recette, par exemple « comment savoir si c’est cuit ? ».",
+    "assistPlaceholder": "Votre question",
+    "assistSend": "Envoyer la question",
+    "assistThinking": "Réflexion…",
+    "assistYou": "Vous",
+    "assistAnswer": "Assistant",
+    "assistDictate": "Dicter la question",
+    "assistDictating": "Dictée en cours : touchez pour arrêter",
+    "assistUnavailable": "L’assistant IA n’est pas disponible. Configurez une clé IA dans les réglages pour l’utiliser en cuisinant.",
+    "assistSettings": "Aller aux réglages IA",
+    "assistOffline": "Vous êtes hors ligne : l’assistant nécessite une connexion. Vous pouvez continuer à cuisiner normalement.",
+    "assistDisclaimer": "Les réponses générées par IA peuvent contenir des erreurs. Aucun conseil médical ni sur les allergies ; en cas de doute, choisissez l’option la plus prudente."
   },
   "collectionSharing": {
     "share": "Partager",

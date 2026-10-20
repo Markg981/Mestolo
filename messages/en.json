@@ -1041,7 +1041,22 @@
     "listening": "Listening: say “next” or “back”",
     "voiceDenied": "Microphone not allowed: voice commands turned off.",
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
-    "noSteps": "This recipe has no steps yet."
+    "noSteps": "This recipe has no steps yet.",
+    "assistOpen": "Ask the assistant",
+    "assistTitle": "Ask the assistant",
+    "assistClose": "Close the assistant",
+    "assistEmpty": "Ask a question about this recipe, for example “how do I know when it’s done?”.",
+    "assistPlaceholder": "Your question",
+    "assistSend": "Send the question",
+    "assistThinking": "Thinking…",
+    "assistYou": "You",
+    "assistAnswer": "Assistant",
+    "assistDictate": "Dictate the question",
+    "assistDictating": "Dictation in progress: tap to stop",
+    "assistUnavailable": "The AI assistant is not available. Set up an AI key in settings to use it while you cook.",
+    "assistSettings": "Go to AI settings",
+    "assistOffline": "You are offline: the assistant needs a connection. You can keep cooking as usual.",
+    "assistDisclaimer": "AI-generated answers may contain mistakes. No medical or allergy advice; when in doubt, choose the safer option."
   },
   "collectionSharing": {
     "share": "Share",

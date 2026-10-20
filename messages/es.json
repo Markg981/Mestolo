@@ -1041,7 +1041,22 @@
     "listening": "Escuchando: di «siguiente» o «atrás»",
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
-    "noSteps": "Esta receta aún no tiene pasos."
+    "noSteps": "Esta receta aún no tiene pasos.",
+    "assistOpen": "Pregunta al asistente",
+    "assistTitle": "Pregunta al asistente",
+    "assistClose": "Cerrar el asistente",
+    "assistEmpty": "Haz una pregunta sobre esta receta, por ejemplo «¿cómo sé si está cocinado?».",
+    "assistPlaceholder": "Tu pregunta",
+    "assistSend": "Enviar la pregunta",
+    "assistThinking": "Pensando…",
+    "assistYou": "Tú",
+    "assistAnswer": "Asistente",
+    "assistDictate": "Dictar la pregunta",
+    "assistDictating": "Dictado en curso: toca para detener",
+    "assistUnavailable": "El asistente de IA no está disponible. Configura una clave de IA en los ajustes para usarlo mientras cocinas.",
+    "assistSettings": "Ir a los ajustes de IA",
+    "assistOffline": "Estás sin conexión: el asistente necesita conexión. Puedes seguir cocinando con normalidad.",
+    "assistDisclaimer": "Las respuestas generadas por IA pueden contener errores. Sin consejos médicos ni sobre alergias; en caso de duda, elige la opción más prudente."
   },
   "collectionSharing": {
     "share": "Compartir",

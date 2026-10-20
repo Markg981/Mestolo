@@ -1041,7 +1041,22 @@
     "listening": "Ich höre zu: sagen Sie „weiter“ oder „zurück“",
     "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
-    "noSteps": "Dieses Rezept hat noch keine Schritte."
+    "noSteps": "Dieses Rezept hat noch keine Schritte.",
+    "assistOpen": "Assistent fragen",
+    "assistTitle": "Assistent fragen",
+    "assistClose": "Assistent schließen",
+    "assistEmpty": "Stelle eine Frage zu diesem Rezept, zum Beispiel „Woran erkenne ich, ob es gar ist?“.",
+    "assistPlaceholder": "Deine Frage",
+    "assistSend": "Frage senden",
+    "assistThinking": "Ich denke nach …",
+    "assistYou": "Du",
+    "assistAnswer": "Assistent",
+    "assistDictate": "Frage diktieren",
+    "assistDictating": "Diktat läuft: zum Beenden tippen",
+    "assistUnavailable": "Der KI-Assistent ist nicht verfügbar. Richte in den Einstellungen einen KI-Schlüssel ein, um ihn beim Kochen zu nutzen.",
+    "assistSettings": "Zu den KI-Einstellungen",
+    "assistOffline": "Du bist offline: Der Assistent braucht eine Verbindung. Du kannst normal weiterkochen.",
+    "assistDisclaimer": "KI-Antworten können Fehler enthalten. Keine medizinischen oder Allergie-Ratschläge; im Zweifel wähle die sicherere Option."
   },
   "collectionSharing": {
     "share": "Teilen",
