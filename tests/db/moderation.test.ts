@@ -44,7 +44,8 @@ d('moderation', () => {
     (await as<{ id: string }>(author, "insert into public.recipes (owner_id, title, visibility) values ($1, 'Pubblica', 'public') returning id", [author]))[0].id;
 
   it('users cannot make themselves moderators', async () => {
-    await as(r1, 'update public.profiles set is_moderator = true where id = $1', [r1]);
+    // Since 20261025000006 the column is not even updatable by users (column privileges); the trigger remains as a second barrier
+    await expect(as(r1, 'update public.profiles set is_moderator = true where id = $1', [r1])).rejects.toThrow(/permission denied/);
     const [p] = await admin<{ is_moderator: boolean }>('select is_moderator from public.profiles where id = $1', [r1]);
     expect(p.is_moderator).toBe(false);
     expect((await as<{ m: boolean }>(r1, 'select public.is_moderator() as m'))[0].m).toBe(false);

@@ -86,12 +86,14 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
   } catch {
     // Without the service role the DB trigger still guarantees uniqueness (it falls back to a generated name).
   }
+  // `next` torna dopo la conferma email (es. /invite/<token>): solo percorsi interni
+  const next = safeNextPath(formData.get('next'));
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${env().siteUrl}/auth/callback?next=/`,
+      emailRedirectTo: `${env().siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
       data: { username: parsed.data.username, locale: isLocale(parsed.data.locale) ? parsed.data.locale : 'it' },
     },
   });
