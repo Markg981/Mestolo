@@ -15,7 +15,7 @@ const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
 const OFFLINE_URL = '/offline';
 
-const CACHEABLE_PAGES = [/^\/$/, /^\/recipes\/?$/, /^\/recipes\/[0-9a-f-]{36}\/?$/, /^\/shopping\/?$/, /^\/plan\/?$/, /^\/collections(\/[0-9a-f-]{36})?\/?$/];
+const CACHEABLE_PAGES = [/^\/$/, /^\/recipes\/?$/, /^\/recipes\/[0-9a-f-]{36}\/?$/, /^\/recipes\/[0-9a-f-]{36}\/cook\/?$/, /^\/shopping\/?$/, /^\/plan\/?$/, /^\/collections(\/[0-9a-f-]{36})?\/?$/];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -176,7 +176,8 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return;
 
-  if (request.mode === 'navigate') {
+  // the recipe page warms the cook route (header) so cooking mode also works offline
+  if (request.mode === 'navigate' || (request.headers.get('x-mestolo-prefetch') === '1' && /^\/recipes\/[0-9a-f-]{36}\/cook\/?$/.test(url.pathname))) {
     const cacheable = CACHEABLE_PAGES.some((re) => re.test(url.pathname));
     event.respondWith(networkFirstPage(request, cacheable));
   }

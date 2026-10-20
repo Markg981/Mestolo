@@ -1,0 +1,27 @@
+/** Realtime publication (migration 20261024000001), executed on real PostgreSQL. */
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import pg from 'pg';
+
+const url = process.env.TEST_DATABASE_URL;
+const d = url ? describe : describe.skip;
+let pool: pg.Pool;
+
+d('realtime publication', () => {
+  beforeAll(() => {
+    pool = new pg.Pool({ connectionString: url });
+  });
+  afterAll(async () => pool?.end());
+
+  it('contiene le tabelle sincronizzate', async () => {
+    const { rows } = await pool.query("select tablename from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public'");
+    const names = rows.map((r) => r.tablename);
+    for (const t of ['shopping_items', 'meal_plan_entries', 'recipes', 'favorites']) expect(names).toContain(t);
+  });
+
+  it('non espone tabelle sensibili e non cambia la replica identity', async () => {
+    const { rows } = await pool.query("select tablename from pg_publication_tables where pubname = 'supabase_realtime' and tablename in ('user_api_keys', 'ai_usage', 'reports')");
+    expect(rows).toEqual([]);
+    const ident = await pool.query("select relname, relreplident from pg_class where relname in ('shopping_items', 'recipes') and relkind = 'r'");
+    for (const r of ident.rows) expect(r.relreplident).toBe('d');
+  });
+});

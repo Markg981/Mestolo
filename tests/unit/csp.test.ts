@@ -22,6 +22,13 @@ describe('buildCsp', () => {
     expect(buildCsp({ nonce: 'a', sentryDsn: dsn })).toContain("connect-src 'self' https://o1.ingest.sentry.io;");
     expect(buildCsp({ nonce: 'a', sentryDsn: 'non-url' })).toContain("connect-src 'self';");
   });
+
+  it('aggiunge https e wss di Supabase solo con URL valido', () => {
+    const csp = buildCsp({ nonce: 'a', supabaseUrl: 'https://abc.supabase.co' });
+    expect(csp).toContain("connect-src 'self' https://abc.supabase.co wss://abc.supabase.co;");
+    expect(buildCsp({ nonce: 'a', supabaseUrl: 'http://localhost:54321' })).toContain('ws://localhost:54321');
+    expect(buildCsp({ nonce: 'a', supabaseUrl: 'non-url' })).toContain("connect-src 'self';");
+  });
 });
 
 describe('nonce e header', () => {
