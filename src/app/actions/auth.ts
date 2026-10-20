@@ -51,7 +51,7 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
     const code: ErrorCode = /confirm/i.test(error?.message ?? '') ? 'auth_not_confirmed' : 'auth_invalid';
     return { error: code, email: parsed.data.email };
   }
-  const { data: profile } = await supabase.from('profiles').select('locale').eq('id', data.user.id).maybeSingle();
+  const { data: profile } = await supabase.rpc('my_profile').maybeSingle<{ locale: string }>();
   await setLocaleCookie(profile?.locale);
   redirect(safeNextPath(formData.get('next')));
 }

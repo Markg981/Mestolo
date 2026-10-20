@@ -80,7 +80,7 @@ d('RLS & data rules', () => {
   });
 
   it('creates a profile and a default shopping list at signup', async () => {
-    const p = await as(alice, 'select username, locale from public.profiles where id = $1', [alice]);
+    const p = await as(alice, 'select username, locale from public.my_profile()');
     expect(p).toHaveLength(1);
     const lists = await as(alice, 'select name from public.shopping_lists');
     expect(lists.map((l) => l.name)).toContain('default');

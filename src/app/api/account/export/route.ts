@@ -18,7 +18,7 @@ export async function GET() {
   const supabase = await createClient();
   const own = (table: string, col = 'owner_id') => supabase.from(table).select('*').eq(col, user.id);
   const [profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.rpc('my_profile').maybeSingle(),
     own('recipes'),
     own('recipe_notes'),
     own('favorites', 'user_id'),
