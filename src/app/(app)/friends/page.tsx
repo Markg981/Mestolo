@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { visibleAvatarIds } from '@/lib/data/profiles';
 import { PageHeader } from '@/components/ui';
 import { FriendSearch, FriendRow, BlockedRow } from './FriendsClient';
 import { InviteSection, type InviteRow } from './InviteSection';
@@ -29,7 +30,8 @@ export default async function FriendsPage() {
   const blockedIds = ((bl as { blocked_id: string }[]) ?? []).map((b) => b.blocked_id);
   const otherIds = [...new Set([...friendships.map((f) => (f.requester_id === user!.id ? f.addressee_id : f.requester_id)), ...blockedIds])];
   const { data: profiles } = otherIds.length ? await supabase.from('profiles').select('id, username, display_name').in('id', otherIds) : { data: [] };
-  const byId = new Map(((profiles as { id: string; username: string; display_name: string }[]) ?? []).map((p) => [p.id, p]));
+  const withAvatar = await visibleAvatarIds(otherIds);
+  const byId = new Map(((profiles as { id: string; username: string; display_name: string }[]) ?? []).map((p) => [p.id, { ...p, has_avatar: withAvatar.has(p.id) }]));
   const other = (f: Friendship) => byId.get(f.requester_id === user!.id ? f.addressee_id : f.requester_id);
 
   const incoming = friendships.filter((f) => f.status === 'pending' && f.addressee_id === user!.id);

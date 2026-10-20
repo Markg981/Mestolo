@@ -956,6 +956,30 @@
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
     "noSteps": "Esta receta aún no tiene pasos."
   },
+  "richProfile": {
+    "location": "Ubicación",
+    "website": "Sitio web",
+    "websiteHint": "Solo enlaces https. Aparece en tu perfil con rel nofollow.",
+    "cuisines": "Cocinas favoritas",
+    "cuisinesHint": "Separadas por comas, máximo 8 (p. ej. italiana, japonesa).",
+    "visibility": "Quién puede ver tu perfil",
+    "visibilityHint": "El nombre y el usuario siempre son visibles para otros usuarios; biografía, avatar, ubicación, web y cocinas siguen esta opción.",
+    "avatarChange": "Cambiar foto",
+    "avatarRemove": "Quitar foto",
+    "avatarSaved": "Foto de perfil actualizada.",
+    "selfNote_public": "Tu perfil es visible para todos los usuarios de Mestolo. Solo se muestran las recetas compartidas.",
+    "selfNote_friends": "Tu perfil completo solo es visible para tus amigos. Solo se muestran las recetas compartidas.",
+    "selfNote_private": "Tu perfil es privado: los demás solo ven tu nombre y usuario.",
+    "restricted": "Este perfil solo es visible para quien tiene permiso para verlo.",
+    "statRecipes": "Recetas",
+    "statFriends": "Amigos",
+    "statCooked": "Cocinadas",
+    "visibilityOptions": {
+      "public": "Todos los usuarios de Mestolo",
+      "friends": "Solo amigos",
+      "private": "Solo yo"
+    }
+  },
   "ratings": {
     "title": "Valoraciones",
     "yours": "Tu valoración",

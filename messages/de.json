@@ -956,6 +956,30 @@
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
   },
+  "richProfile": {
+    "location": "Ort",
+    "website": "Webseite",
+    "websiteHint": "Nur https-Links. Wird mit rel nofollow in deinem Profil angezeigt.",
+    "cuisines": "Lieblingsküchen",
+    "cuisinesHint": "Durch Komma getrennt, maximal 8 (z. B. italienisch, japanisch).",
+    "visibility": "Wer dein Profil sehen darf",
+    "visibilityHint": "Name und Benutzername sind für andere immer sichtbar; Bio, Avatar, Ort, Webseite und Küchen folgen dieser Auswahl.",
+    "avatarChange": "Foto ändern",
+    "avatarRemove": "Foto entfernen",
+    "avatarSaved": "Profilfoto aktualisiert.",
+    "selfNote_public": "Dein Profil ist für alle Mestolo-Nutzer sichtbar. Es werden nur geteilte Rezepte angezeigt.",
+    "selfNote_friends": "Dein vollständiges Profil ist nur für deine Freunde sichtbar. Es werden nur geteilte Rezepte angezeigt.",
+    "selfNote_private": "Dein Profil ist privat: andere sehen nur Name und Benutzername.",
+    "restricted": "Dieses Profil ist nur für berechtigte Personen sichtbar.",
+    "statRecipes": "Rezepte",
+    "statFriends": "Freunde",
+    "statCooked": "Gekocht",
+    "visibilityOptions": {
+      "public": "Alle Mestolo-Nutzer",
+      "friends": "Nur Freunde",
+      "private": "Nur ich"
+    }
+  },
   "ratings": {
     "title": "Bewertungen",
     "yours": "Deine Bewertung",

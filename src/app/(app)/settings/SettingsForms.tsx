@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useActionState, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
+import { uploadAvatar, removeAvatar } from '@/app/actions/profile';
+import { Avatar } from '@/components/Avatar';
 import { updateProfile, deleteApiKey, saveApiKey, deleteAccount } from '@/app/actions/settings';
 import { changePassword } from '@/app/actions/auth';
 import { createCategory, deleteCategory } from '@/app/actions/organize';
@@ -13,8 +15,55 @@ import type { Profile } from '@/lib/supabase/server';
 
 const DIETS = ['vegetarian', 'vegan', 'pescatarian', 'no_pork', 'no_alcohol'] as const;
 
+function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string; hasImage: boolean }) {
+  const tr = useTranslations('richProfile');
+  const te = useTranslations('errors');
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
+  const run = (fn: () => ReturnType<typeof uploadAvatar>) =>
+    start(async () => {
+      const res = await fn();
+      if (res.ok) {
+        setMsg({ text: tr('avatarSaved'), tone: 'success' });
+        router.refresh();
+      } else setMsg({ text: te(res.error), tone: 'error' });
+    });
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <Avatar key={String(hasImage)} userId={userId} name={name} hasImage={hasImage} size="lg" />
+      <div className="flex flex-col gap-2">
+        <label className={buttonClass('secondary', 'md', 'cursor-pointer')}>
+          {tr('avatarChange')}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            disabled={pending}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (!file) return;
+              const fd = new FormData();
+              fd.set('file', file);
+              run(() => uploadAvatar(fd));
+            }}
+          />
+        </label>
+        {hasImage && (
+          <Button size="sm" type="button" disabled={pending} onClick={() => run(() => removeAvatar())}>
+            {tr('avatarRemove')}
+          </Button>
+        )}
+        <LiveMessage message={msg?.text ?? null} tone={msg?.tone} />
+      </div>
+    </div>
+  );
+}
+
 export function ProfileForm({ profile, systemCategories }: { profile: Profile; systemCategories: { slug: string; label: string }[] }) {
   const t = useTranslations('settings');
+  const tr = useTranslations('richProfile');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
   const router = useRouter();
@@ -22,6 +71,10 @@ export function ProfileForm({ profile, systemCategories }: { profile: Profile; s
     username: profile.username,
     display_name: profile.display_name,
     bio: profile.bio,
+    location: profile.location,
+    website: profile.website ?? '',
+    favorite_cuisines: profile.favorite_cuisines.join(', '),
+    profile_visibility: profile.profile_visibility,
     discoverable: profile.discoverable,
     dietary_preferences: profile.dietary_preferences,
     avoided_ingredients: profile.avoided_ingredients.join(', '),
@@ -36,6 +89,7 @@ export function ProfileForm({ profile, systemCategories }: { profile: Profile; s
     start(async () => {
       const res = await updateProfile({
         ...p,
+        favorite_cuisines: p.favorite_cuisines.split(','),
         avoided_ingredients: p.avoided_ingredients.split(',').map((x) => x.trim()).filter(Boolean),
       });
       if (res.ok) {
@@ -59,6 +113,27 @@ export function ProfileForm({ profile, systemCategories }: { profile: Profile; s
         </div>
         <Field label={t('bio')} htmlFor="bio">
           <Textarea id="bio" value={p.bio} maxLength={280} onChange={(e) => setP({ ...p, bio: e.target.value })} rows={2} />
+        </Field>
+        <AvatarEditor userId={profile.id} name={profile.display_name || profile.username} hasImage={!!profile.avatar_path} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={tr('location')} htmlFor="loc">
+            <Input id="loc" value={p.location} maxLength={80} onChange={(e) => setP({ ...p, location: e.target.value })} />
+          </Field>
+          <Field label={tr('website')} htmlFor="web" hint={tr('websiteHint')}>
+            <Input id="web" type="url" inputMode="url" value={p.website} maxLength={200} placeholder="https://" onChange={(e) => setP({ ...p, website: e.target.value })} />
+          </Field>
+        </div>
+        <Field label={tr('cuisines')} htmlFor="cui" hint={tr('cuisinesHint')}>
+          <Input id="cui" value={p.favorite_cuisines} onChange={(e) => setP({ ...p, favorite_cuisines: e.target.value })} />
+        </Field>
+        <Field label={tr('visibility')} htmlFor="vis" hint={tr('visibilityHint')}>
+          <Select id="vis" value={p.profile_visibility} onChange={(e) => setP({ ...p, profile_visibility: e.target.value as typeof p.profile_visibility })}>
+            {(['public', 'friends', 'private'] as const).map((v) => (
+              <option key={v} value={v}>
+                {tr(`visibilityOptions.${v}`)}
+              </option>
+            ))}
+          </Select>
         </Field>
         <label className="flex items-start gap-3">
           <input type="checkbox" checked={p.discoverable} onChange={(e) => setP({ ...p, discoverable: e.target.checked })} className="mt-1 size-5 accent-[var(--basil)]" />

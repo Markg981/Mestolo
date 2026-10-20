@@ -956,6 +956,30 @@
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
     "noSteps": "Cette recette n’a pas encore d’étapes."
   },
+  "richProfile": {
+    "location": "Lieu",
+    "website": "Site web",
+    "websiteHint": "Liens https uniquement. Affiché sur votre profil avec rel nofollow.",
+    "cuisines": "Cuisines préférées",
+    "cuisinesHint": "Séparées par des virgules, 8 maximum (ex. italienne, japonaise).",
+    "visibility": "Qui peut voir votre profil",
+    "visibilityHint": "Le nom et l'identifiant restent toujours visibles pour les autres utilisateurs ; bio, avatar, lieu, site et cuisines suivent ce choix.",
+    "avatarChange": "Changer la photo",
+    "avatarRemove": "Supprimer la photo",
+    "avatarSaved": "Photo de profil mise à jour.",
+    "selfNote_public": "Votre profil est visible par tous les utilisateurs de Mestolo. Seules les recettes partagées sont affichées.",
+    "selfNote_friends": "Votre profil complet n'est visible que par vos amis. Seules les recettes partagées sont affichées.",
+    "selfNote_private": "Votre profil est privé : les autres ne voient que votre nom et identifiant.",
+    "restricted": "Ce profil n'est visible que par les personnes autorisées.",
+    "statRecipes": "Recettes",
+    "statFriends": "Amis",
+    "statCooked": "Cuisinées",
+    "visibilityOptions": {
+      "public": "Tous les utilisateurs de Mestolo",
+      "friends": "Amis uniquement",
+      "private": "Moi uniquement"
+    }
+  },
   "ratings": {
     "title": "Évaluations",
     "yours": "Votre note",
