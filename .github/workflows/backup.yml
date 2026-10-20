@@ -1,0 +1,129 @@
+name: Backup
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets
+        id: gate
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "::notice::SUPABASE_DB_URL non impostato: backup saltato."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "${BACKUP_PASSPHRASE}" ]; then
+            echo "::error::BACKUP_PASSPHRASE non impostato: i dump non vengono mai caricati in chiaro."
+            exit 1
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install PostgreSQL 17 client
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump database
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p out
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          # Schema + dati dello schema public (custom format, gia compresso)
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
+            --format=custom --compress=9 --no-owner --no-privileges \
+            --schema=public --file="out/public-$stamp.dump"
+          # Solo dati dei metadati storage (bucket e oggetti), non i file
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
+            --format=custom --compress=9 --no-owner --no-privileges --data-only \
+            --table=storage.buckets --table=storage.objects \
+            --file="out/storage-meta-$stamp.dump"
+          tar -cf "out/backup-$stamp.tar" -C out "public-$stamp.dump" "storage-meta-$stamp.dump"
+          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase-fd 3 --output "out/backup-$stamp.tar.gpg" "out/backup-$stamp.tar" 3<<<"$BACKUP_PASSPHRASE"
+          rm -f out/*.dump out/*.tar
+          ls -l out
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: out/backup-*.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload to S3 (optional)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+            echo "::notice::Secret BACKUP_S3_* non impostati: upload S3 saltato."
+            exit 0
+          fi
+          endpoint=()
+          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
+          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+          aws s3 cp "${endpoint[@]}" "out/backup-${STAMP}.tar.gpg" "s3://${BACKUP_S3_BUCKET}/mestolo/db/backup-${STAMP}.tar.gpg"
+
+      - name: Backup storage files (optional)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+            echo "::notice::NEXT_PUBLIC_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY non impostati: backup immagini saltato."
+            exit 0
+          fi
+          umask 077
+          npm ci --ignore-scripts --no-audit --no-fund
+          node scripts/backup-storage.mjs storage-out
+          tar -cf "out/storage-${STAMP}.tar" -C storage-out .
+          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase-fd 3 --output "out/storage-${STAMP}.tar.gpg" "out/storage-${STAMP}.tar" 3<<<"$BACKUP_PASSPHRASE"
+          rm -f "out/storage-${STAMP}.tar"
+          if [ -n "${BACKUP_S3_BUCKET}" ] && [ -n "${AWS_ACCESS_KEY_ID}" ]; then
+            endpoint=()
+            if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
+            export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+            aws s3 cp "${endpoint[@]}" "out/storage-${STAMP}.tar.gpg" "s3://${BACKUP_S3_BUCKET}/mestolo/storage/storage-${STAMP}.tar.gpg"
+          fi
+
+      - name: Upload storage artifact
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: storage-backup-${{ env.STAMP }}
+          path: out/storage-*.gpg
+          retention-days: 30
+          if-no-files-found: ignore
