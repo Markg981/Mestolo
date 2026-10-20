@@ -16,6 +16,8 @@ import { ImagePrompt, NoteEditor, TranslateBanner, type AiStatusProps } from '@/
 import { RecipeRating } from '@/components/recipes/RecipeRating';
 import { CookPrefetch } from '@/components/cooking/CookPrefetch';
 import { CookLogsSection } from '@/components/cooking/CookLogs';
+import { NutritionBox } from '@/components/nutrition/NutritionBox';
+import { getRecipeNutrition } from '@/lib/data/nutrition';
 import { Alert, Badge, LinkButton } from '@/components/ui';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -74,6 +76,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
     ['total', recipe.total_minutes, 'total_minutes'],
   ] as const;
   const flags = recipe.field_flags ?? {};
+  const nutrition = await getRecipeNutrition(id);
 
   return (
     <article className="flex flex-col gap-8">
@@ -226,6 +229,16 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             </ol>
           ) : (
             <p className="text-muted">{t('recipe.noSteps')}</p>
+          )}
+
+          {nutrition ? (
+            <NutritionBox values={nutrition} source={nutrition.source} updatedAt={nutrition.updated_at} baseServings={recipe.servings === null ? null : Number(recipe.servings)} editHref={isOwner ? `/recipes/${id}/nutrition` : undefined} />
+          ) : (
+            isOwner && (
+              <Link href={`/recipes/${id}/nutrition`} className="self-start font-semibold text-basil underline underline-offset-4">
+                {t('nutrition.add')}
+              </Link>
+            )
           )}
 
           <section aria-labelledby="src-title" className="mt-6 flex flex-col gap-2 border-t border-line pt-6">

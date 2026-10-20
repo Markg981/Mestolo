@@ -388,6 +388,58 @@
     "hiddenTitle": "Receita ocultada pela moderação",
     "hiddenLead": "Após várias denúncias, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, contacta o suporte."
   },
+  "nutrition": {
+    "title": "Informação nutricional",
+    "perServing": "Por porção",
+    "forPortions": "Para {count, plural, one {# porção} other {# porções}}",
+    "portions": "Número de porções",
+    "fewer": "Menos porções",
+    "more": "Mais porções",
+    "recipeServings": "(a receita rende {count, plural, one {# porção} other {# porções}})",
+    "kcal": "kcal",
+    "gram": "g",
+    "field": {
+      "energy": "Energia",
+      "protein": "Proteínas",
+      "carbs": "Hidratos de carbono",
+      "sugars": "dos quais açúcares",
+      "fat": "Gorduras",
+      "saturated": "das quais saturadas",
+      "fiber": "Fibra",
+      "salt": "Sal"
+    },
+    "source": {
+      "manual": "Inseridos pelo proprietário",
+      "imported": "Importados da fonte",
+      "ai_estimate": "Estimativa de IA"
+    },
+    "note": {
+      "manual": "Valores inseridos pelo proprietário da receita.",
+      "imported": "Valores declarados pelo site de onde a receita foi importada: não foram verificados.",
+      "ai_estimate": "Estimativa gerada por inteligência artificial: é apenas indicativa, não um dado certo."
+    },
+    "updatedOn": "Atualizado em {date}.",
+    "edit": "Editar valores",
+    "add": "Adicionar informação nutricional",
+    "editorTitle": "Informação nutricional",
+    "editorLead": "Valores por porção de «{title}». Pode alterá-los a qualquer momento.",
+    "back": "Voltar à receita",
+    "currentSource": "Fonte atual:",
+    "perServingHint": "Introduza os valores de uma porção. Os campos vazios ficam por indicar.",
+    "save": "Guardar",
+    "saved": "Valores guardados.",
+    "removed": "Valores eliminados.",
+    "remove": "Eliminar valores",
+    "removeConfirm": "Eliminar a informação nutricional desta receita?",
+    "estimate": "Estimar com IA",
+    "estimateHint": "A estimativa de IA é apenas indicativa: reveja-a e corrija-a antes de guardar. Se a alterar, a fonte passa a «inseridos pelo proprietário».",
+    "estimateReady": "Estimativa pronta, ainda não guardada. Reveja-a e prima Guardar.",
+    "aiUnavailable": "A estimativa com IA não está disponível: adicione a sua própria chave nas definições de IA.",
+    "invalidEmpty": "Introduza pelo menos um valor.",
+    "invalidSugars": "Os açúcares não podem exceder os hidratos de carbono.",
+    "invalidSaturated": "As gorduras saturadas não podem exceder as gorduras.",
+    "invalidValue": "Um dos valores não é válido."
+  },
   "translate": {
     "banner": "Esta receita está em {language}.",
     "translateTo": "Traduzir para {language}",

@@ -388,6 +388,58 @@
     "hiddenTitle": "Rezept von der Moderation ausgeblendet",
     "hiddenLead": "Nach mehreren Meldungen ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch. Wenn du glaubst, dass es ein Fehler ist, wende dich an den Support."
   },
+  "nutrition": {
+    "title": "Nährwerte",
+    "perServing": "Pro Portion",
+    "forPortions": "Für {count, plural, one {# Portion} other {# Portionen}}",
+    "portions": "Anzahl der Portionen",
+    "fewer": "Weniger Portionen",
+    "more": "Mehr Portionen",
+    "recipeServings": "(das Rezept ergibt {count, plural, one {# Portion} other {# Portionen}})",
+    "kcal": "kcal",
+    "gram": "g",
+    "field": {
+      "energy": "Energie",
+      "protein": "Eiweiß",
+      "carbs": "Kohlenhydrate",
+      "sugars": "davon Zucker",
+      "fat": "Fett",
+      "saturated": "davon gesättigte Fettsäuren",
+      "fiber": "Ballaststoffe",
+      "salt": "Salz"
+    },
+    "source": {
+      "manual": "Vom Besitzer eingegeben",
+      "imported": "Aus der Quelle importiert",
+      "ai_estimate": "KI-Schätzung"
+    },
+    "note": {
+      "manual": "Vom Besitzer des Rezepts eingegebene Werte.",
+      "imported": "Werte, die die Website angibt, von der das Rezept importiert wurde: sie wurden nicht überprüft.",
+      "ai_estimate": "Von künstlicher Intelligenz erzeugte Schätzung: sie ist nur ein Richtwert, kein sicherer Wert."
+    },
+    "updatedOn": "Aktualisiert am {date}.",
+    "edit": "Werte bearbeiten",
+    "add": "Nährwerte hinzufügen",
+    "editorTitle": "Nährwerte",
+    "editorLead": "Werte pro Portion für „{title}“. Du kannst sie jederzeit ändern.",
+    "back": "Zurück zum Rezept",
+    "currentSource": "Aktuelle Quelle:",
+    "perServingHint": "Gib die Werte für eine Portion ein. Leere Felder bleiben unbestimmt.",
+    "save": "Speichern",
+    "saved": "Werte gespeichert.",
+    "removed": "Werte gelöscht.",
+    "remove": "Werte löschen",
+    "removeConfirm": "Die Nährwerte dieses Rezepts löschen?",
+    "estimate": "Mit KI schätzen",
+    "estimateHint": "Die KI-Schätzung ist nur ein Richtwert: prüfe und korrigiere sie vor dem Speichern. Wenn du sie änderst, wird die Quelle zu „vom Besitzer eingegeben“.",
+    "estimateReady": "Schätzung bereit, noch nicht gespeichert. Prüfe sie und tippe auf Speichern.",
+    "aiUnavailable": "KI-Schätzungen sind nicht verfügbar: Hinterlege in den KI-Einstellungen deinen eigenen Schlüssel.",
+    "invalidEmpty": "Gib mindestens einen Wert ein.",
+    "invalidSugars": "Zucker darf die Kohlenhydrate nicht übersteigen.",
+    "invalidSaturated": "Gesättigte Fettsäuren dürfen das Fett nicht übersteigen.",
+    "invalidValue": "Einer der Werte ist ungültig."
+  },
   "translate": {
     "banner": "Dieses Rezept ist auf {language}.",
     "translateTo": "Auf {language} übersetzen",

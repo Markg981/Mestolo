@@ -1,5 +1,6 @@
 'use server';
 
+import { validateNutrition } from '@/lib/nutrition';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
@@ -74,6 +75,11 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null): Pr
         .single();
       if (error) return dbFailure(error, 'saveRecipe.insert');
       id = data.id as string;
+      // Valori nutrizionali trovati dall'import (schema.org): rivalidati qui, fonte sempre 'imported'.
+      const imported = validateNutrition((payload as { nutrition?: unknown } | null)?.nutrition);
+      if (d.source_type === 'url' && imported.ok) {
+        await supabase.from('recipe_nutrition').upsert({ recipe_id: id, ...imported.values, source: 'imported' });
+      }
     }
 
     if (d.personal_note !== undefined) {

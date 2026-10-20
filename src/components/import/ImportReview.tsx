@@ -20,6 +20,7 @@ export function ImportReview({ draft, categories, draftKey, aside, onBack }: { d
       warnings={draft.warnings}
       aside={aside}
       categoryAutoSuggested={draft.content.category_slug !== null}
+      importedNutrition={draft.nutrition ?? null}
       onBack={onBack}
     />
   );
