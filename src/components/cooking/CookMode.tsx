@@ -10,6 +10,7 @@ import type { Ingredient, Step } from '@/lib/recipes/types';
 import { detectDurations, formatClock } from '@/lib/cooking/durations';
 import { keyDirection, matchVoiceCommand, nextStep, parseCookState, prevStep, remainingSeconds, stepProgress, swipeDirection, type NavDirection } from '@/lib/cooking/navigation';
 import { Button, cx } from '../ui';
+import { CookedItButton } from './CookedIt';
 
 interface CookTimer {
   id: string;
@@ -426,10 +427,14 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
           <ChevronLeft aria-hidden className="size-6" />
           {t('prev')}
         </Button>
-        <Button size="lg" variant="primary" className="flex-1" disabled={step === total - 1} onClick={() => go('next')}>
-          {t('next')}
-          <ChevronRight aria-hidden className="size-6" />
-        </Button>
+        {step === total - 1 ? (
+          <CookedItButton recipeId={recipeId} variant="primary" size="lg" className="flex-1" />
+        ) : (
+          <Button size="lg" variant="primary" className="flex-1" onClick={() => go('next')}>
+            {t('next')}
+            <ChevronRight aria-hidden className="size-6" />
+          </Button>
+        )}
       </nav>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
