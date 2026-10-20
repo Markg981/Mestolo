@@ -1,14 +1,18 @@
 /* Mestolo service worker
  * - static assets (JS/CSS/fonts/icons): cache-first, versioned
- * - pages the user visits (home, recipe book, recipes, shopping list, plan): network-first,
- *   with the last copy available offline
- * - private data cache ("mestolo-user") is wiped on logout and before login, so another
- *   person using the same device never sees someone else's recipes
+ * - pages the user visits: network-first, last copy available offline
+ * - private cache is per user ("mestolo-user-<hash>"): the page tells the worker who is logged in
+ *   (postMessage 'set-user'); it is wiped on logout, on 401 / redirect to login, and when the user
+ *   changes. Without a known current user nothing private is served from cache.
+ * - images: network-first, cached copy used only offline and evicted on 401/403/404/410
  * - POST requests (server actions), /api/* (except images) and auth pages are never cached
  */
-const VERSION = 'v1';
+importScripts('/sw-logic.js');
+const L = self.MestoloSw;
+const VERSION = 'v2';
 const STATIC_CACHE = `mestolo-static-${VERSION}`;
-const USER_CACHE = 'mestolo-user';
+const META_CACHE = 'mestolo-meta';
+const USER_KEY = '/__current-user';
 const OFFLINE_URL = '/offline';
 
 const CACHEABLE_PAGES = [/^\/$/, /^\/recipes\/?$/, /^\/recipes\/[0-9a-f-]{36}\/?$/, /^\/shopping\/?$/, /^\/plan\/?$/, /^\/collections(\/[0-9a-f-]{36})?\/?$/];
@@ -27,18 +31,51 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith('mestolo-static-') && k !== STATIC_CACHE).map((k) => caches.delete(k))))
+      // the legacy shared cache ("mestolo-user") is dropped here
+      .then(() => wipeUserCaches(null))
       .then(() => self.clients.claim()),
   );
 });
 
+async function getCurrentUser() {
+  const res = await (await caches.open(META_CACHE)).match(USER_KEY);
+  return res ? res.text() : null;
+}
+
+async function setCurrentUser(hash) {
+  const meta = await caches.open(META_CACHE);
+  if (hash) await meta.put(USER_KEY, new Response(hash));
+  else await meta.delete(USER_KEY);
+}
+
+/** Deletes every private cache except the one of keepHash (if given). */
+async function wipeUserCaches(keepHash) {
+  const names = L.cachesToDelete(await caches.keys(), keepHash);
+  await Promise.all(names.map((n) => caches.delete(n)));
+}
+
+async function onSessionLost() {
+  await setCurrentUser(null);
+  await wipeUserCaches(null);
+}
+
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'clear-user-data') {
-    event.waitUntil(caches.delete(USER_CACHE));
+  const data = event.data;
+  if (!data) return;
+  if (data.type === 'clear-user-data') {
+    event.waitUntil(onSessionLost());
+  } else if (data.type === 'set-user' && typeof data.userHash === 'string' && data.userHash) {
+    event.waitUntil(
+      (async () => {
+        await wipeUserCaches(data.userHash);
+        await setCurrentUser(data.userHash);
+      })(),
+    );
   }
 });
 
 function isStatic(url) {
-  return url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/') || url.pathname === '/icon.svg';
+  return url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/') || url.pathname === '/icon.svg' || url.pathname === '/sw-logic.js';
 }
 
 async function cacheFirst(request) {
@@ -50,32 +87,45 @@ async function cacheFirst(request) {
 }
 
 async function networkFirstPage(request, cacheable) {
+  const user = cacheable ? await getCurrentUser() : null;
   try {
     const response = await fetch(request);
+    if (L.isSessionLost(response.status, response.redirected, response.url)) {
+      await onSessionLost();
+      return response;
+    }
     const type = response.headers.get('content-type') || '';
-    if (cacheable && response.ok && !response.redirected && type.includes('text/html')) {
-      (await caches.open(USER_CACHE)).put(request, response.clone());
+    if (L.canUseUserCache(user) && response.ok && !response.redirected && type.includes('text/html')) {
+      (await caches.open(L.userCacheName(user))).put(request, response.clone());
     }
     return response;
   } catch {
-    if (cacheable) {
-      const cached = await (await caches.open(USER_CACHE)).match(request, { ignoreSearch: true });
+    if (L.canUseUserCache(user)) {
+      const cached = await (await caches.open(L.userCacheName(user))).match(request, { ignoreSearch: true });
       if (cached) return cached;
     }
     return (await caches.match(OFFLINE_URL)) || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
   }
 }
 
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(USER_CACHE);
-  const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => cached);
-  return cached || network;
+/** Images: network first; the cached copy is only an offline fallback and is dropped when access is revoked. */
+async function imageNetworkFirst(request) {
+  const user = await getCurrentUser();
+  const cache = L.canUseUserCache(user) ? await caches.open(L.userCacheName(user)) : null;
+  try {
+    const response = await fetch(request);
+    if (L.isSessionLost(response.status, response.redirected, response.url)) {
+      await onSessionLost();
+    } else if (L.shouldEvictImage(response.status)) {
+      if (cache) await cache.delete(request);
+    } else if (cache && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = cache ? await cache.match(request) : null;
+    return cached || new Response('', { status: 503 });
+  }
 }
 
 self.addEventListener('fetch', (event) => {
@@ -89,7 +139,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.pathname.startsWith('/api/images/')) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(imageNetworkFirst(request));
     return;
   }
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return;
