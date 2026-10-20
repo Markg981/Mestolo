@@ -1,6 +1,7 @@
 import 'server-only';
 import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { decryptSecret, keyAad, loadEncryptionKey } from '@/lib/crypto/secrets';
 import { AiError, anthropicProvider, openAiProvider, type AiProvider, type Capability } from './providers';
 
@@ -98,7 +99,7 @@ export async function capabilityStatus(userId: string, capability: Capability, g
   return { available: used < limit, keySource: 'app', providerName: app.label, remainingToday: Math.max(0, limit - used), dailyLimit: limit };
 }
 
-export async function resolveProvider(userId: string, capability: Capability, group?: QuotaGroup): Promise<ResolvedProvider> {
+export async function resolveProvider(userId: string, capability: Capability, group: QuotaGroup | undefined, action: string): Promise<ResolvedProvider> {
   const keys = await loadUserKeys(userId);
   const usable = capability === 'image' ? keys.filter((k) => k.provider === 'openai') : keys;
   for (const row of usable) {
@@ -108,11 +109,23 @@ export async function resolveProvider(userId: string, capability: Capability, gr
   const app = appProvider(capability);
   if (!app) throw new AiError('not_configured');
   const g = quotaGroupFor(capability, group);
-  if ((await usedToday(userId, g)) >= env().ai.limits[g]) throw new AiError('quota_exceeded');
+  // Conteggio e registrazione sono atomici (funzione SQL con lock per utente):
+  // la quota viene consumata prima della chiamata AI, non dopo.
+  const supabase = await createClient();
+  const { data: allowed, error } = await supabase.rpc('consume_ai_quota', {
+    p_group: g,
+    p_limit: env().ai.limits[g],
+    p_action: action,
+    p_provider: app.id,
+  });
+  if (error) throw error;
+  if (!allowed) throw new AiError('quota_exceeded');
   return { provider: app, keySource: 'app', providerName: app.label };
 }
 
 export async function recordUsage(userId: string, group: QuotaGroup, action: string, resolved: ResolvedProvider) {
+  // L'uso con la chiave dell'app e' gia' registrato da consume_ai_quota.
+  if (resolved.keySource === 'app') return;
   const admin = createAdminClient();
   await admin.from('ai_usage').insert({ user_id: userId, action: `${group}:${action}`, provider: resolved.provider.id, key_source: resolved.keySource });
 }
