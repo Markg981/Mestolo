@@ -194,6 +194,40 @@ export async function listCollections() {
   }));
 }
 
+export type SharedCollection = { id: string; name: string; description: string; count: number; role: 'viewer' | 'editor'; ownerName: string };
+
+/** Collections of other people shared with the user: invited as member, or published to friends. */
+export async function listSharedCollections(): Promise<SharedCollection[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const supabase = await createClient();
+  const [cols, mem, fr] = await Promise.all([
+    supabase
+      .from('collections')
+      .select('id, owner_id, name, description, collection_recipes(count)')
+      .neq('owner_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(200),
+    supabase.from('collection_members').select('collection_id, role').eq('user_id', user.id),
+    supabase.from('friendships').select('requester_id, addressee_id').eq('status', 'accepted'),
+  ]);
+  const roles = new Map(((mem.data ?? []) as { collection_id: string; role: 'viewer' | 'editor' }[]).map((m) => [m.collection_id, m.role]));
+  const friendIds = new Set(((fr.data ?? []) as { requester_id: string; addressee_id: string }[]).map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id)));
+  type Row = { id: string; owner_id: string; name: string; description: string; collection_recipes: { count: number }[] };
+  const rows = ((cols.data ?? []) as Row[]).filter((c) => roles.has(c.id) || friendIds.has(c.owner_id));
+  const ownerIds = [...new Set(rows.map((c) => c.owner_id))];
+  const { data: profs } = ownerIds.length ? await supabase.from('profiles').select('id, username, display_name').in('id', ownerIds) : { data: [] };
+  const names = new Map(((profs ?? []) as { id: string; username: string; display_name: string }[]).map((p) => [p.id, p.display_name || p.username]));
+  return rows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    count: c.collection_recipes?.[0]?.count ?? 0,
+    role: roles.get(c.id) ?? 'viewer',
+    ownerName: names.get(c.owner_id) ?? '',
+  }));
+}
+
 /** Community recipes visible to the user (public + friends'), never the user's own. */
 export async function listDiscoverable(opts: { category?: string; limit?: number; excludeCategoryIds?: string[] } = {}): Promise<RecipeListItem[]> {
   const user = await getUser();
