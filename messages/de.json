@@ -956,6 +956,21 @@
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
   },
+  "publicPage": {
+    "toggleLabel": "Indexierbare öffentliche Seite",
+    "toggleHint": "Jeder kann dieses Rezept bei Google finden und ohne Konto öffnen. Du kannst es jederzeit deaktivieren.",
+    "needsPublic": "Stelle die Sichtbarkeit auf Öffentlich, um die öffentliche Seite zu aktivieren.",
+    "viewPage": "Öffentliche Seite ansehen",
+    "enabled": "Öffentliche Seite aktiviert",
+    "disabled": "Öffentliche Seite deaktiviert",
+    "save": "In Mestolo speichern",
+    "haveAccount": "Du hast schon ein Konto?",
+    "login": "Anmelden",
+    "byAuthor": "von {name}",
+    "source": "Quelle: {name}",
+    "ctaTitle": "Dein Rezeptbuch, immer dabei",
+    "ctaLead": "Erstelle ein kostenloses Konto, um dieses Rezept zu speichern, nach deinem Geschmack anzupassen und deine Mahlzeiten zu planen."
+  },
   "videoImport": {
     "source": {
       "description": "Text aus der Videobeschreibung",

@@ -956,6 +956,21 @@
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
     "noSteps": "Cette recette n’a pas encore d’étapes."
   },
+  "publicPage": {
+    "toggleLabel": "Page publique indexable",
+    "toggleHint": "N'importe qui pourra trouver cette recette sur Google et l'ouvrir sans compte. Vous pouvez la désactiver à tout moment.",
+    "needsPublic": "Passez la visibilité sur Publique pour activer la page publique.",
+    "viewPage": "Voir la page publique",
+    "enabled": "Page publique activée",
+    "disabled": "Page publique désactivée",
+    "save": "Enregistrer sur Mestolo",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "login": "Se connecter",
+    "byAuthor": "par {name}",
+    "source": "Source : {name}",
+    "ctaTitle": "Votre livre de recettes, toujours avec vous",
+    "ctaLead": "Créez un compte gratuit pour enregistrer cette recette, l'adapter à vos goûts et planifier vos repas."
+  },
   "videoImport": {
     "source": {
       "description": "Texte tiré de la description de la vidéo",

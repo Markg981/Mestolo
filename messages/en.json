@@ -956,6 +956,21 @@
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
     "noSteps": "This recipe has no steps yet."
   },
+  "publicPage": {
+    "toggleLabel": "Indexable public page",
+    "toggleHint": "Anyone will be able to find this recipe on Google and open it without an account. You can turn it off at any time.",
+    "needsPublic": "Set visibility to Public to enable the public page.",
+    "viewPage": "View public page",
+    "enabled": "Public page enabled",
+    "disabled": "Public page disabled",
+    "save": "Save on Mestolo",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "byAuthor": "by {name}",
+    "source": "Source: {name}",
+    "ctaTitle": "Your recipe book, always with you",
+    "ctaLead": "Create a free account to save this recipe, adapt it to your taste and plan your meals."
+  },
   "videoImport": {
     "source": {
       "description": "Text taken from the video description",

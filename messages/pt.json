@@ -956,6 +956,21 @@
     "wakeUnsupported": "O ecrã pode apagar-se: manter o ecrã ligado não é suportado aqui.",
     "noSteps": "Esta receita ainda não tem passos."
   },
+  "publicPage": {
+    "toggleLabel": "Página pública indexável",
+    "toggleHint": "Qualquer pessoa poderá encontrar esta receita no Google e abri-la sem conta. Pode desativá-la a qualquer momento.",
+    "needsPublic": "Defina a visibilidade como Pública para ativar a página pública.",
+    "viewPage": "Ver página pública",
+    "enabled": "Página pública ativada",
+    "disabled": "Página pública desativada",
+    "save": "Guardar no Mestolo",
+    "haveAccount": "Já tem uma conta?",
+    "login": "Iniciar sessão",
+    "byAuthor": "de {name}",
+    "source": "Fonte: {name}",
+    "ctaTitle": "O seu livro de receitas, sempre consigo",
+    "ctaLead": "Crie uma conta gratuita para guardar esta receita, adaptá-la ao seu gosto e planear as refeições."
+  },
   "videoImport": {
     "source": {
       "description": "Texto retirado da descrição do vídeo",

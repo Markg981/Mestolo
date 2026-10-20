@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { CalendarPlus, Copy, Download, Flag, FolderPlus, GitBranch, Heart, History, Pencil, Printer, Sparkles, Trash2, UserX } from 'lucide-react';
-import { copyRecipe, deleteRecipe, setVisibility, toggleFavorite } from '@/app/actions/recipes';
+import { copyRecipe, deleteRecipe, setPublicPage, setVisibility, toggleFavorite } from '@/app/actions/recipes';
 import { setRecipeInCollection, createCollection } from '@/app/actions/organize';
 import { addPlanEntry } from '@/app/actions/planning';
 import { blockUser, reportRecipe } from '@/app/actions/social';
@@ -20,6 +20,8 @@ interface Props {
   ownerUsername: string | null;
   isFavorite: boolean;
   visibility: Visibility;
+  publicPageEnabled: boolean;
+  publicSlug: string | null;
   servings: number | null;
   collections: { id: string; name: string }[];
   memberOf: string[];
@@ -33,12 +35,15 @@ export function RecipeActions(p: Props) {
   const tv = useTranslations('visibility');
   const te = useTranslations('errors');
   const tp = useTranslations('plan');
+  const tpp = useTranslations('publicPage');
   const tr = useTranslations('report');
   const router = useRouter();
   const [pending, start] = useTransition();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [fav, setFav] = useState(p.isFavorite);
   const [vis, setVis] = useState<Visibility>(p.visibility);
+  const [pubOn, setPubOn] = useState(p.publicPageEnabled);
+  const [pubSlug, setPubSlug] = useState(p.publicSlug);
   const [member, setMember] = useState<string[]>(p.memberOf);
   const [cols, setCols] = useState(p.collections);
   const [newCol, setNewCol] = useState('');
@@ -133,7 +138,10 @@ export function RecipeActions(p: Props) {
                 disabled={pending}
                 onChange={(e) => {
                   const v = e.target.value as Visibility;
-                  run(async () => setVisibility(p.recipeId, v), tv('changed', { v: tv(v) }), () => setVis(v));
+                  run(async () => setVisibility(p.recipeId, v), tv('changed', { v: tv(v) }), () => {
+                    setVis(v);
+                    if (v !== 'public') setPubOn(false);
+                  });
                 }}
               >
                 {(['private', 'friends', 'public'] as const).map((v) => (
@@ -143,6 +151,39 @@ export function RecipeActions(p: Props) {
                 ))}
               </Select>
             </label>
+          )}
+          {p.isOwner && (
+            <div className="flex flex-col gap-1">
+              <label className="flex min-h-11 items-center gap-3">
+                <input
+                  type="checkbox"
+                  className="size-5 accent-[var(--basil)]"
+                  checked={pubOn}
+                  disabled={pending || vis !== 'public'}
+                  aria-describedby="pubpage-hint"
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    start(async () => {
+                      const res = await setPublicPage(p.recipeId, on);
+                      if (res.ok) {
+                        setPubOn(on);
+                        setPubSlug(res.data.slug);
+                        setMsg({ text: on ? tpp('enabled') : tpp('disabled'), tone: 'success' });
+                      } else setMsg({ text: te(res.error), tone: 'error' });
+                    });
+                  }}
+                />
+                <span className="font-semibold">{tpp('toggleLabel')}</span>
+              </label>
+              <p id="pubpage-hint" className="text-sm text-muted">
+                {vis === 'public' ? tpp('toggleHint') : tpp('needsPublic')}
+              </p>
+              {pubOn && pubSlug && (
+                <Link href={`/r/${pubSlug}`} target="_blank" className="text-sm font-semibold text-basil underline underline-offset-4">
+                  {tpp('viewPage')}
+                </Link>
+              )}
+            </div>
           )}
           <div className="flex flex-wrap gap-2">
             <a href={`/api/recipes/${p.recipeId}/export`} className={buttonClass('secondary', 'sm')}>

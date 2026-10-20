@@ -157,6 +157,8 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             ownerUsername={owner?.username ?? null}
             isFavorite={detail.isFavorite}
             visibility={recipe.visibility}
+            publicPageEnabled={!!recipe.public_page_enabled}
+            publicSlug={recipe.public_slug ?? null}
             servings={recipe.servings === null ? null : Number(recipe.servings)}
             collections={collections.map((c) => ({ id: c.id, name: c.name }))}
             memberOf={detail.collectionIds}

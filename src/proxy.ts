@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { buildCsp, cspHeaderName, generateNonce } from '@/lib/csp';
 
-const PUBLIC_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/auth', '/setup', '/privacy', '/terms', '/offline', '/invite'];
+const PUBLIC_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/auth', '/setup', '/privacy', '/terms', '/offline', '/invite', '/r', '/sitemap.xml', '/robots.txt'];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

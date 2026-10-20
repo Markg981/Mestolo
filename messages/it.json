@@ -956,6 +956,21 @@
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
     "noSteps": "Questa ricetta non ha ancora un procedimento."
   },
+  "publicPage": {
+    "toggleLabel": "Pagina pubblica indicizzabile",
+    "toggleHint": "Chiunque potrà trovare questa ricetta su Google e aprirla senza account. Puoi disattivarla in qualsiasi momento.",
+    "needsPublic": "Imposta la visibilità su Pubblica per attivare la pagina pubblica.",
+    "viewPage": "Vedi la pagina pubblica",
+    "enabled": "Pagina pubblica attivata",
+    "disabled": "Pagina pubblica disattivata",
+    "save": "Salva su Mestolo",
+    "haveAccount": "Hai già un account?",
+    "login": "Accedi",
+    "byAuthor": "di {name}",
+    "source": "Fonte: {name}",
+    "ctaTitle": "Il tuo ricettario, sempre con te",
+    "ctaLead": "Crea un account gratuito per salvare questa ricetta, adattarla ai tuoi gusti e pianificare i pasti."
+  },
   "videoImport": {
     "source": {
       "description": "Testo preso dalla descrizione del video",
