@@ -166,7 +166,7 @@ d('RLS & data rules', () => {
   it('private images cannot be read through storage, even with the exact path', async () => {
     const rid = await createRecipe(alice, {});
     const path = `${alice}/${rid}/photo.webp`;
-    await as(alice, "insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
+    await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
     await as(alice, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, alice, path]);
 
     expect(await as(alice, 'select name from storage.objects where name = $1', [path])).toHaveLength(1);
@@ -183,7 +183,7 @@ d('RLS & data rules', () => {
   it('imported third-party images stay visible only to the owner, even on public recipes', async () => {
     const rid = await createRecipe(alice, { visibility: 'public' });
     const path = `${alice}/${rid}/imported.webp`;
-    await as(alice, "insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
+    await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
     await as(alice, "insert into public.recipe_images (recipe_id, owner_id, storage_path, kind) values ($1, $2, $3, 'imported')", [rid, alice, path]);
     expect(await as(bob, 'select id from public.recipe_images where recipe_id = $1', [rid])).toHaveLength(0);
     expect(await as(bob, 'select name from storage.objects where name = $1', [path])).toHaveLength(0);
@@ -197,6 +197,24 @@ d('RLS & data rules', () => {
     await expect(
       as(bob, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, bob, `${bob}/${rid}/x.webp`]),
     ).rejects.toThrow(/row-level security/);
+  });
+
+  it('authenticated users cannot write to the image bucket directly (uploads are server-only)', async () => {
+    const rid = await createRecipe(alice, {});
+    await expect(
+      as(alice, "insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [`${alice}/${rid}/own.webp`, alice]),
+    ).rejects.toThrow(/row-level security/);
+    await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [`${alice}/${rid}/srv.webp`, alice]);
+    const upd = await as(alice, "update storage.objects set name = $1 where name = $2 returning name", [`${alice}/${rid}/x.webp`, `${alice}/${rid}/srv.webp`]);
+    expect(upd).toHaveLength(0);
+  });
+
+  it('image bucket enforces size and MIME limits', async () => {
+    const rows = await admin<{ file_size_limit: number; allowed_mime_types: string[] }>(
+      "select file_size_limit, allowed_mime_types from storage.buckets where id = 'recipe-images'",
+    );
+    expect(rows[0].file_size_limit).toBe(5242880);
+    expect([...rows[0].allowed_mime_types].sort()).toEqual(['image/jpeg', 'image/png', 'image/webp']);
   });
 
   it('API keys are never readable by clients; only metadata of own keys', async () => {

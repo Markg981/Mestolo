@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
@@ -32,7 +34,10 @@ async function storeImage(opts: {
   const name = randomUUID();
   const path = `${opts.userId}/${opts.recipeId}/${name}.webp`;
   const thumbPath = `${opts.userId}/${opts.recipeId}/${name}_t.webp`;
-  const bucket = supabase.storage.from('recipe-images');
+  // Writes to the bucket go through the service role only: authenticated users
+  // have no INSERT/UPDATE policy on storage.objects (see the migration).
+  if (processed.full.length > MAX_PROCESSED_BYTES || processed.thumb.length > MAX_PROCESSED_BYTES) return fail('image_too_large');
+  const bucket = createAdminClient().storage.from('recipe-images');
   const up1 = await bucket.upload(path, processed.full, { contentType: 'image/webp', upsert: false });
   if (up1.error) return fail('generic');
   const up2 = await bucket.upload(thumbPath, processed.thumb, { contentType: 'image/webp', upsert: false });
@@ -73,8 +78,10 @@ export async function uploadRecipeImage(formData: FormData): Promise<ActionResul
     const recipeId = String(formData.get('recipeId') ?? '');
     const file = formData.get('file');
     if (!uuid.safeParse(recipeId).success || !(file instanceof File)) return fail('invalid_input');
-    if (file.size > 8 * 1024 * 1024) return fail('image_too_large');
+    if (file.size > MAX_UPLOAD_BYTES) return fail('image_too_large');
+    if (!isAllowedUploadType(file.type)) return fail('invalid_input');
     await enforceRateLimit('upload_image', user.id);
+    await enforceRateLimit('upload_image_day', user.id);
     return await storeImage({
       userId: user.id,
       recipeId,
@@ -98,7 +105,8 @@ export async function importSourceImage(recipeId: string, imageUrl: string, attr
     const user = await getUser();
     if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
     await enforceRateLimit('upload_image', user.id);
-    const res = await safeFetch(imageUrl, { maxBytes: 8 * 1024 * 1024, accept: 'image/*', allowedContentTypes: /^image\/(jpeg|png|webp|avif|gif)/i });
+    await enforceRateLimit('upload_image_day', user.id);
+    const res = await safeFetch(imageUrl, { maxBytes: MAX_UPLOAD_BYTES, accept: 'image/*', allowedContentTypes: /^image\/(jpeg|png|webp|avif|gif)/i });
     if (res.truncated) return fail('image_too_large');
     return await storeImage({ userId: user.id, recipeId, buffer: res.body, kind: 'imported', alt: '', sourceUrl: res.finalUrl, attribution });
   } catch (e) {
