@@ -28,9 +28,12 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
         title={t('recipes.title')}
         lead={t('recipes.lead')}
         actions={
-          <LinkButton href="/recipes/new" variant="primary">
-            {t('nav.addRecipe')}
-          </LinkButton>
+          <>
+            <LinkButton href="/recipes/cooked">{t('cookLog.historyTitle')}</LinkButton>
+            <LinkButton href="/recipes/new" variant="primary">
+              {t('nav.addRecipe')}
+            </LinkButton>
+          </>
         }
       />
 
