@@ -11,12 +11,12 @@ import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 import { env } from '@/lib/env';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
+import { richProfileSchema } from '@/lib/profile/validation';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
-const profileSchema = z.object({
+const profileSchema = richProfileSchema.extend({
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,24}$/),
   display_name: z.string().trim().max(60),
-  bio: z.string().trim().max(280),
   discoverable: z.boolean(),
   dietary_preferences: z.array(z.enum(['vegetarian', 'vegan', 'pescatarian', 'no_pork', 'no_alcohol'])).max(5),
   avoided_ingredients: z.array(z.string().trim().min(1).max(40)).max(30),
@@ -99,6 +99,10 @@ export async function deleteAccount(confirmUsername: string): Promise<ActionResu
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
     if (!profile || profile.username !== String(confirmUsername ?? '').trim().toLowerCase()) return fail('invalid_input');
+    // Avatar file (best effort: a retry of the deletion repeats it, removing a missing file is a no-op)
+    const { data: mine } = await supabase.rpc('my_profile').maybeSingle();
+    const avatar = (mine as { avatar_path?: string | null } | null)?.avatar_path;
+    if (avatar) await createAdminClient().storage.from('avatars').remove([avatar]);
     await deleteAccountData(createAdminClient() as unknown as DeletionAdmin, user.id);
     await supabase.auth.signOut();
   } catch (e) {

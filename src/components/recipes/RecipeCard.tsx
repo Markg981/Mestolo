@@ -5,6 +5,8 @@ import type { RecipeListItem } from '@/lib/data/recipes';
 import { categoryLabel, type CategoryRow } from '@/lib/recipes/categories';
 import { RecipeImage } from './RecipeImage';
 import { Badge } from '../ui';
+import { StarsDisplay } from './StarsDisplay';
+import { showRating } from '@/lib/recipes/rating';
 
 export async function RecipeCard({ recipe, categories, showAuthor, priority }: { recipe: RecipeListItem; categories: CategoryRow[]; showAuthor?: boolean; priority?: boolean }) {
   const t = await getTranslations();
@@ -37,6 +39,7 @@ export async function RecipeCard({ recipe, categories, showAuthor, priority }: {
               {t('card.servings', { n: Number(recipe.servings) })}
             </span>
           )}
+          {showRating(recipe) && <StarsDisplay avg={recipe.rating_avg!} count={recipe.rating_count} />}
           {!showAuthor && recipe.visibility === 'private' && (
             <span className="inline-flex items-center gap-1">
               <Lock aria-hidden className="size-4" />

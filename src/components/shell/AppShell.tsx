@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Avatar } from '@/components/Avatar';
 import { getTranslations } from 'next-intl/server';
 import { NavIcon } from './icons';
 import { PRIMARY_NAV, QUICK_ACTIONS, SECONDARY_NAV } from './nav-items';
@@ -21,7 +22,7 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-export async function AppShell({ children, username, isModerator = false }: { children: React.ReactNode; username: string; isModerator?: boolean }) {
+export async function AppShell({ children, username, isModerator = false, userId, hasAvatar = false }: { children: React.ReactNode; username: string; isModerator?: boolean; userId?: string; hasAvatar?: boolean }) {
   const t = await getTranslations('nav');
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
@@ -49,7 +50,8 @@ export async function AppShell({ children, username, isModerator = false }: { ch
           {isModerator && <NavLink href="/moderation" icon="shield" label={t('moderation')} />}
         </nav>
         <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
-          <Link href={`/u/${username}`} className="truncate px-3 text-sm text-muted hover:text-ink">
+          <Link href={`/u/${username}`} className="flex items-center gap-2 truncate px-3 text-sm text-muted hover:text-ink">
+            {userId && <Avatar userId={userId} name={username} hasImage={hasAvatar} size="sm" />}
             @{username}
           </Link>
           <SignOutButton action={signOut} label={t('signOut')} className="min-h-11 w-full rounded-xl px-3 text-left font-semibold text-muted hover:bg-sunk hover:text-ink" />

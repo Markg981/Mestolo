@@ -16,6 +16,9 @@ import { EXTRACT_SYSTEM, extractUserPrompt } from '@/lib/ai/prompts';
 import { draftFromExtraction } from '@/lib/ai/extraction';
 import type { ImportDraft } from '@/lib/recipes/types';
 import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/limits';
+import { fetchVideoText, type VideoTextResult } from '@/lib/import/video-import';
+import { detectVideoUrl } from '@/lib/import/video';
+import { MAX_AUDIO_BYTES } from '@/lib/import/limits';
 import { fail, ok, toFailure, type ActionResult } from './_utils';
 
 
@@ -123,5 +126,55 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
   } catch (e) {
     if (e instanceof ImageValidationError) return fail(e.code);
     return toFailure(e, 'importFromPhotos');
+  }
+}
+
+export type VideoImportResult = { video: VideoTextResult };
+
+/**
+ * Video link (YouTube/Shorts, TikTok, Instagram Reels): description first, then captions.
+ * Free, no AI, never downloads the video. `source: 'none'` tells the UI to offer the AI/paste paths.
+ */
+export async function importFromVideoUrl(rawUrl: string, uiLocale?: string): Promise<ActionResult<VideoImportResult>> {
+  try {
+    const user = await getUser();
+    if (!user) return fail('forbidden');
+    const url = z.string().trim().min(8).max(2000).safeParse(rawUrl);
+    if (!url.success || !detectVideoUrl(url.data)) return fail('url_invalid');
+    await enforceRateLimit('import_url', user.id);
+    const video = await fetchVideoText(url.data, isLocale(uiLocale) ? uiLocale : DEFAULT_LOCALE);
+    if (!video) return fail('url_invalid');
+    return ok({ video });
+  } catch (e) {
+    return toFailure(e, 'importFromVideoUrl');
+  }
+}
+
+const AUDIO_MIME = /^audio\/(wav|x-wav|wave|mpeg|mp3|mp4|m4a|x-m4a|webm|ogg)$/i;
+
+/**
+ * Speech-to-text on an audio track (extracted in the browser from an uploaded video). Explicit AI
+ * option: uses the user's own OpenAI key or the app's quota. Audio is processed in memory, not stored.
+ */
+export async function transcribeVideoAudio(formData: FormData): Promise<ActionResult<{ text: string }>> {
+  try {
+    const user = await getUser();
+    if (!user) return fail('forbidden');
+    const file = formData.get('audio');
+    if (!(file instanceof File) || file.size === 0) return fail('invalid_input');
+    if (file.size > MAX_AUDIO_BYTES || !AUDIO_MIME.test(file.type.split(';')[0])) return fail('invalid_input');
+    const resolved = await resolveProvider(user.id, 'audio', 'text', 'transcribe');
+    await enforceRateLimit('import_video_ai', user.id);
+    if (!resolved.provider.transcribe) return fail('ai_unsupported');
+    const text = await resolved.provider.transcribe({
+      data: new Uint8Array(await file.arrayBuffer()),
+      mime: file.type.split(';')[0],
+      filename: /wav|wave/i.test(file.type) ? 'audio.wav' : 'audio.m4a',
+    });
+    await recordUsage(user.id, 'text', 'transcribe', resolved);
+    if (!text) return fail('ai_bad_output');
+    return ok({ text: text.slice(0, 20000) });
+  } catch (e) {
+    return toFailure(e, 'transcribeVideoAudio');
   }
 }

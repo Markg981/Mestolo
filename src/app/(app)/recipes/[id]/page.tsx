@@ -13,7 +13,9 @@ import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { IngredientList } from '@/components/recipes/IngredientList';
 import { RecipeActions } from '@/components/recipes/RecipeActions';
 import { ImagePrompt, NoteEditor, TranslateBanner, type AiStatusProps } from '@/components/recipes/RecipeIslands';
+import { RecipeRating } from '@/components/recipes/RecipeRating';
 import { CookPrefetch } from '@/components/cooking/CookPrefetch';
+import { CookLogsSection } from '@/components/cooking/CookLogs';
 import { Alert, Badge, LinkButton } from '@/components/ui';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +34,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
   const [t, locale, user, collections] = await Promise.all([getTranslations(), getLocale(), getUser(), listEditableCollections()]);
   const { recipe, images, category, owner, isOwner } = detail;
   const supabase = await createClient();
+  const { data: myRating } = isOwner ? { data: null } : await supabase.from('recipe_ratings').select('stars').eq('recipe_id', id).eq('user_id', user!.id).maybeSingle();
 
   // Translation (cached, tied to the content hash; the original is never modified)
   const origLang = recipe.original_language.slice(0, 2);
@@ -154,12 +157,16 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             ownerUsername={owner?.username ?? null}
             isFavorite={detail.isFavorite}
             visibility={recipe.visibility}
+            publicPageEnabled={!!recipe.public_page_enabled}
+            publicSlug={recipe.public_slug ?? null}
             servings={recipe.servings === null ? null : Number(recipe.servings)}
             collections={collections.map((c) => ({ id: c.id, name: c.name }))}
             memberOf={detail.collectionIds}
           />
         </div>
       </header>
+
+      <RecipeRating recipeId={id} isOwner={isOwner} avg={recipe.rating_avg} count={recipe.rating_count} mine={myRating?.stars ?? null} />
 
       {translationState !== 'none' && (
         <TranslateBanner
@@ -255,6 +262,8 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
               </a>
             )}
           </section>
+
+          {user && <CookLogsSection recipeId={id} userId={user.id} recipeOwnerId={recipe.owner_id} />}
 
           <section className="mt-6 border-t border-line pt-6">
             <NoteEditor recipeId={id} initial={detail.note} />

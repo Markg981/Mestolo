@@ -1,14 +1,21 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { cleanEditorPayload, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
+import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
+
+/** Drops the cached public page (and the sitemap) after a change that can affect it. */
+function invalidatePublicPage(slug: string | null | undefined) {
+  if (slug) revalidateTag(publicRecipeTag(slug), 'max');
+  revalidateTag(PUBLIC_RECIPES_TAG, 'max');
+}
 
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
 export async function saveRecipe(payload: unknown, recipeId?: string | null): Promise<ActionResult<{ id: string }>> {
@@ -46,10 +53,11 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null): Pr
         .update({ ...content, last_change_source: 'edit' })
         .eq('id', id)
         .eq('owner_id', user.id)
-        .select('id')
+        .select('id, public_slug')
         .maybeSingle();
       if (error) return dbFailure(error, 'saveRecipe.update');
       if (!data) return fail('not_found');
+      invalidatePublicPage(data.public_slug as string | null);
     } else {
       const { data, error } = await supabase
         .from('recipes')
@@ -100,12 +108,14 @@ export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
   const supabase = await createClient();
+  const { data: pub } = await supabase.from('recipes').select('public_slug').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
   const { data: imgs } = await supabase.from('recipe_images').select('storage_path, thumb_path').eq('recipe_id', recipeId).eq('owner_id', user.id);
   const paths = ((imgs as { storage_path: string; thumb_path: string | null }[]) ?? []).flatMap((i) => [i.storage_path, i.thumb_path].filter(Boolean) as string[]);
   const { data, error } = await supabase.from('recipes').delete().eq('id', recipeId).eq('owner_id', user.id).select('id');
   if (error) return dbFailure(error, 'deleteRecipe');
   if (!data?.length) return fail('not_found');
   if (paths.length) await supabase.storage.from('recipe-images').remove(paths);
+  invalidatePublicPage(pub?.public_slug as string | null | undefined);
   revalidatePath('/recipes');
   return ok();
 }
@@ -115,11 +125,37 @@ export async function setVisibility(recipeId: string, visibility: string): Promi
   const v = z.enum(VISIBILITIES).safeParse(visibility);
   if (!user || !v.success || !uuid.safeParse(recipeId).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { data, error } = await supabase.from('recipes').update({ visibility: v.data }).eq('id', recipeId).eq('owner_id', user.id).select('id');
+  const { data, error } = await supabase.from('recipes').update({ visibility: v.data }).eq('id', recipeId).eq('owner_id', user.id).select('id, public_slug');
   if (error) return dbFailure(error, 'setVisibility');
   if (!data?.length) return fail('not_found');
+  invalidatePublicPage(data[0].public_slug as string | null);
   revalidatePath(`/recipes/${recipeId}`);
   return ok();
+}
+
+/**
+ * Opt-in to an indexable public page (/r/<slug>) for one recipe. The database accepts it
+ * only while the recipe is public; the slug is assigned by the database and never changes.
+ */
+export async function setPublicPage(recipeId: string, enabled: boolean): Promise<ActionResult<{ slug: string | null }>> {
+  const user = await getUser();
+  if (!user || !uuid.safeParse(recipeId).success || typeof enabled !== 'boolean') return fail('invalid_input');
+  const supabase = await createClient();
+  const { data: cur } = await supabase.from('recipes').select('visibility').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+  if (!cur) return fail('not_found');
+  if (enabled && cur.visibility !== 'public') return fail('invalid_input');
+  const { data, error } = await supabase
+    .from('recipes')
+    .update({ public_page_enabled: enabled })
+    .eq('id', recipeId)
+    .eq('owner_id', user.id)
+    .select('public_slug, public_page_enabled');
+  if (error) return dbFailure(error, 'setPublicPage');
+  if (!data?.length) return fail('not_found');
+  const slug = (data[0].public_slug as string | null) ?? null;
+  invalidatePublicPage(slug);
+  revalidatePath(`/recipes/${recipeId}`);
+  return ok({ slug });
 }
 
 export async function toggleFavorite(recipeId: string, favorite: boolean): Promise<ActionResult> {

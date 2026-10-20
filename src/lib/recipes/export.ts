@@ -54,7 +54,7 @@ export function toMestoloJson(
   };
 }
 
-function isoMinutes(min: number | null): string | undefined {
+export function isoMinutes(min: number | null): string | undefined {
   if (min === null || min === undefined) return undefined;
   const h = Math.floor(min / 60);
   const m = min % 60;

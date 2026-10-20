@@ -7,12 +7,12 @@ import { PAGE_SIZE, applyKeyset, decodeCursor, toPage, type KeysetSort, type Pag
 /** All reads go through the user's client: RLS decides what is visible. */
 
 export const LIST_COLUMNS =
-  'id, owner_id, title, description, original_language, servings, prep_minutes, cook_minutes, total_minutes, category_id, tags, visibility, verification_status, source_type, source_name, created_at, updated_at, original_author_name, is_hidden';
+  'id, owner_id, title, description, original_language, servings, prep_minutes, cook_minutes, total_minutes, category_id, tags, visibility, verification_status, source_type, source_name, created_at, updated_at, original_author_name, is_hidden, rating_avg, rating_count';
 
 export type RecipeListItem = Pick<
   RecipeRow,
   | 'id' | 'owner_id' | 'title' | 'description' | 'original_language' | 'servings' | 'prep_minutes' | 'cook_minutes' | 'total_minutes'
-  | 'category_id' | 'tags' | 'visibility' | 'verification_status' | 'source_type' | 'source_name' | 'created_at' | 'updated_at' | 'original_author_name' | 'is_hidden'
+  | 'category_id' | 'tags' | 'visibility' | 'verification_status' | 'source_type' | 'source_name' | 'created_at' | 'updated_at' | 'original_author_name' | 'is_hidden' | 'rating_avg' | 'rating_count'
 > & { coverImageId: string | null; coverKind: string | null; ownerUsername?: string | null };
 
 export interface ImageRow {

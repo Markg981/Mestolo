@@ -41,8 +41,12 @@ d('profiles column privileges', () => {
   afterAll(async () => pool?.end());
 
   it('other users read the public columns only', async () => {
-    const rows = await as<{ username: string }>(bob, 'select id, username, display_name, bio from public.profiles where id = $1', [alice]);
+    const rows = await as<{ username: string }>(bob, 'select id, username, display_name from public.profiles where id = $1', [alice]);
     expect(rows).toHaveLength(1);
+  });
+
+  it('bio now goes through get_profile_card (migration 20261025000006)', async () => {
+    await expect(as(bob, 'select bio from public.profiles where id = $1', [alice])).rejects.toThrow(/permission denied/);
   });
 
   it.each(['dietary_preferences', 'avoided_ingredients', 'hidden_categories', 'locale', 'discoverable', 'is_moderator'])(

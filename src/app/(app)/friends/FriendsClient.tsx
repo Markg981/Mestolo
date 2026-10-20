@@ -1,5 +1,6 @@
 'use client';
 
+import { Avatar } from '@/components/Avatar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -8,14 +9,17 @@ import { blockUser, removeFriendship, respondFriendRequest, searchUsers, sendFri
 import { LiveMessage } from '@/components/client-ui';
 import { Button, Input, buttonClass } from '@/components/ui';
 
-type P = { id: string; username: string; display_name: string } | undefined;
+type P = { id: string; username: string; display_name: string; has_avatar?: boolean } | undefined;
 
 function Who({ profile }: { profile: P }) {
   if (!profile) return <span className="text-muted">—</span>;
   return (
-    <Link href={`/u/${profile.username}`} className="flex min-w-0 flex-col hover:underline">
-      <span className="truncate font-semibold">{profile.display_name || profile.username}</span>
-      <span className="truncate text-sm text-muted">@{profile.username}</span>
+    <Link href={`/u/${profile.username}`} className="flex min-w-0 items-center gap-3 hover:underline">
+      <Avatar userId={profile.id} name={profile.display_name || profile.username} hasImage={profile.has_avatar} size="sm" />
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate font-semibold">{profile.display_name || profile.username}</span>
+        <span className="truncate text-sm text-muted">@{profile.username}</span>
+      </span>
     </Link>
   );
 }
