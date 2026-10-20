@@ -184,6 +184,7 @@ Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pr
 | `AI_APP_IMAGE_ENABLED`, `AI_APP_IMAGE_MODEL` | no | Generazione immagini con la chiave del gestore (solo OpenAI) |
 | `AI_DAILY_LIMIT_TEXT/VISION/IMAGE/TRANSLATE` | no | Quote giornaliere per utente sul servizio base (default 20/10/2/30) |
 | `AI_USER_ANTHROPIC_MODEL`, `AI_USER_OPENAI_TEXT_MODEL`, `AI_USER_OPENAI_IMAGE_MODEL` | no | Modelli usati con le chiavi personali |
+| `CRON_SECRET` | per la pulizia | Segreto del cron Vercel (`vercel.json`) che chiama `/api/cron/cleanup` (rimuove file immagine orfani e dati di quota oltre 90 giorni). Senza, la route risponde sempre 401. In Supabase abilitare anche l’estensione `pg_cron` (Database > Extensions) per la pulizia giornaliera lato database |
 | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | no | Monitoraggio errori Sentry (client+server+edge / solo server+edge). Senza DSN è completamente disattivato. Gli eventi sono ripuliti (email, token, cookie, testo delle ricette, chiavi) prima dell’invio; `sendDefaultPii` è sempre false |
 | `SENTRY_TRACES_SAMPLE_RATE` | no | Frazione di tracce 0-1 (default 0,05) |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | no | Solo in build, per caricare le source map |
