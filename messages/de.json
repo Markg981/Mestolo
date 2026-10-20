@@ -955,5 +955,29 @@
     "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
+  },
+  "invites": {
+    "title": "Freunde einladen",
+    "lead": "Erstelle einen Link und teile ihn: Wer ihn öffnet und sich registriert, wird automatisch dein Freund.",
+    "create": "Einladungslink erstellen",
+    "linkOnce": "Dieser Link wird nur einmal angezeigt: Kopiere ihn jetzt.",
+    "linkLabel": "Einladungslink",
+    "copy": "Kopieren",
+    "share": "Teilen",
+    "copied": "Link kopiert.",
+    "copyFailed": "Der Link konnte nicht kopiert werden.",
+    "shareTitle": "Komm zu Mestolo",
+    "shareText": "Ich lade dich zu Mestolo ein, dem Rezeptbuch, das man mit Freunden teilt.",
+    "uses": "{used} von {max} Verwendungen",
+    "expires": "Läuft am {date} ab",
+    "revoke": "Widerrufen",
+    "invalidTitle": "Ungültige Einladung",
+    "invalid": "Diese Einladung ist ungültig, abgelaufen oder wurde widerrufen.",
+    "home": "Zu Mestolo",
+    "landingTitle": "{name} hat dich zu Mestolo eingeladen",
+    "landingLead": "Registriere dich oder melde dich an, um mit ihm befreundet zu sein und seine geteilten Rezepte zu sehen.",
+    "signup": "Registrieren",
+    "login": "Anmelden",
+    "accept": "Annehmen und befreundet sein"
   }
 }
