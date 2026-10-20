@@ -28,3 +28,6 @@ android/capacitor-cordova-android-plugins/
 e2e/.auth/
 public/ocr/
 public/ocr/
+
+# Store listing screenshots (generated)
+store/screenshots/

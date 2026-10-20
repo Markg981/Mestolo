@@ -934,7 +934,8 @@
     "addCategory": "Nueva categoría",
     "addCategoryPlaceholder": "P. ej., Sopas, Dim sum",
     "deleteCategory": "Eliminar la categoría {name}",
-    "termsLink": "Normas de la comunidad"
+    "termsLink": "Normas de la comunidad",
+    "feedbackLink": "Enviar comentarios"
   },
   "aiSettings": {
     "title": "IA y claves API",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "No hay denuncias abiertas",
     "empty": "Cuando un usuario denuncie una receta, aparecerá aquí.",
     "hiddenTitle": "Recetas ocultas",
-    "hiddenEmpty": "No hay recetas ocultas."
+    "hiddenEmpty": "No hay recetas ocultas.",
+    "feedbackLink": "Comentarios de usuarios"
   },
   "terms": {
     "title": "Normas de la comunidad",
@@ -1126,7 +1128,7 @@
     "listening": "Escuchando: di «siguiente» o «atrás»",
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
-    "noSteps": "Esta receta aún no tiene pasos.",
+    "noSteps": "Esta receta aún no tiene pasos.",
     "assistOpen": "Pregunta al asistente",
     "assistTitle": "Pregunta al asistente",
     "assistClose": "Cerrar el asistente",
@@ -1324,5 +1326,43 @@
     "signup": "Registrarse",
     "login": "Iniciar sesión",
     "accept": "Aceptar y hacerse amigos"
+  },
+  "feedback": {
+    "title": "Enviar comentarios",
+    "lead": "Cuéntanos qué falla o qué te gustaría. Leemos todos los mensajes.",
+    "back": "Ajustes",
+    "kind": "¿De qué se trata?",
+    "kinds": {
+      "bug": "Un problema",
+      "idea": "Una idea",
+      "other": "Otro"
+    },
+    "message": "Mensaje",
+    "messageHint": "De 5 a 4000 caracteres. Si es un problema, cuenta qué estabas haciendo.",
+    "context": "Se adjunta automáticamente: plataforma {platform}, versión {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Enviar",
+    "sentTitle": "¡Gracias!",
+    "sentBody": "Tus comentarios han llegado.",
+    "sendAnother": "Enviar otro",
+    "adminTitle": "Comentarios",
+    "adminLead": "Mensajes de testers y usuarios, del más reciente al más antiguo.",
+    "backToModeration": "Moderación",
+    "filterLabel": "Filtrar por estado",
+    "filterAll": "Todos",
+    "statuses": {
+      "new": "Nuevo",
+      "seen": "Visto",
+      "done": "Resuelto"
+    },
+    "markSeen": "Marcar como visto",
+    "markDone": "Marcar como resuelto",
+    "reopen": "Reabrir",
+    "adminEmptyTitle": "Sin comentarios",
+    "adminEmpty": "No hay mensajes con este filtro."
   }
 }

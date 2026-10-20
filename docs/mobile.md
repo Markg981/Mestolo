@@ -18,7 +18,7 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 - Icona, splash screen, scorciatoie (PWA), area sicura per notch e barra di sistema.
 
 ### Limiti attuali
-- **iOS non riceve ancora la condivisione** da altre app: serve una *Share Extension* da creare in Xcode (prossimo passo). La fotocamera e il resto funzionano.
+- **iOS: Share Extension implementata** (`ios/App/ShareExtension/`, target `ShareExtension` nel progetto Xcode, vedi [ios-share-extension.md](ios-share-extension.md)): link e testi condivisi aprono l'import. Le **immagini** condivise vengono salvate nell'App Group ma l'app non le legge ancora.
 - **Notifiche** (es. promemoria del piano pasti): non implementate.
 - Capacitor documenta il caricamento di un sito remoto (`server.url`) come pensato per lo sviluppo. Funziona ed è usato in produzione da molte app, ma Apple può rifiutare app che considera "solo un sito" (linea guida 4.2): per questo l'app integra funzioni native. Se Apple dovesse rifiutare, le strade sono aggiungere altre funzioni native (notifiche, condivisione iOS, offline più ricco) o, più in là, un frontend nativo che usi le stesse API.
 
@@ -66,16 +66,32 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 ## 4. App Store (iOS)
 
 1. **Apple Developer Program** (99 $ l'anno).
-2. Serve **un Mac con Xcode** oppure un servizio di build in cloud (Ionic Appflow, Codemagic, Bitrise…).
-3. Sul Mac: `CAP_SERVER_URL=https://tuo-dominio npm run mobile:ios` (lo script aggiorna anche `WKAppBoundDomains` in `Info.plist`, necessario per le copie offline).
-4. In Xcode: *Signing & Capabilities* → seleziona il tuo Team; imposta *Version* e *Build*.
-5. *Product → Archive* → *Distribute App* → App Store Connect → **TestFlight** per i test.
-6. In App Store Connect compila:
+2. **Non serve un Mac**: la build iOS gira su un runner macOS di GitHub Actions (`.github/workflows/mobile-ios.yml`) con firma automatica tramite chiave API di App Store Connect. (Con un Mac si può comunque fare a mano: `npm run mobile:ios`, poi in Xcode *Product → Archive*.)
+
+### Configurazione una tantum (senza Mac)
+1. **Apple Developer** (developer.apple.com → Certificates, Identifiers & Profiles):
+   - registra gli identificatori `com.markg981.mestolo` (app) e `com.markg981.mestolo.ShareExtension` (estensione);
+   - registra l'**App Group** `group.com.markg981.mestolo` e abilitalo su entrambi gli identificatori (Capabilities → App Groups). Se l'identificatore app ha un altro id (`CAP_APP_ID`), cambia anche i due `.entitlements`, `ShareViewController.swift` e i bundle id nel progetto.
+2. **App Store Connect** → Apps → "+" → nuova app iOS con bundle id `com.markg981.mestolo` (serve prima di poter caricare build).
+3. **App Store Connect → Utenti e accessi → Integrazioni → Chiavi API** (ruolo *App Manager* o *Admin*): genera la chiave, scarica il `.p8` (si scarica una sola volta), annota *Key ID* e *Issuer ID*.
+4. Su GitHub → Settings → Secrets and variables → Actions:
+   - Secrets: `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_PRIVATE_KEY` (contenuto del `.p8`, in chiaro oppure in base64: `base64 -w0 AuthKey_XXXX.p8`);
+   - Variables: `APPLE_TEAM_ID` (10 caratteri, da Membership), `CAP_SERVER_URL` (sito pubblicato, https), opzionale `CAP_APP_ID`.
+
+### Lanciare una build TestFlight
+1. GitHub → Actions → **Mobile iOS (TestFlight)** → *Run workflow* (oppure push di un tag `v*`).
+2. Il job verifica la configurazione (se manca un secret/variabile fallisce subito con l'elenco), esegue `npm run mobile:sync`, archivia lo schema `App` con firma automatica (crea da solo certificato e profili per app ed estensione), esporta l'`.ipa` (scaricabile come artifact per 14 giorni) e la carica con `xcrun altool` usando la chiave API.
+3. Il **numero di build** è il numero di run del workflow (`CURRENT_PROJECT_VERSION` passato a `xcodebuild`, sempre crescente). La *Version* (`MARKETING_VERSION`) si cambia con lo script di versione / nel progetto.
+4. Dopo qualche minuto (elaborazione di Apple) la build compare in App Store Connect → TestFlight: aggiungi i tester interni (subito) o esterni (richiede una breve revisione).
+
+### Scheda dello store e revisione
+1. Il progetto include già il **privacy manifest** (`PrivacyInfo.xcprivacy` per app ed estensione: nessun tracciamento, nessun dato raccolto dal codice nativo, API UserDefaults e timestamp file dichiarate) e `ITSAppUsesNonExemptEncryption = false`. I testi dei permessi (fotocamera, libreria foto) sono in italiano.
+2. In App Store Connect compila:
    - URL privacy e URL di supporto (pagina `/terms` o un sito con il contatto).
    - **Privacy Nutrition Label** (vedi [store-privacy.md](store-privacy.md)).
    - **Note per la revisione**: account di prova, spiegazione delle funzioni native (fotocamera per le pagine del ricettario, offline), e del sistema di moderazione (segnalazione, blocco, nascondimento automatico dopo 3 segnalazioni, pannello moderatori, contatto di supporto).
    - Classificazione per età con contenuti generati dagli utenti.
-7. Invia per la revisione.
+3. Invia per la revisione.
 
 ## 5. Requisiti degli store già coperti dall'app
 
@@ -104,10 +120,12 @@ Il moderatore vede la voce *Moderazione* nel menu. Gli utenti non possono attrib
 - `android/app/src/main/java/.../MainActivity.java`: gestione della condivisione verso `/share`.
 - `android/app/build.gradle`: firma release da `android/keystore.properties` o variabili `ANDROID_*` (senza, build non firmata); `versionCode`/`versionName` sono riscritti da `scripts/mobile-version.mjs` (fonte: `package.json`).
 - `android/keystore.properties.example`: modello per la keystore locale.
-- `ios/App/App/Info.plist`: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`, `ITSAppUsesNonExemptEncryption = false`, `WKAppBoundDomains` (aggiornato da `npm run mobile:sync`).
+- `ios/App/App/Info.plist`: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`, `ITSAppUsesNonExemptEncryption = false`, `WKAppBoundDomains` (aggiornato da `npm run mobile:sync`), schema URL `mestolo`.
+- `ios/App/App.xcodeproj/project.pbxproj`: target `ShareExtension` (con fase "Embed Foundation Extensions"), `App.entitlements` (App Group), `PrivacyInfo.xcprivacy` di app ed estensione; `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` riscritti da `scripts/mobile-version.mjs`.
+- `ios/App/ExportOptions.plist`: opzioni di export usate dal workflow.
 
 ## Cosa NON è stato verificato
 
 **Android**: compilati con successo da riga di comando (Gradle 8.14.3, AGP 8.13, JDK 21 Temurin, SDK 36) `assembleDebug` (APK debug) e `bundleRelease` (AAB **non firmato**, senza keystore) con `CAP_SERVER_URL=https://mestolo.vercel.app`. Non sono invece stati verificati: la build **firmata** (serve la tua keystore), l'esecuzione su dispositivo/emulatore (in particolare la condivisione "→ Mestolo" e la fotocamera), il workflow GitHub Actions `mobile-android.yml` e l'upload su Play. Con JDK 25/26 (quello di Android Studio recente o di sistema) il wrapper Gradle attuale non è garantito: usa JDK 21.
 
-**iOS**: non compilato (serve un Mac con Xcode).
+**iOS**: non compilato (serve un Mac con Xcode). I file di progetto (target `ShareExtension` nel `project.pbxproj`, plist, privacy manifest) e il workflow sono stati scritti e validati solo in modo statico (parsing dei plist, YAML, coerenza degli ID): **la prima esecuzione di `mobile-ios.yml` è il vero collaudo** e può richiedere aggiustamenti (nome dell'immagine/Xcode sul runner, permessi della chiave API, App Group non ancora registrato). Da provare su un iPhone vero: fotocamera, condivisione da Safari verso Mestolo, apertura offline.
