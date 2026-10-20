@@ -4,33 +4,7 @@ import { withSentryConfig } from '@sentry/nextjs/config';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-const isDev = process.env.NODE_ENV !== 'production';
-
-// The browser never talks to Supabase or AI providers directly: every call
-// goes through our server, so connect-src stays 'self' plus the Sentry ingest
-// origin, and only when a public DSN is configured.
-const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-let sentryOrigin = '';
-try {
-  if (sentryDsn) sentryOrigin = ` ${new URL(sentryDsn).origin}`;
-} catch {
-  // invalid DSN: Sentry stays inactive and the CSP is unchanged
-}
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-  "style-src 'self' 'unsafe-inline'",
-  // https: is needed only to preview the source image of an imported recipe
-  // in the review screen (it is never copied without the user's choice).
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  `connect-src 'self'${sentryOrigin}`,
-  "media-src 'self' blob:",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join('; ');
+// The Content-Security-Policy (with a per-request nonce) is set in src/proxy.ts.
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -52,7 +26,6 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy', value: csp },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
