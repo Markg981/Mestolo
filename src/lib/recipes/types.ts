@@ -66,6 +66,8 @@ export interface RecipeRow extends RecipeContent {
   version: number;
   content_hash: string;
   is_hidden: boolean;
+  public_page_enabled?: boolean;
+  public_slug?: string | null;
   created_at: string;
   updated_at: string;
 }
