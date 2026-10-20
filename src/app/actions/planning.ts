@@ -30,9 +30,15 @@ const itemSchema = z.object({
 
 type NewItem = z.infer<typeof itemSchema> & { recipe_id?: string | null; recipe_title?: string | null };
 
-async function addItems(userId: string, items: NewItem[]): Promise<ActionResult<{ added: number; merged: number }>> {
+async function addItems(userId: string, items: NewItem[], targetListId?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const supabase = await createClient();
-  const listId = await defaultListId(userId);
+  let listId: string | null;
+  if (targetListId) {
+    // RLS: la lista e visibile solo al proprietario e ai membri
+    const { data: l } = await supabase.from('shopping_lists').select('id').eq('id', targetListId).maybeSingle();
+    listId = (l?.id as string) ?? null;
+    if (!listId) return fail('forbidden');
+  } else listId = await defaultListId(userId);
   if (!listId) return fail('generic');
   const { data: existing } = await supabase.from('shopping_items').select('id, name, quantity, unit, checked').eq('list_id', listId);
   const plan = planShoppingMerge(
@@ -43,7 +49,7 @@ async function addItems(userId: string, items: NewItem[]): Promise<ActionResult<
     items,
   );
   for (const u of plan.updates) {
-    await supabase.from('shopping_items').update({ quantity: u.quantity }).eq('id', u.id).eq('owner_id', userId);
+    await supabase.from('shopping_items').update({ quantity: u.quantity }).eq('id', u.id);
   }
   if (plan.inserts.length) {
     const { error } = await supabase.from('shopping_items').insert(
@@ -67,9 +73,10 @@ async function addItems(userId: string, items: NewItem[]): Promise<ActionResult<
 
 export async function addShoppingItem(input: unknown): Promise<ActionResult<{ added: number; merged: number }>> {
   const user = await getUser();
-  const p = itemSchema.safeParse(input);
+  const p = itemSchema.extend({ list_id: z.uuid().optional() }).safeParse(input);
   if (!user || !p.success) return fail('invalid_input');
-  return addItems(user.id, [p.data]);
+  const { list_id, ...item } = p.data;
+  return addItems(user.id, [item], list_id);
 }
 
 function ingredientsToItems(ings: Ingredient[], recipe: { id: string; title: string }): NewItem[] {
@@ -100,7 +107,7 @@ export async function toggleShoppingItem(id: string, checked: boolean): Promise<
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('shopping_items').update({ checked }).eq('id', id).eq('owner_id', user.id);
+  const { error } = await supabase.from('shopping_items').update({ checked }).eq('id', id);
   if (error) return dbFailure(error, 'toggleShoppingItem');
   revalidatePath('/shopping');
   return ok();
@@ -110,17 +117,17 @@ export async function deleteShoppingItem(id: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('shopping_items').delete().eq('id', id).eq('owner_id', user.id);
+  const { error } = await supabase.from('shopping_items').delete().eq('id', id);
   if (error) return dbFailure(error, 'deleteShoppingItem');
   revalidatePath('/shopping');
   return ok();
 }
 
-export async function clearCheckedItems(): Promise<ActionResult> {
+export async function clearCheckedItems(listId: string): Promise<ActionResult> {
   const user = await getUser();
-  if (!user) return fail('forbidden');
+  if (!user || !uuid.safeParse(listId).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('shopping_items').delete().eq('owner_id', user.id).eq('checked', true);
+  const { error } = await supabase.from('shopping_items').delete().eq('list_id', listId).eq('checked', true);
   if (error) return dbFailure(error, 'clearCheckedItems');
   revalidatePath('/shopping');
   return ok();
@@ -156,7 +163,7 @@ export async function deletePlanEntry(id: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('meal_plan_entries').delete().eq('id', id).eq('owner_id', user.id);
+  const { error } = await supabase.from('meal_plan_entries').delete().eq('id', id);
   if (error) return dbFailure(error, 'deletePlanEntry');
   revalidatePath('/plan');
   return ok();
