@@ -64,26 +64,25 @@ export interface RecipeFilters {
   limit?: number;
 }
 
-function escapeLike(s: string) {
-  return s.replace(/[\\%_,()]/g, (m) => `\\${m}`);
-}
-
 export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListItem[]> {
   const user = await getUser();
   if (!user) return [];
   const supabase = await createClient();
-  let query = supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', user.id);
+  // With a text query the search goes through the search_recipes RPC (full-text + trigram,
+  // security invoker so RLS still applies); PostgREST lets us chain filters on its result.
+  const base = (owner: string | null) =>
+    f.q
+      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: 200 }).select(LIST_COLUMNS)
+      : owner
+        ? supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', owner)
+        : supabase.from('recipes').select(LIST_COLUMNS);
+  let query = base(user.id);
 
   if (f.favorites) {
     const { data: favs } = await supabase.from('favorites').select('recipe_id').eq('user_id', user.id);
     const ids = (favs ?? []).map((x: { recipe_id: string }) => x.recipe_id);
     // favourites may include recipes of other people: query them without the owner filter
-    query = supabase.from('recipes').select(LIST_COLUMNS).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
-  }
-  if (f.q) {
-    for (const term of f.q.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6)) {
-      query = query.ilike('search_text', `%${escapeLike(term)}%`);
-    }
+    query = base(null).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
   }
   if (f.category) query = query.eq('category_id', f.category);
   if (f.tag) query = query.contains('tags', [f.tag]);
