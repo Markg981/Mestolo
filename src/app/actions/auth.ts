@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
+import { safeNextPath } from '@/lib/safe-redirect';
 import { RateLimitedError, clientIpHash, enforceRateLimit, hashKey, type LimitName } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
 import { fail, type ErrorCode } from './_utils';
@@ -28,10 +29,6 @@ const credentials = z.object({
   email: z.email().max(320),
   password: z.string().min(8).max(200),
 });
-
-function safeNext(next: unknown): string {
-  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/';
-}
 
 async function setLocaleCookie(locale: string | undefined) {
   if (isLocale(locale)) {
@@ -56,7 +53,7 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
   }
   const { data: profile } = await supabase.from('profiles').select('locale').eq('id', data.user.id).maybeSingle();
   await setLocaleCookie(profile?.locale);
-  redirect(safeNext(formData.get('next')));
+  redirect(safeNextPath(formData.get('next')));
 }
 
 const signUpSchema = credentials.extend({
