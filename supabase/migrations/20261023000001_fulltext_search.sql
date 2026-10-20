@@ -43,7 +43,7 @@ create index recipes_tags_idx on public.recipes using gin (tags);
 create index recipes_needs_review_idx on public.recipes (owner_id) where verification_status = 'needs_review';
 
 -- Cerca ricette. Security invoker: la RLS di recipes si applica a chi chiama.
--- Ogni parola e' un prefisso (AND); in alternativa basta un titolo simile (trigram).
+-- Ogni parola e' un prefisso (AND); con una sola parola basta anche un titolo simile (trigram, tolleranza ai refusi).
 -- Paginazione: p_limit/p_offset oppure cursore keyset (p_after_created_at, p_after_id).
 -- Ordine: created_at desc, id desc (coerente con il cursore).
 create or replace function public.search_recipes(
@@ -61,9 +61,10 @@ language plpgsql stable security invoker set search_path = public as $$
 declare
   norm text := lower(public.f_unaccent(coalesce(p_query, '')));
   tsq tsquery;
+  n int;
 begin
-  select to_tsquery('simple', string_agg(w || ':*', ' & '))
-    into tsq
+  select to_tsquery('simple', string_agg(w || ':*', ' & ')), count(*)
+    into tsq, n
     from (select w from regexp_split_to_table(norm, '[^[:alnum:]]+') w where w <> '' limit 6) s;
 
   return query
@@ -73,7 +74,7 @@ begin
       and (p_tag is null or r.tags @> array[p_tag])
       and (not p_needs_review or r.verification_status = 'needs_review')
       and (tsq is null or r.search_tsv @@ tsq
-           or public.f_unaccent(lower(r.title)) operator(public.%) norm)
+           or (n = 1 and public.f_unaccent(lower(r.title)) operator(public.%) norm))
       and (p_after_created_at is null or (r.created_at, r.id) < (p_after_created_at, coalesce(p_after_id, 'ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid)))
     order by r.created_at desc, r.id desc
     limit least(greatest(p_limit, 1), 200) offset greatest(p_offset, 0);
