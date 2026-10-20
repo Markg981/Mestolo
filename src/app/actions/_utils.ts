@@ -4,7 +4,7 @@ import { RateLimitedError } from '@/lib/rate-limit';
 import { AiError } from '@/lib/ai/providers';
 import { UnsafeUrlError } from '@/lib/import/ssrf';
 import { FetchFailedError } from '@/lib/import/safe-fetch';
-import { redactSecrets } from '@/lib/crypto/secrets';
+import { EncryptionConfigError, SecretDecryptionError, redactSecrets } from '@/lib/crypto/secrets';
 
 /** Error codes map to messages under "errors.<code>" in the i18n files. */
 export type ErrorCode =
@@ -58,6 +58,15 @@ export function fail(error: ErrorCode, detail?: string): { ok: false; error: Err
 export function toFailure(e: unknown, context: string): { ok: false; error: ErrorCode } {
   if (e instanceof RateLimitedError) return fail('rate_limited');
   if (e instanceof ConfigError) return fail('config');
+  if (e instanceof EncryptionConfigError) {
+    console.error(`[mestolo] ${context}: ${redactSecrets(e.message)}`);
+    return fail('config');
+  }
+  if (e instanceof SecretDecryptionError) {
+    // The saved personal key is unreadable: the user has to enter it again.
+    console.error(`[mestolo] ${context}: ${redactSecrets(e.message)}`);
+    return fail('ai_invalid_key');
+  }
   if (e instanceof AiError) {
     const map: Record<string, ErrorCode> = {
       not_configured: 'ai_not_configured',

@@ -12,7 +12,14 @@ export interface EncryptedSecret {
   authTag: string;
 }
 
-export class EncryptionConfigError extends Error {}
+export class EncryptionConfigError extends Error {
+  override name = 'EncryptionConfigError';
+}
+
+/** The stored secret cannot be decrypted (wrong master key, wrong user/provider, corrupted data). */
+export class SecretDecryptionError extends Error {
+  override name = 'SecretDecryptionError';
+}
 
 export function loadEncryptionKey(b64: string | undefined): Buffer {
   if (!b64) throw new EncryptionConfigError('APP_ENCRYPTION_KEY is not set');
@@ -30,10 +37,15 @@ export function encryptSecret(plaintext: string, key: Buffer, aad: string): Encr
 }
 
 export function decryptSecret(secret: EncryptedSecret, key: Buffer, aad: string): string {
-  const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(secret.iv, 'base64'));
-  decipher.setAAD(Buffer.from(aad, 'utf8'));
-  decipher.setAuthTag(Buffer.from(secret.authTag, 'base64'));
-  return Buffer.concat([decipher.update(Buffer.from(secret.ciphertext, 'base64')), decipher.final()]).toString('utf8');
+  try {
+    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(secret.iv, 'base64'));
+    decipher.setAAD(Buffer.from(aad, 'utf8'));
+    decipher.setAuthTag(Buffer.from(secret.authTag, 'base64'));
+    return Buffer.concat([decipher.update(Buffer.from(secret.ciphertext, 'base64')), decipher.final()]).toString('utf8');
+  } catch {
+    // Never forward the original message: keep the error free of any key material.
+    throw new SecretDecryptionError('Unable to decrypt the stored secret');
+  }
 }
 
 export function keyAad(userId: string, provider: string): string {
