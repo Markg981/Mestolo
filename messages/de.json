@@ -196,7 +196,8 @@
     "emptyTitle": "Noch keine Rezepte",
     "empty": "Füge dein erstes hinzu: schreib es auf, fotografiere es oder importiere es per Link.",
     "noResultsTitle": "Keine Ergebnisse",
-    "noResults": "Versuch es mit weniger Filtern oder einem anderen Begriff."
+    "noResults": "Versuch es mit weniger Filtern oder einem anderen Begriff.",
+    "resultsCountMore": "{count, plural, other {# oder mehr Rezepte}}"
   },
   "visibility": {
     "label": "Wer es sehen kann",
@@ -882,5 +883,12 @@
     "accountTitle": "Konto",
     "account": "Bei schweren oder wiederholten Verstößen kann das Konto gesperrt oder gelöscht werden. Du kannst dein Konto und alle deine Daten jederzeit in den Einstellungen löschen.",
     "operatorNote": "Der Betreiber dieser Installation kann diese Regeln um eigene Nutzungsbedingungen ergänzen."
+  },
+  "pagination": {
+    "loadMore": "Weitere Rezepte laden",
+    "loading": "Wird geladen…",
+    "end": "Du hast das Ende erreicht.",
+    "error": "Weitere Rezepte konnten nicht geladen werden. Prüfe deine Verbindung.",
+    "retry": "Erneut versuchen"
   }
 }

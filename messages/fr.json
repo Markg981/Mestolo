@@ -196,7 +196,8 @@
     "emptyTitle": "Aucune recette pour l'instant",
     "empty": "Ajoutez la première : vous pouvez l'écrire, la photographier ou l'importer depuis un lien.",
     "noResultsTitle": "Aucun résultat",
-    "noResults": "Essayez avec moins de filtres ou un autre mot."
+    "noResults": "Essayez avec moins de filtres ou un autre mot.",
+    "resultsCountMore": "{count, plural, other {# recettes ou plus}}"
   },
   "visibility": {
     "label": "Qui peut la voir",
@@ -882,5 +883,12 @@
     "accountTitle": "Compte",
     "account": "En cas de violations graves ou répétées, le compte peut être suspendu ou supprimé. Vous pouvez supprimer votre compte et toutes vos données à tout moment depuis les paramètres.",
     "operatorNote": "L'exploitant de cette installation peut compléter ces règles par ses propres conditions d'utilisation."
+  },
+  "pagination": {
+    "loadMore": "Charger plus de recettes",
+    "loading": "Chargement…",
+    "end": "Vous êtes arrivé à la fin.",
+    "error": "Impossible de charger d'autres recettes. Vérifiez votre connexion.",
+    "retry": "Réessayer"
   }
 }

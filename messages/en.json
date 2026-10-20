@@ -196,7 +196,8 @@
     "emptyTitle": "No recipes yet",
     "empty": "Add your first one: type it, snap a photo, or import it from a link.",
     "noResultsTitle": "No results",
-    "noResults": "Try fewer filters or a different word."
+    "noResults": "Try fewer filters or a different word.",
+    "resultsCountMore": "{count, plural, other {# or more recipes}}"
   },
   "visibility": {
     "label": "Who can see it",
@@ -882,5 +883,12 @@
     "accountTitle": "Account",
     "account": "Serious or repeated violations can lead to your account being suspended or deleted. You can delete your account and all your data at any time from settings.",
     "operatorNote": "The operator of this installation may supplement these rules with their own terms of service."
+  },
+  "pagination": {
+    "loadMore": "Load more recipes",
+    "loading": "Loading…",
+    "end": "You have reached the end.",
+    "error": "Could not load more recipes. Check your connection.",
+    "retry": "Try again"
   }
 }
