@@ -955,5 +955,20 @@
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
     "noSteps": "Cette recette n’a pas encore d’étapes."
+  },
+  "feed": {
+    "tabs": "Sections de la communauté",
+    "forYou": "Pour vous",
+    "recent": "Récentes",
+    "why": "Pourquoi vous la voyez :",
+    "reasonFriend": "un de vos amis l'a publiée",
+    "reasonTags": "vous aimez : {tags}",
+    "reasonCategory": "vous aimez la catégorie {category}",
+    "reasonPopular": "elle est populaire dans la communauté",
+    "reasonNew": "c'est une nouveauté de la communauté",
+    "coldStart": "Nous ne connaissons pas encore vos goûts : voici les recettes les plus appréciées et les plus récentes. Enregistrez ou publiez quelques recettes pour recevoir des suggestions sur mesure.",
+    "emptyTitle": "Aucune suggestion pour le moment",
+    "empty": "Dès que de nouvelles recettes publiques ou de vos amis arriveront, vous les trouverez ici.",
+    "seeRecent": "Voir les plus récentes"
   }
 }

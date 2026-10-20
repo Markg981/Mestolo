@@ -955,5 +955,20 @@
     "voiceDenied": "Microfone não permitido: comandos de voz desativados.",
     "wakeUnsupported": "O ecrã pode apagar-se: manter o ecrã ligado não é suportado aqui.",
     "noSteps": "Esta receita ainda não tem passos."
+  },
+  "feed": {
+    "tabs": "Secções da comunidade",
+    "forYou": "Para ti",
+    "recent": "Recentes",
+    "why": "Porque vês isto:",
+    "reasonFriend": "um amigo teu publicou-a",
+    "reasonTags": "gostas de: {tags}",
+    "reasonCategory": "gostas da categoria {category}",
+    "reasonPopular": "é popular na comunidade",
+    "reasonNew": "é uma novidade da comunidade",
+    "coldStart": "Ainda não conhecemos os teus gostos: aqui estão as receitas mais apreciadas e mais recentes. Guarda ou publica algumas receitas para receber sugestões à medida.",
+    "emptyTitle": "Sem sugestões por agora",
+    "empty": "Quando houver novas receitas públicas ou dos teus amigos, vais encontrá-las aqui.",
+    "seeRecent": "Ver as mais recentes"
   }
 }

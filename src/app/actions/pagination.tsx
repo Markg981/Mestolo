@@ -3,6 +3,8 @@
 import type { ReactNode } from 'react';
 import { getUser } from '@/lib/supabase/server';
 import { discover } from '@/lib/data/discover';
+import { listFeed } from '@/lib/data/feed';
+import { FeedGrid } from '@/components/recipes/FeedGrid';
 import { listCategories, listMyRecipesPage, parseRecipeFilters } from '@/lib/data/recipes';
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
 
@@ -30,6 +32,12 @@ export async function loadMoreMyRecipes(params: RecipesParams, cursor: string): 
       </RecipeGrid>
     ),
   };
+}
+
+export async function loadMoreFeed(cursor: string): Promise<MorePage> {
+  if (!(await getUser()) || typeof cursor !== 'string') return EMPTY;
+  const [categories, page] = await Promise.all([listCategories(), listFeed({ cursor })]);
+  return { nextCursor: page.nextCursor, content: <FeedGrid items={page.items} categories={categories} /> };
 }
 
 export async function loadMoreDiscover(params: { category?: string }, cursor: string): Promise<MorePage> {
