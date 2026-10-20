@@ -196,7 +196,8 @@
     "emptyTitle": "Ainda não há receitas",
     "empty": "Adiciona a primeira: podes escrevê-la, fotografá-la ou importá-la de um link.",
     "noResultsTitle": "Sem resultados",
-    "noResults": "Experimenta com menos filtros ou outra palavra."
+    "noResults": "Experimenta com menos filtros ou outra palavra.",
+    "resultsCountMore": "{count, plural, other {# ou mais receitas}}"
   },
   "visibility": {
     "label": "Quem pode ver",
@@ -882,5 +883,12 @@
     "accountTitle": "Conta",
     "account": "Em caso de violações graves ou repetidas, a conta pode ser suspensa ou eliminada. Podes eliminar a tua conta e todos os teus dados a qualquer momento nas definições.",
     "operatorNote": "O gestor desta instalação pode complementar estas regras com os seus próprios termos de serviço."
+  },
+  "pagination": {
+    "loadMore": "Carregar mais receitas",
+    "loading": "A carregar…",
+    "end": "Chegaste ao fim.",
+    "error": "Não foi possível carregar mais receitas. Verifica a ligação.",
+    "retry": "Tentar novamente"
   }
 }

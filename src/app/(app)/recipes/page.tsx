@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
-import { listCategories, listMyRecipes, type RecipeFilters } from '@/lib/data/recipes';
+import { listCategories, listMyRecipesPage, parseRecipeFilters } from '@/lib/data/recipes';
+import { loadMoreMyRecipes } from '@/app/actions/pagination';
+import { InfiniteList } from '@/components/recipes/InfiniteList';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
 import { EmptyState, LadleMark, LinkButton, PageHeader, Select, buttonClass, inputClass } from '@/components/ui';
@@ -16,15 +18,8 @@ type SP = { q?: string; category?: string; sort?: string; fav?: string; review?:
 export default async function RecipesPage({ searchParams }: { searchParams: Promise<SP> }) {
   const t = await getTranslations();
   const sp = await searchParams;
-  const filters: RecipeFilters = {
-    q: sp.q?.slice(0, 100),
-    category: sp.category && /^[0-9a-f-]{36}$/i.test(sp.category) ? sp.category : undefined,
-    sort: (['recent', 'updated', 'title', 'quick'] as const).find((s) => s === sp.sort) ?? 'recent',
-    favorites: sp.fav === '1',
-    review: sp.review === '1',
-    tag: sp.tag?.slice(0, 40),
-  };
-  const [categories, recipes] = await Promise.all([listCategories(), listMyRecipes(filters)]);
+  const filters = parseRecipeFilters(sp);
+  const [categories, { items: recipes, nextCursor }] = await Promise.all([listCategories(), listMyRecipesPage(filters)]);
   const filtered = !!(filters.q || filters.category || filters.favorites || filters.review || filters.tag);
 
   return (
@@ -92,16 +87,18 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
       </form>
 
       <p className="mb-4 text-sm text-muted" aria-live="polite">
-        {t('recipes.resultsCount', { count: recipes.length })}
+        {t(nextCursor ? 'recipes.resultsCountMore' : 'recipes.resultsCount', { count: recipes.length })}
         {filters.tag ? `, #${filters.tag}` : ''}
       </p>
 
       {recipes.length ? (
-        <RecipeGrid>
-          {recipes.map((r, i) => (
-            <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={filters.favorites} priority={i < 3} />
-          ))}
-        </RecipeGrid>
+        <InfiniteList key={JSON.stringify(sp)} initialCursor={nextCursor} loadMore={loadMoreMyRecipes.bind(null, sp)}>
+          <RecipeGrid>
+            {recipes.map((r, i) => (
+              <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={filters.favorites} priority={i < 3} />
+            ))}
+          </RecipeGrid>
+        </InfiniteList>
       ) : filtered ? (
         <EmptyState title={t('recipes.noResultsTitle')} action={<LinkButton href="/recipes">{t('recipes.clearFilters')}</LinkButton>}>
           {t('recipes.noResults')}

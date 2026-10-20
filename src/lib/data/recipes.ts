@@ -2,6 +2,7 @@ import 'server-only';
 import { createClient, getUser } from '@/lib/supabase/server';
 import type { CategoryRow } from '@/lib/recipes/categories';
 import type { RecipeRow } from '@/lib/recipes/types';
+import { PAGE_SIZE, applyKeyset, decodeCursor, toPage, type KeysetSort, type Page } from '@/lib/pagination';
 
 /** All reads go through the user's client: RLS decides what is visible. */
 
@@ -68,14 +69,37 @@ function escapeLike(s: string) {
   return s.replace(/[\\%_,()]/g, (m) => `\\${m}`);
 }
 
-export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListItem[]> {
-  const user = await getUser();
-  if (!user) return [];
+/** Validates raw query-string values into filters (shared by the page and the "load more" action). */
+export function parseRecipeFilters(sp: { q?: string; category?: string; sort?: string; fav?: string; review?: string; tag?: string }): RecipeFilters {
+  return {
+    q: sp.q?.slice(0, 100),
+    category: sp.category && /^[0-9a-f-]{36}$/i.test(sp.category) ? sp.category : undefined,
+    sort: (['recent', 'updated', 'title', 'quick'] as const).find((s) => s === sp.sort) ?? 'recent',
+    favorites: sp.fav === '1',
+    review: sp.review === '1',
+    tag: sp.tag?.slice(0, 40),
+  };
+}
+
+function keysetSortFor(sort: RecipeFilters['sort']): KeysetSort {
+  switch (sort) {
+    case 'title':
+      return { column: 'title', ascending: true };
+    case 'updated':
+      return { column: 'updated_at', ascending: false };
+    case 'quick':
+      return { column: 'total_minutes', ascending: true, nullable: true };
+    default:
+      return { column: 'created_at', ascending: false };
+  }
+}
+
+async function buildMyRecipesQuery(f: RecipeFilters, userId: string) {
   const supabase = await createClient();
-  let query = supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', user.id);
+  let query = supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', userId);
 
   if (f.favorites) {
-    const { data: favs } = await supabase.from('favorites').select('recipe_id').eq('user_id', user.id);
+    const { data: favs } = await supabase.from('favorites').select('recipe_id').eq('user_id', userId);
     const ids = (favs ?? []).map((x: { recipe_id: string }) => x.recipe_id);
     // favourites may include recipes of other people: query them without the owner filter
     query = supabase.from('recipes').select(LIST_COLUMNS).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
@@ -88,21 +112,30 @@ export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListIt
   if (f.category) query = query.eq('category_id', f.category);
   if (f.tag) query = query.contains('tags', [f.tag]);
   if (f.review) query = query.eq('verification_status', 'needs_review');
-  switch (f.sort) {
-    case 'title':
-      query = query.order('title');
-      break;
-    case 'updated':
-      query = query.order('updated_at', { ascending: false });
-      break;
-    case 'quick':
-      query = query.order('total_minutes', { ascending: true, nullsFirst: false });
-      break;
-    default:
-      query = query.order('created_at', { ascending: false });
-  }
-  const { data } = await query.limit(f.limit ?? 120);
+  // wrapped: a bare query builder is thenable and would be executed by the `await` of the async function
+  return { query };
+}
+
+/** First N recipes of the user (home page widgets). */
+export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListItem[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const { query } = await buildMyRecipesQuery(f, user.id);
+  const sort = keysetSortFor(f.sort);
+  const { data } = await query.order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order('id', { ascending: sort.ascending }).limit(f.limit ?? 120);
   return attachCovers((data as RecipeListItem[]) ?? []);
+}
+
+/** One page of the user's recipes, keyset-paginated on the chosen sort (+ id as tie-breaker). */
+export async function listMyRecipesPage(f: RecipeFilters = {}, cursor?: string | null): Promise<Page<RecipeListItem>> {
+  const user = await getUser();
+  if (!user) return { items: [], nextCursor: null };
+  const { query } = await buildMyRecipesQuery(f, user.id);
+  const sort = keysetSortFor(f.sort);
+  const pageSize = f.limit ?? PAGE_SIZE;
+  const { data } = await applyKeyset(query, sort, decodeCursor(cursor), pageSize);
+  const page = toPage((data as RecipeListItem[]) ?? [], sort, pageSize);
+  return { items: await attachCovers(page.items), nextCursor: page.nextCursor };
 }
 
 export interface RecipeDetail {

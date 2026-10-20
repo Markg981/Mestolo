@@ -196,7 +196,8 @@
     "emptyTitle": "Nessuna ricetta, per ora",
     "empty": "Aggiungi la prima: puoi scriverla, fotografarla o importarla da un link.",
     "noResultsTitle": "Nessun risultato",
-    "noResults": "Prova con meno filtri o un'altra parola."
+    "noResults": "Prova con meno filtri o un'altra parola.",
+    "resultsCountMore": "{count, plural, other {# o più ricette}}"
   },
   "visibility": {
     "label": "Chi può vederla",
@@ -882,5 +883,12 @@
     "accountTitle": "Account",
     "account": "In caso di violazioni gravi o ripetute l'account può essere sospeso o eliminato. Puoi eliminare il tuo account e tutti i tuoi dati in qualsiasi momento dalle impostazioni.",
     "operatorNote": "Il gestore di questa installazione può integrare queste regole con i propri termini di servizio."
+  },
+  "pagination": {
+    "loadMore": "Carica altre ricette",
+    "loading": "Caricamento…",
+    "end": "Hai raggiunto la fine.",
+    "error": "Impossibile caricare altre ricette. Controlla la connessione.",
+    "retry": "Riprova"
   }
 }
