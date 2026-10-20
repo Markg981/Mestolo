@@ -897,5 +897,31 @@
     "end": "You have reached the end.",
     "error": "Could not load more recipes. Check your connection.",
     "retry": "Try again"
+  },
+  "cook": {
+    "start": "Cook",
+    "exit": "Exit cooking mode",
+    "regionLabel": "Cooking mode: {title}",
+    "ingredients": "Ingredients",
+    "closeIngredients": "Close ingredients",
+    "progress": "Progress",
+    "stepOf": "Step {n} of {total}",
+    "navigation": "Step navigation",
+    "prev": "Back",
+    "next": "Next",
+    "timers": "Timers",
+    "activeTimers": "Active timers",
+    "timerStart": "Start timer {label}",
+    "timerStop": "Stop timer {label}",
+    "timerStarted": "Timer started: {label}",
+    "timerDone": "Timer finished: {label}",
+    "timerEnded": "Done",
+    "timerDismiss": "Dismiss timer {label}",
+    "voiceOn": "Turn on voice commands (next / back)",
+    "voiceOff": "Turn off voice commands",
+    "listening": "Listening: say “next” or “back”",
+    "voiceDenied": "Microphone not allowed: voice commands turned off.",
+    "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
+    "noSteps": "This recipe has no steps yet."
   }
 }

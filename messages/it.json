@@ -897,5 +897,31 @@
     "end": "Hai raggiunto la fine.",
     "error": "Impossibile caricare altre ricette. Controlla la connessione.",
     "retry": "Riprova"
+  },
+  "cook": {
+    "start": "Cucina",
+    "exit": "Esci dalla modalità cucina",
+    "regionLabel": "Modalità cucina: {title}",
+    "ingredients": "Ingredienti",
+    "closeIngredients": "Chiudi ingredienti",
+    "progress": "Avanzamento",
+    "stepOf": "Passo {n} di {total}",
+    "navigation": "Navigazione dei passi",
+    "prev": "Indietro",
+    "next": "Avanti",
+    "timers": "Timer",
+    "activeTimers": "Timer attivi",
+    "timerStart": "Avvia timer {label}",
+    "timerStop": "Ferma timer {label}",
+    "timerStarted": "Timer avviato: {label}",
+    "timerDone": "Timer finito: {label}",
+    "timerEnded": "Finito",
+    "timerDismiss": "Chiudi timer {label}",
+    "voiceOn": "Attiva comandi vocali (avanti / indietro)",
+    "voiceOff": "Disattiva comandi vocali",
+    "listening": "In ascolto: di' «avanti» o «indietro»",
+    "voiceDenied": "Microfono non consentito: comandi vocali disattivati.",
+    "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
+    "noSteps": "Questa ricetta non ha ancora un procedimento."
   }
 }

@@ -897,5 +897,31 @@
     "end": "Du hast das Ende erreicht.",
     "error": "Weitere Rezepte konnten nicht geladen werden. Prüfe deine Verbindung.",
     "retry": "Erneut versuchen"
+  },
+  "cook": {
+    "start": "Kochen",
+    "exit": "Kochmodus beenden",
+    "regionLabel": "Kochmodus: {title}",
+    "ingredients": "Zutaten",
+    "closeIngredients": "Zutaten schließen",
+    "progress": "Fortschritt",
+    "stepOf": "Schritt {n} von {total}",
+    "navigation": "Schrittnavigation",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "timers": "Timer",
+    "activeTimers": "Aktive Timer",
+    "timerStart": "Timer {label} starten",
+    "timerStop": "Timer {label} stoppen",
+    "timerStarted": "Timer gestartet: {label}",
+    "timerDone": "Timer abgelaufen: {label}",
+    "timerEnded": "Fertig",
+    "timerDismiss": "Timer {label} schließen",
+    "voiceOn": "Sprachbefehle aktivieren (weiter / zurück)",
+    "voiceOff": "Sprachbefehle deaktivieren",
+    "listening": "Ich höre zu: sagen Sie „weiter“ oder „zurück“",
+    "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
+    "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
+    "noSteps": "Dieses Rezept hat noch keine Schritte."
   }
 }

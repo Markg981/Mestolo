@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Clock, ExternalLink, Users } from 'lucide-react';
+import { ChefHat, Clock, ExternalLink, Users } from 'lucide-react';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { getRecipeDetail, listCollections } from '@/lib/data/recipes';
 import { capabilityStatus } from '@/lib/ai/service';
@@ -13,7 +13,8 @@ import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { IngredientList } from '@/components/recipes/IngredientList';
 import { RecipeActions } from '@/components/recipes/RecipeActions';
 import { ImagePrompt, NoteEditor, TranslateBanner, type AiStatusProps } from '@/components/recipes/RecipeIslands';
-import { Alert, Badge } from '@/components/ui';
+import { CookPrefetch } from '@/components/cooking/CookPrefetch';
+import { Alert, Badge, LinkButton } from '@/components/ui';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -139,6 +140,13 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
               ))}
             </ul>
           )}
+          {(recipe.steps?.length ?? 0) > 0 && (
+            <LinkButton href={`/recipes/${id}/cook`} variant="primary" size="lg" className="self-start">
+              <ChefHat aria-hidden className="size-5" />
+              {t('cook.start')}
+            </LinkButton>
+          )}
+          {(recipe.steps?.length ?? 0) > 0 && <CookPrefetch recipeId={id} />}
           <RecipeActions
             recipeId={id}
             isOwner={isOwner}
