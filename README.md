@@ -27,7 +27,7 @@ Ricettario **web, Android e iOS** con un solo codice (Next.js + Capacitor), mult
 - **Versioni**: ogni modifica di contenuto crea una versione (trigger); la versione 1 è sempre l'originale. Nessuna modifica silenziosa.
 - **Chiavi API utente**: cifrate AES-256-GCM con `APP_ENCRYPTION_KEY` (fuori dal DB), legate a utente+provider (AAD), tabella inaccessibile ai client, mai restituite al browser né loggate.
 - **Import da URL protetto contro SSRF**: solo http/https sulle porte 80/443, niente credenziali nell'URL, blocco di IP privati/loopback/link-local/CGNAT/metadata cloud/IPv4-mapped/NAT64, **ri-validazione DNS al momento della connessione** (anti DNS-rebinding), redirect validati uno per uno (max 4), timeout e limite di dimensione.
-- **Rate limiting** (tabella + funzione SQL, solo service role) su login, registrazione, recupero password, import, AI, traduzioni, immagini, richieste di amicizia, segnalazioni, chiavi.
+- **Rate limiting** (tabella + funzione SQL, solo service role; richieste di amicizia 30/giorno e segnalazioni 20/giorno sono imposte anche da trigger nel database) su login, registrazione, recupero password, import, AI, traduzioni, immagini, richieste di amicizia, segnalazioni, chiavi.
 - Header di sicurezza e **Content-Security-Policy**; il browser parla solo con il nostro server.
 - Log senza contenuti delle ricette, foto, token o chiavi (`redactSecrets`).
 
