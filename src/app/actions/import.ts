@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
+import { decodeHtml } from '@/lib/import/decode-html';
 import { recipeFromHtml } from '@/lib/import/recipe-from-html';
 import { parseRecipeText } from '@/lib/recipes/text-parser';
 import { suggestCategory } from '@/lib/recipes/classify';
@@ -30,7 +31,7 @@ export async function importFromUrl(rawUrl: string): Promise<ActionResult<UrlImp
       maxBytes: 3 * 1024 * 1024,
       allowedContentTypes: /text\/html|application\/xhtml\+xml/i,
     });
-    const html = res.body.toString('utf8');
+    const html = decodeHtml(res.body, res.contentType);
     const { draft, pageText } = recipeFromHtml(html, res.finalUrl);
     if (!draft) return ok({ draft: null, pageText: pageText.slice(0, 8000) });
     if (res.truncated) draft.warnings.push({ code: 'partial_content' });
