@@ -1,3 +1,4 @@
+import type { NutritionValues } from '@/lib/nutrition';
 export const VISIBILITIES = ['private', 'friends', 'public'] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
 
@@ -89,6 +90,8 @@ export interface ImportDraft {
     method?: 'jsonld' | 'microdata' | 'text' | 'ai' | 'heuristic';
   };
   categoryConfidence?: number;
+  /** Per-serving values found in schema.org NutritionInformation (saved with source 'imported'). */
+  nutrition?: NutritionValues | null;
 }
 
 export interface ImportWarning {

@@ -55,5 +55,7 @@ export interface EditorProps {
   /** extra content shown next to the form (e.g. the photographed pages) */
   aside?: React.ReactNode;
   categoryAutoSuggested?: boolean;
+  /** per-serving values found by the importer: saved with source 'imported' (editable afterwards) */
+  importedNutrition?: import('@/lib/nutrition').NutritionValues | null;
   onBack?: () => void;
 }

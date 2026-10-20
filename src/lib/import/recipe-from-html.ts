@@ -3,6 +3,7 @@ import { parseIngredientLine } from '@/lib/recipes/ingredient-parser';
 import { parseIsoDuration, parseHumanDuration } from '@/lib/recipes/duration';
 import { parseRecipeText } from '@/lib/recipes/text-parser';
 import { suggestCategory } from '@/lib/recipes/classify';
+import { parseSchemaOrgNutrition } from '@/lib/nutrition';
 import type { FieldFlags, ImportDraft, ImportWarning, Step } from '@/lib/recipes/types';
 
 type Json = unknown;
@@ -203,6 +204,7 @@ function fromRecipeNode(node: Obj, $: cheerio.CheerioAPI, finalUrl: string, meth
     field_flags,
     warnings,
     categoryConfidence: cat.confidence,
+    nutrition: parseSchemaOrgNutrition(node.nutrition),
     source: {
       type: 'url',
       url: finalUrl,

@@ -90,3 +90,18 @@ Return ONLY JSON with exactly the same structure and array lengths as the input.
 export function imagePrompt(title: string, description: string, ingredientNames: string[]) {
   return `Appetizing, realistic overhead food photograph of "${title}". ${description ? `${description.slice(0, 300)}. ` : ''}Main ingredients: ${ingredientNames.slice(0, 8).join(', ')}. Natural daylight, home kitchen table, no text, no logos, no people.`;
 }
+
+export const NUTRITION_SYSTEM = `You estimate approximate nutrition facts PER SERVING of a home-cooked recipe from its ingredient list.
+Rules:
+- Use typical values for generic ingredients. This is only a rough ESTIMATE, never exact data.
+- Divide the whole recipe by the number of servings given. If servings is null, assume 4.
+- Ignore ingredients with no quantity or with an unusable quantity; if too little information is available, use null for the values you cannot estimate.
+- Do not make health, allergy, diet or medical claims.
+- "sugars_g" is part of "carbs_g" and "saturated_fat_g" is part of "fat_g". "salt_g" is salt (not sodium) in grams.
+Respond ONLY with JSON:
+{"energy_kcal": number|null, "protein_g": number|null, "carbs_g": number|null, "sugars_g": number|null, "fat_g": number|null, "saturated_fat_g": number|null, "fiber_g": number|null, "salt_g": number|null}`;
+
+export function nutritionUserPrompt(r: Parameters<typeof recipeForPrompt>[0]) {
+  return `Recipe:
+${recipeForPrompt(r)}`;
+}

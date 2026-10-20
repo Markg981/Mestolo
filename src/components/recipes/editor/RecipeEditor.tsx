@@ -49,7 +49,7 @@ function storageSet(key: string, value: string | null) {
   }
 }
 
-export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, source, warnings, aside, categoryAutoSuggested, onBack }: EditorProps) {
+export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
   const t = useTranslations('editor');
   const tc = useTranslations('common');
   const tu = useTranslations('units');
@@ -221,6 +221,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
       source_url: mode === 'review' ? source?.url ?? null : null,
       source_name: mode === 'review' ? source?.name ?? null : null,
       source_attribution: mode === 'review' ? source?.attribution ?? null : null,
+      nutrition: mode === 'review' ? importedNutrition ?? null : null,
     };
     startSaving(async () => {
       const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);

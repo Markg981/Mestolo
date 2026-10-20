@@ -343,6 +343,58 @@
     "hiddenTitle": "Recette masquée par la modération",
     "hiddenLead": "Suite à plusieurs signalements, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, contactez l'assistance."
   },
+  "nutrition": {
+    "title": "Valeurs nutritionnelles",
+    "perServing": "Par portion",
+    "forPortions": "Pour {count, plural, one {# portion} other {# portions}}",
+    "portions": "Nombre de portions",
+    "fewer": "Moins de portions",
+    "more": "Plus de portions",
+    "recipeServings": "(la recette est prévue pour {count, plural, one {# portion} other {# portions}})",
+    "kcal": "kcal",
+    "gram": "g",
+    "field": {
+      "energy": "Énergie",
+      "protein": "Protéines",
+      "carbs": "Glucides",
+      "sugars": "dont sucres",
+      "fat": "Lipides",
+      "saturated": "dont saturés",
+      "fiber": "Fibres",
+      "salt": "Sel"
+    },
+    "source": {
+      "manual": "Saisies par le propriétaire",
+      "imported": "Importées de la source",
+      "ai_estimate": "Estimation IA"
+    },
+    "note": {
+      "manual": "Valeurs saisies par le propriétaire de la recette.",
+      "imported": "Valeurs déclarées par le site d'où la recette a été importée : elles n'ont pas été vérifiées.",
+      "ai_estimate": "Estimation générée par intelligence artificielle : elle est purement indicative, ce n'est pas une donnée certaine."
+    },
+    "updatedOn": "Mises à jour le {date}.",
+    "edit": "Modifier les valeurs",
+    "add": "Ajouter les valeurs nutritionnelles",
+    "editorTitle": "Valeurs nutritionnelles",
+    "editorLead": "Valeurs par portion de « {title} ». Vous pouvez les modifier à tout moment.",
+    "back": "Retour à la recette",
+    "currentSource": "Source actuelle :",
+    "perServingHint": "Saisissez les valeurs pour une portion. Les champs laissés vides restent non renseignés.",
+    "save": "Enregistrer",
+    "saved": "Valeurs enregistrées.",
+    "removed": "Valeurs supprimées.",
+    "remove": "Supprimer les valeurs",
+    "removeConfirm": "Supprimer les valeurs nutritionnelles de cette recette ?",
+    "estimate": "Estimer avec l'IA",
+    "estimateHint": "L'estimation IA est purement indicative : vérifiez-la et corrigez-la avant d'enregistrer. Si vous la modifiez, la source devient « saisies par le propriétaire ».",
+    "estimateReady": "Estimation prête, pas encore enregistrée. Vérifiez-la et appuyez sur Enregistrer.",
+    "aiUnavailable": "L'estimation par IA n'est pas disponible : ajoutez votre propre clé dans les réglages IA.",
+    "invalidEmpty": "Saisissez au moins une valeur.",
+    "invalidSugars": "Les sucres ne peuvent pas dépasser les glucides.",
+    "invalidSaturated": "Les graisses saturées ne peuvent pas dépasser les lipides.",
+    "invalidValue": "L'une des valeurs n'est pas valide."
+  },
   "translate": {
     "banner": "Cette recette est en {language}.",
     "translateTo": "Traduire en {language}",

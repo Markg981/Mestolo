@@ -343,6 +343,58 @@
     "hiddenTitle": "Ricetta nascosta dalla moderazione",
     "hiddenLead": "Dopo alcune segnalazioni questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore, contatta il supporto."
   },
+  "nutrition": {
+    "title": "Valori nutrizionali",
+    "perServing": "Per porzione",
+    "forPortions": "Per {count, plural, one {# porzione} other {# porzioni}}",
+    "portions": "Numero di porzioni",
+    "fewer": "Meno porzioni",
+    "more": "Più porzioni",
+    "recipeServings": "(la ricetta è per {count, plural, one {# porzione} other {# porzioni}})",
+    "kcal": "kcal",
+    "gram": "g",
+    "field": {
+      "energy": "Energia",
+      "protein": "Proteine",
+      "carbs": "Carboidrati",
+      "sugars": "di cui zuccheri",
+      "fat": "Grassi",
+      "saturated": "di cui saturi",
+      "fiber": "Fibre",
+      "salt": "Sale"
+    },
+    "source": {
+      "manual": "Inseriti dal proprietario",
+      "imported": "Importati dalla fonte",
+      "ai_estimate": "Stima AI"
+    },
+    "note": {
+      "manual": "Valori inseriti dal proprietario della ricetta.",
+      "imported": "Valori dichiarati dal sito da cui è stata importata la ricetta: non sono stati verificati.",
+      "ai_estimate": "Stima generata dall'intelligenza artificiale: è solo indicativa, non un dato certo."
+    },
+    "updatedOn": "Aggiornati il {date}.",
+    "edit": "Modifica i valori",
+    "add": "Aggiungi i valori nutrizionali",
+    "editorTitle": "Valori nutrizionali",
+    "editorLead": "Valori per porzione di «{title}». Puoi modificarli in qualsiasi momento.",
+    "back": "Torna alla ricetta",
+    "currentSource": "Fonte attuale:",
+    "perServingHint": "Inserisci i valori per una porzione. I campi lasciati vuoti restano non indicati.",
+    "save": "Salva",
+    "saved": "Valori salvati.",
+    "removed": "Valori eliminati.",
+    "remove": "Elimina i valori",
+    "removeConfirm": "Eliminare i valori nutrizionali di questa ricetta?",
+    "estimate": "Stima con AI",
+    "estimateHint": "La stima AI è solo indicativa: controllala e correggila prima di salvare. Se la modifichi, la fonte diventa «inseriti dal proprietario».",
+    "estimateReady": "Stima pronta, non ancora salvata. Controllala e premi Salva.",
+    "aiUnavailable": "La stima con AI non è disponibile: configura una tua chiave nelle impostazioni AI.",
+    "invalidEmpty": "Inserisci almeno un valore.",
+    "invalidSugars": "Gli zuccheri non possono superare i carboidrati.",
+    "invalidSaturated": "I grassi saturi non possono superare i grassi.",
+    "invalidValue": "Uno dei valori non è valido."
+  },
   "translate": {
     "banner": "Questa ricetta è in {language}.",
     "translateTo": "Traduci in {language}",

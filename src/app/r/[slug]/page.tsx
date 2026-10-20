@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { Clock, Users } from 'lucide-react';
 import { getUser } from '@/lib/supabase/server';
 import { getPublicRecipe } from '@/lib/data/public-recipes';
+import { getPublicRecipeNutrition } from '@/lib/data/nutrition';
+import { nutritionJsonLd } from '@/lib/nutrition';
 import { env } from '@/lib/env';
 import { LOCALES } from '@/i18n/config';
 import { buildRecipeJsonLd, metaDescription, publicImageUrl, publicRecipePath, publicRecipeUrl, serializeJsonLd } from '@/lib/recipes/public-page';
@@ -53,7 +55,12 @@ export default async function PublicRecipePage({ params }: Params) {
     ['cook', r.cook_minutes],
     ['total', r.total_minutes],
   ] as const;
-  const jsonLd = buildRecipeJsonLd(r, { siteUrl: env().siteUrl, categoryName: r.category_slug ? categoryLabel({ slug: r.category_slug, name: null, owner_id: null }, t) : null });
+  const nutrition = await getPublicRecipeNutrition(slug).catch(() => null);
+  // Le stime AI non vengono pubblicate nei dati strutturati: schema.org non puo' dichiararle come stime.
+  const jsonLd = {
+    ...buildRecipeJsonLd(r, { siteUrl: env().siteUrl, categoryName: r.category_slug ? categoryLabel({ slug: r.category_slug, name: null, owner_id: null }, t) : null }),
+    nutrition: nutrition && nutrition.source !== 'ai_estimate' ? nutritionJsonLd(nutrition) : undefined,
+  };
   const path = publicRecipePath(r.slug);
 
   const groups: { section: string | null; items: string[] }[] = [];
