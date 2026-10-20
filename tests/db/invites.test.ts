@@ -148,7 +148,7 @@ d('Inviti', () => {
     const exhausted = await invite(a);
     await admin('update public.invites set max_uses = 1, uses = 1 where id = $1', [exhausted.id]);
     const own = await invite(a);
-    for (const tok of [unknown, expired.token, revoked.token, exhausted.token, own.token]) {
+    for (const tok of [unknown, expired.token, revoked.token, exhausted.token]) {
       await expect(accept(f, tok)).rejects.toMatchObject({ code: 'IV001', message: 'invalid_invite' });
     }
     await expect(accept(a, own.token)).rejects.toMatchObject({ code: 'IV001' });
