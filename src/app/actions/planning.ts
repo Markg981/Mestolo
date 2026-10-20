@@ -5,7 +5,9 @@ import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { planShoppingMerge } from '@/lib/shopping/merge';
 import { scaleIngredients } from '@/lib/recipes/scale';
-import { weekDays } from '@/lib/plan/week';
+import { weekDays, type MealSlot } from '@/lib/plan/week';
+import { generatePlan, planCells, type Candidate, type Proposal } from '@/lib/plan/generator';
+import { normalizePrefs, prefsFromRow, prefsSchema, prefsToRow, type PrefsRow } from '@/lib/plan/preferences';
 import type { Ingredient } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
 
@@ -187,4 +189,170 @@ export async function addWeekToShopping(weekStart: string): Promise<ActionResult
   const res = await addItems(user.id, items);
   if (!res.ok) return res;
   return ok({ ...res.data, recipes: list.length });
+}
+
+// ---------- Preferenze e generatore ------------------------------------
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const slotEnum = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
+
+export async function savePlanPreferences(input: unknown): Promise<ActionResult> {
+  const user = await getUser();
+  const p = prefsSchema.safeParse(input);
+  if (!user || !p.success) return fail('invalid_input');
+  const supabase = await createClient();
+  const { error } = await supabase.from('plan_preferences').upsert({ user_id: user.id, ...prefsToRow(normalizePrefs(p.data)) });
+  if (error) return dbFailure(error, 'savePlanPreferences');
+  revalidatePath('/plan');
+  return ok();
+}
+
+/** Ricette che l'utente puo' vedere e ha gia' "in mano": sue, preferite o cucinate (RLS decide la visibilita'). */
+async function loadCandidates(userId: string): Promise<Candidate[]> {
+  const supabase = await createClient();
+  const cols = 'id, title, servings, total_minutes, prep_minutes, cook_minutes, category_id, tags, ingredients, rating_avg, rating_count';
+  const [{ data: mine }, { data: favs }, { data: logs }, { data: stars }] = await Promise.all([
+    supabase.from('recipes').select(cols).eq('owner_id', userId).eq('is_hidden', false).order('updated_at', { ascending: false }).limit(400),
+    supabase.from('favorites').select('recipe_id').eq('user_id', userId).limit(300),
+    supabase.from('cook_logs').select('recipe_id, cooked_at').eq('user_id', userId).order('cooked_at', { ascending: false }).limit(1000),
+    supabase.from('recipe_ratings').select('recipe_id, stars').eq('user_id', userId).limit(1000),
+  ]);
+  type Row = { id: string; title: string; servings: number | string | null; total_minutes: number | null; prep_minutes: number | null; cook_minutes: number | null; category_id: string | null; tags: string[] | null; ingredients: Ingredient[] | null; rating_avg: number | string | null; rating_count: number | null };
+  const rows = new Map<string, Row>(((mine as Row[]) ?? []).map((r) => [r.id, r]));
+  const favIds = new Set(((favs as { recipe_id: string }[]) ?? []).map((f) => f.recipe_id));
+  const cookLogs = (logs as { recipe_id: string; cooked_at: string }[]) ?? [];
+  const extra = [...new Set([...favIds, ...cookLogs.map((l) => l.recipe_id)])].filter((id) => !rows.has(id)).slice(0, 300);
+  if (extra.length) {
+    const { data } = await supabase.from('recipes').select(cols).in('id', extra).eq('is_hidden', false);
+    for (const r of (data as Row[]) ?? []) rows.set(r.id, r);
+  }
+  const cooked = new Map<string, { count: number; last: number }>();
+  for (const l of cookLogs) {
+    const t = Date.parse(l.cooked_at);
+    const cur = cooked.get(l.recipe_id) ?? { count: 0, last: 0 };
+    cooked.set(l.recipe_id, { count: cur.count + 1, last: Math.max(cur.last, t) });
+  }
+  const myStars = new Map(((stars as { recipe_id: string; stars: number }[]) ?? []).map((r) => [r.recipe_id, r.stars]));
+  const now = Date.now();
+  return [...rows.values()].map((r) => {
+    const c = cooked.get(r.id);
+    const minutes = r.total_minutes ?? (r.prep_minutes !== null || r.cook_minutes !== null ? (r.prep_minutes ?? 0) + (r.cook_minutes ?? 0) : null);
+    return {
+      id: r.id,
+      title: r.title,
+      totalMinutes: minutes,
+      categoryId: r.category_id,
+      tags: r.tags ?? [],
+      ingredientNames: (r.ingredients ?? []).map((i) => i.name),
+      ratingAvg: r.rating_avg === null ? null : Number(r.rating_avg),
+      ratingCount: r.rating_count ?? 0,
+      myStars: myStars.get(r.id) ?? null,
+      favorite: favIds.has(r.id),
+      cookedCount: c?.count ?? 0,
+      lastCookedDaysAgo: c ? Math.floor((now - c.last) / 86400000) : null,
+      servings: r.servings === null ? null : Number(r.servings),
+    };
+  });
+}
+
+const previewSchema = z.object({
+  weekStart: isoDate,
+  seed: z.number().int().min(0).max(4294967295),
+  /** true = considera anche le celle gia' piene (rigenera) */
+  replaceFilled: z.boolean().default(false),
+  /** rigenera una sola cella */
+  cell: z.object({ date: isoDate, slot: slotEnum }).optional(),
+  /** altre proposte dell'anteprima, per la varieta' */
+  keep: z.array(z.object({ date: isoDate, slot: slotEnum, recipeId: z.uuid() })).max(60).default([]),
+  excludeRecipeIds: z.array(z.uuid()).max(60).default([]),
+});
+
+/** Calcola un'anteprima del piano SENZA salvare nulla. */
+export async function previewPlan(input: unknown): Promise<ActionResult<{ proposals: Proposal[] }>> {
+  const user = await getUser();
+  const p = previewSchema.safeParse(input);
+  if (!user || !p.success) return fail('invalid_input');
+  const days = weekDays(p.data.weekStart);
+  if (p.data.cell && !days.includes(p.data.cell.date)) return fail('invalid_input');
+  const supabase = await createClient();
+  const [{ data: prefsRow }, { data: entries }, candidates] = await Promise.all([
+    supabase.from('plan_preferences').select('*').eq('user_id', user.id).maybeSingle(),
+    supabase.from('meal_plan_entries').select('plan_date, slot, recipe_id').eq('owner_id', user.id).gte('plan_date', days[0]).lte('plan_date', days[6]),
+    loadCandidates(user.id),
+  ]);
+  const prefs = prefsFromRow(prefsRow as PrefsRow | null);
+  const filled = (entries as { plan_date: string; slot: MealSlot; recipe_id: string | null }[]) ?? [];
+  const byRecipe = new Map(candidates.map((c) => [c.id, c]));
+  const key = (c: { date: string; slot: string }) => `${c.date}|${c.slot}`;
+  const cells = p.data.cell
+    ? [p.data.cell]
+    : planCells(days, prefs).filter((c) => (p.data.replaceFilled || !filled.some((e) => e.plan_date === c.date && e.slot === c.slot)));
+  const regenerated = new Set(cells.map(key));
+  const existing = [
+    ...filled.filter((e) => e.recipe_id && !regenerated.has(`${e.plan_date}|${e.slot}`)).map((e) => ({ cell: { date: e.plan_date, slot: e.slot }, recipeId: e.recipe_id as string, categoryId: byRecipe.get(e.recipe_id as string)?.categoryId ?? null })),
+    ...p.data.keep.filter((k) => !regenerated.has(key(k))).map((k) => ({ cell: { date: k.date, slot: k.slot }, recipeId: k.recipeId, categoryId: byRecipe.get(k.recipeId)?.categoryId ?? null })),
+  ];
+  const proposals = generatePlan({ candidates, prefs, cells, existing, seed: p.data.seed, excludeRecipeIds: p.data.excludeRecipeIds });
+  return ok({ proposals });
+}
+
+const applySchema = z.object({
+  weekStart: isoDate,
+  replaceFilled: z.boolean().default(false),
+  proposals: z.array(z.object({ date: isoDate, slot: slotEnum, recipeId: z.uuid(), servings: z.number().positive().max(1000).nullable() })).min(1).max(28),
+});
+
+/** Salva l'anteprima. Senza replaceFilled non tocca mai gli slot gia' pieni. */
+export async function applyPlan(input: unknown): Promise<ActionResult<{ saved: number; skipped: number }>> {
+  const user = await getUser();
+  const p = applySchema.safeParse(input);
+  if (!user || !p.success) return fail('invalid_input');
+  const days = weekDays(p.data.weekStart);
+  const cellKeys = new Set<string>();
+  const list = p.data.proposals.filter((x) => {
+    const k = `${x.date}|${x.slot}`;
+    if (!days.includes(x.date) || cellKeys.has(k)) return false;
+    cellKeys.add(k);
+    return true;
+  });
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from('meal_plan_entries').select('id, plan_date, slot').eq('owner_id', user.id).gte('plan_date', days[0]).lte('plan_date', days[6]);
+  const taken = (existing as { id: string; plan_date: string; slot: string }[]) ?? [];
+  const isTaken = (x: { date: string; slot: string }) => taken.some((e) => e.plan_date === x.date && e.slot === x.slot);
+  const todo = p.data.replaceFilled ? list : list.filter((x) => !isTaken(x));
+  if (!todo.length) return ok({ saved: 0, skipped: list.length });
+  const { data: recipes } = await supabase.from('recipes').select('id, title').in('id', [...new Set(todo.map((x) => x.recipeId))]);
+  const titles = new Map(((recipes as { id: string; title: string }[]) ?? []).map((r) => [r.id, r.title]));
+  const rows = todo.filter((x) => titles.has(x.recipeId)).map((x) => ({ owner_id: user.id, plan_date: x.date, slot: x.slot, recipe_id: x.recipeId, title: titles.get(x.recipeId) as string, servings: x.servings }));
+  if (p.data.replaceFilled) {
+    const ids = taken.filter((e) => rows.some((r) => r.plan_date === e.plan_date && r.slot === e.slot)).map((e) => e.id);
+    if (ids.length) {
+      const { error } = await supabase.from('meal_plan_entries').delete().in('id', ids).eq('owner_id', user.id);
+      if (error) return dbFailure(error, 'applyPlan.delete');
+    }
+  }
+  if (rows.length) {
+    const { error } = await supabase.from('meal_plan_entries').insert(rows);
+    if (error) return dbFailure(error, 'applyPlan.insert');
+  }
+  revalidatePath('/plan');
+  return ok({ saved: rows.length, skipped: list.length - rows.length });
+}
+
+const moveSchema = z.union([
+  z.object({ id: z.uuid(), plan_date: isoDate, slot: slotEnum }),
+  z.object({ id: z.uuid(), swap_with: z.uuid() }),
+]);
+
+/** Sposta una voce in un'altra cella oppure la scambia con un'altra voce (atomico, azzera il promemoria inviato). */
+export async function movePlanEntry(input: unknown): Promise<ActionResult> {
+  const user = await getUser();
+  const p = moveSchema.safeParse(input);
+  if (!user || !p.success) return fail('invalid_input');
+  const supabase = await createClient();
+  const args = 'swap_with' in p.data ? { p_entry: p.data.id, p_date: null, p_slot: null, p_swap_with: p.data.swap_with } : { p_entry: p.data.id, p_date: p.data.plan_date, p_slot: p.data.slot, p_swap_with: null };
+  const { error } = await supabase.rpc('move_plan_entry', args as never);
+  if (error) return dbFailure(error, 'movePlanEntry');
+  revalidatePath('/plan');
+  return ok();
 }
