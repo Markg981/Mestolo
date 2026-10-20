@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp, Camera, ImagePlus, RefreshCw, Trash2 } from 'lucide-react';
-import { importFromPhotos } from '@/app/actions/import';
+import { importFromPhotos, importFromText } from '@/app/actions/import';
+import { recognizePage } from '@/lib/ocr';
+import { joinPages } from '@/lib/ocr/clean';
 import { compressImage, MAX_ORIGINAL_BYTES } from '@/lib/images/client-compress';
 import { isNativeApp, takeNativePhoto } from '@/lib/native/camera';
 import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/limits';
@@ -35,6 +37,8 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [processing, setProcessing] = useState(0);
+  const [ocrText, setOcrText] = useState<string | null>(null);
+  const [ocrBusy, setOcrBusy] = useState<{ page: number; progress: number } | null>(null);
   const replaceTarget = useRef<string | null>(null);
   const replaceInput = useRef<HTMLInputElement>(null);
   const urls = useRef<string[]>([]);
@@ -137,6 +141,32 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
       else setError(te(res.error));
     });
 
+  async function runOcr() {
+    setError(null);
+    const texts: string[] = [];
+    try {
+      for (let i = 0; i < valid.length; i++) {
+        setOcrBusy({ page: i + 1, progress: 0 });
+        texts.push(await recognizePage(valid[i].blob!, locale, (progress) => setOcrBusy({ page: i + 1, progress })));
+      }
+      const joined = joinPages(texts);
+      if (joined.length < 10) setError(t('ocrEmpty'));
+      else setOcrText(joined);
+    } catch {
+      setError(t('ocrFailed'));
+    } finally {
+      setOcrBusy(null);
+    }
+  }
+
+  const parseOcr = () =>
+    start(async () => {
+      setError(null);
+      const res = await importFromText(ocrText ?? '', false, null, locale);
+      if (res.ok) setDraft({ ...res.data, source: { ...res.data.source, type: 'photo' } });
+      else setError(te(res.error));
+    });
+
   const pagesAside = valid.length ? (
     <div className="flex flex-col gap-2">
       <h2 className="font-bold">{t('yourPages')}</h2>
@@ -156,6 +186,38 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
 
   if (draft) {
     return <ImportReview draft={draft} categories={categories} draftKey="mestolo:draft:import-photo" aside={pagesAside} onBack={() => setDraft(null)} />;
+  }
+
+  if (ocrText !== null) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="ocr-text" className="font-bold">{t('ocrTextLabel')}</label>
+          <p className="text-sm text-muted">{t('ocrTextHint')}</p>
+          <textarea id="ocr-text" value={ocrText} onChange={(e) => setOcrText(e.target.value)} rows={16} className="w-full rounded-xl border border-line bg-surface p-3 text-base" />
+        </div>
+        {error && <Alert tone="error">{error}</Alert>}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" size="lg" disabled={pending || ocrText.trim().length < 10} onClick={parseOcr}>
+            {pending ? t('ocrParsing') : t('ocrParse')}
+          </Button>
+          {status.keySource && status.available && (
+            <Button size="lg" disabled={pending || tooBig} onClick={extract}>
+              {pending ? t('extracting') : t('useAi')}
+            </Button>
+          )}
+          <Button size="lg" variant="ghost" onClick={() => setOcrText(null)}>
+            {tc('back')}
+          </Button>
+        </div>
+        {status.keySource && status.available && (
+          <>
+            <AiSourceNote status={status} />
+            <p className="text-sm text-muted">{t('privacyNote')}</p>
+          </>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -231,43 +293,34 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
 
       {valid.length > 0 && (
         <section className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+          <p className="text-sm text-muted">{t('ocrNote')}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" size="lg" disabled={!!ocrBusy || pending || tooBig || processing > 0} onClick={runOcr}>
+              {ocrBusy ? t('ocrReading', { page: ocrBusy.page, total: valid.length, percent: Math.round(ocrBusy.progress * 100) }) : t('ocrRead')}
+            </Button>
+            <Button size="lg" variant="ghost" onClick={() => setDraft(emptyDraft('photo', locale))}>
+              {t('manualEntry')}
+            </Button>
+          </div>
+          {ocrBusy && <p role="status" className="text-sm text-muted">{t('ocrHint')}</p>}
           {status.keySource && status.available ? (
-            <>
+            <div className="flex flex-col gap-2 border-t border-line pt-3">
               <AiSourceNote status={status} />
               <p className="text-sm text-muted">{t('privacyNote')}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="primary" size="lg" disabled={pending || tooBig || processing > 0} onClick={extract}>
-                  {pending ? t('extracting') : t('extract', { n: valid.length })}
-                </Button>
-                <Button size="lg" variant="ghost" onClick={() => setDraft(emptyDraft('photo', locale))}>
-                  {t('manualEntry')}
+              <div>
+                <Button size="lg" disabled={pending || !!ocrBusy || tooBig || processing > 0} onClick={extract}>
+                  {pending ? t('extracting') : t('useAi')}
                 </Button>
               </div>
               {pending && <p role="status" className="text-sm text-muted">{t('extractingHint')}</p>}
-            </>
+            </div>
           ) : (
-            <Alert
-              tone="info"
-              title={t('noProviderTitle')}
-              action={
-                <>
-                  <Button variant="primary" onClick={() => setDraft(emptyDraft('photo', locale))}>
-                    {t('manualEntry')}
-                  </Button>
-                  <Link href="/import/text" className={buttonClass('secondary')}>
-                    {t('pasteInstead')}
-                  </Link>
-                  <Link href="/settings/ai" className={buttonClass('ghost')}>
-                    {t('configure')}
-                  </Link>
-                </>
-              }
-            >
-              {status.keySource === 'app' ? t('quotaReached') : t('noProvider')}
-            </Alert>
+            <Link href="/settings/ai" className={buttonClass('ghost')}>
+              {t('configure')}
+            </Link>
           )}
           {error && (
-            <Alert tone="error" action={<Button size="sm" onClick={extract} disabled={pending}>{tc('retry')}</Button>}>
+            <Alert tone="error">
               {error} {t('pagesKept')}
             </Alert>
           )}

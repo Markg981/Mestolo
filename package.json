@@ -8,7 +8,9 @@
     "node": ">=20.9"
   },
   "scripts": {
+    "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-ocr-assets.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -16,7 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:db":"vitest run --config vitest.db.config.ts",
+    "test:db": "vitest run --config vitest.db.config.ts",
     "db:test:local": "bash scripts/test-db-local.sh",
     "seed:catalog": "node --experimental-strip-types scripts/seed-catalog.ts",
     "gen:key": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
@@ -27,10 +29,12 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@capacitor-mlkit/text-recognition": "^8.2.1",
     "@capacitor/app": "^8.1.2",
     "@capacitor/camera": "^8.2.6",
     "@capacitor/core": "^8.5.3",
     "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/filesystem": "^8.1.5",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.4",
     "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
@@ -38,6 +42,12 @@
     "@sentry/nextjs": "11.8.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
+    "@tesseract.js-data/deu": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/fra": "^1.0.0",
+    "@tesseract.js-data/ita": "^1.0.0",
+    "@tesseract.js-data/por": "^1.0.0",
+    "@tesseract.js-data/spa": "^1.0.0",
     "cheerio": "1.2.0",
     "ipaddr.js": "2.5.0",
     "lucide-react": "1.60.0",
@@ -47,6 +57,8 @@
     "react-dom": "19.3.1",
     "server-only": "^0.0.1",
     "sharp": "^0.35.5",
+    "tesseract.js": "^7.0.0",
+    "tesseract.js-core": "^6.1.2",
     "undici": "8.12.3",
     "web-push": "3.6.7",
     "zod": "4.6.7"
