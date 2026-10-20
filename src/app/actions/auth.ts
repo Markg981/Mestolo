@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { RateLimitedError, clientIpHash, enforceRateLimit, hashKey, type LimitName } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
+import { passwordSchema } from '@/lib/password';
 import { fail, type ErrorCode } from './_utils';
 
 export type AuthState = { error?: ErrorCode; sent?: boolean; email?: string } | undefined;
@@ -26,7 +27,7 @@ async function authRateLimit(limit: LimitName, subject: string) {
 
 const credentials = z.object({
   email: z.email().max(320),
-  password: z.string().min(8).max(200),
+  password: passwordSchema,
 });
 
 function safeNext(next: unknown): string {
@@ -123,13 +124,36 @@ export async function requestPasswordReset(_: AuthState, formData: FormData): Pr
 }
 
 export async function updatePassword(_: AuthState, formData: FormData): Promise<AuthState> {
-  const pw = z.string().min(8).max(200).safeParse(formData.get('password'));
+  const pw = passwordSchema.safeParse(formData.get('password'));
   if (!pw.success) return { error: 'auth_weak_password' };
   if (formData.get('password') !== formData.get('confirm')) return { error: 'invalid_input' };
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: pw.data });
   if (error) return { error: 'generic' };
   redirect('/?password=updated');
+}
+
+export async function changePassword(_: AuthState, formData: FormData): Promise<AuthState> {
+  const current = z.string().min(1).max(200).safeParse(formData.get('current'));
+  if (!current.success) return { error: 'invalid_input' };
+  const pw = passwordSchema.safeParse(formData.get('password'));
+  if (!pw.success) return { error: 'auth_weak_password' };
+  if (formData.get('password') !== formData.get('confirm')) return { error: 'invalid_input' };
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const email = userData.user?.email;
+  if (!email) return { error: 'forbidden' };
+  try {
+    // Re-verifying the current password is a guessing vector: same limit as login
+    await authRateLimit('login_email', hashKey(email.toLowerCase()));
+  } catch {
+    return { error: 'rate_limited' };
+  }
+  const { error: verifyError } = await supabase.auth.signInWithPassword({ email, password: current.data });
+  if (verifyError) return { error: 'auth_wrong_password' };
+  const { error } = await supabase.auth.updateUser({ password: pw.data });
+  if (error) return { error: /password/i.test(error.message) ? 'auth_weak_password' : 'generic' };
+  return { sent: true };
 }
 
 export async function signOut() {

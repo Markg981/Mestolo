@@ -136,7 +136,8 @@
     "retry": "Erneut versuchen",
     "notFoundTitle": "Seite nicht gefunden",
     "notFoundLead": "Die Seite existiert nicht oder du darfst sie nicht sehen.",
-    "goHome": "Zur Startseite"
+    "goHome": "Zur Startseite",
+    "auth_wrong_password": "Das aktuelle Passwort ist falsch."
   },
   "home": {
     "greeting": "Hallo, {name}",
@@ -790,7 +791,16 @@
     "deleteLead": "Löscht Konto, Rezepte, Bilder und alle zugehörigen Daten endgültig. Das kann nicht rückgängig gemacht werden.",
     "deleteConfirmLabel": "Gib zur Bestätigung deinen Benutzernamen ein ({username})",
     "deleteButton": "Endgültig löschen",
-    "deleting": "Wird gelöscht…"
+    "deleting": "Wird gelöscht…",
+    "passwordTitle": "Passwort ändern",
+    "passwordLead": "Wähle ein sicheres Passwort, das du nirgendwo sonst verwendest.",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "passwordHint": "Mindestens 8 Zeichen.",
+    "passwordButton": "Passwort ändern",
+    "passwordSaving": "Wird gespeichert…",
+    "passwordChanged": "Passwort geändert."
   },
   "setup": {
     "title": "Einrichtung erforderlich",
