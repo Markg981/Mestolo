@@ -909,6 +909,27 @@
     "error": "Impossible de charger d'autres recettes. Vérifiez votre connexion.",
     "retry": "Réessayer"
   },
+  "notifications": {
+    "title": "Mestolo",
+    "body": {
+      "breakfast": "Petit-déjeuner : {title}",
+      "lunch": "Ce midi : {title}",
+      "dinner": "Ce soir : {title}",
+      "snack": "Goûter : {title}"
+    },
+    "settingsTitle": "Rappels de repas",
+    "settingsLead": "Recevez une notification à l’heure choisie pour les repas que vous avez planifiés.",
+    "enable": "Activer les rappels",
+    "enableHint": "Sur cet appareil, pour les repas du planning de la semaine.",
+    "timesLegend": "Heure du rappel",
+    "timeHint": "Laissez une heure vide pour ne pas recevoir le rappel de ce repas.",
+    "timezoneNote": "Les heures suivent le fuseau horaire de cet appareil.",
+    "saved": "Préférences enregistrées.",
+    "permissionDenied": "Notifications non autorisées : activez-les dans les réglages de l’appareil ou du navigateur.",
+    "subscribeFailed": "Impossible d’activer les notifications sur cet appareil.",
+    "unsupported": "Ce navigateur ne prend pas en charge les notifications push. Essayez l’appli ou un navigateur à jour.",
+    "iosHint": "Sur iPhone et iPad, les notifications ne fonctionnent qu’après avoir ajouté Mestolo à l’écran d’accueil (Partager > Sur l’écran d’accueil, iOS 16.4 ou version ultérieure)."
+  },
   "cook": {
     "start": "Cuisiner",
     "exit": "Quitter le mode cuisine",

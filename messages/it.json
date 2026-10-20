@@ -909,6 +909,27 @@
     "error": "Impossibile caricare altre ricette. Controlla la connessione.",
     "retry": "Riprova"
   },
+  "notifications": {
+    "title": "Mestolo",
+    "body": {
+      "breakfast": "Colazione: {title}",
+      "lunch": "Oggi a pranzo: {title}",
+      "dinner": "Stasera: {title}",
+      "snack": "Spuntino: {title}"
+    },
+    "settingsTitle": "Promemoria dei pasti",
+    "settingsLead": "Ricevi una notifica all’ora scelta per i pasti che hai pianificato.",
+    "enable": "Attiva i promemoria",
+    "enableHint": "Su questo dispositivo, per i pasti del piano settimanale.",
+    "timesLegend": "Orario del promemoria",
+    "timeHint": "Lascia vuoto un orario per non ricevere il promemoria di quel pasto.",
+    "timezoneNote": "Gli orari seguono il fuso orario di questo dispositivo.",
+    "saved": "Preferenze salvate.",
+    "permissionDenied": "Notifiche non consentite: abilitale nelle impostazioni del dispositivo o del browser.",
+    "subscribeFailed": "Impossibile attivare le notifiche su questo dispositivo.",
+    "unsupported": "Questo browser non supporta le notifiche push. Prova con l’app o con un browser aggiornato.",
+    "iosHint": "Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Mestolo alla schermata Home (Condividi > Aggiungi alla schermata Home, iOS 16.4 o successivo)."
+  },
   "cook": {
     "start": "Cucina",
     "exit": "Esci dalla modalità cucina",

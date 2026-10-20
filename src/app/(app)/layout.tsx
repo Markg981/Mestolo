@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { UserCacheSync } from '@/components/pwa/PwaClient';
+import { MealReminderSync } from '@/components/pwa/MealReminderSync';
 import { RealtimeSync } from '@/components/RealtimeSync';
 import { AppShell } from '@/components/shell/AppShell';
 import { env } from '@/lib/env';
@@ -13,6 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <AppShell username={profile.username} isModerator={profile.is_moderator}>
       <UserCacheSync userId={user.id} />
+      <MealReminderSync />
       <RealtimeSync userId={user.id} supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} />
       {children}
     </AppShell>

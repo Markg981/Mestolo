@@ -185,11 +185,22 @@ Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pr
 | `AI_DAILY_LIMIT_TEXT/VISION/IMAGE/TRANSLATE` | no | Quote giornaliere per utente sul servizio base (default 20/10/2/30) |
 | `AI_USER_ANTHROPIC_MODEL`, `AI_USER_OPENAI_TEXT_MODEL`, `AI_USER_OPENAI_IMAGE_MODEL` | no | Modelli usati con le chiavi personali |
 | `CRON_SECRET` | per la pulizia | Segreto del cron Vercel (`vercel.json`) che chiama `/api/cron/cleanup` (rimuove file immagine orfani e dati di quota oltre 90 giorni). Senza, la route risponde sempre 401. In Supabase abilitare anche l’estensione `pg_cron` (Database > Extensions) per la pulizia giornaliera lato database |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | no | Promemoria dei pasti via Web Push (PWA). Generare le chiavi con `npx web-push generate-vapid-keys`; `VAPID_SUBJECT` è un `mailto:` o un URL https. La chiave pubblica è incorporata in build (richiede un nuovo deploy se cambia). Senza chiavi la route `/api/cron/meal-reminders` non invia nulla e il web non offre le notifiche (l’app nativa usa notifiche locali e non ne ha bisogno). Vedi [Promemoria dei pasti](#promemoria-dei-pasti) |
 | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | no | Monitoraggio errori Sentry (client+server+edge / solo server+edge). Senza DSN è completamente disattivato. Gli eventi sono ripuliti (email, token, cookie, testo delle ricette, chiavi) prima dell’invio; `sendDefaultPii` è sempre false |
 | `SENTRY_TRACES_SAMPLE_RATE` | no | Frazione di tracce 0-1 (default 0,05) |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | no | Solo in build, per caricare le source map |
 
 Configurazione di provider, modelli, costi e privacy: **[docs/ai-providers.md](docs/ai-providers.md)**.
+
+### Promemoria dei pasti
+
+Da Impostazioni l’utente attiva i promemoria dei pasti del piano settimanale (es. «Stasera: Risotto ai funghi»), con un orario per ogni pasto; il fuso orario IANA viene preso dal dispositivo.
+
+- **App nativa (Android/iOS)**: notifiche locali (`@capacitor/local-notifications`) pianificate per i prossimi 7 giorni; vengono annullate e ripianificate all’apertura dell’app, quando torna in primo piano, quando si cambiano le preferenze e quando si apre il piano. Nessun server coinvolto. Dopo aver aggiornato le dipendenze serve **`npx cap sync`** (o `npm run mobile:sync`) e una nuova build nativa dell’app, perché il plugin contiene codice nativo; le app già installate senza il plugin non pianificano nulla.
+- **Web/PWA**: Web Push con VAPID. La migrazione `20261024000002` crea `push_subscriptions`, `notification_preferences` e `meal_reminders_sent` (dedup). Il service worker gestisce `push` e `notificationclick` (apre `/plan`). La route `/api/cron/meal-reminders` (protetta da `CRON_SECRET` come `/api/cron/cleanup`) invia i promemoria scaduti negli ultimi 20 minuti nel fuso dell’utente, elimina le sottoscrizioni che rispondono 404/410 e non invia mai due volte lo stesso pasto.
+- **Frequenza del cron**: `vercel.json` la pianifica **ogni 15 minuti** (`*/15 * * * *`). I cron del piano Vercel **Hobby** girano al massimo una volta al giorno (una pianificazione più frequente fa fallire il deploy): serve il piano **Pro**, oppure impostare `vercel.json` a una frequenza giornaliera e far chiamare la route ogni 15 minuti da uno scheduler esterno (`GET /api/cron/meal-reminders` con header `Authorization: Bearer $CRON_SECRET`, ad esempio GitHub Actions o cron-job.org).
+- **iOS**: il Web Push funziona solo per la PWA aggiunta alla schermata Home (Safari > Condividi > Aggiungi alla schermata Home), iOS/iPadOS 16.4 o successivo; in una scheda di Safari il permesso non è disponibile. Nell’app nativa si usano invece le notifiche locali.
+- **CSP**: nessuna modifica necessaria. L’iscrizione push passa dal servizio push del browser (non da `connect-src`) e le notifiche sono mostrate dal service worker, già servito da `'self'`.
 
 ---
 
