@@ -991,5 +991,29 @@
     "historyEmpty": "When you cook a recipe, tap “I cooked it” to add it here.",
     "historyBrowse": "Go to recipes",
     "unavailableRecipe": "Recipe no longer available"
+  },
+  "invites": {
+    "title": "Invite friends",
+    "lead": "Create a link and share it: anyone who opens it and signs up becomes your friend automatically.",
+    "create": "Create invite link",
+    "linkOnce": "This link is shown only once: copy it now.",
+    "linkLabel": "Invite link",
+    "copy": "Copy",
+    "share": "Share",
+    "copied": "Link copied.",
+    "copyFailed": "Could not copy the link.",
+    "shareTitle": "Join me on Mestolo",
+    "shareText": "I am inviting you to Mestolo, the recipe book you share with friends.",
+    "uses": "{used} of {max} uses",
+    "expires": "Expires on {date}",
+    "revoke": "Revoke",
+    "invalidTitle": "Invalid invite",
+    "invalid": "This invite is not valid, has expired or was revoked.",
+    "home": "Go to Mestolo",
+    "landingTitle": "{name} invited you to Mestolo",
+    "landingLead": "Sign up or log in to become their friend and see the recipes they share with you.",
+    "signup": "Sign up",
+    "login": "Log in",
+    "accept": "Accept and become friends"
   }
 }

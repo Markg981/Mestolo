@@ -991,5 +991,29 @@
     "historyEmpty": "Quando cozinhares uma receita, toca em «Eu cozinhei» para a adicionar aqui.",
     "historyBrowse": "Ir para as receitas",
     "unavailableRecipe": "Receita já não disponível"
+  },
+  "invites": {
+    "title": "Convidar amigos",
+    "lead": "Crie um link e partilhe-o: quem o abrir e se registar torna-se automaticamente seu amigo.",
+    "create": "Criar link de convite",
+    "linkOnce": "Este link é mostrado apenas uma vez: copie-o agora.",
+    "linkLabel": "Link de convite",
+    "copy": "Copiar",
+    "share": "Partilhar",
+    "copied": "Link copiado.",
+    "copyFailed": "Não foi possível copiar o link.",
+    "shareTitle": "Junte-se a mim no Mestolo",
+    "shareText": "Convido-o para o Mestolo, o livro de receitas que se partilha entre amigos.",
+    "uses": "{used} de {max} utilizações",
+    "expires": "Expira em {date}",
+    "revoke": "Revogar",
+    "invalidTitle": "Convite inválido",
+    "invalid": "Este convite não é válido, expirou ou foi revogado.",
+    "home": "Ir para o Mestolo",
+    "landingTitle": "{name} convidou-o para o Mestolo",
+    "landingLead": "Registe-se ou inicie sessão para ser amigo dele e ver as receitas que partilha consigo.",
+    "signup": "Registar",
+    "login": "Iniciar sessão",
+    "accept": "Aceitar e tornar-se amigos"
   }
 }

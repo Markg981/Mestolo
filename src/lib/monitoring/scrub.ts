@@ -16,6 +16,7 @@ export function redactText(s: string): string {
   return redactSecrets(s)
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]')
     .replace(/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*/g, '[jwt]')
+    .replace(/(\/invite\/)[A-Za-z0-9_%-]{16,}/gi, '$1[token]')
     .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, 'Bearer ***')
     .replace(
       /([?&;\s](?:access_token|refresh_token|token|code|key|apikey|api_key|password)=)[^&\s;]+/gi,

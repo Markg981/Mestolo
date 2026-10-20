@@ -991,5 +991,29 @@
     "historyEmpty": "Quando cucini una ricetta, tocca «L'ho cucinata» per aggiungerla qui.",
     "historyBrowse": "Vai alle ricette",
     "unavailableRecipe": "Ricetta non più disponibile"
+  },
+  "invites": {
+    "title": "Invita amici",
+    "lead": "Crea un link e condividilo: chi lo apre e si iscrive diventa tuo amico automaticamente.",
+    "create": "Crea link di invito",
+    "linkOnce": "Questo link viene mostrato una sola volta: copialo ora.",
+    "linkLabel": "Link di invito",
+    "copy": "Copia",
+    "share": "Condividi",
+    "copied": "Link copiato.",
+    "copyFailed": "Impossibile copiare il link.",
+    "shareTitle": "Unisciti a me su Mestolo",
+    "shareText": "Ti invito su Mestolo, il ricettario che si condivide tra amici.",
+    "uses": "{used} di {max} utilizzi",
+    "expires": "Scade il {date}",
+    "revoke": "Revoca",
+    "invalidTitle": "Invito non valido",
+    "invalid": "Questo invito non è valido, è scaduto o è stato revocato.",
+    "home": "Vai a Mestolo",
+    "landingTitle": "{name} ti ha invitato su Mestolo",
+    "landingLead": "Iscriviti o accedi per diventare suo amico e vedere le ricette che condivide con te.",
+    "signup": "Iscriviti",
+    "login": "Accedi",
+    "accept": "Accetta e diventa amico"
   }
 }
