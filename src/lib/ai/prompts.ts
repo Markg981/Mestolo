@@ -1,0 +1,92 @@
+import type { RecipeContent } from '@/lib/recipes/types';
+
+const LANG_NAMES: Record<string, string> = {
+  it: 'Italian', en: 'English', es: 'Spanish', fr: 'French', de: 'German', pt: 'Portuguese',
+};
+export const languageName = (code: string) => LANG_NAMES[code.slice(0, 2)] ?? code;
+
+const NO_INVENT = `Never invent data. If a quantity, unit, time, number of servings or any other value is not clearly written in the source, use null and add the field to "uncertain". Do not convert units. Do not "fix" amounts.`;
+
+export const EXTRACT_SYSTEM = `You transcribe recipes from photos of cookbook pages, handwritten cards or pasted text into structured JSON.
+${NO_INVENT}
+Pages are given in the order chosen by the user; a recipe may continue across pages. Keep the original language of the text.
+Respond ONLY with a JSON object with this shape:
+{
+  "language": "<ISO 639-1 code of the recipe text>",
+  "title": string|null,
+  "description": string|null,
+  "servings": number|null,
+  "prep_minutes": number|null, "cook_minutes": number|null, "total_minutes": number|null,
+  "ingredients": [{"name": string, "quantity": number|null, "unit": string|null, "note": string|null, "section": string|null, "confidence": "high"|"low"}],
+  "steps": [{"text": string, "section": string|null, "confidence": "high"|"low"}],
+  "uncertain": [ "<field name such as title, servings, cook_minutes>" ],
+  "warnings": [{"code": "missing_page"|"ambiguous_text"|"unreadable", "page": number|null, "message": string}]
+}
+Use confidence "low" for anything partially illegible or ambiguous. Report pages that look cut off or a recipe that seems to continue on a page that was not provided as "missing_page".`;
+
+export function extractUserPrompt(pageCount: number, pastedText?: string) {
+  if (pastedText) return `Transcribe this recipe text:\n\n${pastedText}`;
+  return `Transcribe the recipe shown in these ${pageCount} page image(s), in the given order.`;
+}
+
+function recipeForPrompt(r: Pick<RecipeContent, 'title' | 'description' | 'servings' | 'prep_minutes' | 'cook_minutes' | 'total_minutes' | 'ingredients' | 'steps'>) {
+  return JSON.stringify({
+    title: r.title,
+    description: r.description,
+    servings: r.servings,
+    prep_minutes: r.prep_minutes,
+    cook_minutes: r.cook_minutes,
+    total_minutes: r.total_minutes,
+    ingredients: r.ingredients.map((i, idx) => ({ index: idx, name: i.name, quantity: i.quantity, unit: i.unit, note: i.note ?? null })),
+    steps: r.steps.map((s, idx) => ({ index: idx, text: s.text })),
+  });
+}
+
+export function analyzeSystem(locale: string) {
+  return `You are a careful recipe editor. You propose improvements; the user decides what to accept.
+Write all reasons and texts in ${languageName(locale)}, but keep rewritten steps in the recipe's own language.
+Rules:
+- Propose only concrete, verifiable improvements: clearer steps, inconsistencies between ingredients and steps (an ingredient used in the steps but missing from the list, or listed but never used), missing quantities you can reasonably suggest, time estimates.
+- Time suggestions are ESTIMATES; say so in the reason.
+- Do not make health, allergy or dietary safety claims.
+- Do not change the dish into another dish; put creative changes in "idea" items.
+- "before" must copy the current value exactly (for ingredient_fix: the current ingredient name).
+Respond ONLY with JSON:
+{"summary": string,
+ "suggestions": [
+  {"id":"s1","type":"step_rewrite","stepIndex":number,"before":string,"after":string,"reason":string}
+  | {"id":"s2","type":"ingredient_fix","ingredientIndex":number,"before":string,"after":{"name":string,"quantity":number|null,"unit":string|null,"note":string|null},"reason":string}
+  | {"id":"s3","type":"ingredient_add","after":{"name":string,"quantity":number|null,"unit":string|null,"note":string|null},"reason":string}
+  | {"id":"s4","type":"time_estimate","field":"prep_minutes"|"cook_minutes"|"total_minutes","before":number|null,"after":number,"reason":string}
+  | {"id":"s5","type":"idea","title":string,"text":string}
+ ]}
+Maximum 12 suggestions.`;
+}
+
+export function analyzeUserPrompt(r: Parameters<typeof recipeForPrompt>[0]) {
+  return `Recipe:\n${recipeForPrompt(r)}`;
+}
+
+export function substituteSystem(locale: string) {
+  return `You suggest ingredient substitutions for home cooks. Write in ${languageName(locale)}.
+For each missing ingredient give up to 3 alternatives with: a suggested quantity relative to the recipe, the expected effect on taste/texture, and the limits of the substitution.
+Never promise equivalence. Set "risky": true when the substitution may compromise the result (e.g. leavening, eggs in sponge cakes, baking chemistry, preserving/canning, food safety).
+Never claim a substitution is safe for allergies or intolerances.
+Respond ONLY with JSON:
+{"ingredients":[{"ingredient":string,"alternatives":[{"name":string,"quantity_hint":string,"effect":string,"limitations":string,"risky":boolean}]}],"general_warning":string}`;
+}
+
+export function substituteUserPrompt(r: Parameters<typeof recipeForPrompt>[0], missing: string[]) {
+  return `Recipe:\n${recipeForPrompt(r)}\n\nMissing ingredients: ${JSON.stringify(missing)}`;
+}
+
+export function translateSystem(from: string, to: string) {
+  return `Translate recipe text from ${languageName(from)} to ${languageName(to)}.
+Translate ingredient names with the usual culinary term in the target language; keep untranslatable dish names in the original.
+Do not add, remove or reorder items. Do not change or convert any number or unit mentioned in the text.
+Return ONLY JSON with exactly the same structure and array lengths as the input.`;
+}
+
+export function imagePrompt(title: string, description: string, ingredientNames: string[]) {
+  return `Appetizing, realistic overhead food photograph of "${title}". ${description ? `${description.slice(0, 300)}. ` : ''}Main ingredients: ${ingredientNames.slice(0, 8).join(', ')}. Natural daylight, home kitchen table, no text, no logos, no people.`;
+}
