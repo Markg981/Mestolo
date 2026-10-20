@@ -5,7 +5,8 @@ describe('buildCsp', () => {
   it('usa nonce e strict-dynamic senza unsafe-inline negli script', () => {
     const csp = buildCsp({ nonce: 'abc' });
     const script = csp.split('; ').find((d) => d.startsWith('script-src'));
-    expect(script).toBe("script-src 'self' 'nonce-abc' 'strict-dynamic'");
+    expect(script).toBe("script-src 'self' 'nonce-abc' 'strict-dynamic' 'wasm-unsafe-eval'");
+    expect(csp).toContain("worker-src 'self';");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'self'");
