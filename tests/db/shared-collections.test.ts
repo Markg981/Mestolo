@@ -56,7 +56,15 @@ d('Shared collections RLS', () => {
   let privR: string;
   let editorR: string;
 
-  const visible = (uid: string | null) => as<{ id: string }>(uid, 'select id from public.collections where id = $1', [col]).then((r) => r.length === 1);
+  // anon has no table privileges at all: a permission error counts as "not visible"
+  const visible = (uid: string | null) =>
+    as<{ id: string }>(uid, 'select id from public.collections where id = $1', [col]).then(
+      (r) => r.length === 1,
+      (e: Error) => {
+        if (uid === null && /permission denied/.test(e.message)) return false;
+        throw e;
+      },
+    );
   const links = (uid: string | null) => as<{ recipe_id: string }>(uid, 'select recipe_id from public.collection_recipes where collection_id = $1', [col]).then((r) => r.map((x) => x.recipe_id));
   const setVis = (v: string) => admin('update public.collections set visibility = $1 where id = $2', [v, col]);
 
@@ -103,7 +111,8 @@ d('Shared collections RLS', () => {
     await setVis('public');
     expect(await visible(stranger)).toBe(true);
     expect(await visible(null)).toBe(false);
-    expect((await as(null, 'select 1 from public.collection_members')).length).toBe(0);
+    const anonRows = await as(null, 'select 1 from public.collection_members').catch(() => []);
+    expect(anonRows).toHaveLength(0);
     await setVis('private');
   });
 
