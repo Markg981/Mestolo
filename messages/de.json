@@ -890,5 +890,26 @@
     "end": "Du hast das Ende erreicht.",
     "error": "Weitere Rezepte konnten nicht geladen werden. Prüfe deine Verbindung.",
     "retry": "Erneut versuchen"
+  },
+  "notifications": {
+    "title": "Mestolo",
+    "body": {
+      "breakfast": "Frühstück: {title}",
+      "lunch": "Heute Mittag: {title}",
+      "dinner": "Heute Abend: {title}",
+      "snack": "Snack: {title}"
+    },
+    "settingsTitle": "Mahlzeiten-Erinnerungen",
+    "settingsLead": "Erhalte zur gewählten Uhrzeit eine Benachrichtigung für deine geplanten Mahlzeiten.",
+    "enable": "Erinnerungen aktivieren",
+    "enableHint": "Auf diesem Gerät, für die Mahlzeiten deines Wochenplans.",
+    "timesLegend": "Uhrzeit der Erinnerung",
+    "timeHint": "Lass eine Uhrzeit leer, um für diese Mahlzeit keine Erinnerung zu erhalten.",
+    "timezoneNote": "Die Uhrzeiten richten sich nach der Zeitzone dieses Geräts.",
+    "saved": "Einstellungen gespeichert.",
+    "permissionDenied": "Benachrichtigungen nicht erlaubt: Aktiviere sie in den Einstellungen deines Geräts oder Browsers.",
+    "subscribeFailed": "Benachrichtigungen konnten auf diesem Gerät nicht aktiviert werden.",
+    "unsupported": "Dieser Browser unterstützt keine Push-Benachrichtigungen. Probiere die App oder einen aktuellen Browser.",
+    "iosHint": "Auf iPhone und iPad funktionieren Benachrichtigungen erst, nachdem Mestolo zum Home-Bildschirm hinzugefügt wurde (Teilen > Zum Home-Bildschirm, iOS 16.4 oder neuer)."
   }
 }

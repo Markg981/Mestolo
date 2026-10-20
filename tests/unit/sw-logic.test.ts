@@ -9,7 +9,23 @@ const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
   isSessionLost: (status: number, redirected: boolean, url: string) => boolean;
   canUseUserCache: (h: unknown) => boolean;
   shouldEvictImage: (s: number) => boolean;
+  parsePushPayload: (t: string) => { title: string; body: string; tag: string; url: string };
 };
+
+describe('service worker: payload push', () => {
+  it('legge titolo, testo e url dal JSON', () => {
+    expect(L.parsePushPayload('{"title":"Mestolo","body":"Stasera: Risotto","url":"/plan","tag":"meal-1"}')).toEqual({ title: 'Mestolo', body: 'Stasera: Risotto', tag: 'meal-1', url: '/plan' });
+  });
+  it('usa valori sicuri con payload vuoto o non valido', () => {
+    expect(L.parsePushPayload('')).toMatchObject({ title: 'Mestolo', body: '', url: '/plan' });
+    expect(L.parsePushPayload('not json')).toMatchObject({ title: 'Mestolo', url: '/plan' });
+  });
+  it('rifiuta url verso altri origin', () => {
+    expect(L.parsePushPayload('{"url":"https://evil.example/x"}').url).toBe('/plan');
+    expect(L.parsePushPayload('{"url":"//evil.example"}').url).toBe('/plan');
+    expect(L.parsePushPayload('{"url":"/recipes"}').url).toBe('/recipes');
+  });
+});
 
 describe('service worker: cache per utente', () => {
   it('il nome della cache dipende dall hash utente', () => {

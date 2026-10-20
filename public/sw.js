@@ -9,7 +9,7 @@
  */
 importScripts('/sw-logic.js');
 const L = self.MestoloSw;
-const VERSION = 'v2';
+const VERSION = 'v3';
 const STATIC_CACHE = `mestolo-static-${VERSION}`;
 const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
@@ -72,6 +72,38 @@ self.addEventListener('message', (event) => {
       })(),
     );
   }
+});
+
+/* Web Push: meal reminders sent by /api/cron/meal-reminders */
+self.addEventListener('push', (event) => {
+  const p = L.parsePushPayload(event.data ? event.data.text() : '');
+  event.waitUntil(
+    self.registration.showNotification(p.title, {
+      body: p.body,
+      tag: p.tag,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: p.url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || '/plan', self.location.origin).href;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const w of windows) {
+        if (new URL(w.url).origin === self.location.origin && 'focus' in w) {
+          await w.focus();
+          if ('navigate' in w) await w.navigate(target).catch(() => undefined);
+          return;
+        }
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
 });
 
 function isStatic(url) {

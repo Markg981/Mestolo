@@ -48,7 +48,24 @@
     return status === 401 || status === 403 || status === 404 || status === 410;
   }
 
-  var api = { userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage };
+  /** Payload di una notifica push (JSON): testi limitati e url sempre relativo al sito (mai un altro origin). */
+  function parsePushPayload(text) {
+    var data = {};
+    try {
+      data = JSON.parse(text || '{}') || {};
+    } catch {
+      data = {};
+    }
+    var url = typeof data.url === 'string' && /^\/(?!\/)/.test(data.url) ? data.url : '/plan';
+    return {
+      title: typeof data.title === 'string' && data.title ? data.title.slice(0, 80) : 'Mestolo',
+      body: typeof data.body === 'string' ? data.body.slice(0, 200) : '',
+      tag: typeof data.tag === 'string' ? data.tag.slice(0, 80) : 'mestolo',
+      url: url,
+    };
+  }
+
+  var api = { userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.MestoloSw = api;
 })(typeof self !== 'undefined' ? self : globalThis);

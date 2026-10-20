@@ -890,5 +890,26 @@
     "end": "You have reached the end.",
     "error": "Could not load more recipes. Check your connection.",
     "retry": "Try again"
+  },
+  "notifications": {
+    "title": "Mestolo",
+    "body": {
+      "breakfast": "Breakfast: {title}",
+      "lunch": "Lunch today: {title}",
+      "dinner": "Tonight: {title}",
+      "snack": "Snack: {title}"
+    },
+    "settingsTitle": "Meal reminders",
+    "settingsLead": "Get a notification at the time you choose for the meals you have planned.",
+    "enable": "Turn on reminders",
+    "enableHint": "On this device, for the meals in your weekly plan.",
+    "timesLegend": "Reminder time",
+    "timeHint": "Leave a time empty to skip the reminder for that meal.",
+    "timezoneNote": "Times follow the time zone of this device.",
+    "saved": "Preferences saved.",
+    "permissionDenied": "Notifications are not allowed: enable them in your device or browser settings.",
+    "subscribeFailed": "Could not turn on notifications on this device.",
+    "unsupported": "This browser does not support push notifications. Try the app or an up-to-date browser.",
+    "iosHint": "On iPhone and iPad notifications only work after adding Mestolo to the Home Screen (Share > Add to Home Screen, iOS 16.4 or later)."
   }
 }

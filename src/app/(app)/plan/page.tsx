@@ -3,6 +3,7 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { addDays, MEAL_SLOTS, startOfWeek, weekDays } from '@/lib/plan/week';
 import { PageHeader, buttonClass } from '@/components/ui';
+import { MealReminderSync } from '@/components/pwa/MealReminderSync';
 import { PlanBoard, type Entry } from './PlanBoard';
 
 export async function generateMetadata() {
@@ -27,6 +28,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   return (
     <div>
+      <MealReminderSync version={((entries as Entry[]) ?? []).map((e) => `${e.id}${e.plan_date}${e.slot}`).join()} />
       <PageHeader
         title={t('title')}
         lead={t('lead')}

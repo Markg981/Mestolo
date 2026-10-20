@@ -890,5 +890,26 @@
     "end": "Chegaste ao fim.",
     "error": "Não foi possível carregar mais receitas. Verifica a ligação.",
     "retry": "Tentar novamente"
+  },
+  "notifications": {
+    "title": "Mestolo",
+    "body": {
+      "breakfast": "Pequeno-almoço: {title}",
+      "lunch": "Hoje ao almoço: {title}",
+      "dinner": "Hoje à noite: {title}",
+      "snack": "Lanche: {title}"
+    },
+    "settingsTitle": "Lembretes de refeições",
+    "settingsLead": "Receba uma notificação à hora escolhida para as refeições que planeou.",
+    "enable": "Ativar lembretes",
+    "enableHint": "Neste dispositivo, para as refeições do plano semanal.",
+    "timesLegend": "Hora do lembrete",
+    "timeHint": "Deixe uma hora vazia para não receber o lembrete dessa refeição.",
+    "timezoneNote": "As horas seguem o fuso horário deste dispositivo.",
+    "saved": "Preferências guardadas.",
+    "permissionDenied": "Notificações não permitidas: ative-as nas definições do dispositivo ou do navegador.",
+    "subscribeFailed": "Não foi possível ativar as notificações neste dispositivo.",
+    "unsupported": "Este navegador não suporta notificações push. Experimente a app ou um navegador atualizado.",
+    "iosHint": "No iPhone e no iPad as notificações só funcionam depois de adicionar o Mestolo ao ecrã principal (Partilhar > Adicionar ao ecrã principal, iOS 16.4 ou superior)."
   }
 }
