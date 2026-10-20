@@ -51,7 +51,7 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
 
     if (useAi) {
       await enforceRateLimit('ai_text', user.id);
-      const resolved = await resolveProvider(user.id, 'text', 'text');
+      const resolved = await resolveProvider(user.id, 'text', 'text', 'extract_text');
       const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
       await recordUsage(user.id, 'text', 'extract_text', resolved);
       return ok(draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' }));
@@ -100,7 +100,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
     if (files.some((f) => f.size > MAX_PAGE_BYTES) || total > MAX_TOTAL_BYTES) return fail('image_too_large');
 
     // Resolve the provider before doing heavy work, so "not configured" is immediate.
-    const resolved = await resolveProvider(user.id, 'vision', 'vision');
+    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
     await enforceRateLimit('import_photo', user.id);
 
     const images = [];

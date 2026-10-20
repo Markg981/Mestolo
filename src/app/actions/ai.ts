@@ -48,7 +48,7 @@ export async function analyzeRecipe(recipeId: string): Promise<ActionResult<Anal
     if (!data) return fail('not_found');
     const r = data as RecipeRow;
     await enforceRateLimit('ai_text', user.id);
-    const resolved = await resolveProvider(user.id, 'text', 'text');
+    const resolved = await resolveProvider(user.id, 'text', 'text', 'analyze');
     const raw = await resolved.provider.completeJson({ system: analyzeSystem(await uiLocale()), user: analyzeUserPrompt(contentOf(r)), maxTokens: 4000 });
     await recordUsage(user.id, 'text', 'analyze', resolved);
     const parsed = analysisSchema.safeParse(raw);
@@ -169,7 +169,7 @@ export async function suggestSubstitutions(recipeId: string, missing: string[], 
     if (!useAi) return ok({ builtin, ai: null, aiSource: null });
 
     await enforceRateLimit('ai_text', user.id);
-    const resolved = await resolveProvider(user.id, 'text', 'text');
+    const resolved = await resolveProvider(user.id, 'text', 'text', 'substitute');
     const raw = await resolved.provider.completeJson({ system: substituteSystem(locale), user: substituteUserPrompt(contentOf(data as RecipeRow), list.data), maxTokens: 3000 });
     await recordUsage(user.id, 'text', 'substitute', resolved);
     const parsed = substitutionResultSchema.safeParse(raw);
@@ -202,7 +202,7 @@ export async function translateRecipe(recipeId: string, target: string): Promise
     if (cached && isTranslationFresh(cached.source_hash, r.content_hash)) return ok({ cached: true });
 
     await enforceRateLimit('ai_translate', user.id);
-    const resolved = await resolveProvider(user.id, 'text', 'translate');
+    const resolved = await resolveProvider(user.id, 'text', 'translate', 'recipe');
     const payload = buildTranslatable(r);
     const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: JSON.stringify(payload), maxTokens: 6000 });
     await recordUsage(user.id, 'translate', 'recipe', resolved);
