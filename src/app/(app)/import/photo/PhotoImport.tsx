@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp, Camera, ImagePlus, RefreshCw, Trash2 } from 'lucide-react';
 import { importFromPhotos } from '@/app/actions/import';
 import { compressImage, MAX_ORIGINAL_BYTES } from '@/lib/images/client-compress';
+import { isNativeApp, takeNativePhoto } from '@/lib/native/camera';
 import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/limits';
 import { AiSourceNote, type AiStatusProps } from '@/components/recipes/RecipeIslands';
 import { ImportReview, emptyDraft } from '@/components/import/ImportReview';
@@ -39,6 +40,22 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   const urls = useRef<string[]>([]);
 
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
+  const [native, setNative] = useState(false);
+  useEffect(() => {
+    // Detected after mount: the server render never knows whether it runs inside the app
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNative(isNativeApp());
+  }, []);
+
+  async function nativeCapture() {
+    setError(null);
+    try {
+      const file = await takeNativePhoto();
+      if (file) await addFiles([file]);
+    } catch {
+      setError(t('cameraError'));
+    }
+  }
 
   async function toPage(file: File): Promise<Page> {
     const id = `p${seq++}`;
@@ -55,7 +72,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
     }
   }
 
-  async function addFiles(list: FileList | null) {
+  async function addFiles(list: FileList | File[] | null) {
     if (!list?.length) return;
     setError(null);
     setNotice(null);
@@ -149,11 +166,18 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
           {t('choose')}
           <input type="file" accept="image/*,.heic,.heif" multiple className="sr-only" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
         </label>
-        <label className={buttonClass('secondary', 'lg')}>
-          <Camera aria-hidden className="size-5" />
-          {t('takePhoto')}
-          <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
-        </label>
+        {native ? (
+          <Button size="lg" onClick={nativeCapture}>
+            <Camera aria-hidden className="size-5" />
+            {t('takePhoto')}
+          </Button>
+        ) : (
+          <label className={buttonClass('secondary', 'lg')}>
+            <Camera aria-hidden className="size-5" />
+            {t('takePhoto')}
+            <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+          </label>
+        )}
       </div>
       <p className="text-sm text-muted">{t('rules', { max: MAX_PHOTO_PAGES })}</p>
       {notice && <Alert tone="warn">{notice}</Alert>}

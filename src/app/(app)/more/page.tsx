@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { NavIcon } from '@/components/shell/icons';
 import { SECONDARY_NAV } from '@/components/shell/nav-items';
 import { signOut } from '@/app/actions/auth';
+import { SignOutButton } from '@/components/pwa/PwaClient';
 import { getProfile } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui';
 
@@ -20,6 +21,14 @@ export default async function MorePage() {
             </Link>
           </li>
         ))}
+        {profile?.is_moderator && (
+          <li>
+            <Link href="/moderation" className="flex min-h-14 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-lg font-semibold hover:bg-sunk">
+              <NavIcon name="shield" />
+              {t('moderation')}
+            </Link>
+          </li>
+        )}
         {profile && (
           <li>
             <Link href={`/u/${profile.username}`} className="flex min-h-14 items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-lg font-semibold hover:bg-sunk">
@@ -29,11 +38,9 @@ export default async function MorePage() {
           </li>
         )}
       </ul>
-      <form action={signOut} className="mt-6">
-        <button type="submit" className="min-h-12 rounded-full px-4 font-semibold text-muted hover:bg-sunk hover:text-ink">
-          {t('signOut')}
-        </button>
-      </form>
+      <div className="mt-6">
+        <SignOutButton action={signOut} label={t('signOut')} className="min-h-12 rounded-full px-4 font-semibold text-muted hover:bg-sunk hover:text-ink" />
+      </div>
     </div>
   );
 }

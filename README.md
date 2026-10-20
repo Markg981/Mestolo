@@ -1,6 +1,6 @@
 # Mestolo
 
-Ricettario web responsive e multiutente: ricette manuali, importazione da **foto multipagina**, da **link** e da **testo**, revisione prima del salvataggio, suggerimenti AI selezionabili uno per uno, sostituzione ingredienti, versioni e varianti, amici e visibilità (privata / amici / pubblica), sezione Scopri con ricetta del giorno, lista della spesa, piano pasti, stampa ed esportazione. Interfaccia in **italiano, inglese, spagnolo, francese, tedesco e portoghese**.
+Ricettario **web, Android e iOS** con un solo codice (Next.js + Capacitor), multiutente: ricette manuali, importazione da **foto multipagina**, da **link** e da **testo**, revisione prima del salvataggio, suggerimenti AI selezionabili uno per uno, sostituzione ingredienti, versioni e varianti, amici e visibilità (privata / amici / pubblica), sezione Scopri con ricetta del giorno, lista della spesa, piano pasti, stampa ed esportazione. Interfaccia in **italiano, inglese, spagnolo, francese, tedesco e portoghese**.
 
 > Stato: le 5 fasi richieste sono implementate e testate per quanto possibile **senza credenziali esterne**. Vedi [Funzionalità](#funzionalità) per l'elenco onesto di cosa è completo, parziale o mancante.
 
@@ -16,6 +16,8 @@ Ricettario web responsive e multiutente: ricette manuali, importazione da **foto
 | i18n | **next-intl** (lingua da cookie/profilo/`Accept-Language`) | Aggiungere una lingua = aggiungere un file in `messages/` (un test verifica la completezza). |
 | AI | Provider sostituibili via HTTPS (`src/lib/ai/providers.ts`): **Anthropic**, **OpenAI**, **endpoint compatibile OpenAI** (Ollama, OpenRouter, Mistral, Groq…) | Nessun lock-in; il gestore può offrire un servizio base con quote, l'utente può usare la propria chiave. |
 | Immagini | `sharp` lato server | Rotazione EXIF, **rimozione metadati/GPS**, WebP 1600 px + miniatura 480 px. |
+| PWA | service worker e manifest propri (`public/sw.js`) | Copie offline delle pagine aperte, installazione, "Condividi → Mestolo" su Android. |
+| App store | **Capacitor 8** (`android/`, `ios/`) | Le app caricano il sito pubblicato e aggiungono fotocamera nativa, condivisione e pagina offline: un solo codice per web, Android e iOS. Guida: [docs/mobile.md](docs/mobile.md). |
 
 ### Sicurezza in sintesi
 
@@ -71,20 +73,22 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 - **Piano pasti** settimanale (4 pasti al giorno), da ricette proprie o preferite o testo libero, “ingredienti della settimana nella lista”.
 - **Stampa** ricetta e lista; **export** ricetta in JSON Mestolo e Schema.org JSON-LD ([formato](docs/export-format.md)); **export di tutti i dati** dell’account; **eliminazione account** (file compresi).
 - **API key personali**: inserimento, sostituzione, rimozione; stato per funzione (“userà la tua chiave” / “servizio base: 7 di 10 oggi” / “non disponibile”); uso negli ultimi 30 giorni.
+- **Moderazione** (richiesta dagli store): ruolo moderatore assegnabile solo dal gestore, pannello `/moderation`, nascondi/ripristina/archivia, **nascondimento automatico dopo 3 segnalazioni** di utenti diversi, regole della community (`/terms`) accettate alla registrazione, contatto di supporto (`NEXT_PUBLIC_SUPPORT_EMAIL`).
+- **PWA e app**: installabile, copie offline delle pagine aperte (svuotate al logout), condivisione di link verso Mestolo, progetti Android/iOS Capacitor con fotocamera nativa e pagina offline locale.
 - **Accessibilità**: etichette, focus visibile, skip link, aree cliccabili ≥ 44 px, live region per i feedback, dialog nativi, `prefers-reduced-motion`, tema scuro automatico, testo alternativo.
 
 ### Parziali
 
 - **Verifica end-to-end con servizi reali**: non avendo credenziali Supabase e chiavi AI, non è stato possibile provare l’app collegata a un progetto Supabase reale né ai provider AI reali (vedi [Test](#test-eseguiti)).
 - **HEIC** (foto iPhone): funziona dove il browser sa decodificarlo (Safari); altrove l’app chiede di convertire in JPG.
-- **Moderazione**: le segnalazioni vengono registrate e i contenuti si nascondono con `is_hidden`, ma non c’è un pannello di moderazione: si gestisce dal dashboard Supabase.
+- **App Android/iOS**: progetti generati e configurati, ma **non compilati né provati su dispositivo** (nell’ambiente di sviluppo non era possibile scaricare SDK Android/Xcode). La condivisione da altre app su iOS richiede una Share Extension da creare in Xcode.
 - **Lista della spesa**: lo schema supporta più liste, l’interfaccia ne usa una.
 - **Indicazioni dietetiche**: il campo `diet_hints` esiste ma non viene compilato automaticamente (scelta voluta: niente etichette di allergeni presentate come verificate); il filtro preferenze di Scopri è solo indicativo.
 - **Generazione immagini**: implementata solo con provider OpenAI.
 
 ### Non implementate
 
-- App native, notifiche push, modalità offline.
+- Notifiche (promemoria del piano pasti); modifica dei dati offline (offline si consulta, le modifiche richiedono la connessione).
 - Condivisione tramite link pubblico (voluta: non deve aggirare la modalità “amici”).
 - Valori nutrizionali.
 - Import di file JSON esportati (il formato è documentato e predisposto).
@@ -118,6 +122,24 @@ Catalogo iniziale facoltativo per la sezione Scopri:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run seed:catalog
 ```
+
+### Tutto in locale, senza account cloud (Supabase CLI + Docker)
+
+Serve un runtime Docker (Docker Desktop, Rancher Desktop o Podman).
+
+```bash
+npx supabase init     # crea supabase/config.toml (le migrazioni esistenti restano)
+npx supabase start    # avvia database, auth, storage e casella email locale; applica le migrazioni
+npx supabase status   # mostra URL e chiavi da copiare in .env.local
+```
+
+In `supabase/config.toml`, sezione `[auth]`: `site_url = "http://localhost:3000"` e `additional_redirect_urls = ["http://localhost:3000/auth/callback"]`, poi `npx supabase stop && npx supabase start`. In `.env.local` usa `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` e le chiavi `anon` e `service_role` mostrate da `status`. Studio (dati): http://127.0.0.1:54323 · email di prova: http://127.0.0.1:54324.
+
+### Provarlo su Android
+
+- **Stessa rete Wi-Fi**: `npm run build && npx next start -H 0.0.0.0 -p 3000`, poi apri `http://<IP-del-PC>:3000` in Chrome sul telefono (consenti Node.js nel firewall di Windows).
+- **Cavo USB**: `adb reverse tcp:3000 tcp:3000` e apri `http://localhost:3000` sul telefono.
+- **Come app**: vedi [docs/mobile.md](docs/mobile.md#2-provare-lapp-su-un-telefono-android-sviluppo).
 
 ---
 
@@ -153,6 +175,8 @@ Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pr
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sì | Chiave pubblica (soggetta a RLS) |
 | `SUPABASE_SERVICE_ROLE_KEY` | sì | Solo server: chiavi cifrate, quote AI, cache traduzioni, rate limiting, eliminazione account |
 | `NEXT_PUBLIC_SITE_URL` | sì | URL pubblico, per i link nelle email |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | per gli store | Contatto di supporto mostrato in app |
+| `CAP_SERVER_URL`, `CAP_APP_ID` | per le app | Sito che le app caricano e identificativo dell’app ([docs/mobile.md](docs/mobile.md)) |
 | `APP_ENCRYPTION_KEY` | per le chiavi utente | 32 byte base64 (`npm run gen:key`); senza, il salvataggio di chiavi personali è disabilitato |
 | `AI_APP_PROVIDER` | no | `anthropic` \| `openai` \| `openai-compatible` – servizio base pagato dal gestore |
 | `AI_APP_API_KEY`, `AI_APP_BASE_URL` | no | Chiave del gestore; base URL solo per `openai-compatible` |
@@ -191,7 +215,7 @@ Configurazione di provider, modelli, costi e privacy: **[docs/ai-providers.md](d
 ## Prossimi passi consigliati
 
 1. Collegare un progetto Supabase, configurare SMTP e fare un giro completo sui 14 criteri di accettazione con due account reali.
-2. Test end-to-end automatici (Playwright) contro un progetto Supabase di staging.
-3. Pannello di moderazione per le segnalazioni.
-4. Import del formato JSON esportato; più liste della spesa; drag & drop nel piano.
-5. Monitoraggio errori (es. Sentry) con la stessa politica di redazione dei log.
+2. Prima build delle app in Android Studio e Xcode, test su dispositivo, test chiuso su Google Play e TestFlight ([docs/mobile.md](docs/mobile.md)).
+3. Share Extension iOS e notifiche per il piano pasti.
+4. Test end-to-end automatici (Playwright) contro un progetto Supabase di staging.
+5. Import del formato JSON esportato; più liste della spesa; drag & drop nel piano.

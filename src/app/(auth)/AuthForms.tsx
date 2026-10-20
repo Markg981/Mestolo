@@ -68,6 +68,11 @@ export function SignupForm() {
         <input type="checkbox" name="terms" required className="mt-1 size-5 accent-[var(--basil)]" />
         <span>
           {t.rich('termsLabel', {
+            terms: (chunks) => (
+              <Link href="/terms" className="text-basil underline underline-offset-4">
+                {chunks}
+              </Link>
+            ),
             link: (chunks) => (
               <Link href="/privacy" className="text-basil underline underline-offset-4">
                 {chunks}

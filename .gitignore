@@ -13,3 +13,9 @@ supabase/.branches/
 test-results/
 playwright-report/
 .DS_Store
+
+# Capacitor
+mobile/www/config.js
+android/app/release/
+*.keystore
+*.jks

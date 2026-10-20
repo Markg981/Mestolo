@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mestolo</string>
+    <string name="title_activity_main">Mestolo</string>
+    <string name="package_name">com.markg981.mestolo</string>
+    <string name="custom_url_scheme">com.markg981.mestolo</string>
+</resources>

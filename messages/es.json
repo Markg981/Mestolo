@@ -41,7 +41,8 @@
     "importText": "Pegar texto",
     "close": "Cerrar menú",
     "signOut": "Cerrar sesión",
-    "myProfile": "Mi perfil"
+    "myProfile": "Mi perfil",
+    "moderation": "Moderación"
   },
   "welcome": {
     "title": "Todas tus recetas, en un solo cajón.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g de pasta variada",
     "sampleIng2": "600 g de patatas",
     "sampleIng3": "1 corteza de parmesano",
-    "sampleIng4": "Pimienta negra al gusto"
+    "sampleIng4": "Pimienta negra al gusto",
+    "terms": "Normas de la comunidad"
   },
   "auth": {
     "loginTitle": "Hola de nuevo",
@@ -74,7 +76,7 @@
     "passwordHint": "Al menos 8 caracteres.",
     "username": "Nombre de usuario",
     "usernameHint": "De 3 a 24 caracteres: minúsculas, números y guion bajo. Así te encontrarán tus amigos.",
-    "termsLabel": "He leído <link>cómo se tratan mis datos</link>.",
+    "termsLabel": "Acepto las <terms>normas de la comunidad</terms> y he leído <link>cómo se tratan mis datos</link>.",
     "submitLogin": "Iniciar sesión",
     "submitSignup": "Crear cuenta",
     "pendingLogin": "Iniciando sesión…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Solo las ves tú, aunque la receta esté compartida.",
     "notePlaceholder": "P. ej., menos sal, horno a 170°",
     "saveNote": "Guardar nota",
-    "noteSaved": "Nota guardada."
+    "noteSaved": "Nota guardada.",
+    "hiddenTitle": "Receta ocultada por moderación",
+    "hiddenLead": "Tras varias denuncias, esta receta ya no es visible para otros usuarios. Sigue en tu recetario; si crees que es un error, contacta con el soporte."
   },
   "translate": {
     "banner": "Esta receta está en {language}.",
@@ -460,7 +464,8 @@
     "configure": "Ajustes de IA",
     "pagesKept": "Tus páginas siguen aquí.",
     "yourPages": "Tus páginas",
-    "compareHint": "Toca una página para verla a pantalla completa."
+    "compareHint": "Toca una página para verla a pantalla completa.",
+    "cameraError": "No se ha podido usar la cámara. Revisa los permisos de la app o elige una foto de la galería."
   },
   "link": {
     "title": "Importar desde enlace",
@@ -653,7 +658,8 @@
     },
     "details": "Detalles (opcional)",
     "send": "Enviar denuncia",
-    "sent": "Denuncia enviada. Gracias."
+    "sent": "Denuncia enviada. Gracias.",
+    "note": "Un moderador revisa las denuncias. Una receta denunciada por varias personas se oculta hasta que se revise."
   },
   "shopping": {
     "title": "Lista de la compra",
@@ -735,7 +741,8 @@
     "categoriesLead": "Añade categorías que encajen con tu cocina, además de las predeterminadas.",
     "addCategory": "Nueva categoría",
     "addCategoryPlaceholder": "P. ej., Sopas, Dim sum",
-    "deleteCategory": "Eliminar la categoría {name}"
+    "deleteCategory": "Eliminar la categoría {name}",
+    "termsLink": "Normas de la comunidad"
   },
   "aiSettings": {
     "title": "IA y claves API",
@@ -821,5 +828,49 @@
     "printButton": "Imprimir o guardar en PDF",
     "close": "Cerrar",
     "source": "Fuente"
+  },
+  "offline": {
+    "banner": "Estás sin conexión: ves la última copia guardada. Para hacer cambios necesitas conexión.",
+    "title": "Sin conexión",
+    "lead": "Esta página no está disponible sin conexión. Puedes seguir consultando las recetas y la lista de la compra que has abierto hace poco.",
+    "retry": "Reintentar"
+  },
+  "support": {
+    "title": "Soporte",
+    "lead": "Para preguntas, problemas o denuncias urgentes, escribe a <link>{email}</link>.",
+    "notConfigured": "Quien gestiona esta instalación aún no ha indicado un contacto de soporte."
+  },
+  "moderation": {
+    "title": "Moderación",
+    "lead": "Denuncias sobre recetas compartidas. Las recetas ocultas solo son visibles para sus autores.",
+    "openTitle": "Por revisar ({n})",
+    "reportsCount": "{n, plural, one {# denuncia abierta} other {# denuncias abiertas}}",
+    "reportedBy": "Denunciada por {name}",
+    "recipeGone": "Receta eliminada",
+    "hiddenBadge": "Oculta",
+    "hide": "Ocultar la receta",
+    "restore": "Volver a hacer visible",
+    "dismiss": "Archivar la denuncia",
+    "emptyTitle": "No hay denuncias abiertas",
+    "empty": "Cuando un usuario denuncie una receta, aparecerá aquí.",
+    "hiddenTitle": "Recetas ocultas",
+    "hiddenEmpty": "No hay recetas ocultas."
+  },
+  "terms": {
+    "title": "Normas de la comunidad",
+    "lead": "Mestolo es un espacio para compartir recetas. Al usarlo aceptas estas normas, que se aplican a todo lo que haces visible para tus amigos o para todos.",
+    "conductTitle": "Respeto",
+    "conduct": "Nada de contenido ofensivo, discriminatorio, violento, sexual, acosador o engañoso, ni spam o publicidad no solicitada.",
+    "contentTitle": "Lo que compartes",
+    "content": "Eres responsable de las recetas, los textos y las imágenes que publicas. Las recetas son privadas hasta que decides compartirlas.",
+    "rightsTitle": "Derechos",
+    "rights": "Comparte solo contenido tuyo o que tengas derecho a compartir. Las recetas importadas de webs o libros son privadas por defecto: hazlas públicas solo si tienes derecho a ello, y cita siempre la fuente.",
+    "safetyTitle": "Seguridad alimentaria",
+    "safety": "No publiques indicaciones peligrosas. Las sugerencias de la IA y las sustituciones son orientativas y no garantizan que sean aptas para alergias, intolerancias o dietas.",
+    "moderationTitle": "Denuncias y bloqueos",
+    "moderation": "Puedes denunciar una receta y bloquear a un usuario en cualquier momento. Las denuncias se revisan; una receta denunciada por varias personas se oculta hasta que se revise, y el contenido que incumple las normas se elimina.",
+    "accountTitle": "Cuenta",
+    "account": "En caso de infracciones graves o repetidas, la cuenta puede suspenderse o eliminarse. Puedes eliminar tu cuenta y todos tus datos en cualquier momento desde los ajustes.",
+    "operatorNote": "Quien gestiona esta instalación puede completar estas normas con sus propias condiciones del servicio."
   }
 }

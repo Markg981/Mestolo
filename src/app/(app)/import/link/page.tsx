@@ -12,13 +12,14 @@ export async function generateMetadata() {
 
 const NONE = { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };
 
-export default async function LinkImportPage() {
+export default async function LinkImportPage({ searchParams }: { searchParams: Promise<{ url?: string }> }) {
+  const { url } = await searchParams;
   const [t, user, categories] = await Promise.all([getTranslations('link'), getUser(), editorCategories()]);
   const status = user ? await capabilityStatus(user.id, 'text', 'text').catch(() => NONE) : NONE;
   return (
     <div>
       <PageHeader title={t('title')} lead={t('lead')} />
-      <LinkImport categories={categories} status={status} />
+      <LinkImport categories={categories} status={status} initialUrl={url && /^https?:\/\//.test(url) ? url.slice(0, 2000) : ''} />
     </div>
   );
 }

@@ -41,7 +41,8 @@
     "importText": "Coller du texte",
     "close": "Fermer le menu",
     "signOut": "Se déconnecter",
-    "myProfile": "Mon profil"
+    "myProfile": "Mon profil",
+    "moderation": "Modération"
   },
   "welcome": {
     "title": "Toutes vos recettes, dans un seul tiroir.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g de pâtes mélangées",
     "sampleIng2": "600 g de pommes de terre",
     "sampleIng3": "1 croûte de parmesan",
-    "sampleIng4": "Poivre noir à volonté"
+    "sampleIng4": "Poivre noir à volonté",
+    "terms": "Règles de la communauté"
   },
   "auth": {
     "loginTitle": "Bon retour parmi nous",
@@ -74,7 +76,7 @@
     "passwordHint": "Au moins 8 caractères.",
     "username": "Nom d'utilisateur",
     "usernameHint": "De 3 à 24 caractères : lettres minuscules, chiffres et tiret bas. C'est ainsi que vos amis vous trouvent.",
-    "termsLabel": "J'ai lu <link>comment mes données sont traitées</link>.",
+    "termsLabel": "J'accepte les <terms>règles de la communauté</terms> et j'ai lu <link>comment mes données sont traitées</link>.",
     "submitLogin": "Se connecter",
     "submitSignup": "Créer un compte",
     "pendingLogin": "Connexion…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Visibles par vous seul, même si la recette est partagée.",
     "notePlaceholder": "Ex. : moins de sel, four à 170°",
     "saveNote": "Enregistrer la note",
-    "noteSaved": "Note enregistrée."
+    "noteSaved": "Note enregistrée.",
+    "hiddenTitle": "Recette masquée par la modération",
+    "hiddenLead": "Suite à plusieurs signalements, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, contactez l'assistance."
   },
   "translate": {
     "banner": "Cette recette est en {language}.",
@@ -460,7 +464,8 @@
     "configure": "Paramètres IA",
     "pagesKept": "Vos pages sont toujours là.",
     "yourPages": "Vos pages",
-    "compareHint": "Touchez une page pour l'ouvrir en plein écran."
+    "compareHint": "Touchez une page pour l'ouvrir en plein écran.",
+    "cameraError": "Impossible d'utiliser l'appareil photo. Vérifiez les autorisations de l'application ou choisissez une photo dans la galerie."
   },
   "link": {
     "title": "Importer depuis un lien",
@@ -653,7 +658,8 @@
     },
     "details": "Détails (facultatif)",
     "send": "Envoyer le signalement",
-    "sent": "Signalement envoyé. Merci."
+    "sent": "Signalement envoyé. Merci.",
+    "note": "Les signalements sont examinés par un modérateur. Une recette signalée par plusieurs personnes est masquée en attendant vérification."
   },
   "shopping": {
     "title": "Liste de courses",
@@ -735,7 +741,8 @@
     "categoriesLead": "Ajoutez des catégories adaptées à votre cuisine, en plus de celles proposées par défaut.",
     "addCategory": "Nouvelle catégorie",
     "addCategoryPlaceholder": "Ex. : Soupes, Dim sum",
-    "deleteCategory": "Supprimer la catégorie {name}"
+    "deleteCategory": "Supprimer la catégorie {name}",
+    "termsLink": "Règles de la communauté"
   },
   "aiSettings": {
     "title": "IA et clés API",
@@ -821,5 +828,49 @@
     "printButton": "Imprimer ou enregistrer en PDF",
     "close": "Fermer",
     "source": "Source"
+  },
+  "offline": {
+    "banner": "Vous êtes hors ligne : vous voyez la dernière copie enregistrée. Les modifications nécessitent une connexion.",
+    "title": "Pas de connexion",
+    "lead": "Cette page n'est pas disponible hors ligne. Les recettes et la liste de courses ouvertes récemment restent consultables.",
+    "retry": "Réessayer"
+  },
+  "support": {
+    "title": "Assistance",
+    "lead": "Pour toute question, tout problème ou signalement urgent, écrivez à <link>{email}</link>.",
+    "notConfigured": "L'exploitant de cette installation n'a pas encore indiqué de contact d'assistance."
+  },
+  "moderation": {
+    "title": "Modération",
+    "lead": "Signalements sur les recettes partagées. Les recettes masquées restent visibles uniquement par leurs auteurs.",
+    "openTitle": "À examiner ({n})",
+    "reportsCount": "{n, plural, one {# signalement ouvert} other {# signalements ouverts}}",
+    "reportedBy": "Signalée par {name}",
+    "recipeGone": "Recette supprimée",
+    "hiddenBadge": "Masquée",
+    "hide": "Masquer la recette",
+    "restore": "Rendre de nouveau visible",
+    "dismiss": "Archiver le signalement",
+    "emptyTitle": "Aucun signalement ouvert",
+    "empty": "Lorsqu'un utilisateur signale une recette, vous la retrouvez ici.",
+    "hiddenTitle": "Recettes masquées",
+    "hiddenEmpty": "Aucune recette masquée."
+  },
+  "terms": {
+    "title": "Règles de la communauté",
+    "lead": "Mestolo est un espace de partage de recettes. En l'utilisant, vous acceptez ces règles, qui s'appliquent à tout ce que vous rendez visible par vos amis ou par tout le monde.",
+    "conductTitle": "Respect",
+    "conduct": "Aucun contenu offensant, discriminatoire, violent, sexuel, harcelant ou trompeur, ni spam ou publicité non sollicitée.",
+    "contentTitle": "Ce que vous partagez",
+    "content": "Vous êtes responsable des recettes, textes et images que vous publiez. Les recettes restent privées tant que vous ne choisissez pas de les partager.",
+    "rightsTitle": "Droits",
+    "rights": "Ne partagez que des contenus qui vous appartiennent ou que vous avez le droit de partager. Les recettes importées de sites ou de livres sont privées par défaut : rendez-les publiques uniquement si vous en avez le droit, en citant toujours la source.",
+    "safetyTitle": "Sécurité alimentaire",
+    "safety": "Ne publiez pas d'instructions dangereuses. Les suggestions de l'IA et les substitutions sont indicatives et ne garantissent pas leur adéquation en cas d'allergies, d'intolérances ou de régimes.",
+    "moderationTitle": "Signalements et blocages",
+    "moderation": "Vous pouvez signaler une recette et bloquer un utilisateur à tout moment. Les signalements sont examinés ; une recette signalée par plusieurs personnes est masquée en attendant vérification, et les contenus qui enfreignent les règles sont supprimés.",
+    "accountTitle": "Compte",
+    "account": "En cas de violations graves ou répétées, le compte peut être suspendu ou supprimé. Vous pouvez supprimer votre compte et toutes vos données à tout moment depuis les paramètres.",
+    "operatorNote": "L'exploitant de cette installation peut compléter ces règles par ses propres conditions d'utilisation."
   }
 }

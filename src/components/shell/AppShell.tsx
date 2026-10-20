@@ -4,6 +4,7 @@ import { NavIcon } from './icons';
 import { PRIMARY_NAV, QUICK_ACTIONS, SECONDARY_NAV } from './nav-items';
 import { BottomNav, NavLink } from './NavClient';
 import { signOut } from '@/app/actions/auth';
+import { OfflineBanner, SignOutButton } from '@/components/pwa/PwaClient';
 
 export function Logo({ className }: { className?: string }) {
   return (
@@ -20,7 +21,7 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-export async function AppShell({ children, username }: { children: React.ReactNode; username: string }) {
+export async function AppShell({ children, username, isModerator = false }: { children: React.ReactNode; username: string; isModerator?: boolean }) {
   const t = await getTranslations('nav');
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
@@ -45,22 +46,20 @@ export async function AppShell({ children, username }: { children: React.ReactNo
           {[...PRIMARY_NAV, ...SECONDARY_NAV].map((n) => (
             <NavLink key={n.href} href={n.href} icon={n.icon} label={t(n.key)} />
           ))}
+          {isModerator && <NavLink href="/moderation" icon="shield" label={t('moderation')} />}
         </nav>
         <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
           <Link href={`/u/${username}`} className="truncate px-3 text-sm text-muted hover:text-ink">
             @{username}
           </Link>
-          <form action={signOut}>
-            <button type="submit" className="min-h-11 w-full rounded-xl px-3 text-left font-semibold text-muted hover:bg-sunk hover:text-ink">
-              {t('signOut')}
-            </button>
-          </form>
+          <SignOutButton action={signOut} label={t('signOut')} className="min-h-11 w-full rounded-xl px-3 text-left font-semibold text-muted hover:bg-sunk hover:text-ink" />
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-col">
+        <OfflineBanner />
         {/* Mobile top bar */}
-        <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-line bg-porcelain/95 px-4 py-2.5 backdrop-blur lg:hidden">
+        <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-line bg-porcelain/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur lg:hidden">
           <Link href="/" aria-label="Mestolo">
             <Logo />
           </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link2 } from 'lucide-react';
 import { importFromUrl } from '@/app/actions/import';
@@ -11,21 +11,20 @@ import type { EditorCategory } from '@/components/recipes/editor/types';
 import type { ImportDraft } from '@/lib/recipes/types';
 import { Alert, Field, Input, buttonClass } from '@/components/ui';
 
-export function LinkImport({ categories, status }: { categories: EditorCategory[]; status: AiStatusProps }) {
+export function LinkImport({ categories, status, initialUrl = '' }: { categories: EditorCategory[]; status: AiStatusProps; initialUrl?: string }) {
   const t = useTranslations('link');
   const te = useTranslations('errors');
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(initialUrl);
   const [draft, setDraft] = useState<ImportDraft | null>(null);
   const [fallback, setFallback] = useState<{ text: string; reason: 'no_recipe' | 'error' } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const run = (target: string) =>
     start(async () => {
       setError(null);
       setFallback(null);
-      const res = await importFromUrl(url);
+      const res = await importFromUrl(target);
       if (!res.ok) {
         setError(te(res.error));
         setFallback({ text: '', reason: 'error' });
@@ -34,7 +33,21 @@ export function LinkImport({ categories, status }: { categories: EditorCategory[
       if (res.data.draft) setDraft(res.data.draft);
       else setFallback({ text: res.data.pageText, reason: 'no_recipe' });
     });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    run(url);
   };
+
+  // A link shared from another app starts the import right away (once).
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (initialUrl && !autoStarted.current) {
+      autoStarted.current = true;
+      run(initialUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUrl]);
 
   if (draft) return <ImportReview draft={draft} categories={categories} draftKey="mestolo:draft:import-link" onBack={() => setDraft(null)} />;
 

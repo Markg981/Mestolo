@@ -54,6 +54,7 @@ export interface Profile {
   dietary_preferences: string[];
   avoided_ingredients: string[];
   hidden_categories: string[];
+  is_moderator: boolean;
 }
 
 export const getProfile = cache(async (): Promise<Profile | null> => {

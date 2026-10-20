@@ -129,6 +129,8 @@ describe('i18n', () => {
       ...['step_rewrite', 'ingredient_fix', 'ingredient_add', 'time_estimate', 'idea'].map((d) => `assistant.types.${d}`),
       ...['text', 'vision', 'image', 'translate'].map((c) => `aiSettings.capability.${c}`),
       ...['manual', 'photo', 'url', 'text', 'copy', 'variant'].map((s) => `recipe.sourceType.${s}`),
+      ...['conduct', 'content', 'rights', 'safety', 'moderation', 'account'].flatMap((s) => [`terms.${s}`, `terms.${s}Title`]),
+      ...['data', 'visibility', 'photos', 'ai', 'keys', 'images', 'export', 'logs'].flatMap((s) => [`privacy.${s}`, `privacy.${s}Title`]),
     ];
     const errorCodes = readFileSync(join(root, 'src/app/actions/_utils.ts'), 'utf8').match(/export type ErrorCode =([\s\S]*?);/)![1];
     for (const code of errorCodes.matchAll(/'(\w+)'/g)) families.push(`errors.${code[1]}`);

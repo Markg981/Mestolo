@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { SupportContact } from '@/components/SupportContact';
 
 export async function generateMetadata() {
   const t = await getTranslations('privacy');
@@ -19,6 +20,7 @@ export default async function PrivacyPage() {
           <p className="leading-relaxed">{t(s)}</p>
         </section>
       ))}
+      <SupportContact />
       <p className="text-sm text-muted">{t('operatorNote')}</p>
     </article>
   );

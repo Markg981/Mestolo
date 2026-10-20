@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Home, Link2, Menu, Plus, Settings, ShoppingBasket, Users, Type } from 'lucide-react';
+import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Home, Link2, Menu, Plus, Settings, ShieldCheck, ShoppingBasket, Users, Type } from 'lucide-react';
 
 const MAP = {
   home: Home,
@@ -14,6 +14,7 @@ const MAP = {
   link: Link2,
   menu: Menu,
   text: Type,
+  shield: ShieldCheck,
 } as const;
 
 export type IconName = keyof typeof MAP;

@@ -18,9 +18,19 @@
     "test:db": "vitest run --config vitest.db.config.ts",
     "db:test:local": "bash scripts/test-db-local.sh",
     "seed:catalog": "node --experimental-strip-types scripts/seed-catalog.ts",
-    "gen:key": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+    "gen:key": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+    "mobile:sync": "node scripts/mobile-prepare.mjs && cap sync",
+    "mobile:android": "npm run mobile:sync && cap open android",
+    "mobile:ios": "npm run mobile:sync && cap open ios",
+    "mobile:assets": "capacitor-assets generate --android --ios --iconBackgroundColor \"#2a1a2e\" --iconBackgroundColorDark \"#2a1a2e\" --splashBackgroundColor \"#2a1a2e\" --splashBackgroundColorDark \"#2a1a2e\"",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/camera": "^8.2.6",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
     "@fontsource-variable/bricolage-grotesque": "5.3.0",
     "@supabase/ssr": "0.12.7",
@@ -38,6 +48,10 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^22",
     "@types/pg": "8.23.1",

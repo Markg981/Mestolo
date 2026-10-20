@@ -297,6 +297,7 @@ export function RecipeActions(p: Props) {
             ))}
           </Select>
         </Field>
+        <p className="text-sm text-muted">{tr('note')}</p>
         <Field label={tr('details')} htmlFor="details">
           <Textarea id="details" maxLength={1000} value={details} onChange={(e) => setDetails(e.target.value)} />
         </Field>

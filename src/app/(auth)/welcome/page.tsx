@@ -27,9 +27,14 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
             </li>
           ))}
         </ul>
-        <Link href="/privacy" className="text-sm text-muted underline underline-offset-4">
-          {t('privacy')}
-        </Link>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/privacy" className="text-sm text-muted underline underline-offset-4">
+            {t('privacy')}
+          </Link>
+          <Link href="/terms" className="text-sm text-muted underline underline-offset-4">
+            {t('terms')}
+          </Link>
+        </div>
       </div>
 
       {/* A recipe card drawn in HTML: the product's signature object */}

@@ -6,5 +6,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   await requireUser();
   const profile = await getProfile();
   if (!profile) redirect('/login');
-  return <AppShell username={profile.username}>{children}</AppShell>;
+  return (
+    <AppShell username={profile.username} isModerator={profile.is_moderator}>
+      {children}
+    </AppShell>
+  );
 }

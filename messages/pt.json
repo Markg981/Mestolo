@@ -41,7 +41,8 @@
     "importText": "Colar texto",
     "close": "Fechar menu",
     "signOut": "Terminar sessão",
-    "myProfile": "O meu perfil"
+    "myProfile": "O meu perfil",
+    "moderation": "Moderação"
   },
   "welcome": {
     "title": "Todas as tuas receitas, numa só gaveta.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g de massa variada",
     "sampleIng2": "600 g de batatas",
     "sampleIng3": "1 casca de parmesão",
-    "sampleIng4": "Pimenta preta q.b."
+    "sampleIng4": "Pimenta preta q.b.",
+    "terms": "Regras da comunidade"
   },
   "auth": {
     "loginTitle": "Bem-vindo de volta",
@@ -74,7 +76,7 @@
     "passwordHint": "Pelo menos 8 caracteres.",
     "username": "Nome de utilizador",
     "usernameHint": "De 3 a 24 caracteres: letras minúsculas, números e underscore. É assim que os amigos te encontram.",
-    "termsLabel": "Li <link>como são tratados os meus dados</link>.",
+    "termsLabel": "Aceito as <terms>regras da comunidade</terms> e li <link>como são tratados os meus dados</link>.",
     "submitLogin": "Entrar",
     "submitSignup": "Criar conta",
     "pendingLogin": "A entrar…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Visíveis só para ti, mesmo que a receita seja partilhada.",
     "notePlaceholder": "Ex.: menos sal, forno a 170°",
     "saveNote": "Guardar nota",
-    "noteSaved": "Nota guardada."
+    "noteSaved": "Nota guardada.",
+    "hiddenTitle": "Receita ocultada pela moderação",
+    "hiddenLead": "Após várias denúncias, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, contacta o suporte."
   },
   "translate": {
     "banner": "Esta receita está em {language}.",
@@ -460,7 +464,8 @@
     "configure": "Definições de IA",
     "pagesKept": "As tuas páginas continuam aqui.",
     "yourPages": "As tuas páginas",
-    "compareHint": "Toca numa página para a abrir em ecrã inteiro."
+    "compareHint": "Toca numa página para a abrir em ecrã inteiro.",
+    "cameraError": "Não foi possível usar a câmara. Verifica as permissões da app ou escolhe uma foto da galeria."
   },
   "link": {
     "title": "Importar de link",
@@ -653,7 +658,8 @@
     },
     "details": "Detalhes (opcional)",
     "send": "Enviar denúncia",
-    "sent": "Denúncia enviada. Obrigado."
+    "sent": "Denúncia enviada. Obrigado.",
+    "note": "As denúncias são analisadas por um moderador. Uma receita denunciada por várias pessoas fica oculta até ser verificada."
   },
   "shopping": {
     "title": "Lista de compras",
@@ -735,7 +741,8 @@
     "categoriesLead": "Adiciona categorias adequadas à tua cozinha, além das predefinidas.",
     "addCategory": "Nova categoria",
     "addCategoryPlaceholder": "Ex.: Sopas, Dim sum",
-    "deleteCategory": "Eliminar a categoria {name}"
+    "deleteCategory": "Eliminar a categoria {name}",
+    "termsLink": "Regras da comunidade"
   },
   "aiSettings": {
     "title": "IA e chaves de API",
@@ -821,5 +828,49 @@
     "printButton": "Imprimir ou guardar em PDF",
     "close": "Fechar",
     "source": "Fonte"
+  },
+  "offline": {
+    "banner": "Estás offline: estás a ver a última cópia guardada. Para fazer alterações precisas de ligação.",
+    "title": "Sem ligação",
+    "lead": "Esta página não está disponível offline. As receitas e a lista de compras que abriste recentemente continuam disponíveis.",
+    "retry": "Tentar novamente"
+  },
+  "support": {
+    "title": "Suporte",
+    "lead": "Para dúvidas, problemas ou denúncias urgentes, escreve para <link>{email}</link>.",
+    "notConfigured": "O gestor desta instalação ainda não indicou um contacto de suporte."
+  },
+  "moderation": {
+    "title": "Moderação",
+    "lead": "Denúncias sobre receitas partilhadas. As receitas ocultas ficam visíveis apenas para os seus autores.",
+    "openTitle": "Por analisar ({n})",
+    "reportsCount": "{n, plural, one {# denúncia aberta} other {# denúncias abertas}}",
+    "reportedBy": "Denunciada por {name}",
+    "recipeGone": "Receita eliminada",
+    "hiddenBadge": "Oculta",
+    "hide": "Ocultar a receita",
+    "restore": "Tornar novamente visível",
+    "dismiss": "Arquivar a denúncia",
+    "emptyTitle": "Nenhuma denúncia aberta",
+    "empty": "Quando um utilizador denunciar uma receita, vais encontrá-la aqui.",
+    "hiddenTitle": "Receitas ocultas",
+    "hiddenEmpty": "Nenhuma receita oculta."
+  },
+  "terms": {
+    "title": "Regras da comunidade",
+    "lead": "O Mestolo é um espaço para partilhar receitas. Ao usá-lo aceitas estas regras, que se aplicam a tudo o que tornas visível aos amigos ou a todos.",
+    "conductTitle": "Respeito",
+    "conduct": "Nada de conteúdos ofensivos, discriminatórios, violentos, sexuais, de assédio ou enganosos, nem spam ou publicidade não solicitada.",
+    "contentTitle": "O que partilhas",
+    "content": "És responsável pelas receitas, textos e imagens que publicas. As receitas são privadas até decidires partilhá-las.",
+    "rightsTitle": "Direitos",
+    "rights": "Partilha apenas conteúdos teus ou que tenhas o direito de partilhar. As receitas importadas de sites ou livros são privadas por predefinição: torna-as públicas só se tiveres esse direito, citando sempre a fonte.",
+    "safetyTitle": "Segurança alimentar",
+    "safety": "Não publiques indicações perigosas. As sugestões da IA e as substituições são indicativas e não garantem que sejam adequadas a alergias, intolerâncias ou dietas.",
+    "moderationTitle": "Denúncias e bloqueios",
+    "moderation": "Podes denunciar uma receita e bloquear um utilizador a qualquer momento. As denúncias são analisadas; uma receita denunciada por várias pessoas fica oculta até ser verificada e os conteúdos que violam as regras são removidos.",
+    "accountTitle": "Conta",
+    "account": "Em caso de violações graves ou repetidas, a conta pode ser suspensa ou eliminada. Podes eliminar a tua conta e todos os teus dados a qualquer momento nas definições.",
+    "operatorNote": "O gestor desta instalação pode complementar estas regras com os seus próprios termos de serviço."
   }
 }

@@ -41,7 +41,8 @@
     "importText": "Paste text",
     "close": "Close menu",
     "signOut": "Sign out",
-    "myProfile": "My profile"
+    "myProfile": "My profile",
+    "moderation": "Moderation"
   },
   "welcome": {
     "title": "All your recipes, in one drawer.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g mixed pasta",
     "sampleIng2": "600 g potatoes",
     "sampleIng3": "1 Parmesan rind",
-    "sampleIng4": "Black pepper to taste"
+    "sampleIng4": "Black pepper to taste",
+    "terms": "Community rules"
   },
   "auth": {
     "loginTitle": "Welcome back",
@@ -74,7 +76,7 @@
     "passwordHint": "At least 8 characters.",
     "username": "Username",
     "usernameHint": "3 to 24 characters: lowercase letters, numbers, and underscores. This is how friends find you.",
-    "termsLabel": "I've read <link>how my data is handled</link>.",
+    "termsLabel": "I accept the <terms>community rules</terms> and I've read <link>how my data is handled</link>.",
     "submitLogin": "Sign in",
     "submitSignup": "Create account",
     "pendingLogin": "Signing in…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Visible only to you, even if the recipe is shared.",
     "notePlaceholder": "E.g. less salt, oven at 340°F",
     "saveNote": "Save note",
-    "noteSaved": "Note saved."
+    "noteSaved": "Note saved.",
+    "hiddenTitle": "Recipe hidden by moderation",
+    "hiddenLead": "After several reports, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake, contact support."
   },
   "translate": {
     "banner": "This recipe is in {language}.",
@@ -460,7 +464,8 @@
     "configure": "AI settings",
     "pagesKept": "Your pages are still here.",
     "yourPages": "Your pages",
-    "compareHint": "Tap a page to view it full screen."
+    "compareHint": "Tap a page to view it full screen.",
+    "cameraError": "Couldn't use the camera. Check the app's permissions or choose a photo from your gallery."
   },
   "link": {
     "title": "Import from link",
@@ -653,7 +658,8 @@
     },
     "details": "Details (optional)",
     "send": "Send report",
-    "sent": "Report sent. Thank you."
+    "sent": "Report sent. Thank you.",
+    "note": "Reports are reviewed by a moderator. A recipe reported by several people is hidden pending review."
   },
   "shopping": {
     "title": "Shopping list",
@@ -735,7 +741,8 @@
     "categoriesLead": "Add categories that suit your cooking, alongside the default ones.",
     "addCategory": "New category",
     "addCategoryPlaceholder": "E.g. Soups, Dim sum",
-    "deleteCategory": "Delete category {name}"
+    "deleteCategory": "Delete category {name}",
+    "termsLink": "Community rules"
   },
   "aiSettings": {
     "title": "AI and API keys",
@@ -821,5 +828,49 @@
     "printButton": "Print or save as PDF",
     "close": "Close",
     "source": "Source"
+  },
+  "offline": {
+    "banner": "You're offline: you're seeing the last saved copy. Changes need a connection.",
+    "title": "No connection",
+    "lead": "This page isn't available offline. Recipes and shopping lists you opened recently are still available.",
+    "retry": "Try again"
+  },
+  "support": {
+    "title": "Support",
+    "lead": "For questions, problems, or urgent reports, write to <link>{email}</link>.",
+    "notConfigured": "The operator of this installation hasn't provided a support contact yet."
+  },
+  "moderation": {
+    "title": "Moderation",
+    "lead": "Reports on shared recipes. Hidden recipes stay visible only to their authors.",
+    "openTitle": "To review ({n})",
+    "reportsCount": "{n, plural, one {# open report} other {# open reports}}",
+    "reportedBy": "Reported by {name}",
+    "recipeGone": "Recipe deleted",
+    "hiddenBadge": "Hidden",
+    "hide": "Hide recipe",
+    "restore": "Make visible again",
+    "dismiss": "Archive report",
+    "emptyTitle": "No open reports",
+    "empty": "When a user reports a recipe, you'll find it here.",
+    "hiddenTitle": "Hidden recipes",
+    "hiddenEmpty": "No hidden recipes."
+  },
+  "terms": {
+    "title": "Community rules",
+    "lead": "Mestolo is a place to share recipes. By using it, you accept these rules, which apply to everything you make visible to friends or everyone.",
+    "conductTitle": "Respect",
+    "conduct": "No offensive, discriminatory, violent, sexual, harassing, or misleading content, and no spam or unsolicited advertising.",
+    "contentTitle": "What you share",
+    "content": "You're responsible for the recipes, text, and images you publish. Recipes are private until you choose to share them.",
+    "rightsTitle": "Rights",
+    "rights": "Share only content that's yours or that you have the right to share. Recipes imported from websites or books are private by default: make them public only if you have the right to, and always credit the source.",
+    "safetyTitle": "Food safety",
+    "safety": "Don't publish dangerous instructions. AI suggestions and substitutions are only a guide and don't guarantee suitability for allergies, intolerances, or diets.",
+    "moderationTitle": "Reports and blocking",
+    "moderation": "You can report a recipe or block a user at any time. Reports are reviewed; a recipe reported by several people is hidden pending review, and content that breaks the rules is removed.",
+    "accountTitle": "Account",
+    "account": "Serious or repeated violations can lead to your account being suspended or deleted. You can delete your account and all your data at any time from settings.",
+    "operatorNote": "The operator of this installation may supplement these rules with their own terms of service."
   }
 }

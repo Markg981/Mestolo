@@ -77,6 +77,11 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       {sp.saved && <Alert tone="success">{t('recipe.saved')}</Alert>}
       {sp.copied && <Alert tone="success">{t('recipe.copied')}</Alert>}
       {sp.image === 'failed' && <Alert tone="warn">{t('recipe.imageFailed')}</Alert>}
+      {recipe.is_hidden && isOwner && (
+        <Alert tone="error" title={t('recipe.hiddenTitle')}>
+          {t('recipe.hiddenLead')}
+        </Alert>
+      )}
 
       <header className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div className="flex flex-col gap-3">

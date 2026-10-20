@@ -41,7 +41,8 @@
     "importText": "Text einfügen",
     "close": "Menü schließen",
     "signOut": "Abmelden",
-    "myProfile": "Mein Profil"
+    "myProfile": "Mein Profil",
+    "moderation": "Moderation"
   },
   "welcome": {
     "title": "Alle deine Rezepte an einem Ort.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g gemischte Pasta",
     "sampleIng2": "600 g Kartoffeln",
     "sampleIng3": "1 Parmesanrinde",
-    "sampleIng4": "Schwarzer Pfeffer nach Geschmack"
+    "sampleIng4": "Schwarzer Pfeffer nach Geschmack",
+    "terms": "Community-Regeln"
   },
   "auth": {
     "loginTitle": "Willkommen zurück",
@@ -74,7 +76,7 @@
     "passwordHint": "Mindestens 8 Zeichen.",
     "username": "Benutzername",
     "usernameHint": "3 bis 24 Zeichen: Kleinbuchstaben, Zahlen und Unterstrich. So finden dich deine Freunde.",
-    "termsLabel": "Ich habe gelesen, <link>wie meine Daten verarbeitet werden</link>.",
+    "termsLabel": "Ich akzeptiere die <terms>Community-Regeln</terms> und habe gelesen, <link>wie meine Daten verarbeitet werden</link>.",
     "submitLogin": "Anmelden",
     "submitSignup": "Konto erstellen",
     "pendingLogin": "Anmeldung…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Nur für dich sichtbar, auch wenn das Rezept geteilt ist.",
     "notePlaceholder": "z. B. weniger Salz, Ofen auf 170 °C",
     "saveNote": "Notiz speichern",
-    "noteSaved": "Notiz gespeichert."
+    "noteSaved": "Notiz gespeichert.",
+    "hiddenTitle": "Rezept von der Moderation ausgeblendet",
+    "hiddenLead": "Nach mehreren Meldungen ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch. Wenn du glaubst, dass es ein Fehler ist, wende dich an den Support."
   },
   "translate": {
     "banner": "Dieses Rezept ist auf {language}.",
@@ -460,7 +464,8 @@
     "configure": "KI-Einstellungen",
     "pagesKept": "Deine Seiten sind noch da.",
     "yourPages": "Deine Seiten",
-    "compareHint": "Tippe auf eine Seite, um sie im Vollbild zu öffnen."
+    "compareHint": "Tippe auf eine Seite, um sie im Vollbild zu öffnen.",
+    "cameraError": "Die Kamera konnte nicht verwendet werden. Prüfe die Berechtigungen der App oder wähle ein Foto aus der Galerie."
   },
   "link": {
     "title": "Aus Link importieren",
@@ -653,7 +658,8 @@
     },
     "details": "Details (optional)",
     "send": "Meldung senden",
-    "sent": "Meldung gesendet. Danke!"
+    "sent": "Meldung gesendet. Danke!",
+    "note": "Meldungen werden vom Moderationsteam geprüft. Ein Rezept, das von mehreren Personen gemeldet wird, wird bis zur Prüfung ausgeblendet."
   },
   "shopping": {
     "title": "Einkaufsliste",
@@ -735,7 +741,8 @@
     "categoriesLead": "Ergänze die Standardkategorien um Kategorien, die zu deiner Küche passen.",
     "addCategory": "Neue Kategorie",
     "addCategoryPlaceholder": "z. B. Suppen, Dim Sum",
-    "deleteCategory": "Kategorie {name} löschen"
+    "deleteCategory": "Kategorie {name} löschen",
+    "termsLink": "Community-Regeln"
   },
   "aiSettings": {
     "title": "KI und API-Schlüssel",
@@ -821,5 +828,49 @@
     "printButton": "Drucken oder als PDF speichern",
     "close": "Schließen",
     "source": "Quelle"
+  },
+  "offline": {
+    "banner": "Du bist offline: Du siehst die zuletzt gespeicherte Version. Für Änderungen brauchst du eine Verbindung.",
+    "title": "Keine Verbindung",
+    "lead": "Diese Seite ist offline nicht verfügbar. Rezepte und Einkaufslisten, die du kürzlich geöffnet hast, kannst du weiterhin ansehen.",
+    "retry": "Erneut versuchen"
+  },
+  "support": {
+    "title": "Support",
+    "lead": "Bei Fragen, Problemen oder dringenden Meldungen schreib an <link>{email}</link>.",
+    "notConfigured": "Der Betreiber dieser Installation hat noch keinen Support-Kontakt angegeben."
+  },
+  "moderation": {
+    "title": "Moderation",
+    "lead": "Meldungen zu geteilten Rezepten. Ausgeblendete Rezepte sind nur für ihre Autoren sichtbar.",
+    "openTitle": "Zu prüfen ({n})",
+    "reportsCount": "{n, plural, one {# offene Meldung} other {# offene Meldungen}}",
+    "reportedBy": "Gemeldet von {name}",
+    "recipeGone": "Rezept gelöscht",
+    "hiddenBadge": "Ausgeblendet",
+    "hide": "Rezept ausblenden",
+    "restore": "Wieder sichtbar machen",
+    "dismiss": "Meldung archivieren",
+    "emptyTitle": "Keine offenen Meldungen",
+    "empty": "Wenn jemand ein Rezept meldet, findest du es hier.",
+    "hiddenTitle": "Ausgeblendete Rezepte",
+    "hiddenEmpty": "Keine ausgeblendeten Rezepte."
+  },
+  "terms": {
+    "title": "Community-Regeln",
+    "lead": "Mestolo ist ein Ort zum Teilen von Rezepten. Mit der Nutzung akzeptierst du diese Regeln. Sie gelten für alles, was du für Freunde oder alle sichtbar machst.",
+    "conductTitle": "Respekt",
+    "conduct": "Keine anstößigen, diskriminierenden, gewalttätigen, sexuellen, belästigenden oder irreführenden Inhalte, kein Spam und keine unerwünschte Werbung.",
+    "contentTitle": "Was du teilst",
+    "content": "Du bist für die Rezepte, Texte und Bilder verantwortlich, die du veröffentlichst. Rezepte bleiben privat, bis du sie teilst.",
+    "rightsTitle": "Rechte",
+    "rights": "Teile nur Inhalte, die von dir sind oder die du teilen darfst. Rezepte aus Websites oder Büchern sind standardmäßig privat: Mach sie nur öffentlich, wenn du das Recht dazu hast, und gib immer die Quelle an.",
+    "safetyTitle": "Lebensmittelsicherheit",
+    "safety": "Veröffentliche keine gefährlichen Anleitungen. KI-Vorschläge und Ersatzzutaten sind nur Richtwerte und garantieren nicht, dass etwas bei Allergien, Unverträglichkeiten oder Diäten geeignet ist.",
+    "moderationTitle": "Meldungen und Blockieren",
+    "moderation": "Du kannst jederzeit ein Rezept melden oder jemanden blockieren. Meldungen werden geprüft: Ein Rezept, das von mehreren Personen gemeldet wird, wird bis zur Prüfung ausgeblendet, und Inhalte, die gegen die Regeln verstoßen, werden entfernt.",
+    "accountTitle": "Konto",
+    "account": "Bei schweren oder wiederholten Verstößen kann das Konto gesperrt oder gelöscht werden. Du kannst dein Konto und alle deine Daten jederzeit in den Einstellungen löschen.",
+    "operatorNote": "Der Betreiber dieser Installation kann diese Regeln um eigene Nutzungsbedingungen ergänzen."
   }
 }

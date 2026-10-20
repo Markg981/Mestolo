@@ -4,6 +4,7 @@ import { getProfile } from '@/lib/supabase/server';
 import { listCategories } from '@/lib/data/recipes';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { SupportContact } from '@/components/SupportContact';
 import { Card, PageHeader } from '@/components/ui';
 import { ProfileForm, CustomCategories } from './SettingsForms';
 
@@ -29,6 +30,14 @@ export default async function SettingsPage() {
         <Link href="/privacy" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
           {t('settings.privacyLink')}
         </Link>
+        <Link href="/terms" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
+          {t('settings.termsLink')}
+        </Link>
+        {profile?.is_moderator && (
+          <Link href="/moderation" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
+            {t('nav.moderation')}
+          </Link>
+        )}
       </nav>
       <Card className="flex flex-col gap-3">
         <h2 className="text-xl font-bold">{t('settings.languageTitle')}</h2>
@@ -37,6 +46,9 @@ export default async function SettingsPage() {
       </Card>
       {profile && <ProfileForm profile={profile} systemCategories={system} />}
       <CustomCategories categories={custom} />
+      <Card>
+        <SupportContact />
+      </Card>
     </div>
   );
 }

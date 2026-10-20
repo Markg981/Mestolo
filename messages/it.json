@@ -41,7 +41,8 @@
     "importText": "Incolla testo",
     "close": "Chiudi menu",
     "signOut": "Esci",
-    "myProfile": "Il mio profilo"
+    "myProfile": "Il mio profilo",
+    "moderation": "Moderazione"
   },
   "welcome": {
     "title": "Tutte le tue ricette, in un cassetto solo.",
@@ -63,7 +64,8 @@
     "sampleIng1": "320 g pasta mista",
     "sampleIng2": "600 g patate",
     "sampleIng3": "1 crosta di parmigiano",
-    "sampleIng4": "Pepe nero q.b."
+    "sampleIng4": "Pepe nero q.b.",
+    "terms": "Regole della community"
   },
   "auth": {
     "loginTitle": "Bentornato",
@@ -74,7 +76,7 @@
     "passwordHint": "Almeno 8 caratteri.",
     "username": "Nome utente",
     "usernameHint": "Da 3 a 24 caratteri: lettere minuscole, numeri e trattino basso. Gli amici ti trovano così.",
-    "termsLabel": "Ho letto <link>come vengono trattati i miei dati</link>.",
+    "termsLabel": "Accetto le <terms>regole della community</terms> e ho letto <link>come vengono trattati i miei dati</link>.",
     "submitLogin": "Accedi",
     "submitSignup": "Crea account",
     "pendingLogin": "Accesso…",
@@ -328,7 +330,9 @@
     "personalNoteHint": "Visibili solo a te, anche se la ricetta è condivisa.",
     "notePlaceholder": "Es. meno sale, forno a 170°",
     "saveNote": "Salva nota",
-    "noteSaved": "Nota salvata."
+    "noteSaved": "Nota salvata.",
+    "hiddenTitle": "Ricetta nascosta dalla moderazione",
+    "hiddenLead": "Dopo alcune segnalazioni questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore, contatta il supporto."
   },
   "translate": {
     "banner": "Questa ricetta è in {language}.",
@@ -460,7 +464,8 @@
     "configure": "Impostazioni AI",
     "pagesKept": "Le tue pagine sono ancora qui.",
     "yourPages": "Le tue pagine",
-    "compareHint": "Tocca una pagina per aprirla a schermo intero."
+    "compareHint": "Tocca una pagina per aprirla a schermo intero.",
+    "cameraError": "Non è stato possibile usare la fotocamera. Controlla i permessi dell'app o scegli una foto dalla galleria."
   },
   "link": {
     "title": "Importa da link",
@@ -653,7 +658,8 @@
     },
     "details": "Dettagli (facoltativo)",
     "send": "Invia segnalazione",
-    "sent": "Segnalazione inviata. Grazie."
+    "sent": "Segnalazione inviata. Grazie.",
+    "note": "Le segnalazioni sono esaminate da un moderatore. Una ricetta segnalata da più persone viene nascosta in attesa di verifica."
   },
   "shopping": {
     "title": "Lista della spesa",
@@ -735,7 +741,8 @@
     "categoriesLead": "Aggiungi categorie adatte alla tua cucina, oltre a quelle predefinite.",
     "addCategory": "Nuova categoria",
     "addCategoryPlaceholder": "Es. Zuppe, Dim sum",
-    "deleteCategory": "Elimina la categoria {name}"
+    "deleteCategory": "Elimina la categoria {name}",
+    "termsLink": "Regole della community"
   },
   "aiSettings": {
     "title": "AI e chiavi API",
@@ -821,5 +828,49 @@
     "printButton": "Stampa o salva in PDF",
     "close": "Chiudi",
     "source": "Fonte"
+  },
+  "offline": {
+    "banner": "Sei offline: vedi l'ultima copia salvata. Le modifiche richiedono la connessione.",
+    "title": "Nessuna connessione",
+    "lead": "Questa pagina non è disponibile offline. Le ricette e la lista della spesa che hai aperto di recente restano consultabili.",
+    "retry": "Riprova"
+  },
+  "support": {
+    "title": "Supporto",
+    "lead": "Per domande, problemi o segnalazioni urgenti scrivi a <link>{email}</link>.",
+    "notConfigured": "Il gestore di questa installazione non ha ancora indicato un contatto di supporto."
+  },
+  "moderation": {
+    "title": "Moderazione",
+    "lead": "Segnalazioni sulle ricette condivise. Le ricette nascoste restano visibili solo ai loro autori.",
+    "openTitle": "Da esaminare ({n})",
+    "reportsCount": "{n, plural, one {# segnalazione aperta} other {# segnalazioni aperte}}",
+    "reportedBy": "Segnalata da {name}",
+    "recipeGone": "Ricetta eliminata",
+    "hiddenBadge": "Nascosta",
+    "hide": "Nascondi la ricetta",
+    "restore": "Rendi di nuovo visibile",
+    "dismiss": "Archivia la segnalazione",
+    "emptyTitle": "Nessuna segnalazione aperta",
+    "empty": "Quando un utente segnala una ricetta la trovi qui.",
+    "hiddenTitle": "Ricette nascoste",
+    "hiddenEmpty": "Nessuna ricetta nascosta."
+  },
+  "terms": {
+    "title": "Regole della community",
+    "lead": "Mestolo è uno spazio per condividere ricette. Usandolo accetti queste regole, che valgono per tutto ciò che rendi visibile agli amici o a tutti.",
+    "conductTitle": "Rispetto",
+    "conduct": "Niente contenuti offensivi, discriminatori, violenti, sessuali, molesti o ingannevoli, né spam o pubblicità non richiesta.",
+    "contentTitle": "Cosa condividi",
+    "content": "Sei responsabile delle ricette, dei testi e delle immagini che pubblichi. Le ricette sono private finché non scegli di condividerle.",
+    "rightsTitle": "Diritti",
+    "rights": "Condividi solo contenuti tuoi o che hai il diritto di condividere. Le ricette importate da siti o libri restano private per impostazione predefinita: rendile pubbliche solo se ne hai il diritto, citando sempre la fonte.",
+    "safetyTitle": "Sicurezza alimentare",
+    "safety": "Non pubblicare indicazioni pericolose. I suggerimenti dell'AI e le sostituzioni sono indicativi e non garantiscono l'idoneità per allergie, intolleranze o diete.",
+    "moderationTitle": "Segnalazioni e blocchi",
+    "moderation": "Puoi segnalare una ricetta e bloccare un utente in qualsiasi momento. Le segnalazioni vengono esaminate; una ricetta segnalata da più persone viene nascosta in attesa di verifica e i contenuti che violano le regole vengono rimossi.",
+    "accountTitle": "Account",
+    "account": "In caso di violazioni gravi o ripetute l'account può essere sospeso o eliminato. Puoi eliminare il tuo account e tutti i tuoi dati in qualsiasi momento dalle impostazioni.",
+    "operatorNote": "Il gestore di questa installazione può integrare queste regole con i propri termini di servizio."
   }
 }
