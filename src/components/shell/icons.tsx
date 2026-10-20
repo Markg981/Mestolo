@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Home, Link2, Menu, Plus, Settings, ShieldCheck, ShoppingBasket, Users, Type } from 'lucide-react';
+import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Home, Link2, Menu, Plus, Settings, ShieldCheck, ShoppingBasket, Users, Type, Refrigerator } from 'lucide-react';
 
 const MAP = {
   home: Home,
@@ -6,6 +6,7 @@ const MAP = {
   compass: Compass,
   folder: FolderHeart,
   cart: ShoppingBasket,
+  pantry: Refrigerator,
   calendar: CalendarDays,
   users: Users,
   settings: Settings,
