@@ -136,7 +136,8 @@
     "retry": "Réessayer",
     "notFoundTitle": "Page introuvable",
     "notFoundLead": "Cette page n'existe pas ou vous n'avez pas l'autorisation de la voir.",
-    "goHome": "Retour à l'accueil"
+    "goHome": "Retour à l'accueil",
+    "auth_wrong_password": "Le mot de passe actuel est incorrect."
   },
   "home": {
     "greeting": "Bonjour {name}",
@@ -790,7 +791,16 @@
     "deleteLead": "Supprime définitivement votre compte, vos recettes, vos images et toutes les données associées. Cette action est irréversible.",
     "deleteConfirmLabel": "Pour confirmer, saisissez votre nom d'utilisateur ({username})",
     "deleteButton": "Supprimer définitivement",
-    "deleting": "Suppression…"
+    "deleting": "Suppression…",
+    "passwordTitle": "Changer le mot de passe",
+    "passwordLead": "Choisissez un mot de passe robuste que vous n'utilisez pas ailleurs.",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "passwordHint": "Au moins 8 caractères.",
+    "passwordButton": "Changer le mot de passe",
+    "passwordSaving": "Enregistrement…",
+    "passwordChanged": "Mot de passe modifié."
   },
   "setup": {
     "title": "Configuration requise",

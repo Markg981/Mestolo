@@ -136,7 +136,8 @@
     "retry": "Tentar novamente",
     "notFoundTitle": "Página não encontrada",
     "notFoundLead": "A página não existe ou não tens permissão para a ver.",
-    "goHome": "Voltar ao início"
+    "goHome": "Voltar ao início",
+    "auth_wrong_password": "A palavra-passe atual está incorreta."
   },
   "home": {
     "greeting": "Olá, {name}",
@@ -790,7 +791,16 @@
     "deleteLead": "Elimina definitivamente a conta, as receitas, as imagens e todos os dados associados. Esta operação não pode ser anulada.",
     "deleteConfirmLabel": "Para confirmar, escreve o teu nome de utilizador ({username})",
     "deleteButton": "Eliminar definitivamente",
-    "deleting": "A eliminar…"
+    "deleting": "A eliminar…",
+    "passwordTitle": "Alterar palavra-passe",
+    "passwordLead": "Escolha uma palavra-passe forte que não use noutros sítios.",
+    "currentPassword": "Palavra-passe atual",
+    "newPassword": "Nova palavra-passe",
+    "confirmPassword": "Confirmar nova palavra-passe",
+    "passwordHint": "Pelo menos 8 caracteres.",
+    "passwordButton": "Alterar palavra-passe",
+    "passwordSaving": "A guardar…",
+    "passwordChanged": "Palavra-passe alterada."
   },
   "setup": {
     "title": "Configuração necessária",

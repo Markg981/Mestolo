@@ -1,10 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
 import { updateProfile, deleteApiKey, saveApiKey, deleteAccount } from '@/app/actions/settings';
+import { changePassword } from '@/app/actions/auth';
 import { createCategory, deleteCategory } from '@/app/actions/organize';
 import { LiveMessage, Modal } from '@/components/client-ui';
 import { Alert, Button, Card, Field, Input, Select, Textarea, buttonClass } from '@/components/ui';
@@ -241,6 +242,32 @@ export function ApiKeyForm({ configured }: { configured: { provider: string; key
         </div>
       </Modal>
     </div>
+  );
+}
+
+export function ChangePasswordForm() {
+  const t = useTranslations('account');
+  const te = useTranslations('errors');
+  const [state, action, pending] = useActionState(changePassword, undefined);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <Field label={t('currentPassword')} htmlFor="pw-current">
+        <Input id="pw-current" name="current" type="password" autoComplete="current-password" required />
+      </Field>
+      <Field label={t('newPassword')} htmlFor="pw-new" hint={t('passwordHint')}>
+        <Input id="pw-new" name="password" type="password" autoComplete="new-password" required minLength={8} />
+      </Field>
+      <Field label={t('confirmPassword')} htmlFor="pw-confirm">
+        <Input id="pw-confirm" name="confirm" type="password" autoComplete="new-password" required minLength={8} />
+      </Field>
+      {state?.error && <Alert tone="error">{te(state.error)}</Alert>}
+      {state?.sent && <Alert tone="success">{t('passwordChanged')}</Alert>}
+      <div>
+        <Button type="submit" disabled={pending}>
+          {pending ? t('passwordSaving') : t('passwordButton')}
+        </Button>
+      </div>
+    </form>
   );
 }
 

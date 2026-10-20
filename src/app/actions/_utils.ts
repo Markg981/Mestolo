@@ -36,6 +36,7 @@ export type ErrorCode =
   | 'auth_invalid'
   | 'auth_email_taken'
   | 'auth_weak_password'
+  | 'auth_wrong_password'
   | 'auth_not_confirmed'
   | 'username_taken'
   | 'translation_failed'
