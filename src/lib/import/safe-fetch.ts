@@ -50,6 +50,8 @@ export interface SafeFetchOptions {
   accept?: string;
   allowedContentTypes?: RegExp;
   lookup?: LookupFn;
+  /** Extra request headers (e.g. a consent cookie); never user-controlled. */
+  headers?: Record<string, string>;
 }
 
 export async function safeFetch(rawUrl: string, opts: SafeFetchOptions = {}): Promise<SafeFetchResult> {
@@ -73,6 +75,7 @@ export async function safeFetch(rawUrl: string, opts: SafeFetchOptions = {}): Pr
             'user-agent': 'MestoloRecipeImporter/1.0 (+https://github.com/Markg981/Mestolo)',
             accept: opts.accept ?? 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
             'accept-language': 'it,en;q=0.8,*;q=0.5',
+            ...opts.headers,
           },
         });
       } catch (e) {

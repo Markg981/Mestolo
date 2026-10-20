@@ -956,6 +956,34 @@
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
   },
+  "videoImport": {
+    "source": {
+      "description": "Text aus der Videobeschreibung",
+      "captions": "Text aus den Untertiteln des Videos",
+      "transcription": "Text aus der Transkription des Tons"
+    },
+    "sourceHint": {
+      "description": "Prüfe und korrigiere den Text unten und analysiere ihn dann. Kostenlos: keine KI nötig.",
+      "captions": "Untertitel und Beschreibung zusammengeführt. Gesprochenes kann Fehler enthalten: Prüfe den Text vor der Analyse.",
+      "transcription": "Die automatische Transkription kann Fehler enthalten: Prüfe den Text vor der Analyse."
+    },
+    "noneTitle": "Keine Transkription verfügbar",
+    "none": "Für dieses Video ist keine Transkription verfügbar. Versuche die KI-Option mit der Videodatei oder füge unten den Rezepttext ein.",
+    "uploadTitle": "Oder lade ein Video hoch",
+    "uploadTitleCompact": "Kein brauchbarer Text? Videodatei transkribieren",
+    "uploadLead": "Der Ton wird auf deinem Gerät extrahiert und mit KI transkribiert: Das Video selbst wird weder gesendet noch gespeichert.",
+    "upload": "Video hochladen und transkribieren",
+    "extracting": "Ton wird extrahiert…",
+    "transcribing": "Wird transkribiert…",
+    "needsAi": "Erfordert einen persönlichen OpenAI-Schlüssel (KI-Einstellungen) oder den KI-Dienst der App mit verfügbarem Kontingent.",
+    "uploadLimits": "Bis zu 8 Minuten Ton und 200 MB Dateigröße. Verbraucht ein Text-KI-Kontingent.",
+    "fileTooBig": "Die Datei ist zu groß (maximal 200 MB).",
+    "extract": {
+      "too_long": "Das Video ist zu lang: maximal 8 Minuten.",
+      "decode_failed": "Der Ton dieser Datei kann nicht gelesen werden. Versuche ein anderes Format (MP4 oder MOV) oder füge den Text ein.",
+      "unsupported": "Dieser Browser kann keinen Ton extrahieren. Füge den Rezepttext ein."
+    }
+  },
   "feed": {
     "tabs": "Community-Bereiche",
     "forYou": "Für dich",

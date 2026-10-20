@@ -44,17 +44,17 @@ function userProviderFor(row: UserKeyRow, userId: string, capability: Capability
   const key = loadEncryptionKey(cfg.encryptionKey);
   const apiKey = decryptSecret({ ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag }, key, keyAad(userId, row.provider));
   if (row.provider === 'anthropic') {
-    if (capability === 'image') return null;
+    if (capability === 'image' || capability === 'audio') return null;
     return anthropicProvider({ apiKey, model: cfg.ai.userAnthropicModel });
   }
-  return openAiProvider({ apiKey, textModel: cfg.ai.userOpenaiTextModel, imageModel: cfg.ai.userOpenaiImageModel });
+  return openAiProvider({ apiKey, textModel: cfg.ai.userOpenaiTextModel, imageModel: cfg.ai.userOpenaiImageModel, transcribeModel: cfg.ai.transcribeModel });
 }
 
 function appProvider(capability: Capability): AiProvider | null {
   const { ai } = env();
   if (!ai.appProvider || !ai.appApiKey) return null;
   if (ai.appProvider === 'anthropic') {
-    if (capability === 'image') return null;
+    if (capability === 'image' || capability === 'audio') return null;
     return anthropicProvider({ apiKey: ai.appApiKey, model: (capability === 'vision' ? ai.appVisionModel : ai.appTextModel) || ai.userAnthropicModel });
   }
   if (capability === 'image' && (!ai.appImageEnabled || ai.appProvider !== 'openai')) return null;
@@ -63,6 +63,7 @@ function appProvider(capability: Capability): AiProvider | null {
     textModel: (capability === 'vision' ? ai.appVisionModel : ai.appTextModel) || ai.userOpenaiTextModel,
     imageModel: ai.appImageEnabled ? ai.appImageModel || ai.userOpenaiImageModel : undefined,
     baseUrl: ai.appProvider === 'openai-compatible' ? ai.appBaseUrl : undefined,
+    transcribeModel: ai.transcribeModel,
     compatible: ai.appProvider === 'openai-compatible',
   });
 }
@@ -88,7 +89,7 @@ async function usedToday(userId: string, group: QuotaGroup): Promise<number> {
 export async function capabilityStatus(userId: string, capability: Capability, group?: QuotaGroup): Promise<CapabilityStatus> {
   const keys = await loadUserKeys(userId).catch(() => []);
   for (const row of keys) {
-    if (capability === 'image' && row.provider !== 'openai') continue;
+    if ((capability === 'image' || capability === 'audio') && row.provider !== 'openai') continue;
     return { available: !!env().encryptionKey, keySource: 'user', providerName: row.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', remainingToday: null, dailyLimit: null };
   }
   const app = appProvider(capability);
@@ -101,7 +102,7 @@ export async function capabilityStatus(userId: string, capability: Capability, g
 
 export async function resolveProvider(userId: string, capability: Capability, group: QuotaGroup | undefined, action: string): Promise<ResolvedProvider> {
   const keys = await loadUserKeys(userId);
-  const usable = capability === 'image' ? keys.filter((k) => k.provider === 'openai') : keys;
+  const usable = capability === 'image' || capability === 'audio' ? keys.filter((k) => k.provider === 'openai') : keys;
   for (const row of usable) {
     const p = userProviderFor(row, userId, capability);
     if (p) return { provider: p, keySource: 'user', providerName: p.label };

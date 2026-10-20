@@ -956,6 +956,34 @@
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
     "noSteps": "This recipe has no steps yet."
   },
+  "videoImport": {
+    "source": {
+      "description": "Text taken from the video description",
+      "captions": "Text taken from the video captions",
+      "transcription": "Text obtained by transcribing the audio"
+    },
+    "sourceHint": {
+      "description": "Check and fix the text below, then parse it. No cost: no AI needed.",
+      "captions": "Captions and description combined. Speech can contain errors: check the text before parsing it.",
+      "transcription": "Automatic transcription can contain errors: check the text before parsing it."
+    },
+    "noneTitle": "No transcript available",
+    "none": "No transcript is available for this video. Try the AI option by uploading the video file, or paste the recipe text below.",
+    "uploadTitle": "Or upload a video",
+    "uploadTitleCompact": "No useful text? Transcribe a video file",
+    "uploadLead": "The audio is extracted on your device and transcribed with AI: the video itself is not sent or stored.",
+    "upload": "Upload video and transcribe",
+    "extracting": "Extracting audio…",
+    "transcribing": "Transcribing…",
+    "needsAi": "Requires a personal OpenAI key (AI settings) or the app's AI service with quota left.",
+    "uploadLimits": "Up to 8 minutes of audio and a 200 MB file. Uses one text AI quota.",
+    "fileTooBig": "The file is too large (200 MB maximum).",
+    "extract": {
+      "too_long": "The video is too long: 8 minutes maximum.",
+      "decode_failed": "I can't read the audio of this file. Try another format (MP4 or MOV) or paste the text.",
+      "unsupported": "This browser can't extract audio. Paste the recipe text."
+    }
+  },
   "feed": {
     "tabs": "Community sections",
     "forYou": "For you",
