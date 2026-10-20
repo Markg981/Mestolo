@@ -4,6 +4,7 @@ import { createClient, getUser } from '@/lib/supabase/server';
 import { visibleAvatarIds } from '@/lib/data/profiles';
 import { PageHeader } from '@/components/ui';
 import { FriendSearch, FriendRow, BlockedRow } from './FriendsClient';
+import { InviteSection, type InviteRow } from './InviteSection';
 
 type Friendship = { id: string; requester_id: string; addressee_id: string; status: 'pending' | 'accepted' | 'declined' };
 
@@ -15,9 +16,15 @@ export async function generateMetadata() {
 export default async function FriendsPage() {
   const [t, user] = await Promise.all([getTranslations('friends'), getUser()]);
   const supabase = await createClient();
-  const [{ data: fs }, { data: bl }] = await Promise.all([
+  const [{ data: fs }, { data: bl }, { data: inv }] = await Promise.all([
     supabase.from('friendships').select('id, requester_id, addressee_id, status').order('created_at', { ascending: false }),
     supabase.from('blocks').select('blocked_id').eq('blocker_id', user!.id),
+    supabase
+      .from('invites')
+      .select('id, uses, max_uses, expires_at')
+      .is('revoked_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false }),
   ]);
   const friendships = (fs as Friendship[]) ?? [];
   const blockedIds = ((bl as { blocked_id: string }[]) ?? []).map((b) => b.blocked_id);
@@ -42,6 +49,7 @@ export default async function FriendsPage() {
     <div className="flex flex-col gap-10">
       <PageHeader title={t('title')} lead={t('lead')} />
       <FriendSearch existing={otherIds} />
+      <InviteSection invites={((inv as InviteRow[]) ?? []).filter((i) => i.uses < i.max_uses)} />
       {section(
         t('incoming'),
         t('emptyIncoming'),

@@ -201,7 +201,7 @@ describe('built-in substitutions', () => {
 
 describe('export & validation', () => {
   it('exports schema.org JSON-LD with ISO durations', () => {
-    const row = { ...base, id: 'r1', owner_id: 'u', source_type: 'manual', source_url: null, source_name: null, source_attribution: null, visibility: 'private', verification_status: 'verified', field_flags: {}, diet_hints: [], parent_recipe_id: null, copied_from_recipe_id: null, original_author_id: null, original_author_name: null, version: 1, content_hash: '', is_hidden: false, created_at: '2026-01-01', updated_at: '2026-01-01', cook_minutes: 90 } as RecipeRow;
+    const row = { ...base, id: 'r1', owner_id: 'u', source_type: 'manual', source_url: null, source_name: null, source_attribution: null, visibility: 'private', verification_status: 'verified', field_flags: {}, diet_hints: [], parent_recipe_id: null, copied_from_recipe_id: null, original_author_id: null, original_author_name: null, version: 1, content_hash: '', is_hidden: false, rating_avg: null, rating_count: 0, created_at: '2026-01-01', updated_at: '2026-01-01', cook_minutes: 90 } as RecipeRow;
     const ld = toSchemaOrg(row, { authorName: 'Marco' });
     expect(ld).toMatchObject({ '@type': 'Recipe', name: 'Frittata', cookTime: 'PT1H30M', recipeYield: '2' });
     expect(ld.recipeIngredient).toEqual(['4 uova', 'parmigiano']);
