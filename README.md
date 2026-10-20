@@ -184,6 +184,7 @@ Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pr
 | `AI_APP_IMAGE_ENABLED`, `AI_APP_IMAGE_MODEL` | no | Generazione immagini con la chiave del gestore (solo OpenAI) |
 | `AI_DAILY_LIMIT_TEXT/VISION/IMAGE/TRANSLATE` | no | Quote giornaliere per utente sul servizio base (default 20/10/2/30) |
 | `AI_USER_ANTHROPIC_MODEL`, `AI_USER_OPENAI_TEXT_MODEL`, `AI_USER_OPENAI_IMAGE_MODEL` | no | Modelli usati con le chiavi personali |
+| `CRON_SECRET` | per la pulizia | Segreto del cron Vercel (`vercel.json`) che chiama `/api/cron/cleanup` (rimuove file immagine orfani e dati di quota oltre 90 giorni). Senza, la route risponde sempre 401. In Supabase abilitare anche l’estensione `pg_cron` (Database > Extensions) per la pulizia giornaliera lato database |
 | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | no | Monitoraggio errori Sentry (client+server+edge / solo server+edge). Senza DSN è completamente disattivato. Gli eventi sono ripuliti (email, token, cookie, testo delle ricette, chiavi) prima dell’invio; `sendDefaultPii` è sempre false |
 | `SENTRY_TRACES_SAMPLE_RATE` | no | Frazione di tracce 0-1 (default 0,05) |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | no | Solo in build, per caricare le source map |
@@ -204,6 +205,34 @@ Configurazione di provider, modelli, costi e privacy: **[docs/ai-providers.md](d
 **Dichiarazione sui mock**: i test dei provider AI usano `fetch` simulato e verificano formato delle richieste, gestione delle chiavi e validazione delle risposte, **non** il comportamento reale dei provider. Lo stub Supabase per i test RLS riproduce `auth.uid()`, ruoli e `storage.objects`, non l’intera piattaforma. La verifica visiva usa dati fittizi.
 
 `npm run db:test:local` richiede `initdb`/`pg_ctl` (PostgreSQL ≥ 15) e un utente non root.
+
+### Test end-to-end (Playwright)
+
+I test in `e2e/` guidano un browser reale (Chromium desktop e viewport mobile) contro l’app collegata a un **progetto Supabase di staging**: registrazione, accesso/uscita, creazione e modifica di una ricetta, elenco, lista della spesa, piano pasti, cambio lingua. Non usare mai il progetto di produzione: i test creano e cancellano utenti con la service role key.
+
+**Creare il progetto di staging**
+
+1. Su [supabase.com](https://supabase.com) crea un progetto separato (es. `mestolo-staging`).
+2. Applica le migrazioni: `npx supabase login`, `npx supabase link --project-ref <ref-staging>`, `npx supabase db push`.
+3. In *Authentication → Providers → Email* puoi lasciare attiva la conferma email: gli utenti di test sono creati già confermati con l’API admin e il test di registrazione verifica solo l’avviso “Controlla la tua email”.
+4. Da *Project Settings → API* copia URL, `anon` key e `service_role` key.
+
+**Eseguirli in locale**
+
+```bash
+export NEXT_PUBLIC_SUPABASE_URL=https://<ref-staging>.supabase.co
+export NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+export SUPABASE_SERVICE_ROLE_KEY=...
+export APP_ENCRYPTION_KEY=$(npm run -s gen:key)
+npx playwright install chromium
+npm run test:e2e
+```
+
+Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambiente già pubblicato imposta `E2E_BASE_URL`. Le variabili del progetto staging vanno comunque impostate perché il setup crea gli utenti di test (prefisso `e2e-`, dominio `example.com`) e il teardown li cancella. Il report HTML finisce in `playwright-report/`.
+
+**CI (GitHub Actions)**
+
+Il workflow `.github/workflows/e2e.yml` gira sulle pull request e a mano (*workflow_dispatch*). Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`. Se mancano (o se la PR viene da un fork, dove GitHub non espone i secret) il job salta i test e resta verde. Il report HTML è caricato come artifact `playwright-report`.
 
 ---
 

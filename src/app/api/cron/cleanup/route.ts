@@ -1,0 +1,39 @@
+import { timingSafeEqual } from 'node:crypto';
+import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
+
+const BATCH = 200;
+
+function authorized(request: Request): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  const given = Buffer.from(request.headers.get('authorization') ?? '');
+  const expected = Buffer.from(`Bearer ${secret}`);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+/**
+ * Vercel Cron (vercel.json): rimuove dallo Storage i file orfani di recipe-images
+ * e pulisce i dati di quota vecchi. Vercel invia `Authorization: Bearer $CRON_SECRET`.
+ */
+export async function GET(request: Request) {
+  if (!authorized(request)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const admin = createAdminClient();
+  const { data: usage, error: usageError } = await admin.rpc('cleanup_old_usage', { p_days: 90 });
+  if (usageError) return NextResponse.json({ error: 'cleanup_failed' }, { status: 500 });
+
+  const { data: orphans, error: listError } = await admin.rpc('list_orphan_images', { p_limit: BATCH });
+  if (listError) return NextResponse.json({ error: 'list_failed', usage }, { status: 500 });
+  const paths = ((orphans as { name: string }[] | null) ?? []).map((o) => o.name);
+
+  let removed = 0;
+  if (paths.length > 0) {
+    const { error: removeError } = await admin.storage.from('recipe-images').remove(paths);
+    if (removeError) return NextResponse.json({ error: 'remove_failed', usage }, { status: 500 });
+    removed = paths.length;
+  }
+  return NextResponse.json({ ok: true, usage, orphansRemoved: removed });
+}

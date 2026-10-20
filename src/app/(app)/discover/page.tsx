@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { listCategories } from '@/lib/data/recipes';
 import { discover } from '@/lib/data/discover';
+import { loadMoreDiscover } from '@/app/actions/pagination';
+import { InfiniteList } from '@/components/recipes/InfiniteList';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
 import { RecipeImage } from '@/components/recipes/RecipeImage';
@@ -18,7 +20,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
   const categories = await listCategories();
   const systemCats = categories.filter((c) => c.owner_id === null);
   const active = sp.category && systemCats.some((c) => c.id === sp.category) ? sp.category : undefined;
-  const { items, hiddenByPreferences, recipeOfTheDay } = await discover(categories, { category: active });
+  const { items, hiddenByPreferences, recipeOfTheDay, nextCursor } = await discover(categories, { category: active });
   const day = !active ? recipeOfTheDay : null;
   const rest = items.filter((r) => r.id !== day?.id);
 
@@ -71,11 +73,13 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
       )}
 
       {rest.length ? (
-        <RecipeGrid>
-          {rest.map((r) => (
-            <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor />
-          ))}
-        </RecipeGrid>
+        <InfiniteList key={active ?? 'all'} initialCursor={nextCursor} loadMore={loadMoreDiscover.bind(null, { category: active })}>
+          <RecipeGrid>
+            {rest.map((r) => (
+              <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor />
+            ))}
+          </RecipeGrid>
+        </InfiniteList>
       ) : !day ? (
         <EmptyState
           title={t('discover.emptyTitle')}

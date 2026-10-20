@@ -19,3 +19,4 @@ mobile/www/config.js
 android/app/release/
 *.keystore
 *.jks
+e2e/.auth/

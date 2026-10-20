@@ -45,6 +45,7 @@ create index recipes_needs_review_idx on public.recipes (owner_id) where verific
 -- Cerca ricette. Security invoker: la RLS di recipes si applica a chi chiama.
 -- Ogni parola e' un prefisso (AND); con una sola parola basta anche un titolo simile (trigram, tolleranza ai refusi).
 -- Paginazione: p_limit/p_offset oppure cursore keyset (p_after_created_at, p_after_id).
+-- p_limit null = nessun limite: l'app ordina e pagina sul risultato via PostgREST.
 -- Ordine: created_at desc, id desc (coerente con il cursore).
 create or replace function public.search_recipes(
   p_query text default null,
@@ -77,7 +78,8 @@ begin
            or (n = 1 and public.f_unaccent(lower(r.title)) operator(public.%) norm))
       and (p_after_created_at is null or (r.created_at, r.id) < (p_after_created_at, coalesce(p_after_id, 'ffffffff-ffff-ffff-ffff-ffffffffffff'::uuid)))
     order by r.created_at desc, r.id desc
-    limit least(greatest(p_limit, 1), 200) offset greatest(p_offset, 0);
+    limit case when p_limit is null then null else least(greatest(p_limit, 1), 200) end
+    offset greatest(p_offset, 0);
 end $$;
 
 revoke execute on function public.search_recipes(text, uuid, uuid, text, boolean, int, int, timestamptz, uuid) from public, anon;
