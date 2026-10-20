@@ -955,5 +955,14 @@
     "voiceDenied": "Microphone not allowed: voice commands turned off.",
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
     "noSteps": "This recipe has no steps yet."
+  },
+  "ratings": {
+    "title": "Ratings",
+    "yours": "Your rating",
+    "star": "{n, plural, one {# star} other {# stars}}",
+    "hint": "Rate this recipe from 1 to 5 stars.",
+    "saved": "Rating saved. Tap the star again to remove it.",
+    "summary": "Average {avg} out of 5, {count, plural, one {# rating} other {# ratings}}",
+    "notEnough": "Not enough ratings yet to show the average."
   }
 }

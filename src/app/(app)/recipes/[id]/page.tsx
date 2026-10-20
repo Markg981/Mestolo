@@ -13,6 +13,7 @@ import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { IngredientList } from '@/components/recipes/IngredientList';
 import { RecipeActions } from '@/components/recipes/RecipeActions';
 import { ImagePrompt, NoteEditor, TranslateBanner, type AiStatusProps } from '@/components/recipes/RecipeIslands';
+import { RecipeRating } from '@/components/recipes/RecipeRating';
 import { CookPrefetch } from '@/components/cooking/CookPrefetch';
 import { Alert, Badge, LinkButton } from '@/components/ui';
 
@@ -32,6 +33,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
   const [t, locale, user, collections] = await Promise.all([getTranslations(), getLocale(), getUser(), listCollections()]);
   const { recipe, images, category, owner, isOwner } = detail;
   const supabase = await createClient();
+  const { data: myRating } = isOwner ? { data: null } : await supabase.from('recipe_ratings').select('stars').eq('recipe_id', id).eq('user_id', user!.id).maybeSingle();
 
   // Translation (cached, tied to the content hash; the original is never modified)
   const origLang = recipe.original_language.slice(0, 2);
@@ -160,6 +162,8 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
           />
         </div>
       </header>
+
+      <RecipeRating recipeId={id} isOwner={isOwner} avg={recipe.rating_avg} count={recipe.rating_count} mine={myRating?.stars ?? null} />
 
       {translationState !== 'none' && (
         <TranslateBanner

@@ -955,5 +955,14 @@
     "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
+  },
+  "ratings": {
+    "title": "Bewertungen",
+    "yours": "Deine Bewertung",
+    "star": "{n, plural, one {# Stern} other {# Sterne}}",
+    "hint": "Bewerte dieses Rezept mit 1 bis 5 Sternen.",
+    "saved": "Bewertung gespeichert. Tippe erneut auf den Stern, um sie zu entfernen.",
+    "summary": "Durchschnitt {avg} von 5, {count, plural, one {# Bewertung} other {# Bewertungen}}",
+    "notEnough": "Noch zu wenige Bewertungen für einen Durchschnitt."
   }
 }

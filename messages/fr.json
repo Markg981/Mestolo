@@ -955,5 +955,14 @@
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
     "noSteps": "Cette recette n’a pas encore d’étapes."
+  },
+  "ratings": {
+    "title": "Évaluations",
+    "yours": "Votre note",
+    "star": "{n, plural, one {# étoile} other {# étoiles}}",
+    "hint": "Notez cette recette de 1 à 5 étoiles.",
+    "saved": "Note enregistrée. Touchez à nouveau l'étoile pour la retirer.",
+    "summary": "Moyenne {avg} sur 5, {count, plural, one {# note} other {# notes}}",
+    "notEnough": "Pas encore assez de notes pour afficher la moyenne."
   }
 }

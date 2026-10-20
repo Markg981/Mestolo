@@ -955,5 +955,14 @@
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
     "noSteps": "Esta receta aún no tiene pasos."
+  },
+  "ratings": {
+    "title": "Valoraciones",
+    "yours": "Tu valoración",
+    "star": "{n, plural, one {# estrella} other {# estrellas}}",
+    "hint": "Valora esta receta de 1 a 5 estrellas.",
+    "saved": "Valoración guardada. Toca de nuevo la estrella para quitarla.",
+    "summary": "Media {avg} sobre 5, {count, plural, one {# valoración} other {# valoraciones}}",
+    "notEnough": "Aún hay pocas valoraciones para mostrar la media."
   }
 }
