@@ -1,0 +1,1 @@
+Prima versione di Mestolo: importazione di ricette da link, foto e video, modalità cucina con assistente, piano dei pasti, dispensa, lista della spesa condivisa e raccolte.
