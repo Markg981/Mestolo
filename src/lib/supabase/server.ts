@@ -49,6 +49,11 @@ export interface Profile {
   username: string;
   display_name: string;
   bio: string;
+  avatar_path: string | null;
+  location: string;
+  website: string | null;
+  favorite_cuisines: string[];
+  profile_visibility: 'public' | 'friends' | 'private';
   locale: string;
   discoverable: boolean;
   dietary_preferences: string[];

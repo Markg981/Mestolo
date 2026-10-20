@@ -955,5 +955,29 @@
     "voiceDenied": "Microfono non consentito: comandi vocali disattivati.",
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
     "noSteps": "Questa ricetta non ha ancora un procedimento."
+  },
+  "richProfile": {
+    "location": "Luogo",
+    "website": "Sito web",
+    "websiteHint": "Solo link https. Appare sul tuo profilo con rel nofollow.",
+    "cuisines": "Cucine preferite",
+    "cuisinesHint": "Separate da virgola, massimo 8 (es. italiana, giapponese).",
+    "visibility": "Chi può vedere il tuo profilo",
+    "visibilityHint": "Nome e username restano sempre visibili agli altri utenti; bio, avatar, luogo, sito e cucine seguono questa scelta.",
+    "avatarChange": "Cambia foto",
+    "avatarRemove": "Rimuovi foto",
+    "avatarSaved": "Foto profilo aggiornata.",
+    "selfNote_public": "Il tuo profilo è visibile a tutti gli utenti di Mestolo. Le ricette mostrate sono quelle condivise.",
+    "selfNote_friends": "Il tuo profilo completo è visibile solo ai tuoi amici. Le ricette mostrate sono quelle condivise.",
+    "selfNote_private": "Il tuo profilo è privato: gli altri vedono solo nome e username.",
+    "restricted": "Questo profilo è visibile solo a chi ha il permesso di vederlo.",
+    "statRecipes": "Ricette",
+    "statFriends": "Amici",
+    "statCooked": "Cucinate",
+    "visibilityOptions": {
+      "public": "Tutti gli utenti di Mestolo",
+      "friends": "Solo gli amici",
+      "private": "Solo io"
+    }
   }
 }

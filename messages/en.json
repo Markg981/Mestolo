@@ -955,5 +955,29 @@
     "voiceDenied": "Microphone not allowed: voice commands turned off.",
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
     "noSteps": "This recipe has no steps yet."
+  },
+  "richProfile": {
+    "location": "Location",
+    "website": "Website",
+    "websiteHint": "https links only. Shown on your profile with rel nofollow.",
+    "cuisines": "Favourite cuisines",
+    "cuisinesHint": "Comma-separated, up to 8 (e.g. Italian, Japanese).",
+    "visibility": "Who can see your profile",
+    "visibilityHint": "Name and username are always visible to other users; bio, avatar, location, website and cuisines follow this choice.",
+    "avatarChange": "Change photo",
+    "avatarRemove": "Remove photo",
+    "avatarSaved": "Profile photo updated.",
+    "selfNote_public": "Your profile is visible to all Mestolo users. Only shared recipes are shown.",
+    "selfNote_friends": "Your full profile is visible to your friends only. Only shared recipes are shown.",
+    "selfNote_private": "Your profile is private: others see only your name and username.",
+    "restricted": "This profile is only visible to people allowed to see it.",
+    "statRecipes": "Recipes",
+    "statFriends": "Friends",
+    "statCooked": "Cooked",
+    "visibilityOptions": {
+      "public": "All Mestolo users",
+      "friends": "Friends only",
+      "private": "Only me"
+    }
   }
 }
