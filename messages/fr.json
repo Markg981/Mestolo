@@ -890,5 +890,31 @@
     "end": "Vous êtes arrivé à la fin.",
     "error": "Impossible de charger d'autres recettes. Vérifiez votre connexion.",
     "retry": "Réessayer"
+  },
+  "cook": {
+    "start": "Cuisiner",
+    "exit": "Quitter le mode cuisine",
+    "regionLabel": "Mode cuisine : {title}",
+    "ingredients": "Ingrédients",
+    "closeIngredients": "Fermer les ingrédients",
+    "progress": "Progression",
+    "stepOf": "Étape {n} sur {total}",
+    "navigation": "Navigation des étapes",
+    "prev": "Retour",
+    "next": "Suivant",
+    "timers": "Minuteurs",
+    "activeTimers": "Minuteurs actifs",
+    "timerStart": "Lancer le minuteur {label}",
+    "timerStop": "Arrêter le minuteur {label}",
+    "timerStarted": "Minuteur lancé : {label}",
+    "timerDone": "Minuteur terminé : {label}",
+    "timerEnded": "Terminé",
+    "timerDismiss": "Fermer le minuteur {label}",
+    "voiceOn": "Activer les commandes vocales (suivant / retour)",
+    "voiceOff": "Désactiver les commandes vocales",
+    "listening": "À l’écoute : dites « suivant » ou « retour »",
+    "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
+    "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
+    "noSteps": "Cette recette n’a pas encore d’étapes."
   }
 }

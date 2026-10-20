@@ -890,5 +890,31 @@
     "end": "Has llegado al final.",
     "error": "No se pudieron cargar más recetas. Comprueba tu conexión.",
     "retry": "Reintentar"
+  },
+  "cook": {
+    "start": "Cocinar",
+    "exit": "Salir del modo cocina",
+    "regionLabel": "Modo cocina: {title}",
+    "ingredients": "Ingredientes",
+    "closeIngredients": "Cerrar ingredientes",
+    "progress": "Progreso",
+    "stepOf": "Paso {n} de {total}",
+    "navigation": "Navegación de pasos",
+    "prev": "Atrás",
+    "next": "Siguiente",
+    "timers": "Temporizadores",
+    "activeTimers": "Temporizadores activos",
+    "timerStart": "Iniciar temporizador {label}",
+    "timerStop": "Detener temporizador {label}",
+    "timerStarted": "Temporizador iniciado: {label}",
+    "timerDone": "Temporizador terminado: {label}",
+    "timerEnded": "Listo",
+    "timerDismiss": "Cerrar temporizador {label}",
+    "voiceOn": "Activar comandos de voz (siguiente / atrás)",
+    "voiceOff": "Desactivar comandos de voz",
+    "listening": "Escuchando: di «siguiente» o «atrás»",
+    "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
+    "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
+    "noSteps": "Esta receta aún no tiene pasos."
   }
 }
