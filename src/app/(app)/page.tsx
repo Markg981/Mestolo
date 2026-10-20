@@ -6,6 +6,7 @@ import { listCategories, listCollections, listMyRecipes } from '@/lib/data/recip
 import { discover } from '@/lib/data/discover';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
+import { SeasonalSection } from '@/components/seasonal/SeasonalSection';
 import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { Alert, EmptyState, LadleMark, LinkButton } from '@/components/ui';
 
@@ -113,6 +114,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           {t('home.reviewLead')}
         </Alert>
       )}
+
+      <SeasonalSection />
 
       <section aria-labelledby="recent-title" className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">

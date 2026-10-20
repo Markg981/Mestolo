@@ -255,6 +255,18 @@
     "ambiguous": "Texte ambigu",
     "ai_estimate": "Estimation IA"
   },
+  "seasonal": {
+    "title": "De saison en {month}",
+    "vegetables": "Légumes",
+    "fruit": "Fruits",
+    "note": "Calendrier indicatif (climat tempéré, référence Italie/Europe) : il varie selon la région et la variété.",
+    "recipesTitle": "Recettes avec des ingrédients de saison",
+    "noRecipes": "Aucune recette avec des ingrédients de saison pour le moment.",
+    "uses": "{count, plural, one {# ingrédient de saison} other {# ingrédients de saison}}",
+    "hemisphere": "Hémisphère",
+    "north": "Nord",
+    "south": "Sud"
+  },
   "warnings": {
     "missing_page": "Il manque peut-être une page : la recette semble continuer ailleurs.",
     "ambiguous_text": "Une partie du texte était ambiguë.",

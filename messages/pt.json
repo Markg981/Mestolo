@@ -255,6 +255,18 @@
     "ambiguous": "Texto ambíguo",
     "ai_estimate": "Estimativa de IA"
   },
+  "seasonal": {
+    "title": "De época em {month}",
+    "vegetables": "Legumes e verduras",
+    "fruit": "Fruta",
+    "note": "Calendário indicativo (clima temperado, referência Itália/Europa): varia com a região e a variedade.",
+    "recipesTitle": "Receitas com ingredientes da época",
+    "noRecipes": "Por agora não há receitas com ingredientes da época.",
+    "uses": "{count, plural, one {# ingrediente da época} other {# ingredientes da época}}",
+    "hemisphere": "Hemisfério",
+    "north": "Norte",
+    "south": "Sul"
+  },
   "warnings": {
     "missing_page": "Pode faltar uma página: a receita parece continuar noutro sítio.",
     "ambiguous_text": "Uma parte do texto era ambígua.",
