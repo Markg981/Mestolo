@@ -211,7 +211,7 @@ d('RLS & data rules', () => {
 
   it('image bucket enforces size and MIME limits', async () => {
     const rows = await admin<{ file_size_limit: number; allowed_mime_types: string[] }>(
-      "select file_size_limit, allowed_mime_types from storage.buckets where id = 'recipe-images'",
+      "select file_size_limit::int as file_size_limit, allowed_mime_types from storage.buckets where id = 'recipe-images'",
     );
     expect(rows[0].file_size_limit).toBe(5242880);
     expect([...rows[0].allowed_mime_types].sort()).toEqual(['image/jpeg', 'image/png', 'image/webp']);
