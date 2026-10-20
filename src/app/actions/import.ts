@@ -6,6 +6,8 @@ import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
 import { recipeFromHtml } from '@/lib/import/recipe-from-html';
 import { parseRecipeText } from '@/lib/recipes/text-parser';
+import { detectRecipeLanguage } from '@/lib/recipes/detect-language';
+import { isLocale, DEFAULT_LOCALE } from '@/i18n/config';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { prepareOcrPage, ImageValidationError } from '@/lib/images/process';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
@@ -41,7 +43,7 @@ export async function importFromUrl(rawUrl: string): Promise<ActionResult<UrlImp
 }
 
 /** Pasted text: heuristic parser (free) or, if the user chooses, an AI provider. */
-export async function importFromText(text: string, useAi: boolean, sourceUrl?: string | null): Promise<ActionResult<ImportDraft>> {
+export async function importFromText(text: string, useAi: boolean, sourceUrl?: string | null, uiLocale?: string): Promise<ActionResult<ImportDraft>> {
   try {
     const user = await getUser();
     if (!user) return fail('forbidden');
@@ -57,13 +59,14 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
       return ok(draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' }));
     }
 
+    const language = detectRecipeLanguage(t.data, isLocale(uiLocale) ? uiLocale : DEFAULT_LOCALE);
     const p = parseRecipeText(t.data);
     const cat = suggestCategory({ title: p.title, description: p.description, ingredients: p.ingredients });
     return ok({
       content: {
         title: p.title.slice(0, 200),
         description: p.description,
-        original_language: 'it',
+        original_language: language,
         servings: p.servings,
         prep_minutes: p.prep_minutes,
         cook_minutes: p.cook_minutes,

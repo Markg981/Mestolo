@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { importFromText } from '@/app/actions/import';
 import { AiSourceNote, type AiStatusProps } from '../recipes/RecipeIslands';
 import { Alert, Button, Textarea } from '../ui';
@@ -11,6 +11,7 @@ import type { ImportDraft } from '@/lib/recipes/types';
 export function TextParseBox({ initialText = '', sourceUrl, status, onDraft }: { initialText?: string; sourceUrl?: string | null; status: AiStatusProps; onDraft: (d: ImportDraft) => void }) {
   const t = useTranslations('textImport');
   const te = useTranslations('errors');
+  const locale = useLocale();
   const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -18,7 +19,7 @@ export function TextParseBox({ initialText = '', sourceUrl, status, onDraft }: {
   const run = (useAi: boolean) =>
     start(async () => {
       setError(null);
-      const res = await importFromText(text, useAi, sourceUrl ?? null);
+      const res = await importFromText(text, useAi, sourceUrl ?? null, locale);
       if (res.ok) onDraft(res.data);
       else setError(te(res.error));
     });
