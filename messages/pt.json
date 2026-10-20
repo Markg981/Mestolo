@@ -934,7 +934,8 @@
     "addCategory": "Nova categoria",
     "addCategoryPlaceholder": "Ex.: Sopas, Dim sum",
     "deleteCategory": "Eliminar a categoria {name}",
-    "termsLink": "Regras da comunidade"
+    "termsLink": "Regras da comunidade",
+    "feedbackLink": "Enviar feedback"
   },
   "aiSettings": {
     "title": "IA e chaves de API",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "Nenhuma denúncia aberta",
     "empty": "Quando um utilizador denunciar uma receita, vais encontrá-la aqui.",
     "hiddenTitle": "Receitas ocultas",
-    "hiddenEmpty": "Nenhuma receita oculta."
+    "hiddenEmpty": "Nenhuma receita oculta.",
+    "feedbackLink": "Feedback dos utilizadores"
   },
   "terms": {
     "title": "Regras da comunidade",
@@ -1126,7 +1128,7 @@
     "listening": "A ouvir: diga «próximo» ou «voltar»",
     "voiceDenied": "Microfone não permitido: comandos de voz desativados.",
     "wakeUnsupported": "O ecrã pode apagar-se: manter o ecrã ligado não é suportado aqui.",
-    "noSteps": "Esta receita ainda não tem passos.",
+    "noSteps": "Esta receita ainda não tem passos.",
     "assistOpen": "Perguntar ao assistente",
     "assistTitle": "Perguntar ao assistente",
     "assistClose": "Fechar o assistente",
@@ -1324,5 +1326,43 @@
     "signup": "Registar",
     "login": "Iniciar sessão",
     "accept": "Aceitar e tornar-se amigos"
+  },
+  "feedback": {
+    "title": "Enviar feedback",
+    "lead": "Diz-nos o que não funciona ou o que gostarias. Lemos todas as mensagens.",
+    "back": "Definições",
+    "kind": "Do que se trata?",
+    "kinds": {
+      "bug": "Um problema",
+      "idea": "Uma ideia",
+      "other": "Outro"
+    },
+    "message": "Mensagem",
+    "messageHint": "De 5 a 4000 caracteres. Se for um problema, conta o que estavas a fazer.",
+    "context": "Anexado automaticamente: plataforma {platform}, versão {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Enviar",
+    "sentTitle": "Obrigado!",
+    "sentBody": "O teu feedback chegou.",
+    "sendAnother": "Enviar outro",
+    "adminTitle": "Feedback",
+    "adminLead": "Mensagens de testers e utilizadores, do mais recente ao mais antigo.",
+    "backToModeration": "Moderação",
+    "filterLabel": "Filtrar por estado",
+    "filterAll": "Todos",
+    "statuses": {
+      "new": "Novo",
+      "seen": "Visto",
+      "done": "Resolvido"
+    },
+    "markSeen": "Marcar como visto",
+    "markDone": "Marcar como resolvido",
+    "reopen": "Reabrir",
+    "adminEmptyTitle": "Sem feedback",
+    "adminEmpty": "Não há mensagens com este filtro."
   }
 }

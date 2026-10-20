@@ -934,7 +934,8 @@
     "addCategory": "Nouvelle catégorie",
     "addCategoryPlaceholder": "Ex. : Soupes, Dim sum",
     "deleteCategory": "Supprimer la catégorie {name}",
-    "termsLink": "Règles de la communauté"
+    "termsLink": "Règles de la communauté",
+    "feedbackLink": "Envoyer un retour"
   },
   "aiSettings": {
     "title": "IA et clés API",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "Aucun signalement ouvert",
     "empty": "Lorsqu'un utilisateur signale une recette, vous la retrouvez ici.",
     "hiddenTitle": "Recettes masquées",
-    "hiddenEmpty": "Aucune recette masquée."
+    "hiddenEmpty": "Aucune recette masquée.",
+    "feedbackLink": "Retours des utilisateurs"
   },
   "terms": {
     "title": "Règles de la communauté",
@@ -1126,7 +1128,7 @@
     "listening": "À l’écoute : dites « suivant » ou « retour »",
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
-    "noSteps": "Cette recette n’a pas encore d’étapes.",
+    "noSteps": "Cette recette n’a pas encore d’étapes.",
     "assistOpen": "Demander à l’assistant",
     "assistTitle": "Demander à l’assistant",
     "assistClose": "Fermer l’assistant",
@@ -1324,5 +1326,43 @@
     "signup": "S'inscrire",
     "login": "Se connecter",
     "accept": "Accepter et devenir amis"
+  },
+  "feedback": {
+    "title": "Envoyer un retour",
+    "lead": "Dites-nous ce qui ne va pas ou ce que vous aimeriez. Nous lisons chaque message.",
+    "back": "Réglages",
+    "kind": "De quoi s'agit-il ?",
+    "kinds": {
+      "bug": "Un problème",
+      "idea": "Une idée",
+      "other": "Autre"
+    },
+    "message": "Message",
+    "messageHint": "De 5 à 4000 caractères. Pour un problème, dites ce que vous faisiez.",
+    "context": "Joint automatiquement : plateforme {platform}, version {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Envoyer",
+    "sentTitle": "Merci !",
+    "sentBody": "Votre retour nous est parvenu.",
+    "sendAnother": "En envoyer un autre",
+    "adminTitle": "Retours",
+    "adminLead": "Messages des testeurs et des utilisateurs, du plus récent au plus ancien.",
+    "backToModeration": "Modération",
+    "filterLabel": "Filtrer par statut",
+    "filterAll": "Tous",
+    "statuses": {
+      "new": "Nouveau",
+      "seen": "Vu",
+      "done": "Résolu"
+    },
+    "markSeen": "Marquer comme vu",
+    "markDone": "Marquer comme résolu",
+    "reopen": "Rouvrir",
+    "adminEmptyTitle": "Aucun retour",
+    "adminEmpty": "Aucun message pour ce filtre."
   }
 }
