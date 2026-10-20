@@ -17,10 +17,36 @@ export function ServiceWorkerRegister() {
 export async function clearUserCache() {
   try {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear-user-data' });
-    if ('caches' in window) await caches.delete('mestolo-user');
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.filter((n) => n === 'mestolo-user' || n.startsWith('mestolo-user-')).map((n) => caches.delete(n)));
+    }
   } catch {
     /* nothing cached */
   }
+}
+
+/** Hash opaco dell'id utente, usato per il nome della cache privata (l'id non finisce in chiaro). */
+async function hashUserId(userId: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(userId));
+  return Array.from(new Uint8Array(digest).slice(0, 12), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Tells the service worker who is logged in; it drops the caches of any other user. */
+export function UserCacheSync({ userId }: { userId: string }) {
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    let cancelled = false;
+    (async () => {
+      const userHash = await hashUserId(userId);
+      const reg = await navigator.serviceWorker.ready;
+      if (!cancelled) (navigator.serviceWorker.controller ?? reg.active)?.postMessage({ type: 'set-user', userHash });
+    })().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+  return null;
 }
 
 /** Clears the private cache when mounted (used on the login page). */

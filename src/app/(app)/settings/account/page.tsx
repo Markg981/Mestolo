@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { getProfile } from '@/lib/supabase/server';
 import { Card, PageHeader, buttonClass } from '@/components/ui';
-import { DeleteAccountForm } from '../SettingsForms';
+import { ChangePasswordForm, DeleteAccountForm } from '../SettingsForms';
 
 export default async function AccountPage() {
   const [t, profile] = await Promise.all([getTranslations('account'), getProfile()]);
@@ -24,6 +24,11 @@ export default async function AccountPage() {
             {t('exportButton')}
           </a>
         </div>
+      </Card>
+      <Card className="flex flex-col gap-3">
+        <h2 className="text-xl font-bold">{t('passwordTitle')}</h2>
+        <p className="text-muted">{t('passwordLead')}</p>
+        <ChangePasswordForm />
       </Card>
       <Card className="flex flex-col gap-3 border-tomato/40">
         <h2 className="text-xl font-bold text-tomato">{t('deleteTitle')}</h2>

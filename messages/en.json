@@ -136,7 +136,8 @@
     "retry": "Try again",
     "notFoundTitle": "Page not found",
     "notFoundLead": "The page doesn't exist or you don't have permission to see it.",
-    "goHome": "Back to home"
+    "goHome": "Back to home",
+    "auth_wrong_password": "Current password is incorrect."
   },
   "home": {
     "greeting": "Hi, {name}",
@@ -790,7 +791,16 @@
     "deleteLead": "Permanently delete your account, recipes, images, and all related data. This can't be undone.",
     "deleteConfirmLabel": "To confirm, type your username ({username})",
     "deleteButton": "Delete permanently",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "passwordTitle": "Change password",
+    "passwordLead": "Use a strong password you don't use elsewhere.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordHint": "At least 8 characters.",
+    "passwordButton": "Change password",
+    "passwordSaving": "Saving…",
+    "passwordChanged": "Password changed."
   },
   "setup": {
     "title": "Setup required",

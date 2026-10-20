@@ -136,7 +136,8 @@
     "retry": "Reintentar",
     "notFoundTitle": "Página no encontrada",
     "notFoundLead": "La página no existe o no tienes permiso para verla.",
-    "goHome": "Volver al inicio"
+    "goHome": "Volver al inicio",
+    "auth_wrong_password": "La contraseña actual no es correcta."
   },
   "home": {
     "greeting": "Hola, {name}",
@@ -790,7 +791,16 @@
     "deleteLead": "Elimina para siempre la cuenta, las recetas, las imágenes y todos los datos asociados. No se puede deshacer.",
     "deleteConfirmLabel": "Para confirmar, escribe tu nombre de usuario ({username})",
     "deleteButton": "Eliminar para siempre",
-    "deleting": "Eliminando…"
+    "deleting": "Eliminando…",
+    "passwordTitle": "Cambiar contraseña",
+    "passwordLead": "Elige una contraseña segura que no uses en otros sitios.",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar nueva contraseña",
+    "passwordHint": "Al menos 8 caracteres.",
+    "passwordButton": "Cambiar contraseña",
+    "passwordSaving": "Guardando…",
+    "passwordChanged": "Contraseña cambiada."
   },
   "setup": {
     "title": "Configuración necesaria",

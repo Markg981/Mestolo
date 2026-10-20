@@ -140,7 +140,7 @@ export async function generateRecipeImage(recipeId: string, confirmed: boolean):
     const { data: r } = await supabase.from('recipes').select('title, description, ingredients').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     if (!r) return fail('not_found');
     await enforceRateLimit('ai_image', user.id);
-    const resolved = await resolveProvider(user.id, 'image', 'image');
+    const resolved = await resolveProvider(user.id, 'image', 'image', 'generate');
     if (!resolved.provider.generateImage) throw new AiError('unsupported');
     const img = await resolved.provider.generateImage(imagePrompt(r.title, r.description, ((r.ingredients as Ingredient[]) ?? []).map((i) => i.name)));
     await recordUsage(user.id, 'image', 'generate', resolved);

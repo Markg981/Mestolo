@@ -80,7 +80,7 @@ d('RLS & data rules', () => {
   });
 
   it('creates a profile and a default shopping list at signup', async () => {
-    const p = await as(alice, 'select username, locale from public.profiles where id = $1', [alice]);
+    const p = await as(alice, 'select username, locale from public.my_profile()');
     expect(p).toHaveLength(1);
     const lists = await as(alice, 'select name from public.shopping_lists');
     expect(lists.map((l) => l.name)).toContain('default');
@@ -215,6 +215,41 @@ d('RLS & data rules', () => {
     );
     expect(rows[0].file_size_limit).toBe(5242880);
     expect([...rows[0].allowed_mime_types].sort()).toEqual(['image/jpeg', 'image/png', 'image/webp']);
+  });
+
+  it('recipe_images updates cannot repoint the file or move the image to another recipe', async () => {
+    const ridA = await createRecipe(alice, {});
+    const ridA2 = await createRecipe(alice, {});
+    const ridB = await createRecipe(bob, { visibility: 'public' });
+    const pathA = `${alice}/${ridA}/u.webp`;
+    const pathB = `${bob}/${ridB}/u.webp`;
+    await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [pathA, alice]);
+    await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [pathB, bob]);
+    const [img] = await as<{ id: string }>(
+      alice,
+      'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3) returning id',
+      [ridA, alice, pathA],
+    );
+    await as(bob, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [ridB, bob, pathB]);
+
+    // puntare al file di un altro
+    await expect(as(alice, 'update public.recipe_images set storage_path = $2 where id = $1', [img.id, pathB])).rejects.toThrow();
+    await expect(as(alice, 'update public.recipe_images set thumb_path = $2 where id = $1', [img.id, pathB])).rejects.toThrow();
+    // agganciare la foto alla ricetta altrui
+    await expect(as(alice, 'update public.recipe_images set recipe_id = $2 where id = $1', [img.id, ridB])).rejects.toThrow();
+    // anche tra ricette proprie il recipe_id è immutabile
+    await expect(as(alice, 'update public.recipe_images set recipe_id = $2 where id = $1', [img.id, ridA2])).rejects.toThrow(/immutable/);
+    // cambiare owner non ha effetto
+    await as(alice, 'update public.recipe_images set owner_id = $2 where id = $1', [img.id, bob]);
+    const [row] = await admin<{ owner_id: string; storage_path: string; recipe_id: string }>(
+      'select owner_id, storage_path, recipe_id from public.recipe_images where id = $1',
+      [img.id],
+    );
+    expect(row).toEqual({ owner_id: alice, storage_path: pathA, recipe_id: ridA });
+    // bob non può modificare la riga di alice
+    expect(await as(bob, "update public.recipe_images set alt_text = 'x' where id = $1 returning id", [img.id])).toHaveLength(0);
+    // le modifiche legittime restano permesse
+    await as(alice, "update public.recipe_images set alt_text = 'ok', position = 2 where id = $1", [img.id]);
   });
 
   it('API keys are never readable by clients; only metadata of own keys', async () => {

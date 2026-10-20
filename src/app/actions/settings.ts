@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptSecret, keyAad, keyHint, loadEncryptionKey } from '@/lib/crypto/secrets';
+import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 import { env } from '@/lib/env';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
@@ -72,7 +73,6 @@ export async function saveApiKey(input: unknown): Promise<ActionResult> {
     revalidatePath('/settings/ai');
     return ok();
   } catch (e) {
-    if (e instanceof Error && e.name === 'EncryptionConfigError') return fail('config');
     return toFailure(e, 'saveApiKey');
   }
 }
@@ -91,7 +91,7 @@ export async function deleteApiKey(provider: string): Promise<ActionResult> {
   }
 }
 
-/** Permanently deletes the account: storage files first, then the auth user (all rows cascade). */
+/** Permanently deletes the account: storage files first, the auth user last (all rows cascade), then sign out. Safe to retry. */
 export async function deleteAccount(confirmUsername: string): Promise<ActionResult> {
   try {
     const user = await getUser();
@@ -99,14 +99,7 @@ export async function deleteAccount(confirmUsername: string): Promise<ActionResu
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
     if (!profile || profile.username !== String(confirmUsername ?? '').trim().toLowerCase()) return fail('invalid_input');
-    const admin = createAdminClient();
-    const { data: imgs } = await admin.from('recipe_images').select('storage_path, thumb_path').eq('owner_id', user.id);
-    const paths = ((imgs as { storage_path: string; thumb_path: string | null }[]) ?? []).flatMap((i) => [i.storage_path, i.thumb_path].filter(Boolean) as string[]);
-    for (let i = 0; i < paths.length; i += 100) {
-      await admin.storage.from('recipe-images').remove(paths.slice(i, i + 100));
-    }
-    const { error } = await admin.auth.admin.deleteUser(user.id);
-    if (error) return fail('generic');
+    await deleteAccountData(createAdminClient() as unknown as DeletionAdmin, user.id);
     await supabase.auth.signOut();
   } catch (e) {
     return toFailure(e, 'deleteAccount');

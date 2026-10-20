@@ -4,8 +4,11 @@ import { z } from 'zod';
 import { getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
+import { decodeHtml } from '@/lib/import/decode-html';
 import { recipeFromHtml } from '@/lib/import/recipe-from-html';
 import { parseRecipeText } from '@/lib/recipes/text-parser';
+import { detectRecipeLanguage } from '@/lib/recipes/detect-language';
+import { isLocale, DEFAULT_LOCALE } from '@/i18n/config';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { prepareOcrPage, ImageValidationError } from '@/lib/images/process';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
@@ -30,7 +33,7 @@ export async function importFromUrl(rawUrl: string): Promise<ActionResult<UrlImp
       maxBytes: 3 * 1024 * 1024,
       allowedContentTypes: /text\/html|application\/xhtml\+xml/i,
     });
-    const html = res.body.toString('utf8');
+    const html = decodeHtml(res.body, res.contentType);
     const { draft, pageText } = recipeFromHtml(html, res.finalUrl);
     if (!draft) return ok({ draft: null, pageText: pageText.slice(0, 8000) });
     if (res.truncated) draft.warnings.push({ code: 'partial_content' });
@@ -41,7 +44,7 @@ export async function importFromUrl(rawUrl: string): Promise<ActionResult<UrlImp
 }
 
 /** Pasted text: heuristic parser (free) or, if the user chooses, an AI provider. */
-export async function importFromText(text: string, useAi: boolean, sourceUrl?: string | null): Promise<ActionResult<ImportDraft>> {
+export async function importFromText(text: string, useAi: boolean, sourceUrl?: string | null, uiLocale?: string): Promise<ActionResult<ImportDraft>> {
   try {
     const user = await getUser();
     if (!user) return fail('forbidden');
@@ -51,19 +54,20 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
 
     if (useAi) {
       await enforceRateLimit('ai_text', user.id);
-      const resolved = await resolveProvider(user.id, 'text', 'text');
+      const resolved = await resolveProvider(user.id, 'text', 'text', 'extract_text');
       const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
       await recordUsage(user.id, 'text', 'extract_text', resolved);
       return ok(draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' }));
     }
 
+    const language = detectRecipeLanguage(t.data, isLocale(uiLocale) ? uiLocale : DEFAULT_LOCALE);
     const p = parseRecipeText(t.data);
     const cat = suggestCategory({ title: p.title, description: p.description, ingredients: p.ingredients });
     return ok({
       content: {
         title: p.title.slice(0, 200),
         description: p.description,
-        original_language: 'it',
+        original_language: language,
         servings: p.servings,
         prep_minutes: p.prep_minutes,
         cook_minutes: p.cook_minutes,
@@ -100,7 +104,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
     if (files.some((f) => f.size > MAX_PAGE_BYTES) || total > MAX_TOTAL_BYTES) return fail('image_too_large');
 
     // Resolve the provider before doing heavy work, so "not configured" is immediate.
-    const resolved = await resolveProvider(user.id, 'vision', 'vision');
+    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
     await enforceRateLimit('import_photo', user.id);
 
     const images = [];
