@@ -956,6 +956,21 @@
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
     "noSteps": "This recipe has no steps yet."
   },
+  "feed": {
+    "tabs": "Community sections",
+    "forYou": "For you",
+    "recent": "Recent",
+    "why": "Why you see this:",
+    "reasonFriend": "a friend of yours published it",
+    "reasonTags": "you like: {tags}",
+    "reasonCategory": "you like the {category} category",
+    "reasonPopular": "it is popular in the community",
+    "reasonNew": "it is new in the community",
+    "coldStart": "We don't know your tastes yet: here are the most liked and newest recipes. Save or publish a few recipes to get tailored suggestions.",
+    "emptyTitle": "No suggestions for now",
+    "empty": "When new public recipes or your friends' recipes arrive, you'll find them here.",
+    "seeRecent": "See the most recent"
+  },
   "richProfile": {
     "location": "Location",
     "website": "Website",

@@ -956,6 +956,21 @@
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
     "noSteps": "Questa ricetta non ha ancora un procedimento."
   },
+  "feed": {
+    "tabs": "Sezioni della community",
+    "forYou": "Per te",
+    "recent": "Recenti",
+    "why": "Perché lo vedi:",
+    "reasonFriend": "l'ha pubblicata un tuo amico",
+    "reasonTags": "ti piacciono: {tags}",
+    "reasonCategory": "ti piace la categoria {category}",
+    "reasonPopular": "è popolare nella community",
+    "reasonNew": "è una novità della community",
+    "coldStart": "Non conosciamo ancora i tuoi gusti: ecco le ricette più apprezzate e recenti. Salva o pubblica qualche ricetta per ricevere suggerimenti su misura.",
+    "emptyTitle": "Nessun suggerimento per ora",
+    "empty": "Quando ci saranno nuove ricette pubbliche o dei tuoi amici, le troverai qui.",
+    "seeRecent": "Vedi le più recenti"
+  },
   "richProfile": {
     "location": "Luogo",
     "website": "Sito web",

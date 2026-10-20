@@ -956,6 +956,21 @@
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
     "noSteps": "Dieses Rezept hat noch keine Schritte."
   },
+  "feed": {
+    "tabs": "Community-Bereiche",
+    "forYou": "Für dich",
+    "recent": "Neueste",
+    "why": "Warum du das siehst:",
+    "reasonFriend": "ein Freund hat es veröffentlicht",
+    "reasonTags": "du magst: {tags}",
+    "reasonCategory": "du magst die Kategorie {category}",
+    "reasonPopular": "es ist in der Community beliebt",
+    "reasonNew": "es ist neu in der Community",
+    "coldStart": "Wir kennen deinen Geschmack noch nicht: hier sind die beliebtesten und neuesten Rezepte. Speichere oder veröffentliche ein paar Rezepte, um passende Vorschläge zu erhalten.",
+    "emptyTitle": "Vorerst keine Vorschläge",
+    "empty": "Sobald neue öffentliche Rezepte oder Rezepte deiner Freunde da sind, findest du sie hier.",
+    "seeRecent": "Neueste ansehen"
+  },
   "richProfile": {
     "location": "Ort",
     "website": "Webseite",
