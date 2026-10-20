@@ -956,6 +956,15 @@
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
     "noSteps": "Questa ricetta non ha ancora un procedimento."
   },
+  "ratings": {
+    "title": "Valutazioni",
+    "yours": "La tua valutazione",
+    "star": "{n, plural, one {# stella} other {# stelle}}",
+    "hint": "Valuta questa ricetta da 1 a 5 stelle.",
+    "saved": "Valutazione salvata. Tocca di nuovo la stella per rimuoverla.",
+    "summary": "Media {avg} su 5, {count, plural, one {# valutazione} other {# valutazioni}}",
+    "notEnough": "Ancora poche valutazioni per mostrare la media."
+  },
   "cookLog": {
     "button": "L'ho cucinata",
     "sheetTitle": "L'ho cucinata",
