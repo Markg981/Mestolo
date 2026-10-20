@@ -7,6 +7,7 @@ export const PRIMARY_NAV = [
 export const SECONDARY_NAV = [
   { href: '/collections', key: 'collections', icon: 'folder' },
   { href: '/shopping', key: 'shopping', icon: 'cart' },
+  { href: '/pantry', key: 'pantry', icon: 'pantry' },
   { href: '/plan', key: 'plan', icon: 'calendar' },
   { href: '/friends', key: 'friends', icon: 'users' },
   { href: '/settings', key: 'settings', icon: 'settings' },
