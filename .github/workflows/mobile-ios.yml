@@ -1,0 +1,151 @@
+name: Mobile iOS (TestFlight)
+
+# Build firmata dell'app iOS su runner macOS e upload su App Store Connect (TestFlight).
+# Guida completa: docs/mobile.md, sezione "4. App Store (iOS)".
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Carica la build su App Store Connect (TestFlight)
+        type: boolean
+        default: true
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: mobile-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    name: Archive e TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL }}
+      CAP_APP_ID: ${{ vars.CAP_APP_ID }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      # Il numero di build deve crescere a ogni upload: usiamo il numero di run del workflow.
+      MOBILE_BUILD_NUMBER: ${{ github.run_number }}
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+    steps:
+      - name: Verifica configurazione
+        run: |
+          missing=""
+          [ -z "$CAP_SERVER_URL" ] && missing="$missing var:CAP_SERVER_URL"
+          [ -z "$APPLE_TEAM_ID" ] && missing="$missing var:APPLE_TEAM_ID"
+          [ -z "$ASC_KEY_ID" ] && missing="$missing secret:APP_STORE_CONNECT_KEY_ID"
+          [ -z "$ASC_ISSUER_ID" ] && missing="$missing secret:APP_STORE_CONNECT_ISSUER_ID"
+          [ -z "$ASC_PRIVATE_KEY" ] && missing="$missing secret:APP_STORE_CONNECT_PRIVATE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Configurazione mancante (Settings > Secrets and variables > Actions):$missing. Vedi docs/mobile.md, sezione 4."
+            exit 1
+          fi
+          case "$CAP_SERVER_URL" in
+            https://*) ;;
+            *) echo "::error::CAP_SERVER_URL deve essere un indirizzo https:// per le build da store."; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sincronizza il progetto nativo
+        # Genera capacitor.config.json, config.xml e public/ (ignorati da git) e aggiorna WKAppBoundDomains.
+        run: npm run mobile:sync
+
+      - name: Seleziona Xcode
+        # Apple richiede l'SDK iOS corrente per gli upload su App Store Connect: prendiamo l'Xcode 26 piu' recente
+        # presente sull'immagine (se manca, il job fallisce invece di compilare con un SDK non accettato).
+        run: |
+          xcode_app=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$xcode_app" ]; then
+            echo "::error::Nessun Xcode 26 sull'immagine macos-15: aggiorna l'immagine o la selezione in mobile-ios.yml."
+            ls -d /Applications/Xcode*
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode_app/Contents/Developer"
+          xcodebuild -version
+
+      - name: Prepara la chiave App Store Connect
+        run: |
+          # Percorso dove cercano la chiave sia xcodebuild (-authenticationKeyPath) sia altool (AuthKey_<id>.p8).
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          key="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          # Il secret puo' essere il .p8 in chiaro (PEM) oppure codificato base64.
+          if printf '%s' "$ASC_PRIVATE_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+            printf '%s\n' "$ASC_PRIVATE_KEY" > "$key"
+          else
+            printf '%s' "$ASC_PRIVATE_KEY" | base64 --decode > "$key"
+          fi
+          chmod 600 "$key"
+          grep -q "BEGIN PRIVATE KEY" "$key" || { echo "::error::APP_STORE_CONNECT_PRIVATE_KEY non e' un file .p8 valido."; exit 1; }
+          echo "ASC_KEY_PATH=$key" >> "$GITHUB_ENV"
+
+      - name: Archive
+        # Firma automatica con la chiave API: -allowProvisioningUpdates crea/aggiorna da solo certificato e profili per
+        # entrambi i bundle id (app e ShareExtension, con App Group) senza Mac ne' certificati nel repository.
+        # CURRENT_PROJECT_VERSION da riga di comando vale per tutti i target e non dipende dagli script di versione.
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Mestolo.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION="$MOBILE_BUILD_NUMBER" \
+            | tee "$RUNNER_TEMP/archive.log" | tail -n 60
+
+      - name: Esporta l'.ipa
+        run: |
+          set -o pipefail
+          plist="$RUNNER_TEMP/ExportOptions.plist"
+          cp ios/App/ExportOptions.plist "$plist"
+          /usr/libexec/PlistBuddy -c "Set :teamID $APPLE_TEAM_ID" "$plist"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Mestolo.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            | tail -n 40
+          ls -l "$RUNNER_TEMP/export"
+
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: Mestolo-ios-build-${{ github.run_number }}
+          path: ${{ runner.temp }}/export/*.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload su App Store Connect (TestFlight)
+        # Scelta: export in locale + upload con "xcrun altool --upload-app" autenticato con la stessa chiave API.
+        # Cosi' l'.ipa resta disponibile come artifact. (Alternativa equivalente: destination=upload in
+        # ExportOptions.plist, che carica direttamente da xcodebuild ma non lascia l'.ipa.) altool resta supportato
+        # per il solo upload (e' stata rimossa la parte di notarizzazione); non servono Fastlane ne' notarytool.
+        if: github.event_name == 'push' || inputs.upload
+        run: |
+          ipa=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)
+          xcrun altool --upload-app --type ios --file "$ipa" \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"

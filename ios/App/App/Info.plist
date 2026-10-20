@@ -7,11 +7,11 @@
 		<string>mestolo.example.com</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Mestolo uses the camera to photograph cookbook pages and recipe photos.</string>
+	<string>Mestolo usa la fotocamera per fotografare le pagine del tuo ricettario e le foto delle ricette.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Mestolo lets you choose photos of recipes and cookbook pages from your library.</string>
+	<string>Mestolo ti permette di scegliere dalla libreria le foto delle ricette e delle pagine del ricettario.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Mestolo can save recipe photos to your library.</string>
+	<string>Mestolo può salvare le foto delle ricette nella tua libreria.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
