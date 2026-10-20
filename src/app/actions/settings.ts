@@ -72,7 +72,6 @@ export async function saveApiKey(input: unknown): Promise<ActionResult> {
     revalidatePath('/settings/ai');
     return ok();
   } catch (e) {
-    if (e instanceof Error && e.name === 'EncryptionConfigError') return fail('config');
     return toFailure(e, 'saveApiKey');
   }
 }
