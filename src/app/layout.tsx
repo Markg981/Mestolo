@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ServiceWorkerRegister } from '@/components/pwa/PwaClient';
+import { ShareUrlListener } from '@/components/pwa/ShareUrlListener';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider>
           {children}
           <ServiceWorkerRegister />
+          <ShareUrlListener />
         </NextIntlClientProvider>
       </body>
     </html>
