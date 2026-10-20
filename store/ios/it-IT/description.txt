@@ -1,0 +1,37 @@
+Mestolo è il ricettario in cui raccogli tutto quello che cucini: ricette trovate online, pagine di vecchi libri, video visti sui social e quelle di famiglia.
+
+IMPORTA LE RICETTE
+- Da un link: Mestolo legge la pagina e ricava ingredienti e passaggi.
+- Da una foto: fotografa una pagina di un libro o un foglio scritto a mano e il testo viene riconosciuto.
+- Da un video: parti dal link e ottieni la ricetta in forma scritta.
+- Oppure scrivila da zero, con foto, note e porzioni.
+Prima di salvare puoi sempre rivedere e correggere il risultato.
+
+CUCINA PASSO PASSO
+La modalità cucina mostra un passaggio alla volta, a caratteri grandi, con i timer ricavati dal testo. Se hai un dubbio (posso sostituire il burro? quanto cuocio in più?) puoi chiederlo all'assistente di cucina, che conosce la ricetta che stai preparando.
+
+PIANIFICA LA SETTIMANA
+Il generatore di piano propone i pasti in base alle tue preferenze e alle ricette che hai già. Dal piano puoi creare la lista della spesa con un tocco.
+
+LISTA DELLA SPESA
+Gli articoli sono raggruppati per reparto, così fai il giro del negozio una volta sola. Puoi condividere la lista con la famiglia: chi è in negozio vede subito cosa è già nel carrello.
+
+DISPENSA E STAGIONALITÀ
+Segna cosa hai in casa e scopri quali ricette puoi preparare. Mestolo ti suggerisce anche i prodotti di stagione e le ricette che li usano.
+
+VALORI NUTRIZIONALI
+Per ogni ricetta trovi una stima di calorie e nutrienti per porzione.
+
+IN COMPAGNIA
+- Raccolte di ricette, anche condivise con amici e familiari.
+- Un feed della community con le ricette pubblicate dagli altri utenti.
+- Valutazioni con le stelle e il segno "L'ho cucinata" per ricordare cosa hai già provato.
+- Segui gli amici e scopri cosa cucinano.
+
+INTELLIGENZA ARTIFICIALE
+Alcune funzioni (importazione da foto e video, assistente di cucina, generatore di piano) usano un servizio di intelligenza artificiale. Il testo della ricetta o la foto vengono inviati al servizio solo quando usi una di queste funzioni. Le foto delle pagine non vengono conservate.
+
+PRIVACY
+Nessuna pubblicità e nessun tracciamento. Puoi esportare i tuoi dati o eliminare l'account direttamente dall'app, in Impostazioni.
+
+L'app è disponibile in italiano, inglese, tedesco, spagnolo, francese e portoghese.

@@ -1,0 +1,1 @@
+First release of Mestolo: import recipes from links, photos and videos, cooking mode with assistant, meal plan, pantry, shared shopping list and collections.

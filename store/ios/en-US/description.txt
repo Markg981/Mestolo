@@ -1,0 +1,37 @@
+Mestolo is the recipe box where you keep everything you cook: recipes found online, pages from old cookbooks, videos you saw on social media, and your family's own.
+
+IMPORT RECIPES
+- From a link: Mestolo reads the page and extracts the ingredients and steps.
+- From a photo: take a picture of a cookbook page or a handwritten note and the text is recognized.
+- From a video: start from the link and get the recipe in written form.
+- Or write one from scratch, with photos, notes and servings.
+You can always review and correct the result before saving.
+
+COOK STEP BY STEP
+Cooking mode shows one step at a time in large type, with timers picked up from the text. If you have a question (can I replace the butter? how much longer should it cook?) ask the cooking assistant, which knows the recipe you are making.
+
+PLAN THE WEEK
+The meal plan generator suggests meals based on your preferences and the recipes you already have. From the plan you can build a shopping list in one tap.
+
+SHOPPING LIST
+Items are grouped by aisle, so you walk through the store only once. Share the list with your family: whoever is at the store sees right away what is already in the cart.
+
+PANTRY AND SEASONS
+Note what you have at home and see which recipes you can make. Mestolo also suggests seasonal produce and the recipes that use it.
+
+NUTRITION
+Every recipe shows an estimate of calories and nutrients per serving.
+
+TOGETHER
+- Recipe collections, which you can share with friends and family.
+- A community feed with recipes published by other users.
+- Star ratings and an "I cooked it" mark to remember what you have already tried.
+- Follow friends and see what they are cooking.
+
+ARTIFICIAL INTELLIGENCE
+Some features (import from photos and videos, cooking assistant, meal plan generator) use an AI service. The recipe text or photo is sent to the service only when you use one of these features. Photos of pages are not stored.
+
+PRIVACY
+No ads and no tracking. You can export your data or delete your account from the app, in Settings.
+
+The app is available in Italian, English, German, Spanish, French and Portuguese.
