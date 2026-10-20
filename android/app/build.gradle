@@ -1,5 +1,19 @@
 apply plugin: 'com.android.application'
 
+// Release signing: android/keystore.properties (gitignored) or ANDROID_* env vars.
+// versionCode/versionName are rewritten by scripts/mobile-version.mjs (source: package.json).
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file('keystore.properties')
+if (keystoreFile.exists()) {
+    keystoreFile.withInputStream { keystoreProps.load(it) }
+}
+def signingValue = { String prop, String env -> keystoreProps.getProperty(prop) ?: System.getenv(env) }
+def releaseStoreFile = signingValue('storeFile', 'ANDROID_KEYSTORE_PATH')
+def releaseStorePassword = signingValue('storePassword', 'ANDROID_KEYSTORE_PASSWORD')
+def releaseKeyAlias = signingValue('keyAlias', 'ANDROID_KEY_ALIAS')
+def releaseKeyPassword = signingValue('keyPassword', 'ANDROID_KEY_PASSWORD')
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace = "com.markg981.mestolo"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,7 +22,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +30,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            } else {
+                logger.lifecycle('No release keystore configured: release build will be UNSIGNED.')
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

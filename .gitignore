@@ -19,6 +19,12 @@ mobile/www/config.js
 android/app/release/
 *.keystore
 *.jks
+android/keystore.properties
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
 e2e/.auth/
 public/ocr/
 public/ocr/
