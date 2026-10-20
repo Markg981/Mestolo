@@ -9,7 +9,8 @@ import { Badge } from '../ui';
 export async function RecipeCard({ recipe, categories, showAuthor, priority }: { recipe: RecipeListItem; categories: CategoryRow[]; showAuthor?: boolean; priority?: boolean }) {
   const t = await getTranslations();
   const cat = categories.find((c) => c.id === recipe.category_id) ?? null;
-  const time = recipe.total_minutes ?? (recipe.prep_minutes !== null && recipe.cook_minutes !== null ? recipe.prep_minutes + recipe.cook_minutes : null);
+  // Only the declared total: prep + cook may miss resting/rising times, so it is not shown as a total.
+  const time = recipe.total_minutes;
   return (
     <article className="card-tab group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
       <div className="aspect-[4/3] w-full overflow-hidden bg-sunk">

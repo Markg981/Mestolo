@@ -146,6 +146,7 @@ h3,
   height: 6px;
   border-radius: 0 0 6px 6px;
   background: var(--saffron);
+  z-index: 2;
 }
 
 .skip-link {

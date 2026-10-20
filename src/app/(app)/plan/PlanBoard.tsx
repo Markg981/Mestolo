@@ -68,7 +68,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
         <LiveMessage message={msg?.text ?? null} tone={msg?.tone} />
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
         {days.map((d) => (
           <section key={d.iso} aria-labelledby={`d-${d.iso}`} className={cx('flex flex-col gap-2 rounded-[var(--radius-card)] border bg-surface p-3', d.today ? 'border-ink' : 'border-line')}>
             <h2 id={`d-${d.iso}`} className="font-display text-lg font-bold capitalize">
@@ -87,11 +87,11 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
                   {list.map((e) => (
                     <div key={e.id} className="flex items-center gap-1 rounded-lg bg-saffron-wash px-2 py-1">
                       {e.recipe_id ? (
-                        <Link href={`/recipes/${e.recipe_id}`} className="min-w-0 flex-1 truncate text-sm font-semibold hover:underline">
+                        <Link href={`/recipes/${e.recipe_id}`} className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold hover:underline">
                           {e.title}
                         </Link>
                       ) : (
-                        <span className="min-w-0 flex-1 truncate text-sm">{e.title}</span>
+                        <span className="min-w-0 flex-1 line-clamp-2 text-sm">{e.title}</span>
                       )}
                       {e.servings && <span className="text-xs text-muted">×{Number(e.servings)}</span>}
                       <button type="button" className="inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('remove', { title: e.title })} onClick={() => start(async () => { await deletePlanEntry(e.id); router.refresh(); })}>
