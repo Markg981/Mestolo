@@ -955,5 +955,29 @@
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
     "noSteps": "Esta receta aún no tiene pasos."
+  },
+  "invites": {
+    "title": "Invitar amigos",
+    "lead": "Crea un enlace y compártelo: quien lo abra y se registre será tu amigo automáticamente.",
+    "create": "Crear enlace de invitación",
+    "linkOnce": "Este enlace se muestra una sola vez: cópialo ahora.",
+    "linkLabel": "Enlace de invitación",
+    "copy": "Copiar",
+    "share": "Compartir",
+    "copied": "Enlace copiado.",
+    "copyFailed": "No se pudo copiar el enlace.",
+    "shareTitle": "Únete a mí en Mestolo",
+    "shareText": "Te invito a Mestolo, el recetario que se comparte entre amigos.",
+    "uses": "{used} de {max} usos",
+    "expires": "Caduca el {date}",
+    "revoke": "Revocar",
+    "invalidTitle": "Invitación no válida",
+    "invalid": "Esta invitación no es válida, ha caducado o ha sido revocada.",
+    "home": "Ir a Mestolo",
+    "landingTitle": "{name} te ha invitado a Mestolo",
+    "landingLead": "Regístrate o inicia sesión para ser su amigo y ver las recetas que comparte contigo.",
+    "signup": "Registrarse",
+    "login": "Iniciar sesión",
+    "accept": "Aceptar y hacerse amigos"
   }
 }
