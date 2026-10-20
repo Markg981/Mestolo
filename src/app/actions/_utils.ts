@@ -85,6 +85,7 @@ export function toFailure(e: unknown, context: string): { ok: false; error: Erro
 export function dbFailure(error: { code?: string; message?: string } | null, context: string) {
   if (!error) return fail('generic');
   if (error.code === '42501' || /row-level security/i.test(error.message ?? '')) return fail('forbidden');
+  if (error.code === 'RL001') return fail('rate_limited');
   if (error.code === '23505') return fail('already_exists');
   if (error.code === '22023' || error.code === '23514' || error.code === '22P02') return fail('invalid_input');
   console.error(`[mestolo] ${context}: db error ${error.code ?? ''}`);
