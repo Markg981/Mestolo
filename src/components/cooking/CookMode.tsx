@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { Bell, ChevronLeft, ChevronRight, ListChecks, Mic, MicOff, Timer, X } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, ListChecks, MessageCircleQuestion, Mic, MicOff, Timer, X } from 'lucide-react';
 import { formatQuantity } from '@/lib/recipes/ingredient-parser';
 import { UNIT_KEYS } from '@/lib/recipes/units';
 import type { Ingredient, Step } from '@/lib/recipes/types';
@@ -11,6 +11,7 @@ import { detectDurations, formatClock } from '@/lib/cooking/durations';
 import { keyDirection, matchVoiceCommand, nextStep, parseCookState, prevStep, remainingSeconds, stepProgress, swipeDirection, type NavDirection } from '@/lib/cooking/navigation';
 import { Button, cx } from '../ui';
 import { CookedItButton } from './CookedIt';
+import { CookAssistant } from './CookAssistant';
 
 interface CookTimer {
   id: string;
@@ -82,7 +83,21 @@ function beep() {
 }
 
 /** Full-screen, hands-free cooking mode: one step at a time, ingredient checklist, timers, wake lock, voice. */
-export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: string; title: string; ingredients: Ingredient[]; steps: Step[] }) {
+export function CookMode({
+  recipeId,
+  title,
+  ingredients,
+  steps,
+  servings = null,
+  assistantAvailable = false,
+}: {
+  recipeId: string;
+  title: string;
+  ingredients: Ingredient[];
+  steps: Step[];
+  servings?: number | null;
+  assistantAvailable?: boolean;
+}) {
   const t = useTranslations('cook');
   const tu = useTranslations('units');
   const tr = useTranslations('recipe');
@@ -93,6 +108,7 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
   const [checked, setChecked] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [assist, setAssist] = useState(false);
   const [timers, setTimers] = useState<CookTimer[]>([]);
   const [now, setNow] = useState(0);
   const [announce, setAnnounce] = useState('');
@@ -141,6 +157,10 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      if (assist) {
+        if (e.key === 'Escape') setAssist(false);
+        return;
+      }
       if (sheet) {
         if (e.key === 'Escape') setSheet(false);
         return;
@@ -153,7 +173,7 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go, sheet]);
+  }, [go, sheet, assist]);
 
   // Screen Wake Lock, re-acquired when the page becomes visible again
   useEffect(() => {
@@ -318,7 +338,7 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
       onTouchEnd={(e) => {
         const start = touch.current;
         touch.current = null;
-        if (!start || sheet) return;
+        if (!start || sheet || assist) return;
         const p = e.changedTouches[0];
         const dir = swipeDirection(p.clientX - start.x, p.clientY - start.y);
         if (dir) go(dir);
@@ -341,6 +361,11 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
             {listening ? <Mic aria-hidden className="size-5" /> : <MicOff aria-hidden className="size-5" />}
           </Button>
         )}
+        <Button variant="ghost" className="min-h-11 gap-1.5 px-3" aria-haspopup="dialog" aria-expanded={assist} onClick={() => setAssist(true)}>
+          <MessageCircleQuestion aria-hidden className="size-5" />
+          <span className="hidden sm:inline">{t('assistOpen')}</span>
+          <span className="sr-only sm:hidden">{t('assistOpen')}</span>
+        </Button>
         <Button variant="ghost" className="min-h-11 gap-1.5 px-3" aria-expanded={sheet} aria-controls="cook-ingredients" onClick={() => setSheet((v) => !v)}>
           <ListChecks aria-hidden className="size-5" />
           <span>{t('ingredients')}</span>
@@ -443,6 +468,8 @@ export function CookMode({ recipeId, title, ingredients, steps }: { recipeId: st
       <p className="sr-only" role="status" aria-live="assertive">
         {announce}
       </p>
+
+      {assist && <CookAssistant recipeId={recipeId} stepIndex={step} servings={servings} available={assistantAvailable} onClose={() => setAssist(false)} />}
 
       {sheet && (
         <div className="absolute inset-0 z-10 flex flex-col justify-end bg-black/50" onClick={() => setSheet(false)}>

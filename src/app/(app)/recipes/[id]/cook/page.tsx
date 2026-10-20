@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getRecipeDetail } from '@/lib/data/recipes';
+import { getUser } from '@/lib/supabase/server';
+import { capabilityStatus } from '@/lib/ai/service';
 import { CookMode } from '@/components/cooking/CookMode';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -13,5 +15,16 @@ export default async function CookPage({ params }: { params: Promise<{ id: strin
   const detail = await getRecipeDetail(id);
   if (!detail) notFound();
   const { recipe } = detail;
-  return <CookMode recipeId={id} title={recipe.title} ingredients={recipe.ingredients ?? []} steps={recipe.steps ?? []} />;
+  const user = await getUser();
+  const status = user ? await capabilityStatus(user.id, 'text', 'text').catch(() => null) : null;
+  return (
+    <CookMode
+      recipeId={id}
+      title={recipe.title}
+      ingredients={recipe.ingredients ?? []}
+      steps={recipe.steps ?? []}
+      servings={recipe.servings === null ? null : Number(recipe.servings)}
+      assistantAvailable={!!status?.available}
+    />
+  );
 }
