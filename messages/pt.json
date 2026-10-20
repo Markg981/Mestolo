@@ -955,5 +955,33 @@
     "voiceDenied": "Microfone não permitido: comandos de voz desativados.",
     "wakeUnsupported": "O ecrã pode apagar-se: manter o ecrã ligado não é suportado aqui.",
     "noSteps": "Esta receita ainda não tem passos."
+  },
+  "videoImport": {
+    "source": {
+      "description": "Texto retirado da descrição do vídeo",
+      "captions": "Texto retirado das legendas do vídeo",
+      "transcription": "Texto obtido pela transcrição do áudio"
+    },
+    "sourceHint": {
+      "description": "Verifique e corrija o texto abaixo e depois analise-o. Sem custo: não precisa de IA.",
+      "captions": "Legendas e descrição combinadas. A fala pode conter erros: verifique o texto antes de analisá-lo.",
+      "transcription": "A transcrição automática pode conter erros: verifique o texto antes de analisá-lo."
+    },
+    "noneTitle": "Nenhuma transcrição disponível",
+    "none": "Nenhuma transcrição disponível para este vídeo. Tente a IA enviando o arquivo de vídeo ou cole abaixo o texto da receita.",
+    "uploadTitle": "Ou envie um vídeo",
+    "uploadTitleCompact": "Sem texto útil? Transcreva um arquivo de vídeo",
+    "uploadLead": "O áudio é extraído no seu dispositivo e transcrito com IA: o vídeo não é enviado nem guardado.",
+    "upload": "Enviar vídeo e transcrever",
+    "extracting": "Extraindo o áudio…",
+    "transcribing": "Transcrevendo…",
+    "needsAi": "Requer uma chave pessoal da OpenAI (definições de IA) ou o serviço de IA da app com cota disponível.",
+    "uploadLimits": "Até 8 minutos de áudio e arquivo de 200 MB. Usa uma cota de IA de texto.",
+    "fileTooBig": "O arquivo é grande demais (máximo de 200 MB).",
+    "extract": {
+      "too_long": "O vídeo é longo demais: máximo de 8 minutos.",
+      "decode_failed": "Não consigo ler o áudio deste arquivo. Tente outro formato (MP4 ou MOV) ou cole o texto.",
+      "unsupported": "Este navegador não consegue extrair o áudio. Cole o texto da receita."
+    }
   }
 }

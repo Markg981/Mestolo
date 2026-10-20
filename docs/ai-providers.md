@@ -34,6 +34,18 @@ AI_APP_IMAGE_ENABLED=true
 AI_APP_IMAGE_MODEL=gpt-image-1
 ```
 
+### Import da video (trascrizione)
+
+I link YouTube / Shorts / TikTok / Instagram Reels usano gratis descrizione e sottotitoli della
+pagina (nessuna AI). Solo il caricamento di un file video usa la trascrizione audio:
+l'audio e' estratto nel browser (mono 8 kHz, max 8 minuti, 4 MB) e inviato a
+`POST {base}/audio/transcriptions`. Funziona con chiave personale OpenAI o con
+`AI_APP_PROVIDER=openai` / `openai-compatible`; Anthropic non offre speech-to-text.
+
+```
+AI_TRANSCRIBE_MODEL=whisper-1   # default; consuma 1 unita' della quota giornaliera 'text'
+```
+
 Modelli predefiniti (sovrascrivibili, **verifica i nomi aggiornati nella documentazione del provider**): Anthropic `claude-sonnet-5-5`; OpenAI testo `gpt-5-mini`, immagini `gpt-image-1`.
 
 ### Endpoint compatibile OpenAI (self-hosted o terze parti)

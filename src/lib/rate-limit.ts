@@ -11,6 +11,7 @@ export const LIMITS = {
   reset_ip: [5, 60 * 60],
   import_url: [30, 60 * 60],
   import_photo: [12, 60 * 60],
+  import_video_ai: [6, 60 * 60],
   ai_text: [40, 60 * 60],
   ai_translate: [60, 60 * 60],
   ai_image: [6, 60 * 60],

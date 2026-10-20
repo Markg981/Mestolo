@@ -118,3 +118,21 @@ describe('extraction output normalisation', () => {
     expect(d.warnings.map((w) => w.code)).toEqual(['no_ingredients', 'no_steps']);
   });
 });
+
+describe('openai transcription (mocked fetch)', () => {
+  it('posts multipart audio and returns the text', async () => {
+    const f = mockFetch(200, { text: ' Taglia la cipolla ' });
+    const p = openAiProvider({ apiKey: 'sk-test-key-123456', textModel: 'm', transcribeModel: 'whisper-1', fetchImpl: f as unknown as typeof fetch });
+    const out = await p.transcribe!({ data: new Uint8Array([1, 2, 3]), mime: 'audio/wav', filename: 'audio.wav' });
+    expect(out).toBe('Taglia la cipolla');
+    const [url, init] = f.mock.calls[0];
+    expect(String(url)).toBe('https://api.openai.com/v1/audio/transcriptions');
+    expect(init!.body).toBeInstanceOf(FormData);
+    expect((init!.body as FormData).get('model')).toBe('whisper-1');
+    expect(p.capabilities).toContain('audio');
+  });
+  it('maps provider errors', async () => {
+    const p = openAiProvider({ apiKey: 'k', textModel: 'm', fetchImpl: mockFetch(401, 'no') as unknown as typeof fetch });
+    await expect(p.transcribe!({ data: new Uint8Array([1]), mime: 'audio/wav', filename: 'a.wav' })).rejects.toMatchObject({ code: 'invalid_key' });
+  });
+});

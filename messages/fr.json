@@ -955,5 +955,33 @@
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
     "noSteps": "Cette recette n’a pas encore d’étapes."
+  },
+  "videoImport": {
+    "source": {
+      "description": "Texte tiré de la description de la vidéo",
+      "captions": "Texte tiré des sous-titres de la vidéo",
+      "transcription": "Texte obtenu par transcription de l'audio"
+    },
+    "sourceHint": {
+      "description": "Vérifiez et corrigez le texte ci-dessous, puis analysez-le. Aucun coût : pas besoin d'IA.",
+      "captions": "Sous-titres et description combinés. La parole peut contenir des erreurs : vérifiez le texte avant de l'analyser.",
+      "transcription": "La transcription automatique peut contenir des erreurs : vérifiez le texte avant de l'analyser."
+    },
+    "noneTitle": "Aucune transcription disponible",
+    "none": "Aucune transcription n'est disponible pour cette vidéo. Essayez l'IA en important le fichier vidéo, ou collez le texte de la recette ci-dessous.",
+    "uploadTitle": "Ou importez une vidéo",
+    "uploadTitleCompact": "Pas de texte utile ? Transcrivez un fichier vidéo",
+    "uploadLead": "L'audio est extrait sur votre appareil et transcrit par l'IA : la vidéo n'est ni envoyée ni enregistrée.",
+    "upload": "Importer la vidéo et transcrire",
+    "extracting": "Extraction de l'audio…",
+    "transcribing": "Transcription…",
+    "needsAi": "Nécessite une clé OpenAI personnelle (réglages IA) ou le service IA de l'app avec un quota disponible.",
+    "uploadLimits": "Jusqu'à 8 minutes d'audio et un fichier de 200 Mo. Utilise un quota d'IA texte.",
+    "fileTooBig": "Le fichier est trop volumineux (200 Mo maximum).",
+    "extract": {
+      "too_long": "La vidéo est trop longue : 8 minutes maximum.",
+      "decode_failed": "Impossible de lire l'audio de ce fichier. Essayez un autre format (MP4 ou MOV) ou collez le texte.",
+      "unsupported": "Ce navigateur ne peut pas extraire l'audio. Collez le texte de la recette."
+    }
   }
 }

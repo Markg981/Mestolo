@@ -955,5 +955,33 @@
     "voiceDenied": "Microfono non consentito: comandi vocali disattivati.",
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
     "noSteps": "Questa ricetta non ha ancora un procedimento."
+  },
+  "videoImport": {
+    "source": {
+      "description": "Testo preso dalla descrizione del video",
+      "captions": "Testo preso dai sottotitoli del video",
+      "transcription": "Testo ottenuto dalla trascrizione dell'audio"
+    },
+    "sourceHint": {
+      "description": "Controlla e correggi il testo qui sotto, poi analizzalo. Nessun costo: non serve l'AI.",
+      "captions": "Sottotitoli e descrizione uniti. Il parlato può contenere errori: controlla il testo prima di analizzarlo.",
+      "transcription": "La trascrizione automatica può contenere errori: controlla il testo prima di analizzarlo."
+    },
+    "noneTitle": "Nessuna trascrizione disponibile",
+    "none": "Nessuna trascrizione disponibile per questo video. Prova con l'AI caricando il file video, oppure incolla qui sotto il testo della ricetta.",
+    "uploadTitle": "Oppure carica un video",
+    "uploadTitleCompact": "Nessun testo utile? Trascrivi un file video",
+    "uploadLead": "L'audio viene estratto sul tuo dispositivo e trascritto con l'AI: il video non viene inviato né salvato.",
+    "upload": "Carica video e trascrivi",
+    "extracting": "Estraggo l'audio…",
+    "transcribing": "Trascrivo…",
+    "needsAi": "Serve una chiave OpenAI personale (impostazioni AI) o il servizio AI dell'app con quota disponibile.",
+    "uploadLimits": "Massimo 8 minuti di audio e 200 MB di file. Usa una quota AI di testo.",
+    "fileTooBig": "Il file è troppo grande (massimo 200 MB).",
+    "extract": {
+      "too_long": "Il video dura troppo: massimo 8 minuti.",
+      "decode_failed": "Non riesco a leggere l'audio di questo file. Prova con un altro formato (MP4 o MOV) o incolla il testo.",
+      "unsupported": "Questo browser non può estrarre l'audio. Incolla il testo della ricetta."
+    }
   }
 }

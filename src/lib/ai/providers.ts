@@ -5,7 +5,7 @@ import { redactSecrets } from '@/lib/crypto/secrets';
  * implementation is easy to audit and to mock in tests.
  */
 export type ProviderId = 'anthropic' | 'openai' | 'openai-compatible';
-export type Capability = 'text' | 'vision' | 'image';
+export type Capability = 'text' | 'vision' | 'image' | 'audio';
 
 export interface ImageInput {
   mime: 'image/jpeg' | 'image/png' | 'image/webp';
@@ -25,6 +25,8 @@ export interface AiProvider {
   capabilities: Capability[];
   completeJson(req: JsonRequest): Promise<unknown>;
   generateImage?(prompt: string): Promise<{ mime: string; base64: string }>;
+  /** Speech-to-text (OpenAI-style /audio/transcriptions). Returns plain text. */
+  transcribe?(audio: { data: Uint8Array; mime: string; filename: string; language?: string }): Promise<string>;
 }
 
 export type AiErrorCode =
@@ -120,6 +122,7 @@ export function openAiProvider(opts: {
   apiKey: string;
   textModel: string;
   imageModel?: string;
+  transcribeModel?: string;
   baseUrl?: string;
   compatible?: boolean;
   fetchImpl?: FetchLike;
@@ -130,7 +133,7 @@ export function openAiProvider(opts: {
   const provider: AiProvider = {
     id: compatible ? 'openai-compatible' : 'openai',
     label: compatible ? 'OpenAI-compatible' : 'OpenAI',
-    capabilities: opts.imageModel ? ['text', 'vision', 'image'] : ['text', 'vision'],
+    capabilities: opts.imageModel ? ['text', 'vision', 'audio', 'image'] : ['text', 'vision', 'audio'],
     async completeJson(req) {
       const userContent = req.images?.length
         ? [
@@ -154,6 +157,31 @@ export function openAiProvider(opts: {
       const text: string = data?.choices?.[0]?.message?.content ?? '';
       return extractJson(text);
     },
+  };
+  const sttModel = opts.transcribeModel || 'whisper-1';
+  provider.transcribe = async (audio) => {
+    const form = new FormData();
+    form.append('file', new Blob([audio.data as BlobPart], { type: audio.mime }), audio.filename);
+    form.append('model', sttModel);
+    form.append('response_format', 'json');
+    if (audio.language) form.append('language', audio.language);
+    let res: Response;
+    try {
+      res = await f(`${base}/audio/transcriptions`, { method: 'POST', headers: { authorization: `Bearer ${opts.apiKey}` }, body: form, signal: AbortSignal.timeout(120000) });
+    } catch (e) {
+      const name = (e as { name?: string }).name;
+      if (name === 'TimeoutError' || name === 'AbortError') throw new AiError('timeout');
+      throw new AiError('provider_error', 'network error');
+    }
+    const raw = await res.text();
+    if (!res.ok) throw mapHttpError(res.status, raw);
+    try {
+      const text = JSON.parse(raw)?.text;
+      if (typeof text !== 'string') throw new Error('no text');
+      return text.trim();
+    } catch {
+      throw new AiError('bad_output', 'invalid transcription reply');
+    }
   };
   if (opts.imageModel) {
     const model = opts.imageModel;

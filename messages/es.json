@@ -955,5 +955,33 @@
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
     "noSteps": "Esta receta aún no tiene pasos."
+  },
+  "videoImport": {
+    "source": {
+      "description": "Texto tomado de la descripción del vídeo",
+      "captions": "Texto tomado de los subtítulos del vídeo",
+      "transcription": "Texto obtenido al transcribir el audio"
+    },
+    "sourceHint": {
+      "description": "Revisa y corrige el texto de abajo y luego analízalo. Sin coste: no hace falta IA.",
+      "captions": "Subtítulos y descripción combinados. El habla puede contener errores: revisa el texto antes de analizarlo.",
+      "transcription": "La transcripción automática puede contener errores: revisa el texto antes de analizarlo."
+    },
+    "noneTitle": "No hay transcripción disponible",
+    "none": "No hay transcripción disponible para este vídeo. Prueba con la IA subiendo el archivo de vídeo o pega abajo el texto de la receta.",
+    "uploadTitle": "O sube un vídeo",
+    "uploadTitleCompact": "¿Sin texto útil? Transcribe un archivo de vídeo",
+    "uploadLead": "El audio se extrae en tu dispositivo y se transcribe con IA: el vídeo no se envía ni se guarda.",
+    "upload": "Subir vídeo y transcribir",
+    "extracting": "Extrayendo el audio…",
+    "transcribing": "Transcribiendo…",
+    "needsAi": "Requiere una clave personal de OpenAI (ajustes de IA) o el servicio de IA de la app con cuota disponible.",
+    "uploadLimits": "Máximo 8 minutos de audio y 200 MB de archivo. Usa una cuota de IA de texto.",
+    "fileTooBig": "El archivo es demasiado grande (máximo 200 MB).",
+    "extract": {
+      "too_long": "El vídeo es demasiado largo: máximo 8 minutos.",
+      "decode_failed": "No puedo leer el audio de este archivo. Prueba con otro formato (MP4 o MOV) o pega el texto.",
+      "unsupported": "Este navegador no puede extraer el audio. Pega el texto de la receta."
+    }
   }
 }

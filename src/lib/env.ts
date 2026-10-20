@@ -23,6 +23,7 @@ export function env() {
         image: intOr(e.AI_DAILY_LIMIT_IMAGE, 2),
         translate: intOr(e.AI_DAILY_LIMIT_TRANSLATE, 30),
       },
+      transcribeModel: e.AI_TRANSCRIBE_MODEL || 'whisper-1',
       userAnthropicModel: e.AI_USER_ANTHROPIC_MODEL || 'claude-sonnet-5-5',
       userOpenaiTextModel: e.AI_USER_OPENAI_TEXT_MODEL || 'gpt-5-mini',
       userOpenaiImageModel: e.AI_USER_OPENAI_IMAGE_MODEL || 'gpt-image-1',

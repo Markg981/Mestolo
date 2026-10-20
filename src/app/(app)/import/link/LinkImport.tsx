@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link2 } from 'lucide-react';
-import { importFromUrl } from '@/app/actions/import';
+import { useLocale } from 'next-intl';
+import { importFromUrl, importFromVideoUrl } from '@/app/actions/import';
+import { detectVideoUrl } from '@/lib/import/video';
+import { VideoTextStep, VideoUpload, type VideoText } from '@/components/import/VideoImport';
 import { ImportReview } from '@/components/import/ImportReview';
 import { TextParseBox } from '@/components/import/TextParseBox';
 import type { AiStatusProps } from '@/components/recipes/RecipeIslands';
@@ -14,6 +17,8 @@ import { Alert, Field, Input, buttonClass } from '@/components/ui';
 export function LinkImport({ categories, status, initialUrl = '' }: { categories: EditorCategory[]; status: AiStatusProps; initialUrl?: string }) {
   const t = useTranslations('link');
   const te = useTranslations('errors');
+  const locale = useLocale();
+  const [video, setVideo] = useState<VideoText | null>(null);
   const [url, setUrl] = useState(initialUrl);
   const [draft, setDraft] = useState<ImportDraft | null>(null);
   const [fallback, setFallback] = useState<{ text: string; reason: 'no_recipe' | 'error' } | null>(null);
@@ -24,6 +29,18 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
     start(async () => {
       setError(null);
       setFallback(null);
+      setVideo(null);
+      if (detectVideoUrl(target)) {
+        const vr = await importFromVideoUrl(target, locale);
+        if (!vr.ok) {
+          setError(te(vr.error));
+          setFallback({ text: '', reason: 'error' });
+          return;
+        }
+        const v = vr.data.video;
+        setVideo({ source: v.source, text: v.text, sourceUrl: v.sourceUrl });
+        return;
+      }
       const res = await importFromUrl(target);
       if (!res.ok) {
         setError(te(res.error));
@@ -67,6 +84,10 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
       </form>
 
       {error && <Alert tone="error">{error}</Alert>}
+
+      {video && <VideoTextStep video={video} status={status} onDraft={setDraft} onTranscribed={setVideo} />}
+
+      {!video && <VideoUpload status={status} onTranscribed={setVideo} />}
 
       {fallback && (
         <section className="flex flex-col gap-3">
