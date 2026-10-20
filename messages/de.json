@@ -467,7 +467,18 @@
     "pagesKept": "Deine Seiten sind noch da.",
     "yourPages": "Deine Seiten",
     "compareHint": "Tippe auf eine Seite, um sie im Vollbild zu öffnen.",
-    "cameraError": "Die Kamera konnte nicht verwendet werden. Prüfe die Berechtigungen der App oder wähle ein Foto aus der Galerie."
+    "cameraError": "Die Kamera konnte nicht verwendet werden. Prüfe die Berechtigungen der App oder wähle ein Foto aus der Galerie.",
+    "ocrNote": "Der Text wird kostenlos auf deinem Gerät gelesen: Die Fotos verlassen dein Telefon nicht. Du prüfst den Text, bevor er analysiert wird.",
+    "ocrRead": "Text lesen (kostenlos)",
+    "ocrReading": "Seite {page} von {total} wird gelesen… {percent}%",
+    "ocrHint": "Beim ersten Mal kann die Vorbereitung des Lesers einige Sekunden dauern.",
+    "ocrEmpty": "Aus den Fotos konnte kein Text gelesen werden. Versuche ein schärferes, gut beleuchtetes Foto oder nutze die KI.",
+    "ocrFailed": "Das Lesen auf dem Gerät ist fehlgeschlagen. Du kannst es erneut versuchen oder die KI nutzen.",
+    "ocrTextLabel": "Erkannter Text",
+    "ocrTextHint": "Korrigiere Lesefehler und analysiere dann den Text: Das Ergebnis öffnet sich in der Prüfansicht.",
+    "ocrParse": "Text analysieren",
+    "ocrParsing": "Analyse…",
+    "useAi": "KI nutzen"
   },
   "link": {
     "title": "Aus Link importieren",

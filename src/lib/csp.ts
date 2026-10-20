@@ -26,7 +26,9 @@ export function buildCsp({ nonce, isDev = false, sentryDsn }: CspOptions): strin
   const sentry = sentryOrigin(sentryDsn);
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
+    // On-device OCR (Tesseract.js) runs in a same-origin worker served from /ocr (self-hosted, no CDN).
+    "worker-src 'self'",
     // Inline styles are still needed for style attributes set by React/Next.
     "style-src 'self' 'unsafe-inline'",
     // https: is needed only to preview the source image of an imported recipe

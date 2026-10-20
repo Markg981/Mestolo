@@ -467,7 +467,18 @@
     "pagesKept": "As tuas páginas continuam aqui.",
     "yourPages": "As tuas páginas",
     "compareHint": "Toca numa página para a abrir em ecrã inteiro.",
-    "cameraError": "Não foi possível usar a câmara. Verifica as permissões da app ou escolhe uma foto da galeria."
+    "cameraError": "Não foi possível usar a câmara. Verifica as permissões da app ou escolhe uma foto da galeria.",
+    "ocrNote": "O texto é lido no teu dispositivo, de graça: as fotos não saem do telemóvel. Verificas o texto antes de o analisar.",
+    "ocrRead": "Ler o texto (grátis)",
+    "ocrReading": "A ler a página {page} de {total}… {percent}%",
+    "ocrHint": "Da primeira vez pode demorar alguns segundos a preparar o leitor.",
+    "ocrEmpty": "Não foi possível ler texto das fotos. Tenta uma foto mais nítida e bem iluminada, ou usa a IA.",
+    "ocrFailed": "A leitura no dispositivo falhou. Podes tentar de novo ou usar a IA.",
+    "ocrTextLabel": "Texto reconhecido",
+    "ocrTextHint": "Corrige os erros de leitura e depois analisa o texto: o resultado abre no ecrã de revisão.",
+    "ocrParse": "Analisar o texto",
+    "ocrParsing": "A analisar…",
+    "useAi": "Usar a IA"
   },
   "link": {
     "title": "Importar de link",

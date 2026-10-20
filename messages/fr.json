@@ -467,7 +467,18 @@
     "pagesKept": "Vos pages sont toujours là.",
     "yourPages": "Vos pages",
     "compareHint": "Touchez une page pour l'ouvrir en plein écran.",
-    "cameraError": "Impossible d'utiliser l'appareil photo. Vérifiez les autorisations de l'application ou choisissez une photo dans la galerie."
+    "cameraError": "Impossible d'utiliser l'appareil photo. Vérifiez les autorisations de l'application ou choisissez une photo dans la galerie.",
+    "ocrNote": "Le texte est lu sur votre appareil, gratuitement : les photos ne quittent pas votre téléphone. Vous vérifiez le texte avant de l'analyser.",
+    "ocrRead": "Lire le texte (gratuit)",
+    "ocrReading": "Lecture de la page {page} sur {total}… {percent} %",
+    "ocrHint": "La première fois, la préparation du lecteur peut prendre quelques secondes.",
+    "ocrEmpty": "Impossible de lire du texte sur les photos. Essayez une photo plus nette et bien éclairée, ou utilisez l'IA.",
+    "ocrFailed": "La lecture sur l'appareil a échoué. Vous pouvez réessayer ou utiliser l'IA.",
+    "ocrTextLabel": "Texte reconnu",
+    "ocrTextHint": "Corrigez les erreurs de lecture, puis analysez le texte : le résultat s'ouvre dans l'écran de révision.",
+    "ocrParse": "Analyser le texte",
+    "ocrParsing": "Analyse…",
+    "useAi": "Utiliser l'IA"
   },
   "link": {
     "title": "Importer depuis un lien",

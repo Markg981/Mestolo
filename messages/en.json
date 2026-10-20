@@ -467,7 +467,18 @@
     "pagesKept": "Your pages are still here.",
     "yourPages": "Your pages",
     "compareHint": "Tap a page to view it full screen.",
-    "cameraError": "Couldn't use the camera. Check the app's permissions or choose a photo from your gallery."
+    "cameraError": "Couldn't use the camera. Check the app's permissions or choose a photo from your gallery.",
+    "ocrNote": "Text is read on your device, for free: photos never leave your phone. You can check the text before it is analyzed.",
+    "ocrRead": "Read the text (free)",
+    "ocrReading": "Reading page {page} of {total}… {percent}%",
+    "ocrHint": "The first time it may take a few seconds to prepare the reader.",
+    "ocrEmpty": "Could not read any text from the photos. Try a sharper, well-lit photo, or use AI.",
+    "ocrFailed": "On-device reading failed. You can retry or use AI.",
+    "ocrTextLabel": "Recognized text",
+    "ocrTextHint": "Fix any reading errors, then analyze the text: the result opens in the review screen.",
+    "ocrParse": "Analyze the text",
+    "ocrParsing": "Analyzing…",
+    "useAi": "Use AI"
   },
   "link": {
     "title": "Import from link",
