@@ -5,8 +5,9 @@ L'estensione apre l'app con `mestolo://share?url=...` (o `text=...`, `image=...`
 link con `@capacitor/app` (`appUrlOpen`, componente `ShareUrlListener`) e lo manda al flusso di import
 (`/import/link` o `/import/text`) con la stessa logica del Web Share Target Android (`sharedToImportPath`).
 
-Stato: i file sorgente sono nel repo, ma il target Xcode NON e' stato aggiunto a `project.pbxproj`
-(modifica manuale troppo fragile) e non e' stato compilato (sviluppato su Windows). Va creato in Xcode.
+Stato: sorgenti e target `ShareExtension` sono nel repo (target, entitlements, embed e privacy manifest in
+`project.pbxproj`), ma non sono mai stati compilati (sviluppato su Windows): la prima build e' quella del
+workflow `mobile-ios.yml`. I "Passi in Xcode" qui sotto servono solo come riferimento/verifica o se il target va ricreato.
 
 ## File nel repo
 - `ios/App/ShareExtension/ShareViewController.swift`, `Info.plist`, `ShareExtension.entitlements`
