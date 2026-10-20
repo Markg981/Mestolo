@@ -19,6 +19,7 @@ export async function proxy(request: NextRequest) {
     nonce,
     isDev: process.env.NODE_ENV !== 'production',
     sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   });
   const cspName = cspHeaderName(process.env.CSP_REPORT_ONLY === '1');
   // Next reads the nonce from the request CSP header to tag its own scripts.

@@ -1,7 +1,8 @@
 // Content-Security-Policy with a per-request nonce, built in proxy.ts.
-// The browser never talks to Supabase or AI providers directly: every call
-// goes through our server, so connect-src stays 'self' plus the Sentry ingest
-// origin, and only when a public DSN is configured.
+// Data and AI calls go through our server; the only direct browser link to
+// Supabase is the Realtime websocket (user-scoped, RLS-filtered), so connect-src
+// is 'self' plus the Sentry ingest origin (public DSN only) and the Supabase
+// https/wss origins (the browser client also refreshes tokens over https).
 
 export function generateNonce(): string {
   return btoa(crypto.randomUUID());
@@ -16,14 +17,25 @@ function sentryOrigin(dsn: string | undefined): string {
   }
 }
 
+function supabaseOrigins(url: string | undefined): string[] {
+  try {
+    if (!url) return [];
+    const u = new URL(url);
+    return [u.origin, `${u.protocol === 'http:' ? 'ws:' : 'wss:'}//${u.host}`];
+  } catch {
+    return [];
+  }
+}
+
 export type CspOptions = {
   nonce: string;
   isDev?: boolean;
   sentryDsn?: string;
+  supabaseUrl?: string;
 };
 
-export function buildCsp({ nonce, isDev = false, sentryDsn }: CspOptions): string {
-  const sentry = sentryOrigin(sentryDsn);
+export function buildCsp({ nonce, isDev = false, sentryDsn, supabaseUrl }: CspOptions): string {
+  const connect = ["'self'", sentryOrigin(sentryDsn), ...supabaseOrigins(supabaseUrl)].filter(Boolean).join(' ');
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
@@ -33,7 +45,7 @@ export function buildCsp({ nonce, isDev = false, sentryDsn }: CspOptions): strin
     // in the review screen (it is never copied without the user's choice).
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    `connect-src 'self'${sentry ? ` ${sentry}` : ''}`,
+    `connect-src ${connect}`,
     "media-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
