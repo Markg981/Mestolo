@@ -33,6 +33,23 @@ export async function processRecipeImage(input: Buffer) {
   return { full: full.data, width: full.info.width, height: full.info.height, thumb };
 }
 
+/** Avatar: real image, upright, no metadata, square 256px WebP. */
+export async function processAvatar(input: Buffer): Promise<Buffer> {
+  if (input.length > MAX_INPUT_BYTES) throw new ImageValidationError('image_too_large');
+  try {
+    const meta = await sharp(input, { limitInputPixels: 50_000_000 }).metadata();
+    if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
+    return await sharp(input, { limitInputPixels: 50_000_000, animated: false })
+      .rotate()
+      .resize({ width: 256, height: 256, fit: 'cover', position: 'attention' })
+      .webp({ quality: 80 })
+      .toBuffer();
+  } catch (e) {
+    if (e instanceof ImageValidationError) throw e;
+    throw new ImageValidationError('image_invalid');
+  }
+}
+
 /**
  * Normalises a cookbook page photo before sending it to an OCR/vision provider:
  * upright orientation, no metadata, JPEG, longest side 2000px.

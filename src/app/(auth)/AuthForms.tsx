@@ -32,7 +32,7 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
         <Link href="/forgot-password" className="text-basil underline underline-offset-4">
           {t('forgot')}
         </Link>
-        <Link href="/signup" className="text-basil underline underline-offset-4">
+        <Link href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'} className="text-basil underline underline-offset-4">
           {t('noAccount')}
         </Link>
       </div>
@@ -40,7 +40,7 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string }) {
   const t = useTranslations('auth');
   const locale = useLocale();
   const [state, action] = useActionState(signUp, undefined);
@@ -55,6 +55,7 @@ export function SignupForm() {
     <form action={action} className="flex flex-col gap-4">
       <ErrorAlert state={state} />
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="next" value={next ?? '/'} />
       <Field label={t('username')} htmlFor="username" hint={t('usernameHint')}>
         <Input id="username" name="username" autoComplete="username" required pattern="[a-z0-9_]{3,24}" minLength={3} maxLength={24} autoCapitalize="none" spellCheck={false} />
       </Field>
@@ -82,7 +83,7 @@ export function SignupForm() {
         </span>
       </label>
       <SubmitButton pendingLabel={t('pendingSignup')}>{t('submitSignup')}</SubmitButton>
-      <Link href="/login" className="text-sm text-basil underline underline-offset-4">
+      <Link href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'} className="text-sm text-basil underline underline-offset-4">
         {t('haveAccount')}
       </Link>
     </form>
