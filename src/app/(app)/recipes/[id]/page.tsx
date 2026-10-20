@@ -15,6 +15,7 @@ import { RecipeActions } from '@/components/recipes/RecipeActions';
 import { ImagePrompt, NoteEditor, TranslateBanner, type AiStatusProps } from '@/components/recipes/RecipeIslands';
 import { RecipeRating } from '@/components/recipes/RecipeRating';
 import { CookPrefetch } from '@/components/cooking/CookPrefetch';
+import { CookLogsSection } from '@/components/cooking/CookLogs';
 import { Alert, Badge, LinkButton } from '@/components/ui';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -259,6 +260,8 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
               </a>
             )}
           </section>
+
+          {user && <CookLogsSection recipeId={id} userId={user.id} recipeOwnerId={recipe.owner_id} />}
 
           <section className="mt-6 border-t border-line pt-6">
             <NoteEditor recipeId={id} initial={detail.note} />
