@@ -255,6 +255,18 @@
     "ambiguous": "Unclear text",
     "ai_estimate": "AI estimate"
   },
+  "seasonal": {
+    "title": "In season in {month}",
+    "vegetables": "Vegetables",
+    "fruit": "Fruit",
+    "note": "Indicative calendar (temperate climate, Italy/Europe reference): it varies with region and variety.",
+    "recipesTitle": "Recipes with seasonal ingredients",
+    "noRecipes": "No recipes with seasonal ingredients for now.",
+    "uses": "{count, plural, one {# seasonal ingredient} other {# seasonal ingredients}}",
+    "hemisphere": "Hemisphere",
+    "north": "North",
+    "south": "South"
+  },
   "warnings": {
     "missing_page": "A page may be missing: the recipe seems to continue elsewhere.",
     "ambiguous_text": "Part of the text was unclear.",

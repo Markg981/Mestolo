@@ -255,6 +255,18 @@
     "ambiguous": "Text unklar",
     "ai_estimate": "KI-Schätzung"
   },
+  "seasonal": {
+    "title": "Saisonal im {month}",
+    "vegetables": "Gemüse",
+    "fruit": "Obst",
+    "note": "Richtwert-Kalender (gemäßigtes Klima, Bezug Italien/Europa): variiert je nach Region und Sorte.",
+    "recipesTitle": "Rezepte mit saisonalen Zutaten",
+    "noRecipes": "Derzeit keine Rezepte mit saisonalen Zutaten.",
+    "uses": "{count, plural, one {# saisonale Zutat} other {# saisonale Zutaten}}",
+    "hemisphere": "Halbkugel",
+    "north": "Nord",
+    "south": "Süd"
+  },
   "warnings": {
     "missing_page": "Möglicherweise fehlt eine Seite: Das Rezept scheint woanders weiterzugehen.",
     "ambiguous_text": "Ein Teil des Textes war unklar.",
