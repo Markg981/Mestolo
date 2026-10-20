@@ -65,10 +65,6 @@ export interface RecipeFilters {
   limit?: number;
 }
 
-function escapeLike(s: string) {
-  return s.replace(/[\\%_,()]/g, (m) => `\\${m}`);
-}
-
 /** Validates raw query-string values into filters (shared by the page and the "load more" action). */
 export function parseRecipeFilters(sp: { q?: string; category?: string; sort?: string; fav?: string; review?: string; tag?: string }): RecipeFilters {
   return {
@@ -96,18 +92,22 @@ function keysetSortFor(sort: RecipeFilters['sort']): KeysetSort {
 
 async function buildMyRecipesQuery(f: RecipeFilters, userId: string) {
   const supabase = await createClient();
-  let query = supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', userId);
+  // With a text query the search goes through the search_recipes RPC (full-text + trigram,
+  // security invoker so RLS still applies). p_limit null returns every match, so sorting and
+  // keyset pagination are applied by PostgREST on its result like on the plain table.
+  const base = (owner: string | null) =>
+    f.q
+      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: null }).select(LIST_COLUMNS)
+      : owner
+        ? supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', owner)
+        : supabase.from('recipes').select(LIST_COLUMNS);
+  let query = base(userId);
 
   if (f.favorites) {
     const { data: favs } = await supabase.from('favorites').select('recipe_id').eq('user_id', userId);
     const ids = (favs ?? []).map((x: { recipe_id: string }) => x.recipe_id);
     // favourites may include recipes of other people: query them without the owner filter
-    query = supabase.from('recipes').select(LIST_COLUMNS).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
-  }
-  if (f.q) {
-    for (const term of f.q.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6)) {
-      query = query.ilike('search_text', `%${escapeLike(term)}%`);
-    }
+    query = base(null).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
   }
   if (f.category) query = query.eq('category_id', f.category);
   if (f.tag) query = query.contains('tags', [f.tag]);
