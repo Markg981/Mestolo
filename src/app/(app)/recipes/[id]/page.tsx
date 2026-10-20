@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ChefHat, Clock, ExternalLink, Users } from 'lucide-react';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { getRecipeDetail, listCollections } from '@/lib/data/recipes';
+import { getRecipeDetail, listEditableCollections } from '@/lib/data/recipes';
 import { capabilityStatus } from '@/lib/ai/service';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { isTranslationFresh, mergeTranslation, translatedPayloadSchema } from '@/lib/recipes/translation';
@@ -29,7 +29,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
   const sp = await searchParams;
   const detail = await getRecipeDetail(id);
   if (!detail) notFound();
-  const [t, locale, user, collections] = await Promise.all([getTranslations(), getLocale(), getUser(), listCollections()]);
+  const [t, locale, user, collections] = await Promise.all([getTranslations(), getLocale(), getUser(), listEditableCollections()]);
   const { recipe, images, category, owner, isOwner } = detail;
   const supabase = await createClient();
 

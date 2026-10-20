@@ -194,6 +194,20 @@ export async function listCollections() {
   }));
 }
 
+/** Collections the user can add recipes to: own ones plus those where they are co-editor. */
+export async function listEditableCollections() {
+  const own = await listCollections();
+  const user = await getUser();
+  if (!user) return own;
+  const supabase = await createClient();
+  const { data: mem } = await supabase.from('collection_members').select('collection_id').eq('user_id', user.id).eq('role', 'editor');
+  const ids = ((mem ?? []) as { collection_id: string }[]).map((m) => m.collection_id);
+  if (!ids.length) return own;
+  const { data } = await supabase.from('collections').select('id, name, description').in('id', ids);
+  const extra = ((data ?? []) as { id: string; name: string; description: string }[]).map((c) => ({ ...c, count: 0 }));
+  return [...own, ...extra];
+}
+
 export type SharedCollection = { id: string; name: string; description: string; count: number; role: 'viewer' | 'editor'; ownerName: string };
 
 /** Collections of other people shared with the user: invited as member, or published to friends. */

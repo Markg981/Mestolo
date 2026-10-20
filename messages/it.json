@@ -594,7 +594,7 @@
   },
   "collections": {
     "title": "Raccolte",
-    "lead": "Gruppi di ricette che crei tu. Sono sempre private.",
+    "lead": "Gruppi di ricette che crei tu. Sono private finché non le condividi con amici o le rendi pubbliche.",
     "name": "Nome",
     "namePlaceholder": "Nome della nuova raccolta",
     "description": "Descrizione",
@@ -984,6 +984,7 @@
     "readOnly": "Sola lettura",
     "unavailable": "Ricetta non disponibile",
     "emptyShared": "Questa raccolta è vuota.",
-    "sharedWithMe": "Condivise con me"
+    "sharedWithMe": "Condivise con me",
+    "removeRecipe": "Rimuovi dalla raccolta"
   }
 }

@@ -594,7 +594,7 @@
   },
   "collections": {
     "title": "Sammlungen",
-    "lead": "Rezeptgruppen, die du selbst anlegst. Sie sind immer privat.",
+    "lead": "Rezeptgruppen, die du selbst anlegst. Sie sind privat, bis du sie mit Freunden teilst oder öffentlich machst.",
     "name": "Name",
     "namePlaceholder": "Name der neuen Sammlung",
     "description": "Beschreibung",
@@ -984,6 +984,7 @@
     "readOnly": "Nur Lesen",
     "unavailable": "Rezept nicht verfügbar",
     "emptyShared": "Diese Sammlung ist leer.",
-    "sharedWithMe": "Mit mir geteilt"
+    "sharedWithMe": "Mit mir geteilt",
+    "removeRecipe": "Aus der Sammlung entfernen"
   }
 }

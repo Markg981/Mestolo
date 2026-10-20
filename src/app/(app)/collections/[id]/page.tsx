@@ -6,6 +6,7 @@ import { attachCovers, listCategories, LIST_COLUMNS, type RecipeListItem } from 
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
 import { Badge, EmptyState, LinkButton, PageHeader } from '@/components/ui';
 import { CollectionAdmin } from '../CollectionForms';
+import { RemoveFromCollection } from '../RemoveFromCollection';
 import { ShareCollection } from '../ShareCollection';
 
 type Profile = { id: string; username: string; display_name: string };
@@ -57,6 +58,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
     ownerName = owner ? label(owner as Profile) : '';
     role = (mine as { role: 'viewer' | 'editor' } | null)?.role ?? 'viewer';
   }
+  const canEdit = isOwner || role === 'editor';
   return (
     <div>
       <PageHeader
@@ -83,9 +85,16 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
       />
       {ordered.length || unavailable ? (
         <RecipeGrid>
-          {ordered.map((r) => (
-            <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={r.owner_id !== user!.id} />
-          ))}
+          {ordered.map((r) =>
+            canEdit ? (
+              <div key={r.id} className="flex flex-col items-start gap-1">
+                <RecipeCard recipe={r} categories={categories} showAuthor={r.owner_id !== user!.id} />
+                <RemoveFromCollection collectionId={col.id} recipeId={r.id} />
+              </div>
+            ) : (
+              <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={r.owner_id !== user!.id} />
+            ),
+          )}
           {Array.from({ length: unavailable }, (_, i) => (
             <div key={`na-${i}`} className="flex min-h-24 items-center justify-center rounded-[var(--radius-card)] border border-dashed border-line p-5 text-sm text-muted">
               {ts('unavailable')}
