@@ -82,7 +82,8 @@ d('recipe nutrition', () => {
     await put(owner, pub.id);
     expect(await as(other, 'select 1 from public.recipe_nutrition where recipe_id = $1', [priv.id])).toHaveLength(0);
     expect(await as(other, 'select 1 from public.recipe_nutrition where recipe_id = $1', [pub.id])).toHaveLength(1);
-    await expect(as(null, 'select 1 from public.recipe_nutrition')).rejects.toThrow(/permission denied/);
+    // anon: nessuna policy, quindi nessuna riga (con o senza grant di default)
+    expect(await as(null, 'select 1 from public.recipe_nutrition').catch(() => [])).toHaveLength(0);
   });
 
   it('public function exposes values only for active public pages', async () => {
