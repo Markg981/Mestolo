@@ -50,6 +50,8 @@ d('db pantry_items', () => {
     const b = await mkUser(`pa_d_${s}`);
     await expect(as(a, "insert into public.pantry_items (owner_id, name) values ($1, 'x')", [b])).rejects.toThrow();
     const id = (await as(a, "insert into public.pantry_items (owner_id, name) values ($1, 'y') returning id", [a]))[0].id as string;
-    await expect(as(a, 'update public.pantry_items set owner_id = $2 where id = $1', [id, b])).rejects.toThrow();
+    // keep_owner o la RLS rifiutano o ripristinano: in ogni caso l'owner non cambia
+    await as(a, 'update public.pantry_items set owner_id = $2 where id = $1', [id, b]).catch(() => null);
+    expect((await admin('select owner_id from public.pantry_items where id = $1', [id]))[0].owner_id).toBe(a);
   });
 });
