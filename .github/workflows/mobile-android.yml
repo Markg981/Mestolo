@@ -1,0 +1,96 @@
+name: Mobile Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Traccia Play per l'upload (alpha = test chiuso). Usato solo se PLAY_SERVICE_ACCOUNT_JSON è impostato."
+        required: false
+        default: alpha
+        type: string
+      build_number:
+        description: "Build number (versionCode). Vuoto = run number di GitHub."
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Build AAB firmato
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      # Variabile di repository (Settings -> Variables): URL HTTPS del sito pubblicato.
+      CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL }}
+      MOBILE_STORE_BUILD: "1"
+      MOBILE_BUILD_NUMBER: ${{ inputs.build_number || github.run_number }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      # Rifiuta URL segnaposto o non HTTPS (MOBILE_STORE_BUILD=1) e scrive versione/build nei progetti nativi.
+      - run: npm run mobile:sync
+
+      - name: Decodifica la keystore
+        id: keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 non impostato: l'AAB sarà NON firmato."
+          fi
+
+      - name: Gradle bundleRelease
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.keystore.outputs.path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: mestolo-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+  play-upload:
+    name: Upload su Google Play (opzionale)
+    needs: bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - name: Salta se manca il service account
+        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON == '' }}
+        run: echo "PLAY_SERVICE_ACCOUNT_JSON non impostato: upload su Play saltato."
+      - uses: actions/download-artifact@v4.3.0
+        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        with:
+          name: mestolo-aab
+          path: aab
+      - uses: r0adkll/upload-google-play@v1.1.3
+        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.markg981.mestolo
+          releaseFiles: aab/*.aab
+          track: ${{ inputs.track || 'alpha' }}
+          status: draft

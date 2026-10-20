@@ -1,6 +1,6 @@
 {
   "name": "mestolo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Mestolo – ricettario intelligente, web app responsive multiutente",
   "license": "UNLICENSED",
@@ -22,7 +22,8 @@
     "db:test:local": "bash scripts/test-db-local.sh",
     "seed:catalog": "node --experimental-strip-types scripts/seed-catalog.ts",
     "gen:key": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
-    "mobile:sync": "node scripts/mobile-prepare.mjs && cap sync",
+    "mobile:sync": "node scripts/mobile-prepare.mjs && node scripts/mobile-version.mjs && cap sync",
+    "mobile:version": "node scripts/mobile-version.mjs",
     "mobile:android": "npm run mobile:sync && cap open android",
     "mobile:ios": "npm run mobile:sync && cap open ios",
     "mobile:assets": "capacitor-assets generate --android --ios --iconBackgroundColor \"#2a1a2e\" --iconBackgroundColorDark \"#2a1a2e\" --splashBackgroundColor \"#2a1a2e\" --splashBackgroundColorDark \"#2a1a2e\"",

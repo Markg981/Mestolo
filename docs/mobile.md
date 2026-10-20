@@ -44,14 +44,24 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 ## 3. Google Play
 
 1. Account **Google Play Console** (25 $ una tantum). Gli account personali creati dopo novembre 2023 devono fare un **test chiuso con almeno 12 tester per 14 giorni consecutivi** prima di poter pubblicare in produzione: pianificalo.
-2. `CAP_SERVER_URL=https://tuo-dominio npm run mobile:android`.
-3. Android Studio → *Build → Generate Signed App Bundle* → crea una **keystore** (conservala insieme alla password fuori dal repository: senza non potrai più aggiornare l'app; i file `*.jks`/`*.keystore` sono già in `.gitignore`). Consigliato: attivare *Play App Signing*.
-4. Aggiorna `versionCode` (intero crescente) e `versionName` in `android/app/build.gradle` a ogni rilascio.
-5. In Play Console: crea l'app, carica l'`.aab` nella traccia *Test chiuso*, compila:
+2. **Versione**: la fonte unica è `version` in `package.json` (es. `1.0.0`) più un *build number* intero crescente. `npm run mobile:sync` esegue `scripts/mobile-version.mjs`, che scrive `versionName`/`versionCode` in `android/app/build.gradle` e `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` in `ios/App/App.xcodeproj/project.pbxproj` (tutti i target). Il build number arriva da `MOBILE_BUILD_NUMBER` (o `node scripts/mobile-version.mjs <n>`); se assente resta quello attuale. Play rifiuta un `versionCode` già usato: incrementalo a ogni upload.
+3. **Keystore** (una tantum): `keytool -genkeypair -v -keystore mestolo-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`. Conservala con le password fuori dal repository (senza non potrai più aggiornare l'app; `*.jks`/`*.keystore`/`android/keystore.properties` sono in `.gitignore`). Consigliato: *Play App Signing*, così questa è solo la chiave di upload.
+4. **Build firmata in locale**: copia `android/keystore.properties.example` in `android/keystore.properties` e compilalo (oppure imposta `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). Poi:
+   ```bash
+   MOBILE_STORE_BUILD=1 MOBILE_BUILD_NUMBER=2 CAP_SERVER_URL=https://tuo-dominio npm run mobile:sync
+   cd android && ./gradlew bundleRelease     # richiede JDK 17-24, consigliato 21
+   ```
+   L'`.aab` è in `android/app/build/outputs/bundle/release/`. Senza keystore la build riesce ma **non è firmata** (non caricabile su Play). Con `MOBILE_STORE_BUILD=1` `mobile-prepare` rifiuta un `CAP_SERVER_URL` segnaposto (`mestolo.example.com`) o non HTTPS.
+5. **Build in CI**: workflow `.github/workflows/mobile-android.yml` (manuale da *Actions → Mobile Android → Run workflow*, oppure al push di un tag `v*`). Configura in GitHub:
+   - variabile `CAP_SERVER_URL` (URL HTTPS del sito);
+   - secret `ANDROID_KEYSTORE_BASE64` (`base64 -w0 mestolo-upload.jks`), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`;
+   - opzionale `PLAY_SERVICE_ACCOUNT_JSON` (service account con permesso di rilascio in Play Console): se presente, l'`.aab` viene caricato come **bozza** nella traccia indicata dall'input `track` (default `alpha` = test chiuso). Il build number è l'input `build_number` oppure il run number.
+   L'`.aab` è sempre disponibile come artifact `mestolo-aab`. Il primo upload va fatto a mano dalla Play Console (l'API richiede che l'app esista già).
+6. In Play Console: crea l'app, carica l'`.aab` nella traccia *Test chiuso*, compila:
    - **Scheda dello store**: nome, descrizione breve e completa, icona 512×512 (`public/icons/icon-512.png`), immagine in evidenza 1024×500, almeno 2 screenshot del telefono.
    - **Norme sui contenuti**: URL della privacy (`https://tuo-dominio/privacy`), classificazione dei contenuti (app con contenuti generati dagli utenti), pubblico di destinazione (non per bambini), **Sicurezza dei dati** (vedi [store-privacy.md](store-privacy.md)), eliminazione account: indica il percorso *Impostazioni → Account e dati* e l'URL `https://tuo-dominio/settings/account`.
    - **Accesso all'app**: fornisci un account di prova (email/password) per i revisori.
-6. Dopo i 14 giorni di test chiuso: richiedi l'accesso alla produzione.
+7. Dopo i 14 giorni di test chiuso: richiedi l'accesso alla produzione.
 
 ## 4. App Store (iOS)
 
@@ -108,12 +118,14 @@ Il moderatore vede la voce *Moderazione* nel menu. Gli utenti non possono attrib
 
 - `android/app/src/main/AndroidManifest.xml`: `intent-filter` `ACTION_SEND` `text/plain` sulla `MainActivity`.
 - `android/app/src/main/java/.../MainActivity.java`: gestione della condivisione verso `/share`.
+- `android/app/build.gradle`: firma release da `android/keystore.properties` o variabili `ANDROID_*` (senza, build non firmata); `versionCode`/`versionName` sono riscritti da `scripts/mobile-version.mjs` (fonte: `package.json`).
+- `android/keystore.properties.example`: modello per la keystore locale.
 - `ios/App/App/Info.plist`: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`, `ITSAppUsesNonExemptEncryption = false`, `WKAppBoundDomains` (aggiornato da `npm run mobile:sync`), schema URL `mestolo`.
-- `ios/App/App.xcodeproj/project.pbxproj`: target `ShareExtension` (con fase "Embed Foundation Extensions"), `App.entitlements` (App Group), `PrivacyInfo.xcprivacy` di app ed estensione.
+- `ios/App/App.xcodeproj/project.pbxproj`: target `ShareExtension` (con fase "Embed Foundation Extensions"), `App.entitlements` (App Group), `PrivacyInfo.xcprivacy` di app ed estensione; `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` riscritti da `scripts/mobile-version.mjs`.
 - `ios/App/ExportOptions.plist`: opzioni di export usate dal workflow.
 
 ## Cosa NON è stato verificato
 
-L'ambiente di sviluppo usato non poteva scaricare SDK Android, Gradle o Xcode: le app **non sono state compilate né provate su un dispositivo**. Il codice nativo aggiunto è minimo (un `intent-filter` e una classe Java di ~40 righe), ma va verificato con la prima build in Android Studio.
+**Android**: compilati con successo da riga di comando (Gradle 8.14.3, AGP 8.13, JDK 21 Temurin, SDK 36) `assembleDebug` (APK debug) e `bundleRelease` (AAB **non firmato**, senza keystore) con `CAP_SERVER_URL=https://mestolo.vercel.app`. Non sono invece stati verificati: la build **firmata** (serve la tua keystore), l'esecuzione su dispositivo/emulatore (in particolare la condivisione "→ Mestolo" e la fotocamera), il workflow GitHub Actions `mobile-android.yml` e l'upload su Play. Con JDK 25/26 (quello di Android Studio recente o di sistema) il wrapper Gradle attuale non è garantito: usa JDK 21.
 
-Per iOS, i file di progetto (target `ShareExtension` nel `project.pbxproj`, plist, privacy manifest) e il workflow sono stati scritti e validati solo in modo statico (parsing dei plist, YAML, coerenza degli ID): **la prima esecuzione di `mobile-ios.yml` è il vero collaudo** e può richiedere aggiustamenti (nome dell'immagine/Xcode sul runner, permessi della chiave API, App Group non ancora registrato). Da provare su un iPhone vero: fotocamera, condivisione da Safari verso Mestolo, apertura offline.
+**iOS**: non compilato (serve un Mac con Xcode). I file di progetto (target `ShareExtension` nel `project.pbxproj`, plist, privacy manifest) e il workflow sono stati scritti e validati solo in modo statico (parsing dei plist, YAML, coerenza degli ID): **la prima esecuzione di `mobile-ios.yml` è il vero collaudo** e può richiedere aggiustamenti (nome dell'immagine/Xcode sul runner, permessi della chiave API, App Group non ancora registrato). Da provare su un iPhone vero: fotocamera, condivisione da Safari verso Mestolo, apertura offline.
