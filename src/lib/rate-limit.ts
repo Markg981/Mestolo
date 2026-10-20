@@ -23,6 +23,7 @@ export const LIMITS = {
   export_data: [10, 60 * 60],
   invite_create: [10, 60 * 60],
   invite_accept: [20, 60 * 60],
+  feedback_send: [10, 24 * 60 * 60],
 } as const satisfies Record<string, readonly [number, number]>;
 
 export type LimitName = keyof typeof LIMITS;

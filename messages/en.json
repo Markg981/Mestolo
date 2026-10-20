@@ -934,7 +934,8 @@
     "addCategory": "New category",
     "addCategoryPlaceholder": "E.g. Soups, Dim sum",
     "deleteCategory": "Delete category {name}",
-    "termsLink": "Community rules"
+    "termsLink": "Community rules",
+    "feedbackLink": "Send feedback"
   },
   "aiSettings": {
     "title": "AI and API keys",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "No open reports",
     "empty": "When a user reports a recipe, you'll find it here.",
     "hiddenTitle": "Hidden recipes",
-    "hiddenEmpty": "No hidden recipes."
+    "hiddenEmpty": "No hidden recipes.",
+    "feedbackLink": "User feedback"
   },
   "terms": {
     "title": "Community rules",
@@ -1126,7 +1128,7 @@
     "listening": "Listening: say “next” or “back”",
     "voiceDenied": "Microphone not allowed: voice commands turned off.",
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
-    "noSteps": "This recipe has no steps yet.",
+    "noSteps": "This recipe has no steps yet.",
     "assistOpen": "Ask the assistant",
     "assistTitle": "Ask the assistant",
     "assistClose": "Close the assistant",
@@ -1324,5 +1326,43 @@
     "signup": "Sign up",
     "login": "Log in",
     "accept": "Accept and become friends"
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "lead": "Tell us what is broken or what you would like. We read every message.",
+    "back": "Settings",
+    "kind": "What is it about?",
+    "kinds": {
+      "bug": "A problem",
+      "idea": "An idea",
+      "other": "Other"
+    },
+    "message": "Message",
+    "messageHint": "5 to 4000 characters. For a problem, tell us what you were doing.",
+    "context": "Attached automatically: platform {platform}, version {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Send",
+    "sentTitle": "Thank you!",
+    "sentBody": "Your feedback has arrived.",
+    "sendAnother": "Send another",
+    "adminTitle": "Feedback",
+    "adminLead": "Messages from testers and users, newest first.",
+    "backToModeration": "Moderation",
+    "filterLabel": "Filter by status",
+    "filterAll": "All",
+    "statuses": {
+      "new": "New",
+      "seen": "Seen",
+      "done": "Done"
+    },
+    "markSeen": "Mark as seen",
+    "markDone": "Mark as done",
+    "reopen": "Reopen",
+    "adminEmptyTitle": "No feedback",
+    "adminEmpty": "There are no messages for this filter."
   }
 }

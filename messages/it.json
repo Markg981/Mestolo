@@ -934,7 +934,8 @@
     "addCategory": "Nuova categoria",
     "addCategoryPlaceholder": "Es. Zuppe, Dim sum",
     "deleteCategory": "Elimina la categoria {name}",
-    "termsLink": "Regole della community"
+    "termsLink": "Regole della community",
+    "feedbackLink": "Invia feedback"
   },
   "aiSettings": {
     "title": "AI e chiavi API",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "Nessuna segnalazione aperta",
     "empty": "Quando un utente segnala una ricetta la trovi qui.",
     "hiddenTitle": "Ricette nascoste",
-    "hiddenEmpty": "Nessuna ricetta nascosta."
+    "hiddenEmpty": "Nessuna ricetta nascosta.",
+    "feedbackLink": "Feedback degli utenti"
   },
   "terms": {
     "title": "Regole della community",
@@ -1126,7 +1128,7 @@
     "listening": "In ascolto: di' «avanti» o «indietro»",
     "voiceDenied": "Microfono non consentito: comandi vocali disattivati.",
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
-    "noSteps": "Questa ricetta non ha ancora un procedimento.",
+    "noSteps": "Questa ricetta non ha ancora un procedimento.",
     "assistOpen": "Chiedi all’assistente",
     "assistTitle": "Chiedi all’assistente",
     "assistClose": "Chiudi l’assistente",
@@ -1324,5 +1326,43 @@
     "signup": "Iscriviti",
     "login": "Accedi",
     "accept": "Accetta e diventa amico"
+  },
+  "feedback": {
+    "title": "Invia feedback",
+    "lead": "Dicci cosa non funziona o cosa vorresti. Leggiamo ogni messaggio.",
+    "back": "Impostazioni",
+    "kind": "Di cosa si tratta?",
+    "kinds": {
+      "bug": "Un problema",
+      "idea": "Un'idea",
+      "other": "Altro"
+    },
+    "message": "Messaggio",
+    "messageHint": "Da 5 a 4000 caratteri. Se è un problema, racconta cosa stavi facendo.",
+    "context": "Alleghiamo automaticamente: piattaforma {platform}, versione {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Invia",
+    "sentTitle": "Grazie!",
+    "sentBody": "Il tuo feedback è arrivato.",
+    "sendAnother": "Invia un altro",
+    "adminTitle": "Feedback",
+    "adminLead": "Messaggi di tester e utenti, dal più recente.",
+    "backToModeration": "Moderazione",
+    "filterLabel": "Filtra per stato",
+    "filterAll": "Tutti",
+    "statuses": {
+      "new": "Nuovo",
+      "seen": "Visto",
+      "done": "Risolto"
+    },
+    "markSeen": "Segna come visto",
+    "markDone": "Segna come risolto",
+    "reopen": "Riapri",
+    "adminEmptyTitle": "Nessun feedback",
+    "adminEmpty": "Non ci sono messaggi con questo filtro."
   }
 }

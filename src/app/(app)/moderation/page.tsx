@@ -34,7 +34,15 @@ export default async function ModerationPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <PageHeader title={t('title')} lead={t('lead')} />
+      <PageHeader
+        title={t('title')}
+        lead={t('lead')}
+        actions={
+          <Link href="/moderation/feedback" className="font-semibold text-basil underline underline-offset-4">
+            {t('feedbackLink')}
+          </Link>
+        }
+      />
       <section className="flex flex-col gap-3">
         <h2 className="text-2xl font-bold">{t('openTitle', { n: open.length })}</h2>
         {open.length ? (

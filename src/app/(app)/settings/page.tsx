@@ -30,7 +30,10 @@ export default async function SettingsPage() {
         <Link href="/settings/account" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
           {t('settings.accountLink')}
         </Link>
-        <Link href="/privacy" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
+        <Link href="/settings/feedback" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
+          {t('settings.feedbackLink')}
+        </Link>
+        <Link href="/privacy"className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
           {t('settings.privacyLink')}
         </Link>
         <Link href="/terms" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
@@ -39,6 +42,11 @@ export default async function SettingsPage() {
         {profile?.is_moderator && (
           <Link href="/moderation" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
             {t('nav.moderation')}
+          </Link>
+        )}
+        {profile?.is_moderator && (
+          <Link href="/moderation/feedback" className="rounded-full border border-line bg-surface px-4 py-2.5 font-semibold hover:bg-sunk">
+            {t('feedback.adminTitle')}
           </Link>
         )}
       </nav>

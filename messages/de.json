@@ -934,7 +934,8 @@
     "addCategory": "Neue Kategorie",
     "addCategoryPlaceholder": "z. B. Suppen, Dim Sum",
     "deleteCategory": "Kategorie {name} löschen",
-    "termsLink": "Community-Regeln"
+    "termsLink": "Community-Regeln",
+    "feedbackLink": "Feedback senden"
   },
   "aiSettings": {
     "title": "KI und API-Schlüssel",
@@ -1055,7 +1056,8 @@
     "emptyTitle": "Keine offenen Meldungen",
     "empty": "Wenn jemand ein Rezept meldet, findest du es hier.",
     "hiddenTitle": "Ausgeblendete Rezepte",
-    "hiddenEmpty": "Keine ausgeblendeten Rezepte."
+    "hiddenEmpty": "Keine ausgeblendeten Rezepte.",
+    "feedbackLink": "Nutzer-Feedback"
   },
   "terms": {
     "title": "Community-Regeln",
@@ -1126,7 +1128,7 @@
     "listening": "Ich höre zu: sagen Sie „weiter“ oder „zurück“",
     "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
-    "noSteps": "Dieses Rezept hat noch keine Schritte.",
+    "noSteps": "Dieses Rezept hat noch keine Schritte.",
     "assistOpen": "Assistent fragen",
     "assistTitle": "Assistent fragen",
     "assistClose": "Assistent schließen",
@@ -1324,5 +1326,43 @@
     "signup": "Registrieren",
     "login": "Anmelden",
     "accept": "Annehmen und befreundet sein"
+  },
+  "feedback": {
+    "title": "Feedback senden",
+    "lead": "Sag uns, was nicht funktioniert oder was du dir wünschst. Wir lesen jede Nachricht.",
+    "back": "Einstellungen",
+    "kind": "Worum geht es?",
+    "kinds": {
+      "bug": "Ein Problem",
+      "idea": "Eine Idee",
+      "other": "Sonstiges"
+    },
+    "message": "Nachricht",
+    "messageHint": "5 bis 4000 Zeichen. Bei einem Problem: Was hast du gerade gemacht?",
+    "context": "Automatisch angehängt: Plattform {platform}, Version {version}.",
+    "platforms": {
+      "web": "Web",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "submit": "Senden",
+    "sentTitle": "Danke!",
+    "sentBody": "Dein Feedback ist angekommen.",
+    "sendAnother": "Weiteres senden",
+    "adminTitle": "Feedback",
+    "adminLead": "Nachrichten von Testern und Nutzern, neueste zuerst.",
+    "backToModeration": "Moderation",
+    "filterLabel": "Nach Status filtern",
+    "filterAll": "Alle",
+    "statuses": {
+      "new": "Neu",
+      "seen": "Gesehen",
+      "done": "Erledigt"
+    },
+    "markSeen": "Als gesehen markieren",
+    "markDone": "Als erledigt markieren",
+    "reopen": "Wieder öffnen",
+    "adminEmptyTitle": "Kein Feedback",
+    "adminEmpty": "Für diesen Filter gibt es keine Nachrichten."
   }
 }
