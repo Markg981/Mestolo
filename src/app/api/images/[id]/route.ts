@@ -14,8 +14,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) return new NextResponse(null, { status: 401 });
 
   const supabase = await createClient();
-  const { data: img } = await supabase.from('recipe_images').select('storage_path, thumb_path').eq('id', id).maybeSingle();
+  const { data: img } = await supabase.from('recipe_images').select('owner_id, storage_path, thumb_path').eq('id', id).maybeSingle();
   if (!img) return new NextResponse(null, { status: 404 });
+
+  // Difesa in profondità: il file deve stare nella cartella del proprietario della riga
+  const prefix = `${img.owner_id}/`;
+  if (!img.storage_path.startsWith(prefix) || (img.thumb_path && !img.thumb_path.startsWith(prefix))) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   const wantThumb = request.nextUrl.searchParams.get('size') === 'thumb';
   const path = wantThumb && img.thumb_path ? img.thumb_path : img.storage_path;
