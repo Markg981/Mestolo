@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { cleanEditorPayload, recipeInputSchema } from '@/lib/recipes/schema';
-import { findPossibleDuplicates, type DuplicateMatch } from '@/lib/recipes/duplicates';
+import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
@@ -231,16 +231,11 @@ export async function checkDuplicates(draft: { title: string; source_url?: strin
   const user = await getUser();
   if (!user || !draft?.title) return [];
   const supabase = await createClient();
-  const { data } = await supabase.from('recipes').select('id, title, source_url, ingredients').eq('owner_id', user.id).limit(2000);
-  const existing = ((data as { id: string; title: string; source_url: string | null; ingredients: Ingredient[] }[]) ?? []).map((r) => ({
-    id: r.id,
-    title: r.title,
-    source_url: r.source_url,
-    ingredientNames: (r.ingredients ?? []).map((i) => i.name),
-  }));
-  return findPossibleDuplicates(
-    { title: String(draft.title).slice(0, 200), source_url: draft.source_url ?? null, ingredientNames: (draft.ingredients ?? []).map((i) => String(i.name ?? '')).slice(0, 200) },
-    existing,
-    excludeId,
-  );
+  const { data } = await supabase.rpc('find_possible_duplicates', {
+    p_title: String(draft.title).slice(0, 200),
+    p_source_url: draft.source_url ?? null,
+    p_ingredients: (draft.ingredients ?? []).map((i) => String(i.name ?? '')).slice(0, 200),
+    p_exclude_id: excludeId ?? null,
+  });
+  return (data as DuplicateMatch[] | null) ?? [];
 }
