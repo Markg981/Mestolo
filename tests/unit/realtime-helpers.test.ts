@@ -6,7 +6,7 @@ describe('realtime helpers', () => {
 
   it('costruisce il filtro per utente', () => {
     expect(userFilter('owner_id', 'u1')).toBe('owner_id=eq.u1');
-    expect(REALTIME_TABLES.map((t) => t.table)).toContain('favorites');
+    expect(REALTIME_TABLES.map((t) => t.table)).not.toContain('favorites');
   });
 
   it('il debounce accorpa una raffica in una sola chiamata', () => {
