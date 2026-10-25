@@ -52,37 +52,8 @@ jobs:
       - name: Dump database
         run: |
           set -euo pipefail
-          umask 077
-          mkdir -p out
-          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-          # Schema + dati dello schema public (custom format, gia compresso)
-          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
-            --format=custom --compress=9 --no-owner --no-privileges \
-            --schema=public --file="out/public-$stamp.dump"
-          # Utenti: auth.users e auth.identities (schema + dati) per ripristinare le FK di public
-          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
-            --format=custom --compress=9 --no-owner --no-privileges \
-            --table=auth.users --table=auth.identities \
-            --file="out/auth-$stamp.dump"
-          # Solo dati dei metadati storage (bucket e oggetti), non i file
-          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
-            --format=custom --compress=9 --no-owner --no-privileges --data-only \
-            --table=storage.buckets --table=storage.objects \
-            --file="out/storage-meta-$stamp.dump"
-          # Manifest dei conteggi al momento del backup, usato da restore-verify.yml
-          : > "out/manifest-$stamp.txt"
-          for t in public.recipes public.profiles public.categories auth.users auth.identities storage.buckets storage.objects; do
-            n="$(psql "$SUPABASE_DB_URL" -At -c "select count(*) from $t")"
-            echo "$t $n" >> "out/manifest-$stamp.txt"
-          done
-          while read -r l; do echo "$l"; done < "out/manifest-$stamp.txt"
-          # Un backup con zero ricette o zero utenti e quasi certamente rotto
-          grep -qE '^public.recipes [1-9]' "out/manifest-$stamp.txt" || { echo "::error::public.recipes vuota: backup sospetto"; exit 1; }
-          grep -qE '^auth.users [1-9]' "out/manifest-$stamp.txt" || { echo "::error::auth.users vuota: backup sospetto"; exit 1; }
-          tar -cf "out/backup-$stamp.tar" -C out "public-$stamp.dump" "auth-$stamp.dump" "storage-meta-$stamp.dump" "manifest-$stamp.txt"
-          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
-            --passphrase-fd 3 --output "out/backup-$stamp.tar.gpg" "out/backup-$stamp.tar" 3<<<"$BACKUP_PASSPHRASE"
-          rm -f out/*.dump out/*.tar out/*.txt
+          # Stesso script provato in CI dal job backup-roundtrip (dump, manifest, cifratura)
+          stamp="$(PG_BIN=/usr/lib/postgresql/17/bin scripts/backup-db.sh "$SUPABASE_DB_URL" out)"
           ls -l out
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
 

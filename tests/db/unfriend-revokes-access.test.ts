@@ -58,6 +58,29 @@ d('db unfriend revokes shared access', () => {
     expect(await canList(o, lid)).toBe(true);
   });
 
+  it('the owner removing the friendship revokes access too', async () => {
+    const { o, f, fid, lid, cid } = await setup('own');
+    await as(o, 'delete from public.friendships where id = $1', [fid]);
+    expect(await canList(f, lid)).toBe(false);
+    expect(await role(f, cid)).toBeNull();
+    expect(await as(f, 'select id from public.collections where id = $1', [cid])).toHaveLength(0);
+  });
+
+  it('blocking a friend removes the friendship and the shared access', async () => {
+    const { o, f, lid, cid } = await setup('blk');
+    await as(f, 'insert into public.blocks (blocker_id, blocked_id) values ($1, $2)', [f, o]);
+    expect(await admin('select 1 from public.friendships where least(requester_id, addressee_id) = least($1::uuid, $2::uuid) and greatest(requester_id, addressee_id) = greatest($1::uuid, $2::uuid)', [o, f])).toHaveLength(0);
+    expect(await canList(f, lid)).toBe(false);
+    expect(await role(f, cid)).toBeNull();
+  });
+
+  it('after unfriending, the former friend cannot be re-added without a new friendship', async () => {
+    const { o, f, fid, lid, cid } = await setup('readd');
+    await as(f, 'delete from public.friendships where id = $1', [fid]);
+    await expect(as(o, "insert into public.collection_members (collection_id, user_id, role) values ($1, $2, 'viewer')", [cid, f])).rejects.toThrow(/row-level security/);
+    await expect(as(o, 'insert into public.shopping_list_members (list_id, user_id) values ($1, $2)', [lid, f])).rejects.toThrow();
+  });
+
   it('stale member rows grant nothing even if the trigger is bypassed', async () => {
     const { fid, f, lid, cid } = await setup('stale');
     const c = await pool.connect();

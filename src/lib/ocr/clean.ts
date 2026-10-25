@@ -15,6 +15,10 @@ export function cleanOcrText(raw: string): string {
   t = t.replace(/([a-zàèéìòù])-\n(?:([a-zàèéìòù])|([COSUVWXZ])(?=[a-zàèéìòù]))/g, (_, a: string, b?: string, c?: string) => a + (b ?? c!.toLowerCase()));
   // "300 9 mazzancolle": a g misread as 9 after a quantity
   t = t.replace(/^(\d+(?:[.,]\d+)?) 9 (?=\p{L})/gmu, '$1 g ');
+  // "100 mi latte", "1,5 di di latte": an l misread as i in ml/dl/cl after a quantity (dl/cl
+  // only before a connector, since "2 di" alone may be prose)
+  t = t.replace(/^(\d+(?:[.,]\d+)?) mi (?=\p{L})/gmu, '$1 ml ');
+  t = t.replace(/^(\d+(?:[.,]\d+)?) ([dc])i (?=d(?:i |['’]))/gmu, '$1 $2l ');
   // O/o between digits or before a unit is a misread zero
   t = t.replace(/(?<=\d)[Oo](?=\d|\s*(?:g|kg|ml|l|cl|dl)\b)/g, '0');
   t = t

@@ -63,6 +63,40 @@ describe('parseIngredientLine', () => {
     expect(r.quantity).toBeNull();
     expect(r.name).toBe('farina tipo 1');
   });
+  // A1/A2: fractions and decimals on whole lines, with unit, connector, name and note
+  it.each([
+    ['1,5 kg di farina', 1.5, null, 'kg', 'farina', null],
+    ['1.5 kg farina', 1.5, null, 'kg', 'farina', null],
+    ['10,5 g sale', 10.5, null, 'g', 'sale', null],
+    ['0,5 l di latte (tiepido)', 0.5, null, 'l', 'latte', 'tiepido'],
+    ['2,25 dl panna, fredda', 2.25, null, 'dl', 'panna', 'fredda'],
+    ['2.5 oz butter, softened', 2.5, null, 'oz', 'butter', 'softened'],
+    ['1,000 kg farina', 1, null, 'kg', 'farina', null],
+    ['1 1/2 kg di patate', 1.5, null, 'kg', 'patate', null],
+    ['1 / 2 cipolla', 0.5, null, null, 'cipolla', null],
+    ['1 1 / 2 kg di patate', 1.5, null, 'kg', 'patate', null],
+    ['1/3 tazza di olio', 1 / 3, null, 'cup', 'olio', null],
+    ['3/4 di cipolla', 0.75, null, null, 'cipolla', null],
+    ['1/2 bicchiere di vino bianco', 0.5, null, 'glass', 'vino bianco', null],
+    ['½ cucchiaino di lievito', 0.5, null, 'tsp', 'lievito', null],
+    ['1½ cucchiaino di sale', 1.5, null, 'tsp', 'sale', null],
+    ['1 ½ tazze di farina', 1.5, null, 'cup', 'farina', null],
+    ['¾ cup sugar', 0.75, null, 'cup', 'sugar', null],
+    ['2 ⅓ cups milk', 7 / 3, null, 'cup', 'milk', null],
+    ['1,5 uova', 1.5, null, null, 'uova', null],
+    ['1-1,5 kg di cozze', 1, 1.5, 'kg', 'cozze', null],
+    ['1,5-2 l brodo', 1.5, 2, 'l', 'brodo', null],
+    ['1/2-1 cucchiaino di peperoncino', 0.5, 1, 'tsp', 'peperoncino', null],
+    ['Zucchero 1/2 cucchiaino', 0.5, null, 'tsp', 'Zucchero', null],
+    ['Latte 0,5 l', 0.5, null, 'l', 'Latte', null],
+    ['Burro 1 1/2 tbsp', 1.5, null, 'tbsp', 'Burro', null],
+  ])('whole line %s', (line, q, qMax, unit, name, note) => {
+    const r = parseIngredientLine(line as string);
+    expect(r.quantity).toBeCloseTo(q as number);
+    expect(r.quantityMax ?? null).toBe(qMax);
+    expect(r).toMatchObject({ unit, name, note });
+    expect(r.flags).toBeUndefined();
+  });
   it('strips bullets and keeps the raw text', () => {
     const r = parseIngredientLine('• 100 ml latte intero, tiepido');
     expect(r).toMatchObject({ quantity: 100, unit: 'ml', name: 'latte intero', note: 'tiepido', raw: '• 100 ml latte intero, tiepido' });
