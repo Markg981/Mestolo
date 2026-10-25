@@ -11,8 +11,19 @@ const FRACTION_CHARS = Object.keys(UNICODE_FRACTIONS).join('');
 const NUM = `(?:\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\/\\d+|\\s*[${FRACTION_CHARS}])?|\\d+\\/\\d+|[${FRACTION_CHARS}])`;
 const RANGE_RE = new RegExp(`^(${NUM})(?:\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\s*(${NUM}))?`, 'i');
 
-/** Parses a numeric token; returns null if it is not a valid positive number. */
-export function parseNumber(token: string): number | null {
+/** Units for which "N,ddd" / "N.ddd" is plausibly a thousands group (small units). */
+const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
+
+/**
+ * Parses a numeric token; returns null if it is not a valid positive number.
+ *
+ * Separator disambiguation ("0,250", "1,250", "1.000"):
+ *  - a leading "0" followed by a separator is always a decimal ("0,250" = 0.25);
+ *  - otherwise a single group of exactly 3 digits is ambiguous: it is read as a
+ *    thousands separator only with no unit or a small unit (g, mg, ml: "1.000 g" = 1000);
+ *    with any other unit (kg, l, cup...) it is decimal ("1,250 kg" = 1.25).
+ */
+export function parseNumber(token: string, unit?: string | null): number | null {
   const t = token.trim();
   if (!t) return null;
   if (t in UNICODE_FRACTIONS) return UNICODE_FRACTIONS[t];
@@ -34,7 +45,7 @@ export function parseNumber(token: string): number | null {
     return den ? Number(frac[1]) / den : null;
   }
   // thousands separator "1.000" / "1,000" (exactly groups of 3)
-  if (/^\d{1,3}([.,]\d{3})+$/.test(t)) {
+  if (/^[1-9]\d{0,2}([.,]\d{3})+$/.test(t) && (!unit || THOUSANDS_UNITS.has(unit))) {
     return Number(t.replace(/[.,]/g, ''));
   }
   const n = Number(t.replace(',', '.'));
@@ -121,13 +132,21 @@ export function parseIngredientLine(line: string): Ingredient {
         rest = glued[2];
       }
       rest = rest.replace(CONNECTORS, '').replace(CONNECTOR_APOS, '').trim();
+      if (unit) {
+        // the unit is only known now: re-read the number with it as context
+        quantity = parseNumber(lead[1], unit) ?? quantity;
+        if (lead[2]) {
+          const m = parseNumber(lead[2], unit);
+          quantityMax = m !== null && m > quantity ? m : null;
+        }
+      }
     }
   } else {
     // Trailing quantity with a recognised unit: "Farina 00 200 g", "Burro: 50 gr"
     const trailing = text.match(new RegExp(`^(.*?)[\\s:]+(${NUM})\\s*([^\\d\\s][^\\s]*(?:\\s[^\\s]+)?)$`, 'i'));
     if (trailing) {
       const u = takeUnit(trailing[3].split(/\s+/).map((w) => w.replace(/[.,]$/, '')));
-      const q = parseNumber(trailing[2]);
+      const q = u.unit ? parseNumber(trailing[2], u.unit) : null;
       if (u.unit && q !== null && q > 0 && u.consumed === trailing[3].split(/\s+/).length) {
         quantity = q;
         unit = u.unit;

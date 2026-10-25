@@ -73,4 +73,19 @@ describe('units', () => {
     expect(formatQuantity(1, 'it', 2)).toBe('1–2');
     expect(formatQuantity(null)).toBe('');
   });
+
+  describe('decimal comma vs thousands separator', () => {
+    it.each([
+      ['0,250 kg', 0.25, 'kg'], ['1,250 kg', 1.25, 'kg'], ['1.000 g', 1000, 'g'],
+      ['1,5 l', 1.5, 'l'], ['0.500 l', 0.5, 'l'], ['0,250 g', 0.25, 'g'], ['1,250 l', 1.25, 'l'],
+    ])('%s', (line, q, u) => {
+      expect(parseIngredientLine(line + ' farina')).toMatchObject({ quantity: q, unit: u });
+    });
+    it('trailing form uses unit context', () => {
+      expect(parseIngredientLine('Farina 1,250 kg')).toMatchObject({ quantity: 1.25, unit: 'kg' });
+    });
+    it('parseNumber leading zero is always decimal', () => {
+      expect(parseNumber('0,250')).toBeCloseTo(0.25);
+    });
+  });
 });
