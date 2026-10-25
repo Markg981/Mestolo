@@ -1,4 +1,4 @@
--- M17 bis: il FOR UPDATE introdotto in 20261029000017 causava deadlock con voti simultanei.
+-- M17 bis: il FOR UPDATE introdotto in 20261025025000 causava deadlock con voti simultanei.
 -- L'insert in recipe_ratings prende gia' FOR KEY SHARE sulla riga di recipes (controllo della FK
 -- recipe_id); due transazioni concorrenti lo ottengono entrambe, poi il trigger chiede FOR UPDATE,
 -- che confligge con il KEY SHARE dell'altra: ognuna aspetta l'altra (40P01, il voto fallisce).
