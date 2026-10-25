@@ -14,7 +14,7 @@ const SERVINGS_RE = /(?:per|for|para|pour|für|serves|dosi per|porzioni|servings
 const PREP_RE = /^(?:tempo di )?(?:preparazione|prep(?:aration)?(?: time)?|preparación|préparation|zubereitung(?:szeit)?|vorbereitung|preparo|preparação)\s*[:\-–]\s*(.+)$/i;
 const COOK_RE = /^(?:tempo di )?(?:cottura|cook(?:ing)?(?: time)?|cocción|cuisson|garzeit|backzeit|kochzeit|cozedura|cozimento)\s*[:\-–]\s*(.+)$/i;
 const TOTAL_RE = /^(?:tempo totale|total(?: time)?|tiempo total|temps total|gesamtzeit|tempo total)\s*[:\-–]\s*(.+)$/i;
-const STEP_PREFIX = /^\s*(?:(?:step|passo|passaggio|paso|étape|schritt|passo)\s*)?\d{1,2}\s*[.):\-–]\s*/i;
+const STEP_PREFIX = /^\s*(?:(?:step|passo|passaggio|paso|étape|schritt|passo)\s*)?\d{1,2}\s*(?:[.):](?!\d)|[\-–](?!\s*\d|(?:min|minut\p{L}*|ore|ora|sec|secondi|h|hours?|minutes?)\b))\s*/iu;
 
 export interface ParsedText {
   title: string;
@@ -58,6 +58,12 @@ function editDistance(a: string, b: string): number {
     prev = cur;
   }
   return prev[b.length];
+}
+
+/** Content on the same line as a header, after the colon: "Ingredienti: 2 uova" -> "2 uova". */
+function headerRest(line: string, re: RegExp): string {
+  const m = line.match(re);
+  return m && m[0].includes(':') ? line.slice(m[0].length).trim() : '';
 }
 
 const isIngredientHeader = (line: string) => INGREDIENT_HEADERS.test(line) || fuzzyHeader(line, INGREDIENT_WORDS, 4);
@@ -134,14 +140,18 @@ export function parseRecipeText(input: string): ParsedText {
       sawHeaders = true;
       section = SECTION_RE.test(line) ? line.replace(/:$/, '') : null;
       const after = INGREDIENT_HEADERS.test(line) ? line.replace(INGREDIENT_HEADERS, '').trim() : line.split(/\s+/).slice(1).join(' ');
+      const rest = headerRest(line, INGREDIENT_HEADERS);
+      if (rest) ingredientLines.push({ line: rest, section });
       const sv = after.match(SERVINGS_RE);
       if (sv && servings === null) servings = Number((sv[1] ?? sv[2]).replace(',', '.'));
       continue;
     }
-    if (isStepHeader(line)) {
+    if (isStepHeader(line) || headerRest(line, STEP_HEADERS)) {
       mode = 'steps';
       sawHeaders = true;
       section = null;
+      const rest = headerRest(line, STEP_HEADERS);
+      if (rest) stepLines.push({ line: rest, section: null, gap: false });
       continue;
     }
     if (NOTES_HEADERS.test(line) && mode !== 'head') {
