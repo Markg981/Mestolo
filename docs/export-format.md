@@ -54,6 +54,15 @@ Endpoint: `GET /api/recipes/{id}/export?format=schema`. Formato standard leggibi
 
 Endpoint: `GET /api/account/export` (*Impostazioni → Account e dati*). File `mestolo.account-export/v1` con profilo, ricette, versioni, metadati immagini, note, preferiti, categorie personali, raccolte, lista della spesa, piano pasti, amicizie, blocchi, segnalazioni, provider configurati (**mai i valori delle chiavi**) e uso AI.
 
-## 4. Stampa / PDF
+## 4. Importazione dei file esportati
+
+Pagina `/import/file` (anche da *Impostazioni → Account e dati → Importa da file*). Il file viene letto **nel browser** (massimo 10 MB, 2000 ricette) da `src/lib/recipes/import-json.ts`:
+
+- `mestolo.recipe/v1`: la ricetta apre la schermata di revisione, come ogni altra importazione.
+- `mestolo.account-export/v1`: elenco delle ricette; ognuna si può rivedere singolarmente, oppure *Importa tutte come private* le salva in sequenza saltando quelle con lo stesso titolo di una ricetta già presente.
+
+Regole: non vengono mai ripresi id, proprietario, versioni, visibilità (sempre **privata**), immagini, valutazioni, amicizie, raccolte e liste. Ingredienti e passaggi non validi vengono scartati con l'avviso "contenuto parziale"; categorie personali e categorie di sistema assenti dall'export vengono riproposte automaticamente; le indicazioni dietetiche sconosciute vengono ignorate; la nota personale viene ripresa. Il server rivalida tutto al salvataggio.
+
+## 5. Stampa / PDF
 
 `/print/recipes/{id}` e `/print/shopping` sono pagine ottimizzate per la stampa: usa "Stampa" del browser e scegli "Salva come PDF".
