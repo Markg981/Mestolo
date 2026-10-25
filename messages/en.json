@@ -116,6 +116,7 @@
     "ai_bad_output": "The AI response couldn't be used. Try again or continue manually.",
     "ai_timeout": "The AI provider took too long. Try again.",
     "ai_unsupported": "The configured provider doesn't support this feature.",
+    "ai_keys_unavailable": "Couldn't check your personal AI key. Try again in a moment.",
     "url_invalid": "That address isn't valid. Paste a full link starting with https://",
     "url_blocked": "This address can't be opened for security reasons.",
     "url_unreachable": "We can't reach the site. Check the link or paste the recipe text.",

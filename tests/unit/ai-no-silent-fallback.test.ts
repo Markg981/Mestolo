@@ -1,0 +1,56 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
+
+const state = vi.hoisted(() => ({
+  result: { data: null as unknown, error: null as unknown },
+  encryptionKey: undefined as string | undefined,
+}));
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({ from: () => ({ select: () => ({ eq: async () => state.result }) }) }),
+}));
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc: async () => ({ data: true, error: null }) }) }));
+vi.mock('@/lib/env', () => ({
+  ConfigError: class ConfigError extends Error {},
+  env: () => ({
+    encryptionKey: state.encryptionKey,
+    ai: { appProvider: 'openai', appApiKey: 'sk-app-key-1234567890', limits: { text: 5, vision: 5, image: 5, translate: 5 }, userAnthropicModel: 'm', userOpenaiTextModel: 'm', userOpenaiImageModel: 'm', transcribeModel: 'm' },
+  }),
+}));
+
+import { capabilityStatus, resolveProvider } from '@/lib/ai/service';
+import { AiError } from '@/lib/ai/providers';
+import { EncryptionConfigError } from '@/lib/crypto/secrets';
+import { toFailure } from '@/app/actions/_utils';
+
+const row = { provider: 'openai', ciphertext: 'x', iv: 'y', auth_tag: 'z' };
+
+describe('no silent fallback to the base service', () => {
+  beforeEach(() => {
+    state.result = { data: [], error: null };
+    state.encryptionKey = undefined;
+  });
+
+  it('fails explicitly when reading the user keys errors out', async () => {
+    state.result = { data: null, error: { message: 'boom' } };
+    await expect(resolveProvider('u1', 'text', 'text', 'a')).rejects.toMatchObject({ code: 'keys_unavailable' });
+    await expect(capabilityStatus('u1', 'text', 'text')).rejects.toBeInstanceOf(AiError);
+    expect(toFailure(new AiError('keys_unavailable'), 't')).toMatchObject({ error: 'ai_keys_unavailable' });
+  });
+
+  it('fails explicitly when a user key exists but APP_ENCRYPTION_KEY is missing', async () => {
+    state.result = { data: [row], error: null };
+    await expect(resolveProvider('u1', 'text', 'text', 'a')).rejects.toBeInstanceOf(EncryptionConfigError);
+  });
+
+  it('reports "not available" instead of "uses your key" when the key cannot be used', async () => {
+    state.result = { data: [row], error: null };
+    await expect(capabilityStatus('u1', 'text', 'text')).resolves.toMatchObject({ available: false, keySource: null });
+  });
+
+  it('still uses the base service when the user has no key', async () => {
+    const r = await resolveProvider('u1', 'text', 'text', 'a');
+    expect(r.keySource).toBe('app');
+  });
+});

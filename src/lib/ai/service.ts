@@ -34,13 +34,15 @@ type UserKeyRow = { provider: 'anthropic' | 'openai'; ciphertext: string; iv: st
 
 async function loadUserKeys(userId: string): Promise<UserKeyRow[]> {
   const admin = createAdminClient();
-  const { data } = await admin.from('user_api_keys').select('provider, ciphertext, iv, auth_tag').eq('user_id', userId);
+  const { data, error } = await admin.from('user_api_keys').select('provider, ciphertext, iv, auth_tag').eq('user_id', userId);
+  // Mai ripiegare in silenzio sul servizio base: se non sappiamo se l'utente ha una chiave, errore esplicito.
+  if (error) throw new AiError('keys_unavailable');
   return (data as UserKeyRow[]) ?? [];
 }
 
 function userProviderFor(row: UserKeyRow, userId: string, capability: Capability): AiProvider | null {
   const cfg = env();
-  if (!cfg.encryptionKey) return null;
+  // Chiave utente presente ma server senza APP_ENCRYPTION_KEY: errore esplicito (EncryptionConfigError), niente ripiego.
   const key = loadEncryptionKey(cfg.encryptionKey);
   const apiKey = decryptSecret({ ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag }, key, keyAad(userId, row.provider));
   if (row.provider === 'anthropic') {
@@ -87,10 +89,12 @@ async function usedToday(userId: string, group: QuotaGroup): Promise<number> {
 }
 
 export async function capabilityStatus(userId: string, capability: Capability, group?: QuotaGroup): Promise<CapabilityStatus> {
-  const keys = await loadUserKeys(userId).catch(() => []);
+  const keys = await loadUserKeys(userId);
   for (const row of keys) {
     if ((capability === 'image' || capability === 'audio') && row.provider !== 'openai') continue;
-    return { available: !!env().encryptionKey, keySource: 'user', providerName: row.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', remainingToday: null, dailyLimit: null };
+    // Senza APP_ENCRYPTION_KEY la chiave non e' usabile e non si ripiega sul servizio base: stato coerente = non disponibile.
+    if (!env().encryptionKey) return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };
+    return { available: true, keySource: 'user', providerName: row.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', remainingToday: null, dailyLimit: null };
   }
   const app = appProvider(capability);
   if (!app) return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };

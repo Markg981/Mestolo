@@ -23,6 +23,7 @@ export type ErrorCode =
   | 'ai_bad_output'
   | 'ai_timeout'
   | 'ai_unsupported'
+  | 'ai_keys_unavailable'
   | 'url_invalid'
   | 'url_blocked'
   | 'url_unreachable'
@@ -78,6 +79,7 @@ export function toFailure(e: unknown, context: string): { ok: false; error: Erro
       bad_output: 'ai_bad_output',
       timeout: 'ai_timeout',
       unsupported: 'ai_unsupported',
+      keys_unavailable: 'ai_keys_unavailable',
     };
     return fail(map[e.code] ?? 'ai_provider_error');
   }

@@ -38,7 +38,8 @@ export type AiErrorCode =
   | 'timeout'
   | 'not_configured'
   | 'quota_exceeded'
-  | 'unsupported';
+  | 'unsupported'
+  | 'keys_unavailable';
 
 export class AiError extends Error {
   constructor(public code: AiErrorCode, detail?: string) {

@@ -116,6 +116,7 @@
     "ai_bad_output": "Die Antwort der KI war nicht brauchbar. Versuch es erneut oder mach manuell weiter.",
     "ai_timeout": "Der KI-Anbieter hat zu lange gebraucht. Versuch es erneut.",
     "ai_unsupported": "Der eingerichtete Anbieter unterstützt diese Funktion nicht.",
+    "ai_keys_unavailable": "Dein persönlicher KI-Schlüssel konnte nicht geprüft werden. Versuch es gleich noch einmal.",
     "url_invalid": "Die Adresse ist ungültig. Füge einen vollständigen Link ein, der mit https:// beginnt.",
     "url_blocked": "Diese Adresse kann aus Sicherheitsgründen nicht geöffnet werden.",
     "url_unreachable": "Wir erreichen die Website nicht. Prüfe den Link oder füge den Rezepttext ein.",
