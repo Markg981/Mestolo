@@ -5,17 +5,19 @@ import { useTranslations } from 'next-intl';
 import { RecipeEditor } from '../recipes/editor/RecipeEditor';
 import { stateFromDraft } from '../recipes/editor/convert';
 import type { EditorCategory } from '../recipes/editor/types';
+import { importIdentity } from '@/lib/recipes/import-identity';
 import type { ImportDraft } from '@/lib/recipes/types';
 
 export function ImportReview({ draft, categories, draftKey, aside, onBack }: { draft: ImportDraft; categories: EditorCategory[]; draftKey: string; aside?: React.ReactNode; onBack: () => void }) {
   const tu = useTranslations('units');
   const initial = useMemo(() => stateFromDraft(draft, categories, (k) => (tu.has(k) ? tu(k) : k)), [draft, categories, tu]);
+  const scopedDraftKey = useMemo(() => `${draftKey}:${importIdentity(initial)}`, [draftKey, initial]);
   return (
     <RecipeEditor
       mode="review"
       initial={initial}
       categories={categories}
-      draftKey={draftKey}
+      draftKey={scopedDraftKey}
       source={draft.source}
       warnings={draft.warnings}
       aside={aside}
