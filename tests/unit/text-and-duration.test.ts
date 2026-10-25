@@ -72,4 +72,18 @@ Cook in a hot pan.`);
     expect(r.ingredients).toHaveLength(2);
     expect(r.steps).toHaveLength(1);
   });
+
+  it.each([
+    ['Cuocere per 20 minuti', 'Per 4 persone', 4],
+    ['Bake for 20 minutes', 'Serves 6', 6],
+    ['Cuocere per 2 ore', 'Dosi per 8', 8],
+  ])('una durata non e una porzione (M10): %s', (timeLine, servingsLine, expected) => {
+    const r = parseRecipeText(`Torta\nUn dolce semplice.\n${timeLine}\n${servingsLine}\n\nIngredienti\n200 g farina`);
+    expect(r.servings).toBe(expected);
+  });
+
+  it('senza dichiarazione di porzioni resta null (M10)', () => {
+    const r = parseRecipeText('Torta\nUn dolce.\nCuocere per 20 minuti\n\nIngredienti\n200 g farina');
+    expect(r.servings).toBeNull();
+  });
 });
