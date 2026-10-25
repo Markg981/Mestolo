@@ -481,6 +481,7 @@
     "title": "Título",
     "titlePlaceholder": "P. ej., berenjenas a la parmesana",
     "titleRequired": "El título es obligatorio.",
+    "quantityInvalid": "La cantidad \"{value}\" de \"{name}\" no es válida. Usa un número, una fracción (1 1/2) o deja el campo vacío.",
     "description": "Descripción",
     "category": "Categoría",
     "categorySuggested": "Sugerida automáticamente: puedes cambiarla.",

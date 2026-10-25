@@ -481,6 +481,7 @@
     "title": "Title",
     "titlePlaceholder": "E.g. Eggplant Parmesan",
     "titleRequired": "Title is required.",
+    "quantityInvalid": "The quantity \"{value}\" for \"{name}\" is not valid. Use a number, a fraction (1 1/2) or leave the field empty.",
     "description": "Description",
     "category": "Category",
     "categorySuggested": "Suggested automatically: you can change it.",

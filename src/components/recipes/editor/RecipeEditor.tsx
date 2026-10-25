@@ -18,7 +18,7 @@ import { compressImage } from '@/lib/images/client-compress';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import type { FieldFlag, Visibility } from '@/lib/recipes/types';
 import { Alert, Badge, Button, Field, Input, Select, Textarea, buttonClass, cx, inputClass } from '../../ui';
-import { emptyIngredient, emptyStep, toEditorIngredient, toPayload } from './convert';
+import { emptyIngredient, emptyStep, invalidQuantityIngredients, toEditorIngredient, toPayload } from './convert';
 import type { EditorIngredient, EditorProps, EditorState, EditorStep } from './types';
 
 function FlagBadges({ flags }: { flags?: FieldFlag[] }) {
@@ -222,6 +222,12 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
     if (!s.title.trim()) {
       setError(t('titleRequired'));
       document.getElementById('title')?.focus();
+      return;
+    }
+    const badQty = invalidQuantityIngredients(s)[0];
+    if (badQty) {
+      setError(t('quantityInvalid', { name: badQty.name.trim(), value: badQty.quantity.trim() || badQty.quantityMax.trim() }));
+      document.getElementById(`q-${badQty.key}`)?.focus();
       return;
     }
     const payload = {

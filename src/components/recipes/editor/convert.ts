@@ -1,4 +1,5 @@
-import { normalizeUnit } from '@/lib/recipes/units';
+import { TO_TASTE_PATTERNS, normalizeUnit } from '@/lib/recipes/units';
+import { parseNumber } from '@/lib/recipes/ingredient-parser';
 import { knownDiets } from '@/lib/recipes/diets';
 import type { FieldFlags, ImportDraft, Ingredient, RecipeRow, Step } from '@/lib/recipes/types';
 import type { EditorCategory, EditorIngredient, EditorState, EditorStep } from './types';
@@ -97,13 +98,44 @@ export function emptyState(locale: string): EditorState {
   };
 }
 
+const UNI = '½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞';
+const QTY_RE = new RegExp(`^(\\d+\\s+\\d+\\s*\\/\\s*\\d+|\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)*\\s*[${UNI}]?|[${UNI}])\\s*(.*)$`);
+
+export type ParsedQuantity = { value: number | null; unit: string | null; toTaste: boolean; invalid: boolean };
+
+/**
+ * Parses what the user typed in a quantity field, reusing the ingredient parser's number rules
+ * (fractions, unicode fractions, "1.000,5", "1,5"). An attached unit ("2kg") is returned separately.
+ * Non-empty input that cannot be interpreted is reported as `invalid`, never silently dropped.
+ */
+export function parseQuantity(input: string): ParsedQuantity {
+  const t = input.trim();
+  const none = { value: null, unit: null, toTaste: false, invalid: false };
+  if (!t) return none;
+  if (TO_TASTE_PATTERNS.some((re) => re.test(t))) return { ...none, toTaste: true };
+  const m = t.match(QTY_RE);
+  if (!m) return { ...none, invalid: true };
+  const unit = m[2] ? normalizeUnit(m[2]) : null;
+  if (m[2] && !unit) return { ...none, invalid: true };
+  let numText = m[1];
+  // "1.000,5" / "1,000.5": when both separators appear, the last one is the decimal point
+  if (/[.,]\d+[.,]\d+$/.test(numText) && /[.,]\d{1,2}$|[.,]\d{4,}$/.test(numText)) {
+    const last = Math.max(numText.lastIndexOf('.'), numText.lastIndexOf(','));
+    numText = numText.slice(0, last).replace(/[.,]/g, '') + '.' + numText.slice(last + 1);
+  }
+  const value = parseNumber(numText, unit);
+  if (value === null || !(value > 0)) return { ...none, invalid: true };
+  return { value, unit, toTaste: false, invalid: false };
+}
+
 function parseNum(s: string): number | null {
-  const t = s.trim().replace(',', '.');
-  if (!t) return null;
-  const frac = t.match(/^(\d+)\/(\d+)$/);
-  if (frac && Number(frac[2])) return Number(frac[1]) / Number(frac[2]);
-  const n = Number(t);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  const q = parseQuantity(s);
+  return q.unit || q.toTaste ? null : q.value;
+}
+
+/** Ingredient rows (with a name) whose quantity text cannot be interpreted: the save must be blocked. */
+export function invalidQuantityIngredients(s: EditorState): EditorIngredient[] {
+  return s.ingredients.filter((i) => i.name.trim() && !i.toTaste && (parseQuantity(i.quantity).invalid || parseQuantity(i.quantityMax).invalid));
 }
 
 function parseInt0(s: string): number | null {
@@ -127,12 +159,14 @@ export function toPayload(s: EditorState, labelToUnit: Map<string, string>, opts
   const ingredients = s.ingredients
     .filter((i) => i.name.trim())
     .map((i) => {
-      const unitText = i.unit.trim();
+      const pq = parseQuantity(i.quantity);
+      const unitText = i.unit.trim() || pq.unit || '';
       const unit = unitText ? labelToUnit.get(unitText.toLowerCase()) ?? normalizeUnit(unitText) ?? unitText : null;
-      const quantity = i.toTaste ? null : parseNum(i.quantity);
+      const toTaste = i.toTaste || pq.toTaste;
+      const quantity = toTaste ? null : pq.value;
       const quantityMax = quantity !== null ? parseNum(i.quantityMax) : null;
       let flags = opts.verified ? i.flags.filter((f) => f === 'ai_estimate') : i.flags;
-      if (quantity !== null || i.toTaste) flags = flags.filter((f) => f !== 'missing');
+      if (quantity !== null || toTaste) flags = flags.filter((f) => f !== 'missing');
       return {
         name: i.name.trim(),
         quantity,
@@ -140,7 +174,7 @@ export function toPayload(s: EditorState, labelToUnit: Map<string, string>, opts
         unit,
         note: i.note.trim() || null,
         section: i.section,
-        toTaste: i.toTaste || undefined,
+        toTaste: toTaste || undefined,
         raw: i.raw,
         flags: flags.length ? flags : undefined,
       };

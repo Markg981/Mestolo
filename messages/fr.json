@@ -481,6 +481,7 @@
     "title": "Titre",
     "titlePlaceholder": "Ex. : Gratin d'aubergines au parmesan",
     "titleRequired": "Le titre est obligatoire.",
+    "quantityInvalid": "La quantité \"{value}\" de \"{name}\" n'est pas valide. Utilisez un nombre, une fraction (1 1/2) ou laissez le champ vide.",
     "description": "Description",
     "category": "Catégorie",
     "categorySuggested": "Proposée automatiquement : vous pouvez la modifier.",
