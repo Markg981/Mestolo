@@ -196,8 +196,8 @@ d('Shared collections RLS', () => {
   });
 
   it('owner cannot rewrite user_id/invited_by of a member (friendship bypass)', async () => {
-    await expect(as(owner, 'update public.collection_members set user_id = $3 where collection_id = $1 and user_id = $2', [col, friend, stranger])).rejects.toThrow();
-    await expect(as(owner, 'update public.collection_members set invited_by = $3 where collection_id = $1 and user_id = $2', [col, friend, stranger])).rejects.toThrow();
+    await expect(as(owner, 'update public.collection_members set user_id = $3 where collection_id = $1 and user_id = $2', [col, viewer, stranger])).rejects.toThrow();
+    await expect(as(owner, 'update public.collection_members set invited_by = $3 where collection_id = $1 and user_id = $2', [col, viewer, stranger])).rejects.toThrow();
   });
 
   it('a member can leave; helper functions are not callable by anon', async () => {
