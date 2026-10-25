@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Camera, ImagePlus, RefreshCw, Trash2 } from 'lucide
 import { importFromPhotos, importFromText } from '@/app/actions/import';
 import { recognizePage } from '@/lib/ocr';
 import { joinPages } from '@/lib/ocr/clean';
+import { OcrTimeoutError } from '@/lib/ocr/timeout';
 import { compressImage, MAX_ORIGINAL_BYTES } from '@/lib/images/client-compress';
 import { isNativeApp, takeNativePhoto } from '@/lib/native/camera';
 import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/limits';
@@ -38,6 +39,11 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   const [pending, start] = useTransition();
   const [processing, setProcessing] = useState(0);
   const [ocrText, setOcrText] = useState<string | null>(null);
+  // Text editor visible; the text (and its source pages) survive going back
+  const [ocrOpen, setOcrOpen] = useState(false);
+  const ocrSource = useRef<string | null>(null);
+  // Slots taken (pages + files being processed), updated synchronously: state closures go stale on rapid selections
+  const slots = useRef(0);
   const [ocrBusy, setOcrBusy] = useState<{ page: number; progress: number } | null>(null);
   const replaceTarget = useRef<string | null>(null);
   const replaceInput = useRef<HTMLInputElement>(null);
@@ -81,9 +87,10 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
     setError(null);
     setNotice(null);
     const files = Array.from(list);
-    const room = MAX_PHOTO_PAGES - pages.length;
+    const room = Math.max(0, MAX_PHOTO_PAGES - slots.current);
     if (files.length > room) setNotice(t('tooMany', { max: MAX_PHOTO_PAGES }));
-    const accepted = files.slice(0, Math.max(0, room));
+    const accepted = files.slice(0, room);
+    slots.current += accepted.length;
     setProcessing((n) => n + accepted.length);
     for (const f of accepted) {
       const page = await toPage(f);
@@ -141,8 +148,15 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
       else setError(te(res.error));
     });
 
+  // Identifies the exact set/order/content of the readable pages (each blob has its own object URL)
+  const pagesKey = valid.map((p) => p.url).join('|');
+
   async function runOcr() {
     setError(null);
+    if (ocrText !== null && ocrSource.current === pagesKey) {
+      setOcrOpen(true);
+      return;
+    }
     const texts: string[] = [];
     try {
       for (let i = 0; i < valid.length; i++) {
@@ -151,9 +165,13 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
       }
       const joined = joinPages(texts);
       if (joined.length < 10) setError(t('ocrEmpty'));
-      else setOcrText(joined);
-    } catch {
-      setError(t('ocrFailed'));
+      else {
+        setOcrText(joined);
+        ocrSource.current = pagesKey;
+        setOcrOpen(true);
+      }
+    } catch (e) {
+      setError(e instanceof OcrTimeoutError ? t('ocrTimeout') : t('ocrFailed'));
     } finally {
       setOcrBusy(null);
     }
@@ -188,7 +206,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
     return <ImportReview draft={draft} categories={categories} draftKey="mestolo:draft:import-photo" aside={pagesAside} onBack={() => setDraft(null)} />;
   }
 
-  if (ocrText !== null) {
+  if (ocrOpen && ocrText !== null) {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -206,7 +224,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
               {pending ? t('extracting') : t('useAi')}
             </Button>
           )}
-          <Button size="lg" variant="ghost" onClick={() => setOcrText(null)}>
+          <Button size="lg" variant="ghost" onClick={() => setOcrOpen(false)}>
             {tc('back')}
           </Button>
         </div>
@@ -276,7 +294,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
                   <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={t('replacePage', { n: idx + 1 })} onClick={() => { replaceTarget.current = p.id; replaceInput.current?.click(); }}>
                     <RefreshCw aria-hidden className="size-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="ml-auto size-10 px-0 text-tomato" aria-label={t('removePage', { n: idx + 1 })} onClick={() => setPages((ps) => ps.filter((x) => x.id !== p.id))}>
+                  <Button size="sm" variant="ghost" className="ml-auto size-10 px-0 text-tomato" aria-label={t('removePage', { n: idx + 1 })} onClick={() => { slots.current = Math.max(0, slots.current - 1); setPages((ps) => ps.filter((x) => x.id !== p.id)); }}>
                     <Trash2 aria-hidden className="size-4" />
                   </Button>
                 </div>

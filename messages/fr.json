@@ -579,6 +579,7 @@
     "ocrHint": "La première fois, la préparation du lecteur peut prendre quelques secondes.",
     "ocrEmpty": "Impossible de lire du texte sur les photos. Essayez une photo plus nette et bien éclairée, ou utilisez l'IA.",
     "ocrFailed": "La lecture sur l'appareil a échoué. Vous pouvez réessayer ou utiliser l'IA.",
+    "ocrTimeout": "La lecture d'une page a pris trop de temps. Réessayez avec une photo plus nette ou utilisez l'IA.",
     "ocrTextLabel": "Texte reconnu",
     "ocrTextHint": "Corrigez les erreurs de lecture, puis analysez le texte : le résultat s'ouvre dans l'écran de révision.",
     "ocrParse": "Analyser le texte",
