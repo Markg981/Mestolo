@@ -1,5 +1,8 @@
 'use client';
 
+import type { TextLine } from '@capacitor-mlkit/text-recognition';
+import { linesToText, type OcrLine } from './layout';
+
 /**
  * Native OCR (Google ML Kit). ML Kit reads a local file path, so the already-downscaled
  * image is written to the app cache first. Throws if the plugin is missing from the native
@@ -13,10 +16,20 @@ export async function recognizeNative(blob: Blob): Promise<string> {
   const file = await Filesystem.writeFile({ path: `ocr-${Date.now()}.jpg`, data, directory: Directory.Cache });
   try {
     const res = await TextRecognition.processImage({ path: file.uri });
-    return res.text;
+    const lines = res.blocks.flatMap((b) => b.lines);
+    // ML Kit's block order mixes columns: rebuild it from geometry when every line has a box.
+    return lines.length && lines.every((l) => l.boundingBox) ? linesToText(lines.map(toOcrLine)) : res.text;
   } finally {
     await Filesystem.deleteFile({ path: file.uri }).catch(() => undefined);
   }
+}
+
+function toOcrLine(l: TextLine): OcrLine {
+  const r = l.boundingBox!;
+  const [p0, p1] = l.cornerPoints ?? [];
+  const angle = p0 && p1 && p1.x !== p0.x ? Math.atan2(p1.y - p0.y, p1.x - p0.x) : undefined;
+  const words = l.elements?.flatMap((e) => (e.boundingBox ? [{ text: e.text, x: e.boundingBox.left, w: e.boundingBox.right - e.boundingBox.left }] : []));
+  return { text: l.text, x: r.left, y: r.top, w: r.right - r.left, h: r.bottom - r.top, angle, words };
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
