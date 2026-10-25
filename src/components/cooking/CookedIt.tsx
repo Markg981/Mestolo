@@ -7,17 +7,14 @@ import { Camera, CheckCircle2, ImagePlus, Trash2 } from 'lucide-react';
 import { createCookLog, deleteCookLog, setCookLogVisibility } from '@/app/actions/cooklogs';
 import { compressImage, MAX_ORIGINAL_BYTES } from '@/lib/images/client-compress';
 import { isNativeApp, takeNativePhoto } from '@/lib/native/camera';
+import { todayIso } from '@/lib/plan/week';
 import { COOK_NOTE_MAX } from '@/lib/cooking/cook-log';
 import { Alert, Button, Field, Select, Textarea, Input, buttonClass } from '../ui';
 import { LiveMessage, Modal } from '../client-ui';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quiet';
 
-const todayLocal = () => {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-};
+const todayLocal = () => todayIso(new Date(), null);
 
 /** "L'ho cucinata" button + sheet (date, note, optional photo from file or camera, visibility). */
 export function CookedItButton({ recipeId, variant = 'secondary', size = 'md', className }: { recipeId: string; variant?: ButtonVariant; size?: 'sm' | 'md' | 'lg'; className?: string }) {
