@@ -59,8 +59,8 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 - **Editor** mobile-first con riordino, incolla-lista ingredienti, bozza salvata automaticamente nel browser (nessuna perdita dati in caso di errore), categoria proposta automaticamente e modificabile, avviso **possibili duplicati**.
 - **Import da link**: Schema.org JSON-LD (anche `@graph`, `HowToSection`), poi microdata, poi testo leggibile (segnato a bassa confidenza); revisione obbligatoria; fonte, sito e autore salvati; alternativa “incolla il testo”.
 - **Import da testo**: parser gratuito multilingue (intestazioni, porzioni, tempi) oppure AI.
-- **Import da foto multipagina**: galleria o fotocamera, anteprima, riordino, sostituzione e rimozione pagine, validazione formato/dimensione/numero, compressione e rotazione sul dispositivo, provider di visione sostituibile, avvisi per pagine mancanti/testo ambiguo/campi a bassa confidenza, schermata di revisione con le foto affiancate, nuovo tentativo senza perdere le pagine. **Se nessun provider è configurato, l’OCR non viene simulato**: l’app lo dice e propone l’inserimento manuale guardando le foto.
-- **Mai dati inventati**: valori non trovati restano vuoti e marcati “Non rilevato”; nessuna conversione di unità; il totale non viene calcolato sommando i tempi.
+- **Import da foto multipagina**: galleria o fotocamera, anteprima, riordino, sostituzione e rimozione pagine, validazione formato/dimensione/numero, compressione e rotazione sul dispositivo, provider di visione sostituibile, avvisi per pagine mancanti/testo ambiguo/campi a bassa confidenza, schermata di revisione con le foto affiancate, nuovo tentativo senza perdere le pagine. **OCR gratuito sul dispositivo, senza AI e senza chiavi**: Tesseract.js nel browser (motore e dati delle 6 lingue serviti dall’app, copiati in `public/ocr` da `scripts/copy-ocr-assets.mjs` prima di `dev`/`build`) e ML Kit nell’app Android/iOS (`@capacitor-mlkit/text-recognition`, con Tesseract come ripiego). Il testo letto si corregge in un campo modificabile, poi il parser gratuito lo divide in titolo, ingredienti, passaggi, porzioni e tempi e si passa alla revisione. Le foto non lasciano il dispositivo. L’estrazione con AI resta un pulsante separato e facoltativo, utile per scrittura a mano o impaginazioni complesse.
+- **Mai dati inventati**: valori non trovati restano vuoti e marcati “Non rilevato”; nessuna conversione di unità all’importazione; il totale non viene calcolato sommando i tempi.
 - **Categorie** iniziali (10 + “Da classificare”), categorie personali, tag, raccolte, ricerca, filtri, preferiti, ordinamento.
 - **Assistente AI**: suggerimenti tipizzati (passaggi più chiari, correzioni/aggiunte di ingredienti, stime di tempo marcate come stime, idee), confronto originale/proposta, selezione singola, tre azioni finali (mantieni l’originale / applica i selezionati / salva come variante collegata), suggerimenti obsoleti scartati.
 - **Sostituzioni**: tabella di base gratuita (10 ingredienti comuni, 6 lingue) + AI facoltativa; quantità indicative, effetto, limiti, avviso “può compromettere la riuscita”, nessuna promessa su allergie.
@@ -75,22 +75,25 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 - **API key personali**: inserimento, sostituzione, rimozione; stato per funzione (“userà la tua chiave” / “servizio base: 7 di 10 oggi” / “non disponibile”); uso negli ultimi 30 giorni.
 - **Moderazione** (richiesta dagli store): ruolo moderatore assegnabile solo dal gestore, pannello `/moderation`, nascondi/ripristina/archivia, **nascondimento automatico dopo 3 segnalazioni** di utenti diversi, regole della community (`/terms`) accettate alla registrazione, contatto di supporto (`NEXT_PUBLIC_SUPPORT_EMAIL`).
 - **PWA e app**: installabile, copie offline delle pagine aperte (svuotate al logout), condivisione di link verso Mestolo, progetti Android/iOS Capacitor con fotocamera nativa e pagina offline locale.
+- **Import da video**: da descrizione, sottotitoli e trascrizione audio (la trascrizione richiede un provider, vedi `AI_TRANSCRIBE_MODEL`).
+- **In cucina**: modalità cucina a schermo intero con “Chiedi all’assistente”, diario “L’ho cucinata” (nota, foto, visibilità), conversione delle unità su richiesta (solo in visualizzazione, l’originale non cambia).
+- **Organizzazione**: dispensa con scadenze e “cosa cucino stasera”, piano settimanale generato dalle preferenze e riordinabile con trascinamento, promemoria dei pasti ([dettagli](#promemoria-dei-pasti)), lista della spesa per reparto e condivisa con la famiglia, suggerimenti di stagione nella home.
+- **Nutrizione**: valori nutrizionali per porzione, sempre con la fonte dichiarata.
+- **Community**: valutazioni da 1 a 5 stelle, feed “Per te”, profili ricchi (avatar, luogo, sito, cucine preferite), raccolte condivise con amici o pubbliche, inviti con link a scadenza, pagine pubbliche indicizzabili `/r/[slug]` per le sole ricette pubbliche, sincronizzazione in tempo reale.
 - **Accessibilità**: etichette, focus visibile, skip link, aree cliccabili ≥ 44 px, live region per i feedback, dialog nativi, `prefers-reduced-motion`, tema scuro automatico, testo alternativo.
 
 ### Parziali
 
 - **Verifica end-to-end con servizi reali**: non avendo credenziali Supabase e chiavi AI, non è stato possibile provare l’app collegata a un progetto Supabase reale né ai provider AI reali (vedi [Test](#test-eseguiti)).
 - **HEIC** (foto iPhone): funziona dove il browser sa decodificarlo (Safari); altrove l’app chiede di convertire in JPG.
-- **App Android/iOS**: progetti generati e configurati, ma **non compilati né provati su dispositivo** (nell’ambiente di sviluppo non era possibile scaricare SDK Android/Xcode). La condivisione da altre app su iOS richiede una Share Extension da creare in Xcode.
-- **Lista della spesa**: lo schema supporta più liste, l’interfaccia ne usa una.
+- **App Android/iOS**: progetti generati e configurati, ma **non compilati né provati su dispositivo** (nell’ambiente di sviluppo non era possibile scaricare SDK Android/Xcode). La Share Extension iOS è descritta in [docs/ios-share-extension.md](docs/ios-share-extension.md).
 - **Indicazioni dietetiche**: il campo `diet_hints` esiste ma non viene compilato automaticamente (scelta voluta: niente etichette di allergeni presentate come verificate); il filtro preferenze di Scopri è solo indicativo.
 - **Generazione immagini**: implementata solo con provider OpenAI.
 
 ### Non implementate
 
-- Notifiche (promemoria del piano pasti); modifica dei dati offline (offline si consulta, le modifiche richiedono la connessione).
-- Condivisione tramite link pubblico (voluta: non deve aggirare la modalità “amici”).
-- Valori nutrizionali.
+- Modifica dei dati offline (offline si consulta, le modifiche richiedono la connessione).
+- Link di condivisione per ricette private o per soli amici (voluto: non deve aggirare la modalità “amici”). Solo le ricette pubbliche hanno una pagina pubblica `/r/[slug]`.
 - Import di file JSON esportati (il formato è documentato e predisposto).
 
 ---
@@ -112,7 +115,7 @@ npm run dev                    # http://localhost:3000
 
 **Opzione A – progetto Supabase cloud** (più semplice):
 1. Crea un progetto su [supabase.com](https://supabase.com).
-2. Apri *SQL Editor*, incolla ed esegui `supabase/migrations/20261020000001_init.sql`.
+2. Applica **tutte** le migrazioni di `supabase/migrations/`, in ordine di nome (la prima è `20261020000001_init.sql`; le successive aggiungono moderazione, ricerca, dispensa, nutrizione e le altre funzioni, che senza di loro non funzionano). Il modo più semplice è l’opzione B; in alternativa incollale una per una nel *SQL Editor*.
 3. *Authentication → URL Configuration*: imposta *Site URL* (es. `http://localhost:3000`) e aggiungi `http://localhost:3000/auth/callback` ai *Redirect URLs*.
 4. Copia URL, `anon key` e `service_role key` (Project Settings → API) in `.env.local`.
 
@@ -163,7 +166,7 @@ In `supabase/config.toml`, sezione `[auth]`: `site_url = "http://localhost:3000"
 
 Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pricing), [Vercel limits](https://vercel.com/docs/limits), [Vercel: body size limit](https://vercel.com/kb/guide/how-to-bypass-vercel-body-size-limit-serverless-functions).
 
-**Funzioni sempre gratuite e senza AI**: ricettario, editor, import da link con dati strutturati, analisi del testo incollato, sostituzioni di base, categorie automatiche, duplicati, porzioni, raccolte, amici, Scopri, lista della spesa, piano pasti, stampa, esportazioni.
+**Funzioni sempre gratuite e senza AI**: ricettario, editor, import da link con dati strutturati, import da foto con OCR sul dispositivo, analisi del testo incollato, sostituzioni di base, categorie automatiche, duplicati, porzioni, raccolte, amici, Scopri, lista della spesa, piano pasti, stampa, esportazioni.
 
 ---
 
@@ -252,13 +255,12 @@ Il workflow `.github/workflows/e2e.yml` gira sulle pull request e a mano (*workf
 - I provider AI possono sbagliare: per questo ogni risultato passa da una revisione e nulla viene salvato senza conferma.
 - Siti con contenuti caricati via JavaScript o a pagamento possono non essere importabili: l’app lo dice e propone di incollare il testo.
 - Il servizio base AI ha un costo per il gestore: tienilo spento (`AI_APP_PROVIDER` vuoto) o con quote basse finché non sai quanto costa.
-- Le foto inviate all’OCR e i testi inviati all’AI vengono trattati dal provider secondo i suoi termini (vedi [docs/ai-providers.md](docs/ai-providers.md)); la pagina `/privacy` va completata dal gestore con i propri riferimenti.
+- L’OCR gratuito gira sul dispositivo e non invia le foto a nessuno. Le foto e i testi inviati all’AI (solo se l’utente sceglie l’estrazione con AI) vengono trattati dal provider secondo i suoi termini (vedi [docs/ai-providers.md](docs/ai-providers.md)); la pagina `/privacy` va completata dal gestore con i propri riferimenti.
 - Prima di offrire l’uso di chiavi personali verifica i termini attuali dei provider (non è stato possibile farlo con valore legale in questa sede).
 
 ## Prossimi passi consigliati
 
 1. Collegare un progetto Supabase, configurare SMTP e fare un giro completo sui 14 criteri di accettazione con due account reali.
 2. Prima build delle app in Android Studio e Xcode, test su dispositivo, test chiuso su Google Play e TestFlight ([docs/mobile.md](docs/mobile.md)).
-3. Share Extension iOS e notifiche per il piano pasti.
-4. Test end-to-end automatici (Playwright) contro un progetto Supabase di staging.
-5. Import del formato JSON esportato; più liste della spesa; drag & drop nel piano.
+3. Provare su dispositivo la Share Extension iOS e le notifiche locali del piano pasti.
+4. Import del formato JSON esportato.
