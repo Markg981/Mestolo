@@ -60,6 +60,7 @@ export async function acceptInvite(token: string): Promise<ActionResult<{ status
       if (error.code === 'IV001') return fail('not_found');
       return dbFailure(error, 'acceptInvite');
     }
+    if (data === 'invalid_invite') return fail('not_found');
     revalidatePath('/friends');
     return ok({ status: data === 'already_friends' ? 'already_friends' : 'accepted' });
   } catch (e) {
