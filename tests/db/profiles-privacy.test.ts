@@ -45,6 +45,19 @@ d('profiles column privileges', () => {
     expect(rows).toHaveLength(1);
   });
 
+  it('profili non discoverable invisibili agli estranei, visibili a se stessi e agli amici (M2)', async () => {
+    const s = Math.random().toString(36).slice(2, 7);
+    const [hidden, friend] = await Promise.all(['ph', 'pf'].map((n) => user(`${n}_${s}`)));
+    await admin('update public.profiles set discoverable = false where id = $1', [hidden]);
+    const q = 'select id from public.profiles where id = $1';
+    expect(await as(bob, q, [hidden])).toHaveLength(0);
+    expect(await as(hidden, q, [hidden])).toHaveLength(1);
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'accepted')", [hidden, friend]);
+    expect(await as(friend, q, [hidden])).toHaveLength(1);
+    await admin("insert into public.recipes (owner_id, title, visibility) values ($1, 'pubblica', 'public')", [hidden]);
+    expect(await as(bob, q, [hidden])).toHaveLength(1);
+  });
+
   it('bio now goes through get_profile_card (migration 20261025000006)', async () => {
     await expect(as(bob, 'select bio from public.profiles where id = $1', [alice])).rejects.toThrow(/permission denied/);
   });
