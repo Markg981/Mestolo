@@ -14,6 +14,13 @@ describe('cleanOcrText', () => {
   it('rimuove righe di solo rumore e comprime gli spazi', () => {
     expect(cleanOcrText('uova   due\n---\n\n\n\nmescola')).toBe('uova due\n\nmescola');
   });
+  it('corregge le maiuscole spurie in mezzo alla parola', () => {
+    expect(cleanOcrText('poMOdoro saLe ZUCchine qUadrati')).toBe('pomodoro sale zucchine quadrati');
+  });
+  it('preserva le maiuscole miste legittime (M12)', () => {
+    expect(cleanOcrText('McDonald iPhone MacBook eBay')).toBe('McDonald iPhone MacBook eBay');
+    expect(cleanOcrText('IGP DOP Mestolo')).toBe('IGP DOP Mestolo');
+  });
   it('unisce più pagine saltando le vuote', () => {
     expect(joinPages(['a b', '  ', 'c d'])).toBe('a b\n\nc d');
   });
