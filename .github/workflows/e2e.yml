@@ -35,6 +35,11 @@ jobs:
         id: secrets
         run: |
           if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            # Formato dell'URL verificato senza stamparne il valore.
+            if ! printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | grep -Eq '^https://[a-z0-9]+\.supabase\.co/?$'; then
+              echo "::error::STAGING_SUPABASE_URL non valido (lunghezza ${#NEXT_PUBLIC_SUPABASE_URL}): atteso https://<ref>.supabase.co, senza virgolette, spazi o a capo."
+              exit 1
+            fi
             echo "available=true" >> "$GITHUB_OUTPUT"
           elif [ "$NO_SECRETS_BY_DESIGN" = "true" ]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
