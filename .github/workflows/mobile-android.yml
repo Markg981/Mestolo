@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       track:
-        description: "Traccia Play per l'upload (alpha = test chiuso). Usato solo se PLAY_SERVICE_ACCOUNT_JSON è impostato."
+        description: "Traccia Play per l'upload (alpha = test chiuso). Usato solo se PLAY_SERVICE_ACCOUNT_JSON e' impostato."
         required: false
         default: alpha
         type: string
@@ -52,7 +52,7 @@ jobs:
             echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
             echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::ANDROID_KEYSTORE_BASE64 non impostato: l'AAB sarà NON firmato."
+            echo "::warning::ANDROID_KEYSTORE_BASE64 non impostato: l'AAB sara' NON firmato."
           fi
 
       - name: Gradle bundleRelease

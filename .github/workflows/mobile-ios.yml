@@ -62,6 +62,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Info.plist senza host di sviluppo
+        run: node scripts/check-mobile-config.mjs
+
       - name: Sincronizza il progetto nativo
         # Genera capacitor.config.json, config.xml e public/ (ignorati da git) e aggiorna WKAppBoundDomains.
         run: npm run mobile:sync

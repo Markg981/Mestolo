@@ -31,6 +31,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Info.plist senza host di sviluppo
+        run: node scripts/check-mobile-config.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

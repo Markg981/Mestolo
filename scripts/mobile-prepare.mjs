@@ -1,10 +1,20 @@
 // Prepares the native projects for the configured server URL before `cap sync`:
 //  - mobile/www/config.js (used by the local offline/launch pages)
-//  - iOS Info.plist WKAppBoundDomains (required for service workers in WKWebView)
+//  - iOS Info.plist WKAppBoundDomains (required for service workers in WKWebView); skipped for development hosts
 // With MOBILE_STORE_BUILD=1 (release/store builds) a placeholder or non-HTTPS CAP_SERVER_URL is refused.
 // Usage: CAP_SERVER_URL=https://your-domain npm run mobile:sync
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+// True for hosts that only make sense on a developer machine (localhost, loopback, private/link-local IPs, .local).
+export function isDevHost(hostname) {
+  const h = hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h === '::1') return true;
+  const m = h.match(/^(\d+)\.(\d+)\.\d+\.\d+$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  return a === 10 || a === 127 || a === 0 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254);
+}
 
 // Returns an error message when the URL must not ship in a store build, otherwise null.
 export function checkStoreServerUrl(server) {
@@ -17,7 +27,7 @@ export function checkStoreServerUrl(server) {
   if (u.protocol !== 'https:') {
     return `CAP_SERVER_URL (${server}) must be HTTPS for store builds.`;
   }
-  if (/(^|\.)example\.(com|org|net)$/i.test(u.hostname) || u.hostname === 'localhost') {
+  if (/(^|\.)example\.(com|org|net)$/i.test(u.hostname) || isDevHost(u.hostname)) {
     return `CAP_SERVER_URL (${server}) is a placeholder: set the real published site URL (e.g. https://mestolo.vercel.app).`;
   }
   return null;
@@ -53,7 +63,10 @@ function main() {
   writeFileSync('mobile/www/config.js', `window.MESTOLO_SERVER = ${JSON.stringify(server)};\n`);
 
   const plist = 'ios/App/App/Info.plist';
-  if (existsSync(plist)) {
+  if (isDevHost(url.hostname)) {
+    // Info.plist is tracked: never write development hosts into it (it would end up committed/published).
+    console.warn(`! ${url.hostname} is a development host: ios/App/App/Info.plist (WKAppBoundDomains) left untouched.`);
+  } else if (existsSync(plist)) {
     let s = readFileSync(plist, 'utf8');
     const block = `<key>WKAppBoundDomains</key>\n\t<array>\n\t\t<string>${url.hostname}</string>\n\t</array>`;
     if (s.includes('<key>WKAppBoundDomains</key>')) {

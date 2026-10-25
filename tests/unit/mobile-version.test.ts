@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain .mjs script without type declarations
 import * as v from '../../scripts/mobile-version.mjs';
 // @ts-expect-error plain .mjs script without type declarations
-import { checkStoreServerUrl } from '../../scripts/mobile-prepare.mjs';
+import { checkStoreServerUrl, isDevHost } from '../../scripts/mobile-prepare.mjs';
+
+// @ts-expect-error plain .mjs script without type declarations
+import { findDevHosts } from '../../scripts/check-mobile-config.mjs';
 
 describe('mobile-version', () => {
   it('validates semver and build numbers', () => {
@@ -37,5 +40,20 @@ describe('checkStoreServerUrl', () => {
   });
   it('accepts a real https URL', () => {
     expect(checkStoreServerUrl('https://mestolo.vercel.app')).toBeNull();
+  });
+});
+
+describe('development hosts', () => {
+  it('detects localhost, loopback and private IPs only', () => {
+    for (const h of ['localhost', '127.0.0.1', '10.0.0.5', '192.168.1.2', '172.20.1.1', 'pc.local', '[::1]']) expect(isDevHost(h)).toBe(true);
+    for (const h of ['mestolo.vercel.app', '8.8.8.8', '172.32.0.1']) expect(isDevHost(h)).toBe(false);
+  });
+  it('refuses a development host in store builds', () => {
+    expect(checkStoreServerUrl('https://192.168.1.2')).toMatch(/placeholder/i);
+  });
+  it('finds development hosts in the plist WKAppBoundDomains', () => {
+    const plist = (h: string) => `<dict>\n\t<key>WKAppBoundDomains</key>\n\t<array>\n\t\t<string>${h}</string>\n\t</array>\n</dict>`;
+    expect(findDevHosts(plist('localhost'))).toEqual(['localhost']);
+    expect(findDevHosts(plist('mestolo.vercel.app'))).toEqual([]);
   });
 });
