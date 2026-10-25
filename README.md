@@ -44,7 +44,8 @@ src/lib/recipes/       parser ingredienti/testo, unità, categorie, duplicati, s
 src/lib/import/        protezione SSRF, fetch sicuro, estrazione Schema.org/microdata
 src/lib/ai/            provider, prompt, risoluzione chiave/quote
 supabase/migrations/   schema versionato con RLS e storage
-tests/unit/            131 test unitari          tests/db/   22 test RLS su Postgres reale
+tests/unit/            test unitari (Vitest)     tests/db/   test RLS su Postgres reale
+e2e/                   test end-to-end (Playwright)
 messages/              traduzioni dell'interfaccia (6 lingue)
 ```
 
@@ -212,14 +213,23 @@ Da Impostazioni l’utente attiva i promemoria dei pasti del piano settimanale (
 
 | Comando | Cosa verifica | Risultato |
 |---|---|---|
-| `npm test` | 131 test unitari: parser ingredienti (6 lingue), testo incollato, durate, estrazione Schema.org/microdata/testo, SSRF (IP privati, DNS, rebinding), cifratura chiavi, provider AI, normalizzazione output AI, applicazione selettiva dei suggerimenti, traduzioni (struttura e invalidazione), sostituzioni, categorie, duplicati, scalatura, unione lista spesa, export, validazione input, completezza i18n (chiavi usate nel codice, 6 lingue, sintassi ICU) | ✅ 131/131 |
-| `npm run db:test:local` | 22 test **su PostgreSQL 16 reale** con migrazioni applicate e uno stub degli schemi `auth`/`storage` di Supabase: privata di default, accesso negato ad altri utenti (anche via storage con path esatto), amici solo se accettati, blocchi, immagini importate solo al proprietario, chiavi API illeggibili, traduzioni/uso AI non falsificabili, attribuzione non falsificabile, versioni e originale, invalidazione hash, moderazione, note/raccolte/liste/piano privati, segnalazioni, ricerca utenti, categorie altrui | ✅ 22/22 |
+| `npm test` | Test unitari (Vitest, centinaia di casi in `tests/unit/`): parser ingredienti (6 lingue), testo incollato, durate, estrazione Schema.org/microdata/testo, SSRF (IP privati, DNS, rebinding), cifratura chiavi, provider AI, normalizzazione output AI, applicazione selettiva dei suggerimenti, traduzioni (struttura e invalidazione), sostituzioni, categorie, duplicati, scalatura, unione lista spesa, export, validazione input, completezza i18n (chiavi usate nel codice, 6 lingue, sintassi ICU) | ✅ passati |
+| `npm run db:test:local` | Test RLS **su PostgreSQL 16 reale** con migrazioni applicate e uno stub degli schemi `auth`/`storage` di Supabase: privata di default, accesso negato ad altri utenti (anche via storage con path esatto), amici solo se accettati, blocchi, immagini importate solo al proprietario, chiavi API illeggibili, traduzioni/uso AI non falsificabili, attribuzione non falsificabile, versioni e originale, invalidazione hash, moderazione, note/raccolte/liste/piano privati, segnalazioni, ricerca utenti, categorie altrui | ✅ passati |
 | `npm run typecheck`, `npm run lint`, `npm run build` | Tipi, regole React/Next, build di produzione | ✅ |
 | Verifica visiva | Screenshot di landing, login, home, ricettario, ricetta, editor, import foto, spesa, piano, Scopri a 390 px e 1280 px, tema chiaro e scuro, con un **server fittizio** che imita l’API Supabase | ✅ nessun errore in pagina |
 
 **Dichiarazione sui mock**: i test dei provider AI usano `fetch` simulato e verificano formato delle richieste, gestione delle chiavi e validazione delle risposte, **non** il comportamento reale dei provider. Lo stub Supabase per i test RLS riproduce `auth.uid()`, ruoli e `storage.objects`, non l’intera piattaforma. La verifica visiva usa dati fittizi.
 
-`npm run db:test:local` richiede `initdb`/`pg_ctl` (PostgreSQL ≥ 15) e un utente non root.
+Il numero di test cambia a ogni PR, quindi non è riportato qui: `npm test` lo stampa a fine esecuzione.
+
+**Eseguire le suite**
+
+| Suite | Comando | Requisiti |
+|---|---|---|
+| Unitari | `npm test` (`npm run test:watch` in modalità watch) | nessuno |
+| DB / RLS | `npm run db:test:local` (avvia un PostgreSQL temporaneo e applica le migrazioni) | `initdb`/`pg_ctl` (PostgreSQL ≥ 15) e un utente non root |
+| DB / RLS su un Postgres già pronto | `npm run test:db` | `TEST_DATABASE_URL` con stub Supabase (`supabase/tests/supabase-stub.sql`) e migrazioni applicate |
+| End-to-end | `npm run test:e2e` | progetto Supabase di staging, vedi sotto |
 
 ### Test end-to-end (Playwright)
 
