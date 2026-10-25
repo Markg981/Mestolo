@@ -578,6 +578,7 @@
     "ocrHint": "The first time it may take a few seconds to prepare the reader.",
     "ocrEmpty": "Could not read any text from the photos. Try a sharper, well-lit photo, or use AI.",
     "ocrFailed": "On-device reading failed. You can retry or use AI.",
+    "ocrTimeout": "Reading a page took too long. Retry with a sharper photo or use AI.",
     "ocrTextLabel": "Recognized text",
     "ocrTextHint": "Fix any reading errors, then analyze the text: the result opens in the review screen.",
     "ocrParse": "Analyze the text",

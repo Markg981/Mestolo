@@ -578,6 +578,7 @@
     "ocrHint": "Beim ersten Mal kann die Vorbereitung des Lesers einige Sekunden dauern.",
     "ocrEmpty": "Aus den Fotos konnte kein Text gelesen werden. Versuche ein schärferes, gut beleuchtetes Foto oder nutze die KI.",
     "ocrFailed": "Das Lesen auf dem Gerät ist fehlgeschlagen. Du kannst es erneut versuchen oder die KI nutzen.",
+    "ocrTimeout": "Das Lesen einer Seite hat zu lange gedauert. Versuche es mit einem schärferen Foto oder nutze die KI.",
     "ocrTextLabel": "Erkannter Text",
     "ocrTextHint": "Korrigiere Lesefehler und analysiere dann den Text: Das Ergebnis öffnet sich in der Prüfansicht.",
     "ocrParse": "Text analysieren",
