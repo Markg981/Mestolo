@@ -8,6 +8,7 @@ import { capabilityStatus } from '@/lib/ai/service';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { isTranslationFresh, mergeTranslation, translatedPayloadSchema } from '@/lib/recipes/translation';
 import { formatMinutes } from '@/lib/recipes/duration';
+import { knownDiets } from '@/lib/recipes/diets';
 import { isLocale } from '@/i18n/config';
 import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { IngredientList } from '@/components/recipes/IngredientList';
@@ -76,6 +77,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
     ['total', recipe.total_minutes, 'total_minutes'],
   ] as const;
   const flags = recipe.field_flags ?? {};
+  const dietHints = knownDiets(recipe.diet_hints);
   const nutrition = await getRecipeNutrition(id);
 
   return (
@@ -145,6 +147,11 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
                 </li>
               ))}
             </ul>
+          )}
+          {dietHints.length > 0 && (
+            <p className="text-sm text-muted">
+              {t('recipe.dietHints', { diets: dietHints.map((d) => t(`settings.diets.${d}`)).join(', ') })}
+            </p>
           )}
           {(recipe.steps?.length ?? 0) > 0 && (
             <LinkButton href={`/recipes/${id}/cook`} variant="primary" size="lg" className="self-start">

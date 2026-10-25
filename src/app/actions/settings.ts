@@ -12,13 +12,14 @@ import { env } from '@/lib/env';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
 import { richProfileSchema } from '@/lib/profile/validation';
+import { DIETS } from '@/lib/recipes/diets';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const profileSchema = richProfileSchema.extend({
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,24}$/),
   display_name: z.string().trim().max(60),
   discoverable: z.boolean(),
-  dietary_preferences: z.array(z.enum(['vegetarian', 'vegan', 'pescatarian', 'no_pork', 'no_alcohol'])).max(5),
+  dietary_preferences: z.array(z.enum(DIETS)).max(DIETS.length),
   avoided_ingredients: z.array(z.string().trim().min(1).max(40)).max(30),
   hidden_categories: z.array(z.string().max(40)).max(20),
 });

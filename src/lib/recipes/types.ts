@@ -87,8 +87,12 @@ export interface ImportDraft {
     name?: string | null;
     attribution?: string | null;
     imageUrl?: string | null;
-    method?: 'jsonld' | 'microdata' | 'text' | 'ai' | 'heuristic';
+    method?: 'jsonld' | 'microdata' | 'text' | 'ai' | 'heuristic' | 'file';
   };
+  /** diet hints declared by the author (only from a Mestolo export file): never verified */
+  diet_hints?: string[];
+  /** personal note carried by a Mestolo export file */
+  personal_note?: string;
   categoryConfidence?: number;
   /** Per-serving values found in schema.org NutritionInformation (saved with source 'imported'). */
   nutrition?: NutritionValues | null;

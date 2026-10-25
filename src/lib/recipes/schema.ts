@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { VISIBILITIES } from './types';
+import { DIETS, knownDiets } from './diets';
 
 /** Limiti di lunghezza: fonte unica per schema zod ed editor (maxLength). */
 export const RECIPE_LIMITS = {
@@ -72,7 +73,12 @@ export const recipeInputSchema = z.object({
     .refine((r) => Object.keys(r).length <= FIELD_FLAGS_MAX)
     .default({}),
   verification_status: z.enum(['verified', 'needs_review']).default('verified'),
-  diet_hints: z.array(z.string().max(40)).max(20).default([]),
+  // dichiarate dall'autore, mai verificate
+  diet_hints: z
+    .array(z.enum(DIETS))
+    .max(DIETS.length)
+    .transform((d) => knownDiets(d))
+    .default([]),
   // provenance (only for new recipes coming from an import)
   source_type: z.enum(['manual', 'photo', 'url', 'text']).default('manual'),
   source_url: z

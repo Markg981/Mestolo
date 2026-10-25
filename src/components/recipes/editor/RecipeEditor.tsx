@@ -11,6 +11,7 @@ import { createCategory } from '@/app/actions/organize';
 import { parseIngredientLines } from '@/lib/recipes/ingredient-parser';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { RECIPE_LIMITS } from '@/lib/recipes/schema';
+import { DIETS } from '@/lib/recipes/diets';
 import { UNIT_KEYS } from '@/lib/recipes/units';
 import { RECIPE_LANGUAGES } from '@/i18n/config';
 import { compressImage } from '@/lib/images/client-compress';
@@ -64,6 +65,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
     return `${label}${n}`;
   };
   const tCat = useTranslations('categories');
+  const ts = useTranslations('settings');
   const locale = useLocale();
   const router = useRouter();
 
@@ -421,6 +423,23 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
           <Field label={t('tags')} htmlFor="tags" hint={t('tagsHint')}>
             <Input id="tags" value={s.tags} onChange={(e) => set('tags', e.target.value)} placeholder={t('tagsPlaceholder')} />
           </Field>
+          <fieldset className="flex flex-col gap-1" aria-describedby="diet-hint">
+            <legend className="mb-1 font-semibold">{t('dietHints')}</legend>
+            <p id="diet-hint" className="text-sm text-muted">
+              {t('dietHintsHint')}
+            </p>
+            <div className="flex flex-wrap gap-x-5">
+              {DIETS.map((d) => {
+                const on = (s.diet_hints ?? []).includes(d);
+                return (
+                  <label key={d} className="flex min-h-11 items-center gap-2">
+                    <input type="checkbox" checked={on} onChange={() => set('diet_hints', on ? (s.diet_hints ?? []).filter((x) => x !== d) : [...(s.diet_hints ?? []), d])} className="size-5 accent-[var(--basil)]" />
+                    {ts(`diets.${d}`)}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
         </section>
 
         <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

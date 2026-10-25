@@ -387,7 +387,8 @@
     "saveNote": "Save note",
     "noteSaved": "Note saved.",
     "hiddenTitle": "Recipe hidden by moderation",
-    "hiddenLead": "After several reports, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake, contact support."
+    "hiddenLead": "After several reports, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake, contact support.",
+    "dietHints": "According to the author (not verified): {diets}"
   },
   "nutrition": {
     "title": "Nutrition facts",
@@ -541,7 +542,9 @@
     "publicImportWarning": "This recipe comes from an external source: only make it public if you have the right to. You can always change your mind later.",
     "verifiedCheck": "I've checked the imported details",
     "verifiedHint": "If you leave this unchecked, the recipe stays marked \"Needs review\".",
-    "saveImported": "Save recipe"
+    "saveImported": "Save recipe",
+    "dietHints": "Author's diet notes",
+    "dietHintsHint": "Optional and not verified by Mestolo: with allergies or intolerances always check the ingredients."
   },
   "photo": {
     "title": "Import from photo",

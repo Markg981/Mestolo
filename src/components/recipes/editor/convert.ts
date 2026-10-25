@@ -1,4 +1,5 @@
 import { normalizeUnit } from '@/lib/recipes/units';
+import { knownDiets } from '@/lib/recipes/diets';
 import type { FieldFlags, ImportDraft, Ingredient, RecipeRow, Step } from '@/lib/recipes/types';
 import type { EditorCategory, EditorIngredient, EditorState, EditorStep } from './types';
 
@@ -50,6 +51,7 @@ export function stateFromRecipe(r: RecipeRow, note: string, unitLabel: (key: str
     visibility: r.visibility,
     personal_note: note,
     field_flags: r.field_flags ?? {},
+    diet_hints: knownDiets(r.diet_hints),
   };
 }
 
@@ -69,8 +71,9 @@ export function stateFromDraft(d: ImportDraft, categories: EditorCategory[], uni
     category_id: cat?.id ?? '',
     tags: c.tags.join(', '),
     visibility: 'private',
-    personal_note: '',
+    personal_note: d.personal_note ?? '',
     field_flags: d.field_flags,
+    diet_hints: knownDiets(d.diet_hints),
   };
 }
 
@@ -90,6 +93,7 @@ export function emptyState(locale: string): EditorState {
     visibility: 'private',
     personal_note: '',
     field_flags: {},
+    diet_hints: [],
   };
 }
 
@@ -171,6 +175,7 @@ export function toPayload(s: EditorState, labelToUnit: Map<string, string>, opts
     visibility: s.visibility,
     personal_note: s.personal_note,
     field_flags,
+    diet_hints: knownDiets(s.diet_hints),
     verification_status: opts.review && anyFlags ? ('needs_review' as const) : anyFlags ? ('needs_review' as const) : ('verified' as const),
   };
 }
