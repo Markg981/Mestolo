@@ -192,11 +192,6 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
     if (!src) return fail('not_found');
     const s = src as RecipeRow;
     const own = s.owner_id === user.id;
-    let authorName: string | null = s.original_author_name;
-    if (!own && !authorName) {
-      const { data: p } = await supabase.from('profiles').select('username').eq('id', s.owner_id).maybeSingle();
-      authorName = p?.username ? `@${p.username}` : null;
-    }
     const { data, error } = await supabase
       .from('recipes')
       .insert({
@@ -222,7 +217,6 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
         parent_recipe_id: mode === 'variant' ? s.id : null,
         copied_from_recipe_id: own ? null : s.id,
         original_author_id: own ? null : (s.original_author_id ?? s.owner_id),
-        original_author_name: own ? null : authorName,
         last_change_source: 'copy',
       })
       .select('id')
