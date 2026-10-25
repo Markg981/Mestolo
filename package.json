@@ -85,5 +85,11 @@
     "typescript": "5.9.3",
     "vitest": "5.0.5"
   },
+  "overrides": {
+    "@capacitor/assets": {
+      "sharp": "$sharp",
+      "tar": "^7.5.22"
+    }
+  },
   "type": "module"
 }
