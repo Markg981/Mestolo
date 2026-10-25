@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 import { X } from 'lucide-react';
 import { buttonClass, cx } from './ui';
@@ -18,6 +18,8 @@ export function SubmitButton({ children, pendingLabel, variant = 'primary', clas
 /** Accessible modal built on the native <dialog> element (focus trap + Esc handled by the browser). */
 export function Modal({ open, onClose, title, children, closeLabel }: { open: boolean; onClose: () => void; title: string; children: ReactNode; closeLabel: string }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Id unico: con un id fisso piu' modali nella stessa pagina prendevano tutte il titolo della prima
+  const titleId = useId();
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -28,12 +30,12 @@ export function Modal({ open, onClose, title, children, closeLabel }: { open: bo
     <dialog
       ref={ref}
       onClose={onClose}
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
       className="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-[var(--radius-card)] border border-line bg-surface p-0 text-ink shadow-2xl"
     >
       <div className="sheet-in flex flex-col gap-4 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
-          <h2 id="modal-title" className="text-xl font-bold">
+          <h2 id={titleId} className="text-xl font-bold">
             {title}
           </h2>
           <button type="button" onClick={onClose} className={cx(buttonClass('ghost', 'sm'), 'size-10 px-0')} aria-label={closeLabel}>

@@ -47,6 +47,7 @@ test.describe('importazione', () => {
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify({ hello: 'world' })),
     });
-    await expect(page.getByText("Questo file non è un'esportazione di Mestolo.")).toBeVisible();
+    // Il testo usa l'apostrofo tipografico (’)
+    await expect(page.getByText(/Questo file non è un.esportazione di Mestolo\./)).toBeVisible();
   });
 });

@@ -32,7 +32,8 @@ test.describe('eliminazione dell\'account', () => {
       await u.page.getByLabel('Email').fill(u.user.email);
       await u.page.getByLabel('Password').fill(u.user.password);
       await u.page.getByRole('button', { name: 'Accedi' }).click();
-      await expect(u.page.getByRole('alert')).toContainText('Email o password non corrette.');
+      // Il route announcer di Next e' anch'esso un role=alert
+      await expect(u.page.getByRole('alert').filter({ hasText: 'Email o password non corrette.' })).toBeVisible();
       await expect(u.page).toHaveURL(/\/login/);
     } finally {
       await u.close();
