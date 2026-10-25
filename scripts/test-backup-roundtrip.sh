@@ -58,4 +58,6 @@ b="$(psql "$restore" -At -c "$probe")"
 echo "sorgente:   $a"
 echo "ripristino: $b"
 if [ "$a" != "$b" ]; then echo "::error::il ripristino differisce dalla sorgente (ricette|policy|trigger|funzioni|trigger auth|indici|vincoli)"; exit 1; fi
+g="$(psql "$restore" -At -c "select has_schema_privilege('authenticated', 'private', 'usage') and has_function_privilege('authenticated', 'private.is_blocked_between(uuid, uuid)', 'execute')")"
+if [ "$g" != t ]; then echo "::error::authenticated senza grant su private.is_blocked_between dopo il restore"; exit 1; fi
 echo "Round trip del backup OK ($stamp)"
