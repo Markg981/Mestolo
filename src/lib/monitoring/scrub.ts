@@ -50,17 +50,21 @@ const SPAN_URL_KEY = /^(url|url\.full|http\.url|http\.query|url\.query|url\.frag
 /** Scrubs one span of a transaction: URLs lose their query string, any other value is redacted. */
 export function scrubSpan<T extends object>(span: T): T {
   const sp = { ...(span as Loose) };
-  if (typeof sp.description === 'string') sp.description = stripQuery(sp.description);
-  const data = sp.data as Loose | undefined;
-  if (data && typeof data === 'object') {
+  // Static spans use description/data, streamed spans use name/attributes.
+  for (const key of ['description', 'name']) {
+    if (typeof sp[key] === 'string') sp[key] = stripQuery(sp[key]);
+  }
+  for (const key of ['data', 'attributes']) {
+    const data = sp[key] as Loose | undefined;
+    if (!data || typeof data !== 'object') continue;
     const out: Loose = {};
     for (const [k, v] of Object.entries(data)) {
       if (/query$|fragment$/.test(k) && k !== 'url') out[k] = REDACTED;
-      else if (SPAN_URL_KEY.test(k) || typeof v === 'string' && /^https?:\/\/|^\//.test(v)) {
+      else if (SPAN_URL_KEY.test(k) || (typeof v === 'string' && /^https?:\/\/|^\//.test(v))) {
         out[k] = typeof v === 'string' ? stripQuery(v) : scrubValue(v);
       } else out[k] = scrubValue(v);
     }
-    sp.data = out;
+    sp[key] = out;
   }
   return sp as T;
 }
@@ -108,6 +112,7 @@ export function sentryOptions(dsn: string | undefined) {
     tracesSampleRate: Number.isFinite(rate) && rate >= 0 && rate <= 1 ? rate : 0.05,
     beforeSend: <T extends object>(e: T): T => scrubEvent(e),
     beforeSendTransaction: <T extends object>(e: T): T => scrubEvent(e),
+    beforeSendSpan: <T extends object>(sp: T): T => scrubSpan(sp),
     beforeBreadcrumb: <T extends object>(b: T): T => scrubBreadcrumb(b),
   };
 }

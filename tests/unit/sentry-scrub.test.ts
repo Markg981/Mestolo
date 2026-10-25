@@ -76,6 +76,13 @@ describe('scrubSpan / spans di una transazione', () => {
     expect(out.spans[0].description).toBe('GET https://x.supabase.co/rest/v1/profiles');
   });
 
+  it('copre anche gli span streamed (name/attributes) tramite beforeSendSpan', () => {
+    const streamed = { name: `GET ${url}`, attributes: { 'url.full': url, 'http.query': 'username=eq.mario_rossi' } };
+    const out = sentryOptions('https://k@o1.ingest.sentry.io/1').beforeSendSpan(streamed);
+    expect(JSON.stringify(out)).not.toContain('mario_rossi');
+    expect(out.name).toBe('GET https://x.supabase.co/rest/v1/profiles');
+  });
+
   it("non modifica lo span originale", () => {
     scrubSpan(span);
     expect(span.data.url).toBe(url);
