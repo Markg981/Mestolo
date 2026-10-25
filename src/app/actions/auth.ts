@@ -98,6 +98,10 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
     },
   });
   if (error) {
+    // Limite di invio email di Supabase (429 over_email_send_rate_limit)
+    if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
+      return { error: 'rate_limited', email: parsed.data.email };
+    }
     if (/registered|exists/i.test(error.message)) return { error: 'auth_email_taken', email: parsed.data.email };
     if (/password/i.test(error.message)) return { error: 'auth_weak_password', email: parsed.data.email };
     return { error: 'generic', email: parsed.data.email };
