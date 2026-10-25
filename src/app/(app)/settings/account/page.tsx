@@ -19,10 +19,13 @@ export default async function AccountPage() {
       <Card className="flex flex-col gap-3">
         <h2 className="text-xl font-bold">{t('exportTitle')}</h2>
         <p className="text-muted">{t('exportLead')}</p>
-        <div>
+        <div className="flex flex-wrap gap-3">
           <a href="/api/account/export" className={buttonClass('secondary')}>
             {t('exportButton')}
           </a>
+          <Link href="/import/file" className={buttonClass('secondary')}>
+            {t('importButton')}
+          </Link>
         </div>
       </Card>
       <Card className="flex flex-col gap-3">
