@@ -1,0 +1,108 @@
+name: Restore verify
+
+on:
+  schedule:
+    - cron: '47 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      GH_TOKEN: ${{ github.token }}
+      TARGET: postgresql://postgres:pw@localhost:5432/postgres
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "${BACKUP_PASSPHRASE}" ]; then
+            echo "::error::BACKUP_PASSPHRASE non impostato: impossibile verificare il restore."
+            exit 1
+          fi
+
+      - name: Install PostgreSQL 17 client
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Download latest backup
+        run: |
+          set -euo pipefail
+          umask 077
+          run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "::error::Nessun run riuscito di backup.yml: nessun backup da verificare."
+            exit 1
+          fi
+          mkdir -p dl work
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'db-backup-*' --dir dl
+          f="$(ls dl/*/backup-*.tar.gpg | head -n1)"
+          gpg --batch --pinentry-mode loopback --passphrase-fd 3 --output work/backup.tar --decrypt "$f" 3<<<"$BACKUP_PASSPHRASE"
+          tar -xf work/backup.tar -C work
+          ls -l work
+
+      - name: Prepare Supabase-like roles and stubs
+        run: |
+          set -euo pipefail
+          psql "$TARGET" -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+          create role service_role nologin;
+          create schema if not exists auth;
+          create schema if not exists storage;
+          create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+          create or replace function auth.role() returns text language sql stable as $$ select null::text $$;
+          create extension if not exists pgcrypto;
+          create table storage.buckets (id text primary key, name text, public boolean);
+          create table storage.objects (id uuid primary key, bucket_id text, name text);
+          SQL
+
+      - name: Restore
+        run: |
+          set -uo pipefail
+          # Errori non bloccanti (ruoli/estensioni Supabase) sono attesi: l'esito si decide sui conteggi
+          pg_restore --no-owner --no-privileges --dbname "$TARGET" work/auth-*.dump || echo "::warning::pg_restore auth con errori"
+          pg_restore --no-owner --no-privileges --dbname "$TARGET" work/public-*.dump || echo "::warning::pg_restore public con errori"
+          pg_restore --data-only --disable-triggers --no-owner --dbname "$TARGET" work/storage-meta-*.dump || echo "::warning::pg_restore storage-meta con errori"
+
+      - name: Compare row counts with manifest
+        run: |
+          set -euo pipefail
+          fail=0
+          while read -r table expected; do
+            actual="$(psql "$TARGET" -At -c "select count(*) from $table" 2>/dev/null || echo ERR)"
+            if [ "$actual" = "ERR" ]; then
+              echo "::error::$table: tabella non ripristinata (atteso $expected)"; fail=1; continue
+            fi
+            echo "$table atteso=$expected ripristinato=$actual"
+            case "$table" in public.recipes|public.profiles|auth.users)
+              if [ "$actual" -le 0 ]; then echo "::error::$table vuota dopo il restore"; fail=1; fi ;;
+            esac
+            # Tolleranza 2% (min 5 righe): i dump per schema non condividono lo snapshot
+            tol=$(( expected / 50 )); [ "$tol" -lt 5 ] && tol=5
+            diff=$(( actual > expected ? actual - expected : expected - actual ))
+            if [ "$diff" -gt "$tol" ]; then echo "::error::$table: conteggio $actual diverso dal manifest $expected"; fail=1; fi
+          done < <(cat work/manifest-*.txt)
+          exit $fail
