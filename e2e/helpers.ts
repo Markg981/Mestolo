@@ -4,6 +4,22 @@ import { expect, type Page } from '@playwright/test';
 /** Prefisso di tutti gli utenti creati dai test: il teardown cancella quelli che lo hanno. */
 export const E2E_PREFIX = 'e2e-';
 export const E2E_DOMAIN = 'example.com';
+/** Oltre questa eta' un utente di test e' un residuo di un'esecuzione interrotta. */
+const STALE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Identificativo dell'esecuzione corrente, impostato da global-setup e ereditato dai worker.
+ * Piu' esecuzioni (PR diverse) girano in parallelo sullo stesso staging: ognuna cancella
+ * solo i propri utenti, mai quelli delle altre.
+ */
+export function runId(): string {
+  if (!process.env.E2E_RUN_ID) process.env.E2E_RUN_ID = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  return process.env.E2E_RUN_ID;
+}
+
+function runPrefix(): string {
+  return `${E2E_PREFIX}${runId()}-`;
+}
 
 export function requireEnv(name: string): string {
   const v = process.env[name];
@@ -26,7 +42,7 @@ export interface TestUser {
 export function randomUser(tag: string): TestUser {
   const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   return {
-    email: `${E2E_PREFIX}${tag}-${id}@${E2E_DOMAIN}`,
+    email: `${runPrefix()}${tag}-${id}@${E2E_DOMAIN}`,
     password: `Pw-${id}-Test1!`,
     username: `${E2E_PREFIX.replace('-', '_')}${tag}_${id}`.slice(0, 24),
   };
@@ -44,15 +60,20 @@ export async function createTestUser(user: TestUser): Promise<string> {
   return data.user.id;
 }
 
-/** Cancella tutti gli utenti di test (e, a cascata, i loro dati). */
-export async function deleteTestUsers(): Promise<number> {
+/**
+ * Cancella gli utenti di test (e, a cascata, i loro dati): quelli dell'esecuzione corrente
+ * se `ownRun`, e in ogni caso i residui piu' vecchi di STALE_MS lasciati da altre esecuzioni.
+ */
+export async function deleteTestUsers({ ownRun }: { ownRun: boolean }): Promise<number> {
   const admin = adminClient();
   let deleted = 0;
   for (let page = 1; page <= 20; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw new Error(`Elenco utenti fallito: ${error.message}`);
     for (const u of data.users) {
-      if (u.email?.startsWith(E2E_PREFIX) && u.email.endsWith(`@${E2E_DOMAIN}`)) {
+      if (!u.email?.startsWith(E2E_PREFIX) || !u.email.endsWith(`@${E2E_DOMAIN}`)) continue;
+      const stale = Date.now() - new Date(u.created_at).getTime() > STALE_MS;
+      if (stale || (ownRun && u.email.startsWith(runPrefix()))) {
         const { error: delError } = await admin.auth.admin.deleteUser(u.id);
         if (delError) console.warn(`Impossibile cancellare ${u.email}: ${delError.message}`);
         else deleted++;
