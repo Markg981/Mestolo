@@ -23,7 +23,7 @@ test.describe('ricette, spesa e piano pasti', () => {
     await page.getByLabel('Quantità', { exact: true }).first().fill('200');
     await page.getByLabel('Unità', { exact: true }).first().fill('g');
     await page.getByLabel('Ingrediente', { exact: true }).first().fill(ingredient);
-    await page.getByLabel('Passaggio 1').fill('Mescola tutto e cuoci.');
+    await page.getByLabel('Passaggio 1', { exact: true }).fill('Mescola tutto e cuoci.');
     await page.getByRole('button', { name: 'Salva', exact: true }).click();
 
     await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]{36}/);
