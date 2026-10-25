@@ -7,8 +7,8 @@ const UNICODE_FRACTIONS: Record<string, number> = {
 };
 const FRACTION_CHARS = Object.keys(UNICODE_FRACTIONS).join('');
 
-// A single number: "1", "1,5", "1.5", "1/2", "1 1/2", "1½", "½", "1.000"
-const NUM = `(?:\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\/\\d+|\\s*[${FRACTION_CHARS}])?|[${FRACTION_CHARS}])`;
+// A single number: "1", "1,5", "1.5", "1/2", "1 / 2" (OCR), "1 1/2", "1½", "½", "1.000"
+const NUM = `(?:\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\s*\\/\\s*\\d+|\\s*[${FRACTION_CHARS}])?|[${FRACTION_CHARS}])`;
 const RANGE_RE = new RegExp(`^(${NUM})(?:\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\s*(${NUM}))?`, 'i');
 
 /** Units for which "N,ddd" / "N.ddd" is plausibly a thousands group (small units). */
@@ -24,7 +24,7 @@ const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
  *    with any other unit (kg, l, cup...) it is decimal ("1,250 kg" = 1.25).
  */
 export function parseNumber(token: string, unit?: string | null): number | null {
-  const t = token.trim();
+  const t = token.trim().replace(/\s*\/\s*/g, '/');
   if (!t) return null;
   if (t in UNICODE_FRACTIONS) return UNICODE_FRACTIONS[t];
 

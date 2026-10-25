@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 
-function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[]; cook?: unknown[] } = {}) {
+function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[]; cook?: unknown[]; cookError?: boolean } = {}) {
   const calls: string[] = [];
+  const filters: string[] = [];
   const remove = vi.fn(async (p: string[]) => {
     calls.push(`remove:${p.length}`);
     return { error: opts.removeError ? { message: 'boom' } : null };
@@ -13,9 +14,10 @@ function make(opts: { removeError?: boolean; deleteError?: { status?: number; co
   });
   const admin = {
     from: (table: string) => ({
-      select: () => ({
-        eq: async () => {
-          if (table === 'cook_logs') return { data: opts.cook ?? [], error: null };
+      select: (cols: string) => ({
+        eq: async (col: string, val: string) => {
+          filters.push(`${table}(${cols}).${col}=${val}`);
+          if (table === 'cook_logs') return opts.cookError ? { data: null, error: { message: 'boom' } } : { data: opts.cook ?? [], error: null };
           calls.push('list');
           return { data: opts.rows ?? [{ storage_path: 'a', thumb_path: 'a_t' }, { storage_path: 'b', thumb_path: null }], error: null };
         },
@@ -24,7 +26,7 @@ function make(opts: { removeError?: boolean; deleteError?: { status?: number; co
     storage: { from: () => ({ remove }) },
     auth: { admin: { deleteUser } },
   } as unknown as DeletionAdmin;
-  return { admin, calls, remove, deleteUser };
+  return { admin, calls, filters, remove, deleteUser };
 }
 
 describe('deleteAccountData', () => {
@@ -39,6 +41,20 @@ describe('deleteAccountData', () => {
     await deleteAccountData(m.admin, 'u1');
     expect(m.remove).toHaveBeenCalledWith(['u1/cook/x.webp']);
     expect(m.calls).toEqual(['list', 'remove:1', 'deleteUser']);
+  });
+
+  it('filters each table by the column that holds the user, and removes all files together', async () => {
+    const m = make({ cook: [{ photo_path: 'u1/cook/x.webp' }] });
+    await deleteAccountData(m.admin, 'u1');
+    expect(m.filters).toEqual(['recipe_images(storage_path, thumb_path).owner_id=u1', 'cook_logs(photo_path).user_id=u1']);
+    expect(m.remove).toHaveBeenCalledWith(['a', 'a_t', 'b', 'u1/cook/x.webp']);
+  });
+
+  it('does not touch storage nor the auth user if listing the cooked-diary photos fails', async () => {
+    const m = make({ cookError: true });
+    await expect(deleteAccountData(m.admin, 'u1')).rejects.toThrow(/cook photos/);
+    expect(m.remove).not.toHaveBeenCalled();
+    expect(m.deleteUser).not.toHaveBeenCalled();
   });
 
   it('chunks removals by 100', async () => {
