@@ -104,6 +104,7 @@
     "not_found": "Elemento non trovato o non più disponibile.",
     "forbidden": "Non hai i permessi per questa operazione.",
     "invalid_input": "Alcuni dati non sono validi. Controlla i campi e riprova.",
+    "invalid_input_field": "Campo non valido: {field}. Controllalo e riprova.",
     "rate_limited": "Hai fatto molte richieste in poco tempo. Attendi qualche minuto e riprova.",
     "config": "Questa funzione non è ancora configurata sul server.",
     "ai_not_configured": "Nessun servizio AI configurato. Aggiungi una tua chiave nelle impostazioni AI oppure continua manualmente.",

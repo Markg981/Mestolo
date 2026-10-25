@@ -10,6 +10,7 @@ import { uploadRecipeImage, importSourceImage } from '@/app/actions/images';
 import { createCategory } from '@/app/actions/organize';
 import { parseIngredientLines } from '@/lib/recipes/ingredient-parser';
 import { suggestCategory } from '@/lib/recipes/classify';
+import { RECIPE_LIMITS } from '@/lib/recipes/schema';
 import { UNIT_KEYS } from '@/lib/recipes/units';
 import { RECIPE_LANGUAGES } from '@/i18n/config';
 import { compressImage } from '@/lib/images/client-compress';
@@ -56,6 +57,12 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
   const tv = useTranslations('visibility');
   const tw = useTranslations('warnings');
   const te = useTranslations('errors');
+  const fieldLabel = (path: string) => {
+    const [head, idx] = path.split('.');
+    const n = /^\d+$/.test(idx ?? '') ? ` ${Number(idx) + 1}` : '';
+    const label = head === 'ingredients' ? t('ingredientName') : head === 'steps' ? t('steps') : head === 'title' ? t('title') : head;
+    return `${label}${n}`;
+  };
   const tCat = useTranslations('categories');
   const locale = useLocale();
   const router = useRouter();
@@ -226,7 +233,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
     startSaving(async () => {
       const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);
       if (!res.ok) {
-        setError(te(res.error));
+        setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
         return;
       }
       const id = res.data.id;
@@ -359,10 +366,10 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
 
         <section className="flex flex-col gap-5">
           <Field label={t('title')} htmlFor="title" flag={<FlagBadges flags={s.field_flags.title} />}>
-            <Input id="title" required maxLength={200} value={s.title} onChange={(e) => set('title', e.target.value, 'title')} placeholder={t('titlePlaceholder')} className="font-display text-xl font-bold" />
+            <Input id="title" required maxLength={RECIPE_LIMITS.title} value={s.title} onChange={(e) => set('title', e.target.value, 'title')} placeholder={t('titlePlaceholder')} className="font-display text-xl font-bold" />
           </Field>
           <Field label={t('description')} htmlFor="description">
-            <Textarea id="description" maxLength={4000} value={s.description} onChange={(e) => set('description', e.target.value)} rows={3} />
+            <Textarea id="description" maxLength={RECIPE_LIMITS.description} value={s.description} onChange={(e) => set('description', e.target.value)} rows={3} />
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
@@ -437,11 +444,11 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
                   <label className="sr-only" htmlFor={`q-${ing.key}`}>{t('quantity')}</label>
                   <input id={`q-${ing.key}`} className={inputClass} inputMode="decimal" value={ing.toTaste ? '' : ing.quantity} disabled={ing.toTaste} placeholder={ing.flags.includes('missing') ? '?' : t('quantityShort')} onChange={(e) => updIng(ing.key, { quantity: e.target.value })} />
                   <label className="sr-only" htmlFor={`u-${ing.key}`}>{t('unit')}</label>
-                  <input id={`u-${ing.key}`} className={inputClass} list="unit-list" value={ing.unit} placeholder={t('unit')} onChange={(e) => updIng(ing.key, { unit: e.target.value })} />
+                  <input id={`u-${ing.key}`} className={inputClass} list="unit-list" maxLength={RECIPE_LIMITS.ingredientUnit} value={ing.unit} placeholder={t('unit')} onChange={(e) => updIng(ing.key, { unit: e.target.value })} />
                   <label className="sr-only" htmlFor={`n-${ing.key}`}>{t('ingredientName')}</label>
-                  <input id={`n-${ing.key}`} className={inputClass} value={ing.name} placeholder={t('ingredientName')} onChange={(e) => updIng(ing.key, { name: e.target.value })} />
+                  <input id={`n-${ing.key}`} className={inputClass} maxLength={RECIPE_LIMITS.ingredientName} value={ing.name} placeholder={t('ingredientName')} onChange={(e) => updIng(ing.key, { name: e.target.value })} />
                   <label className="sr-only" htmlFor={`note-${ing.key}`}>{t('note')}</label>
-                  <input id={`note-${ing.key}`} className={cx(inputClass, 'col-span-3 sm:col-span-1')} value={ing.note} placeholder={t('notePlaceholder')} onChange={(e) => updIng(ing.key, { note: e.target.value })} />
+                  <input id={`note-${ing.key}`} className={cx(inputClass, 'col-span-3 sm:col-span-1')} maxLength={RECIPE_LIMITS.ingredientNote} value={ing.note} placeholder={t('notePlaceholder')} onChange={(e) => updIng(ing.key, { note: e.target.value })} />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <label className="flex min-h-10 items-center gap-2 text-sm">
@@ -508,7 +515,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
                   <label htmlFor={`s-${st.key}`} className="sr-only">
                     {t('stepN', { n: idx + 1 })}
                   </label>
-                  <Textarea id={`s-${st.key}`} rows={3} value={st.text} onChange={(e) => updStep(st.key, e.target.value)} />
+                  <Textarea id={`s-${st.key}`} rows={3} maxLength={RECIPE_LIMITS.stepText} value={st.text} onChange={(e) => updStep(st.key, e.target.value)} />
                   <div className="flex flex-wrap items-center gap-2">
                     <FlagBadges flags={st.flags} />
                     <span className="ml-auto flex gap-1">
@@ -572,7 +579,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
         </fieldset>
 
         <Field label={t('personalNote')} htmlFor="note" hint={t('personalNoteHint')}>
-          <Textarea id="note" rows={3} maxLength={10000} value={s.personal_note} onChange={(e) => set('personal_note', e.target.value)} />
+          <Textarea id="note" rows={3} maxLength={RECIPE_LIMITS.personalNote} value={s.personal_note} onChange={(e) => set('personal_note', e.target.value)} />
         </Field>
 
         {mode === 'review' && (

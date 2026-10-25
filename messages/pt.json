@@ -104,6 +104,7 @@
     "not_found": "Item não encontrado ou já não disponível.",
     "forbidden": "Não tens permissão para esta operação.",
     "invalid_input": "Alguns dados não são válidos. Verifica os campos e tenta novamente.",
+    "invalid_input_field": "Campo inválido: {field}. Verifica-o e tenta novamente.",
     "rate_limited": "Fizeste muitos pedidos em pouco tempo. Aguarda alguns minutos e tenta novamente.",
     "config": "Esta função ainda não está configurada no servidor.",
     "ai_not_configured": "Nenhum serviço de IA configurado. Adiciona a tua chave nas definições de IA ou continua manualmente.",

@@ -104,6 +104,7 @@
     "not_found": "Nicht gefunden oder nicht mehr verfügbar.",
     "forbidden": "Dafür hast du keine Berechtigung.",
     "invalid_input": "Einige Angaben sind ungültig. Prüfe die Felder und versuch es erneut.",
+    "invalid_input_field": "Ungültiges Feld: {field}. Prüfe es und versuch es erneut.",
     "rate_limited": "Zu viele Anfragen in kurzer Zeit. Warte ein paar Minuten und versuch es erneut.",
     "config": "Diese Funktion ist auf dem Server noch nicht eingerichtet.",
     "ai_not_configured": "Kein KI-Dienst eingerichtet. Füge in den KI-Einstellungen deinen eigenen Schlüssel hinzu oder mach manuell weiter.",
