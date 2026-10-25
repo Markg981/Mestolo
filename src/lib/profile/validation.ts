@@ -8,6 +8,9 @@ export const LOCATION_MAX = 80;
 export const WEBSITE_MAX = 200;
 export const CUISINES_MAX = 8;
 export const CUISINE_MAX_LEN = 30;
+// Limiti sull'input grezzo (prima di normalizzazione e deduplica).
+export const CUISINES_INPUT_MAX = 50;
+export const CUISINE_INPUT_MAX = 100;
 
 /** Empty string means "no website" (null). Only https links, no credentials, no spaces; undefined = invalid. */
 export function normalizeWebsite(input: string): string | null | undefined {
@@ -45,7 +48,8 @@ export const richProfileSchema = z.object({
     return n ?? null;
   }),
   favorite_cuisines: z
-    .array(z.string())
+    .array(z.string().max(CUISINE_INPUT_MAX))
+    .max(CUISINES_INPUT_MAX)
     .transform(parseCuisines)
     .pipe(z.array(z.string().min(1).max(CUISINE_MAX_LEN)).max(CUISINES_MAX)),
   profile_visibility: z.enum(PROFILE_VISIBILITIES),

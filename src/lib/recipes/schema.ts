@@ -45,6 +45,9 @@ export const stepSchema = z.object({
   flags: z.array(flag).max(4).optional(),
 });
 
+export const FLAG_KEY_MAX = 100;
+export const FIELD_FLAGS_MAX = 500;
+
 export const LOCALE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
 
 export const recipeInputSchema = z.object({
@@ -64,7 +67,10 @@ export const recipeInputSchema = z.object({
     .transform((t) => [...new Set(t)]),
   visibility: z.enum(VISIBILITIES).default('private'),
   personal_note: z.string().max(RECIPE_LIMITS.personalNote).optional(),
-  field_flags: z.record(z.string(), z.array(flag)).default({}),
+  field_flags: z
+    .record(z.string().max(FLAG_KEY_MAX), z.array(flag).max(4))
+    .refine((r) => Object.keys(r).length <= FIELD_FLAGS_MAX)
+    .default({}),
   verification_status: z.enum(['verified', 'needs_review']).default('verified'),
   diet_hints: z.array(z.string().max(40)).max(20).default([]),
   // provenance (only for new recipes coming from an import)
