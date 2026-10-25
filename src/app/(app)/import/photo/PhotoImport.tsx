@@ -243,6 +243,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
       </div>
       <p className="text-sm text-muted">{t('rules', { max: MAX_PHOTO_PAGES })}</p>
       {notice && <Alert tone="warn">{notice}</Alert>}
+      {error && valid.length === 0 && <Alert tone="error">{error}</Alert>}
       {processing > 0 && <p role="status" className="text-sm text-muted">{t('processing', { n: processing })}</p>}
 
       <input ref={replaceInput} type="file" accept="image/*,.heic,.heif" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { replaceFile(e.target.files); e.target.value = ''; }} />

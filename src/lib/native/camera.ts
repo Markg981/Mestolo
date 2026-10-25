@@ -28,11 +28,21 @@ export async function takeNativePhoto(): Promise<File | null> {
       saveToGallery: false,
     });
     if (!photo.dataUrl) return null;
-    const blob = await (await fetch(photo.dataUrl)).blob();
+    const blob = dataUrlToBlob(photo.dataUrl);
     return new File([blob], `page-${Date.now()}.${photo.format || 'jpg'}`, { type: blob.type || 'image/jpeg' });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (/cancel/i.test(msg)) return null;
     throw e;
   }
+}
+
+/** Decodes a base64 data URL in memory: fetch() on data: URLs is blocked by the CSP connect-src. */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  const type = /^data:([^;,]+)/.exec(dataUrl)?.[1] ?? 'image/jpeg';
+  const bin = atob(dataUrl.slice(comma + 1));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
 }
