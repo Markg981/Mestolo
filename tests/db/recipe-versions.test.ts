@@ -39,4 +39,13 @@ d('recipe versions limit', () => {
     await admin("update public.recipes set title = 'T1' where id = $1", [id]);
     expect(await versions(id)).toEqual([1, 2]);
   });
+
+  it('version-guarded update (optimistic concurrency): the stale writer matches 0 rows', async () => {
+    const id = await newRecipe();
+    const [{ version }] = await admin<{ version: number }>('select version from public.recipes where id = $1', [id]);
+    const guarded = (title: string) => admin('update public.recipes set title = $2 where id = $1 and version = $3 returning id', [id, title, version]);
+    expect(await guarded('A')).toHaveLength(1);
+    expect(await guarded('B')).toHaveLength(0);
+    expect((await admin<{ title: string }>('select title from public.recipes where id = $1', [id]))[0].title).toBe('A');
+  });
 });

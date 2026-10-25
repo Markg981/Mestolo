@@ -37,7 +37,7 @@ function FlagBadges({ flags }: { flags?: FieldFlag[] }) {
   );
 }
 
-export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, baseVersion, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
+export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, baseVersion, expectedVersion, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
   const t = useTranslations('editor');
   const tc = useTranslations('common');
   const tu = useTranslations('units');
@@ -225,7 +225,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     };
     startSaving(async () => {
       try {
-        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);
+        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null, mode === 'edit' ? expectedVersion : null);
         if (!res.ok) {
           setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
           return;

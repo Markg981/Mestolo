@@ -40,7 +40,8 @@ export type ErrorCode =
   | 'auth_not_confirmed'
   | 'username_taken'
   | 'translation_failed'
-  | 'already_exists';
+  | 'already_exists'
+  | 'conflict';
 
 export type ActionResult<T = undefined> = ({ ok: true } & (T extends undefined ? { data?: undefined } : { data: T })) | { ok: false; error: ErrorCode; detail?: string };
 

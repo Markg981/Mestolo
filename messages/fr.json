@@ -133,6 +133,7 @@
     "username_taken": "Ce nom d'utilisateur est déjà pris.",
     "translation_failed": "La traduction a échoué. L'original reste disponible.",
     "already_exists": "Existe déjà.",
+    "conflict": "Cette recette a été modifiée ailleurs (autre onglet ou autre appareil). Recharge la page pour voir la dernière version avant d'enregistrer.",
     "pageTitle": "Cette page ne s'est pas chargée",
     "pageLead": "Cela peut arriver si la connexion est instable. Les données que vous saisissiez sont conservées en brouillon.",
     "retry": "Réessayer",

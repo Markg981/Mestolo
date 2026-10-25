@@ -17,7 +17,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-10">
       <PageHeader title={t('editTitle')} lead={t('editLead')} />
       <ImageManager recipeId={id} title={detail.recipe.title} images={detail.images} />
-      <RecipeEditor mode="edit" recipeId={id} initial={stateFromRecipe(detail.recipe, detail.note, unitLabel)} categories={categories} draftKey={draftNames.edit(id)} baseVersion={detail.recipe.content_hash} />
+      <RecipeEditor mode="edit" recipeId={id} initial={stateFromRecipe(detail.recipe, detail.note, unitLabel)} categories={categories} draftKey={draftNames.edit(id)} baseVersion={detail.recipe.content_hash} expectedVersion={detail.recipe.version} />
     </div>
   );
 }
