@@ -59,6 +59,47 @@ export function mergeTranslation<T extends Pick<RecipeContent, 'title' | 'descri
   };
 }
 
+const VULGAR: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3, '⅛': 0.125 };
+
+/** Numbers found in free text, normalised (1,5 = 1.5, ½ = 1/2 = 0.5) and sorted; ranges like 10-12 yield both ends. */
+export function extractNumbers(text: string): string[] {
+  const out: string[] = [];
+  for (const m of text.matchAll(/(\d+)\s*\/\s*(\d+)|(\d+(?:[.,]\d+)?)|([½¼¾⅓⅔⅛])/g)) {
+    const v = m[4] ? VULGAR[m[4]] : m[1] ? Number(m[1]) / Number(m[2]) : Number(m[3].replace(',', '.'));
+    if (Number.isFinite(v)) out.push(String(Math.round(v * 1000) / 1000));
+  }
+  return out.sort();
+}
+
+/** True if both texts contain exactly the same multiset of numbers. */
+export function sameNumbers(original: string, translated: string): boolean {
+  const a = extractNumbers(original);
+  const b = extractNumbers(translated);
+  return a.length === b.length && a.every((n, i) => n === b[i]);
+}
+
+/**
+ * Times and temperatures inside free text come from the model unchecked. For every
+ * text whose numbers differ from the original, fall back to the original text so a
+ * wrong number is never cached and shown to other readers.
+ */
+export function guardTranslatedNumbers(
+  original: Pick<RecipeContent, 'title' | 'description' | 'ingredients' | 'steps'>,
+  translated: z.infer<typeof translatedPayloadSchema>,
+): z.infer<typeof translatedPayloadSchema> {
+  const keep = (orig: string, tr: string) => (sameNumbers(orig, tr) ? tr : orig);
+  return {
+    ...translated,
+    title: keep(original.title, translated.title),
+    description: keep(original.description, translated.description),
+    ingredients: translated.ingredients.map((t, i) => {
+      const origNote = original.ingredients[i]?.note;
+      return { ...t, note: t.note !== null && origNote ? keep(origNote, t.note) : t.note };
+    }),
+    steps: translated.steps.map((t, i) => ({ ...t, text: original.steps[i] ? keep(original.steps[i].text, t.text) : t.text })),
+  };
+}
+
 /** A cached translation is valid only if it was produced from the current content. */
 export function isTranslationFresh(cachedSourceHash: string | null | undefined, currentContentHash: string): boolean {
   return !!cachedSourceHash && cachedSourceHash === currentContentHash;
