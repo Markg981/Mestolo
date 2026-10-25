@@ -73,3 +73,22 @@ Cook in a hot pan.`);
     expect(r.steps).toHaveLength(1);
   });
 });
+
+describe('parseRecipeText: intestazioni con contenuto e prefissi dei passi (M11)', () => {
+  it('Ingredienti con contenuto sulla stessa riga: e la prima voce', () => {
+    const r = parseRecipeText(`Frittata\nIngredienti: 2 uova\n50 g di parmigiano\nPreparazione: Sbattere le uova.\nCuocere in padella.`);
+    expect(r.ingredients).toHaveLength(2);
+    expect(r.ingredients[0].quantity).toBe(2);
+    expect(r.steps.map((s) => s.text)).toEqual(['Sbattere le uova.', 'Cuocere in padella.']);
+  });
+
+  it("un intervallo o un'unita non e numerazione", () => {
+    const r = parseRecipeText(`Torta\nIngredienti\n2 uova\nProcedimento\n2-3 minuti dopo il bollore, spegnere.\n10 minuti di riposo.`);
+    expect(r.steps.map((s) => s.text)).toEqual(['2-3 minuti dopo il bollore, spegnere.', '10 minuti di riposo.']);
+  });
+
+  it.each(['1. Tagliare', '1) Tagliare', '2- Tagliare'])('numerazione "%s" rimossa', (l) => {
+    const r = parseRecipeText(`Torta\nIngredienti\n2 uova\nProcedimento\n${l}`);
+    expect(r.steps[0].text).toBe('Tagliare');
+  });
+});
