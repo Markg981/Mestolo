@@ -1,6 +1,17 @@
 import { z } from 'zod';
 import { VISIBILITIES } from './types';
 
+/** Limiti di lunghezza: fonte unica per schema zod ed editor (maxLength). */
+export const RECIPE_LIMITS = {
+  title: 200,
+  description: 4000,
+  ingredientName: 200,
+  ingredientNote: 300,
+  ingredientUnit: 40,
+  stepText: 4000,
+  personalNote: 10000,
+} as const;
+
 const flag = z.enum(['missing', 'low_confidence', 'ambiguous', 'ai_estimate']);
 const optText = (max: number) =>
   z
@@ -17,11 +28,11 @@ const minutes = z
   .nullable();
 
 export const ingredientSchema = z.object({
-  name: z.string().trim().min(1).max(200),
+  name: z.string().trim().min(1).max(RECIPE_LIMITS.ingredientName),
   quantity: z.number().positive().max(100000).nullable(),
   quantityMax: z.number().positive().max(100000).nullish().transform((v) => v ?? null),
-  unit: optText(40),
-  note: optText(300),
+  unit: optText(RECIPE_LIMITS.ingredientUnit),
+  note: optText(RECIPE_LIMITS.ingredientNote),
   section: optText(100),
   toTaste: z.boolean().optional(),
   raw: optText(500),
@@ -29,7 +40,7 @@ export const ingredientSchema = z.object({
 });
 
 export const stepSchema = z.object({
-  text: z.string().trim().min(1).max(4000),
+  text: z.string().trim().min(1).max(RECIPE_LIMITS.stepText),
   section: optText(100),
   flags: z.array(flag).max(4).optional(),
 });
@@ -37,8 +48,8 @@ export const stepSchema = z.object({
 export const LOCALE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
 
 export const recipeInputSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  description: z.string().trim().max(4000).default(''),
+  title: z.string().trim().min(1).max(RECIPE_LIMITS.title),
+  description: z.string().trim().max(RECIPE_LIMITS.description).default(''),
   original_language: z.string().regex(LOCALE_RE).default('it'),
   servings: z.number().positive().max(1000).nullable(),
   prep_minutes: minutes,
@@ -52,7 +63,7 @@ export const recipeInputSchema = z.object({
     .max(30)
     .transform((t) => [...new Set(t)]),
   visibility: z.enum(VISIBILITIES).default('private'),
-  personal_note: z.string().max(10000).optional(),
+  personal_note: z.string().max(RECIPE_LIMITS.personalNote).optional(),
   field_flags: z.record(z.string(), z.array(flag)).default({}),
   verification_status: z.enum(['verified', 'needs_review']).default('verified'),
   diet_hints: z.array(z.string().max(40)).max(20).default([]),

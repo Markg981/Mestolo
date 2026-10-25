@@ -104,6 +104,7 @@
     "not_found": "Élément introuvable ou plus disponible.",
     "forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
     "invalid_input": "Certaines données ne sont pas valides. Vérifiez les champs et réessayez.",
+    "invalid_input_field": "Champ non valide : {field}. Vérifiez-le et réessayez.",
     "rate_limited": "Vous avez fait beaucoup de demandes en peu de temps. Patientez quelques minutes et réessayez.",
     "config": "Cette fonctionnalité n'est pas encore configurée sur le serveur.",
     "ai_not_configured": "Aucun service d'IA n'est configuré. Ajoutez votre propre clé dans les paramètres IA ou continuez manuellement.",

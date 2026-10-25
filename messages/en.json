@@ -104,6 +104,7 @@
     "not_found": "Item not found or no longer available.",
     "forbidden": "You don't have permission to do this.",
     "invalid_input": "Some details aren't valid. Check the fields and try again.",
+    "invalid_input_field": "Invalid field: {field}. Check it and try again.",
     "rate_limited": "You've made a lot of requests in a short time. Wait a few minutes and try again.",
     "config": "This feature isn't set up on the server yet.",
     "ai_not_configured": "No AI service is set up. Add your own key in AI settings or continue manually.",
