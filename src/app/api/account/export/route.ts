@@ -59,7 +59,21 @@ export async function GET() {
         supabase.from('recipe_images').select('id, recipe_id, kind, source_url, attribution, alt_text, created_at').in('recipe_id', recipeIds),
         supabase.from('recipe_nutrition').select('*').in('recipe_id', recipeIds),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+
+  // Una query fallita non deve produrre un export parziale con 200: l'utente
+  // crederebbe di avere tutti i dati. Si logga solo il nome della sezione e il
+  // codice errore (mai dati personali).
+  const results: Record<string, { data?: unknown; error?: { code?: string } | null }> = {
+    profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories,
+    cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback,
+    versions, images, nutrition,
+  };
+  const failed = Object.entries(results).filter(([, r]) => r.error);
+  if (failed.length) {
+    console.error('account export failed', failed.map(([name, r]) => `${name}:${r.error?.code ?? 'unknown'}`).join(','));
+    return new NextResponse('Export failed', { status: 500, headers: { 'cache-control': 'no-store' } });
+  }
 
   const body = buildAccountExport({
     user,

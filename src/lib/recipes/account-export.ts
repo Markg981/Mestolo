@@ -72,6 +72,6 @@ export function buildAccountExport(d: AccountExportInput) {
     reports: d.reports,
     api_keys_configured: d.keys,
     ai_usage: d.usage,
-    note: 'Image files can be downloaded from each recipe page. API key values are never exported.',
+    note: 'Image files can be downloaded from each recipe page. Avatar and cook-log photos are referenced by storage path (profile.avatar_path, cook_logs[].photo_path), not embedded. API key values are never exported.',
   };
 }
