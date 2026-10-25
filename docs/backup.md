@@ -8,7 +8,7 @@ Il workflow `.github/workflows/backup.yml` gira ogni giorno alle 03:17 UTC (e a 
 - `auth-<ts>.dump`: tabelle `auth.users` e `auth.identities` (schema + dati, incluso hash password: restano cifrate nel tar.gpg).
 - `manifest-<ts>.txt`: conteggi righe delle tabelle chiave al momento del backup, usati dalla verifica di restore.
 - `storage-meta-<ts>.dump`: solo dati di `storage.buckets` e `storage.objects` (metadati, non i file).
-- `storage-<ts>.tar.gpg` (opzionale): i file del bucket `recipe-images`, scaricati con `scripts/backup-storage.mjs`. Richiede `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; se mancano il passo viene saltato.
+- `storage-<ts>.tar.gpg` (opzionale): i file dei bucket `recipe-images` (ricette e foto del diario) e `avatars`, scaricati (elenco modificabile con `BACKUP_BUCKETS`) con `scripts/backup-storage.mjs`. Richiede `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; se mancano il passo viene saltato.
 
 Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`) prima di ogni upload. Artifact con retention 30 giorni; copia opzionale su bucket S3 compatibile.
 
@@ -45,11 +45,11 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
    pg_restore --data-only --disable-triggers --no-owner --dbname "$TARGET_DB_URL" public-<ts>.dump
    ```
    Su un database vuoto, senza migration, si puo ripristinare anche lo schema: `pg_restore --no-owner --no-privileges --clean --if-exists --dbname "$TARGET_DB_URL" public-<ts>.dump`.
-4. Ripristinare i metadati storage, solo se il bucket `recipe-images` esiste gia (creato dalle migration):
+4. Ripristinare i metadati storage, solo se i bucket `recipe-images` e `avatars` esistono gia (creato dalle migration):
    ```bash
    pg_restore --data-only --disable-triggers --dbname "$TARGET_DB_URL" storage-meta-<ts>.dump
    ```
-5. Ripristinare i file: decifrare `storage-<ts>.tar.gpg`, estrarre e caricare ogni file di `recipe-images/` nello stesso percorso con `supabase-js` (`storage.from('recipe-images').upload(path, file)`) oppure da dashboard.
+5. Ripristinare i file: decifrare `storage-<ts>.tar.gpg`, estrarre e caricare ogni file di `recipe-images/` e `avatars/` nello stesso percorso con `supabase-js` (`storage.from(<bucket>).upload(path, file)`) oppure da dashboard.
 6. Verificare: conteggio righe delle tabelle principali, apertura di una ricetta con immagine.
 
 ## Verifica automatica del restore

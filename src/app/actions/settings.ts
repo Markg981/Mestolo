@@ -100,10 +100,14 @@ export async function deleteAccount(confirmUsername: string): Promise<ActionResu
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
     if (!profile || profile.username !== String(confirmUsername ?? '').trim().toLowerCase()) return fail('invalid_input');
-    // Avatar file (best effort: a retry of the deletion repeats it, removing a missing file is a no-op)
+    // Avatar file: a failure aborts before the account is touched, so the face photo is never left behind
+    // (a retry of the deletion repeats it, removing a missing file is a no-op)
     const { data: mine } = await supabase.rpc('my_profile').maybeSingle();
     const avatar = (mine as { avatar_path?: string | null } | null)?.avatar_path;
-    if (avatar) await createAdminClient().storage.from('avatars').remove([avatar]);
+    if (avatar) {
+      const { error: avatarError } = await createAdminClient().storage.from('avatars').remove([avatar]);
+      if (avatarError) throw new Error(`avatar remove failed: ${avatarError.message}`);
+    }
     await deleteAccountData(createAdminClient() as unknown as DeletionAdmin, user.id);
     await supabase.auth.signOut();
   } catch (e) {

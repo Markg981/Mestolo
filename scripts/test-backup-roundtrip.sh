@@ -37,6 +37,8 @@ select id, 'Backup ' || n, 'public', jsonb_build_array(jsonb_build_object('name'
 from u cross join generate_series(1, 3) n;
 insert into storage.buckets (id, name) values ('recipe-images', 'recipe-images') on conflict do nothing;
 insert into storage.objects (bucket_id, name) select 'recipe-images', 'bk/' || md5(random()::text) || '.webp' from generate_series(1, 7);
+insert into storage.buckets (id, name) values ('avatars', 'avatars') on conflict do nothing;
+insert into storage.objects (bucket_id, name) select 'avatars', 'bk/' || md5(random()::text) || '.webp' from generate_series(1, 5);
 SQL
 
 stamp="$("$here/backup-db.sh" "$src" "$tmp/out")"

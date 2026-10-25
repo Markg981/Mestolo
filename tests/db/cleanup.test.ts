@@ -45,6 +45,21 @@ d('scheduled cleanup', () => {
     expect(names).not.toContain(p('fresh.webp'));
   });
 
+  it('lists only old avatar files that no profile references', async () => {
+    const u = await mkUser(`cl_a_${s}`);
+    await admin("insert into storage.buckets (id, name) values ('avatars', 'avatars') on conflict do nothing");
+    const p = (n: string) => `${u}/${n}`;
+    await admin('update public.profiles set avatar_path = $2 where id = $1', [u, p('current.webp')]);
+    const old = "now() - interval '2 days'";
+    await admin(`insert into storage.objects (bucket_id, name, created_at) values ('avatars', $1, ${old}), ('avatars', $2, ${old}), ('avatars', $3, now())`, [
+      p('current.webp'), p('stale.webp'), p('fresh.webp'),
+    ]);
+    const names = (await admin('select name from public.list_orphan_avatars(1000)')).map((r) => r.name);
+    expect(names).toContain(p('stale.webp'));
+    expect(names).not.toContain(p('current.webp'));
+    expect(names).not.toContain(p('fresh.webp'));
+  });
+
   it('is not executable by clients', async () => {
     const c = await pool.connect();
     try {
@@ -55,6 +70,10 @@ d('scheduled cleanup', () => {
       await c.query('begin');
       await c.query('set local role authenticated');
       await expect(c.query('select * from public.list_orphan_images(10)')).rejects.toThrow();
+      await c.query('rollback');
+      await c.query('begin');
+      await c.query('set local role authenticated');
+      await expect(c.query('select * from public.list_orphan_avatars(10)')).rejects.toThrow();
     } finally {
       await c.query('rollback');
       c.release();
