@@ -78,3 +78,38 @@ jobs:
             psql -v ON_ERROR_STOP=1 -q -f "$f" >/dev/null
           done
       - run: npm run test:db
+
+  backup-roundtrip:
+    name: Backup round trip (Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mestolo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: mestolo_test
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Applica stub Supabase e migrazioni
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/supabase-stub.sql
+          for f in supabase/migrations/*.sql; do
+            psql -v ON_ERROR_STOP=1 -q -f "$f" >/dev/null
+          done
+      # backup-db.sh -> restore-verify-db.sh su un database nuovo: conteggi e schema identici
+      - run: scripts/test-backup-roundtrip.sh postgresql://postgres:postgres@localhost:5432/mestolo_test
