@@ -1,4 +1,5 @@
 import type { FieldFlag, FieldFlags, ImportDraft, ImportWarning, Visibility } from '@/lib/recipes/types';
+import type { Diet } from '@/lib/recipes/diets';
 
 export interface EditorIngredient {
   key: string;
@@ -35,6 +36,8 @@ export interface EditorState {
   visibility: Visibility;
   personal_note: string;
   field_flags: FieldFlags;
+  /** declared by the author, never verified (optional: drafts saved before it existed lack it) */
+  diet_hints?: Diet[];
 }
 
 export interface EditorCategory {

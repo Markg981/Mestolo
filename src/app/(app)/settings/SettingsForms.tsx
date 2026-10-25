@@ -12,8 +12,7 @@ import { createCategory, deleteCategory } from '@/app/actions/organize';
 import { LiveMessage, Modal } from '@/components/client-ui';
 import { Alert, Button, Card, Field, Input, Select, Textarea, buttonClass } from '@/components/ui';
 import type { Profile } from '@/lib/supabase/server';
-
-const DIETS = ['vegetarian', 'vegan', 'pescatarian', 'no_pork', 'no_alcohol'] as const;
+import { DIETS } from '@/lib/recipes/diets';
 
 function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string; hasImage: boolean }) {
   const tr = useTranslations('richProfile');

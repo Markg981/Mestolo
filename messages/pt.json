@@ -387,7 +387,8 @@
     "saveNote": "Guardar nota",
     "noteSaved": "Nota guardada.",
     "hiddenTitle": "Receita ocultada pela moderação",
-    "hiddenLead": "Após várias denúncias, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, contacta o suporte."
+    "hiddenLead": "Após várias denúncias, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, contacta o suporte.",
+    "dietHints": "Segundo o autor (não verificado): {diets}"
   },
   "nutrition": {
     "title": "Informação nutricional",
@@ -541,7 +542,9 @@
     "publicImportWarning": "Esta receita vem de uma fonte externa: publica-a só se tiveres direito a isso. Podes sempre mudar de ideias depois.",
     "verifiedCheck": "Verifiquei os dados importados",
     "verifiedHint": "Se não marcares, a receita continuará assinalada como \"Por verificar\".",
-    "saveImported": "Guardar a receita"
+    "saveImported": "Guardar a receita",
+    "dietHints": "Indicações do autor",
+    "dietHintsHint": "Opcionais e não verificadas pelo Mestolo: em caso de alergias ou intolerâncias verifique sempre os ingredientes."
   },
   "photo": {
     "title": "Importar de foto",
