@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { headers } from 'next/headers';
+import { extractClientIp } from '@/lib/client-ip';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Limits per action: [max events, window in seconds]. */
@@ -40,8 +41,7 @@ export function hashKey(value: string): string {
 
 export async function clientIpHash(): Promise<string> {
   const h = await headers();
-  const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
-  return hashKey(ip);
+  return hashKey(extractClientIp(h));
 }
 
 /** Records an event and throws RateLimitedError if the limit is exceeded. Fails closed. */
