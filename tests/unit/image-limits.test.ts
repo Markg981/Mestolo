@@ -11,8 +11,13 @@ describe('image upload limits', () => {
     expect(isAllowedUploadType('')).toBe(false);
   });
 
-  it('keeps the processed size within the upload size', () => {
-    expect(MAX_PROCESSED_BYTES).toBeLessThanOrEqual(MAX_UPLOAD_BYTES);
+  it('keeps the upload size below the server action body limit and Vercel 4.5 MB', () => {
+    const cfg = readFileSync('next.config.ts', 'utf8');
+    const m = /bodySizeLimit:\s*'(\d+)mb'/.exec(cfg);
+    expect(m).not.toBeNull();
+    const bodyLimit = Number(m![1]) * 1024 * 1024;
+    expect(MAX_UPLOAD_BYTES).toBeLessThan(bodyLimit);
+    expect(bodyLimit).toBeLessThanOrEqual(4.5 * 1024 * 1024);
   });
 
   it('migration drops client write policies and sets bucket limits matching the code', () => {
