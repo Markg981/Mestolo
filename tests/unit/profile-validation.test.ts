@@ -35,3 +35,13 @@ describe('richProfileSchema', () => {
     expect(richProfileSchema.safeParse({ ...base, profile_visibility: 'everyone' }).success).toBe(false);
   });
 });
+
+describe('richProfileSchema input limits', () => {
+  const base = { bio: 'ciao', location: 'Roma', website: '', profile_visibility: 'friends' as const };
+  it('rejects too many raw cuisine entries', () => {
+    expect(richProfileSchema.safeParse({ ...base, favorite_cuisines: Array.from({ length: 51 }, () => 'a') }).success).toBe(false);
+  });
+  it('rejects an oversized raw cuisine string', () => {
+    expect(richProfileSchema.safeParse({ ...base, favorite_cuisines: ['a'.repeat(101)] }).success).toBe(false);
+  });
+});
