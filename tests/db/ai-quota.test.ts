@@ -10,11 +10,11 @@ const d = url ? describe : describe.skip;
 
 let pool: pg.Pool;
 
-async function as<T = Record<string, unknown>>(uid: string | null, sql: string, params: unknown[] = []): Promise<T[]> {
+async function asRole<T = Record<string, unknown>>(role: string, uid: string | null, sql: string, params: unknown[] = []): Promise<T[]> {
   const c = await pool.connect();
   try {
     await c.query('begin');
-    await c.query(`set local role ${uid ? 'authenticated' : 'anon'}`);
+    await c.query(`set local role ${role}`);
     await c.query("select set_config('request.jwt.claim.sub', $1, true)", [uid ?? '']);
     const r = await c.query(sql, params);
     await c.query('commit');
@@ -27,8 +27,9 @@ async function as<T = Record<string, unknown>>(uid: string | null, sql: string, 
   }
 }
 
-async function consume(uid: string | null, group: string, limit: number): Promise<boolean> {
-  const rows = await as<{ ok: boolean }>(uid, 'select public.consume_ai_quota($1, $2, $3, $4) as ok', [group, limit, 'test', 'openai']);
+// La funzione e' eseguibile solo dal service role (C-20).
+async function consume(uid: string | null, group: string, limit: number, role = 'service_role'): Promise<boolean> {
+  const rows = await asRole<{ ok: boolean }>(role, null, 'select public.consume_ai_quota($1, $2, $3, $4, $5) as ok', [uid, group, limit, 'test', 'openai']);
   return rows[0].ok;
 }
 
@@ -85,7 +86,12 @@ d('consume_ai_quota', () => {
     expect(await usedCount(alice, 'text')).toBe(limit);
   });
 
-  it('richiede un utente autenticato e rifiuta gruppi non validi', async () => {
+  it('non è eseguibile da authenticated e anon (limite non falsificabile dal client)', async () => {
+    await expect(consume(alice, 'text', 1000, 'authenticated')).rejects.toThrow(/permission denied/);
+    await expect(consume(alice, 'text', 1000, 'anon')).rejects.toThrow(/permission denied/);
+  });
+
+  it('richiede un utente e rifiuta gruppi non validi', async () => {
     await expect(consume(null, 'text', 5)).rejects.toThrow();
     await expect(consume(alice, 'bogus', 5)).rejects.toThrow();
   });
