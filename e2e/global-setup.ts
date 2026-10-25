@@ -1,4 +1,4 @@
-import { createTestUser, deleteTestUsers, randomUser, requireEnv } from './helpers';
+import { adminClient, createTestUser, deleteTestUsers, randomUser, requireEnv } from './helpers';
 
 /**
  * Crea due utenti di test sul progetto di staging tramite l'API admin:
@@ -13,6 +13,14 @@ export default async function globalSetup() {
 
   // Pulisce eventuali residui di esecuzioni interrotte
   await deleteTestUsers();
+
+  // In CI l'IP del client e' sempre "unknown": senza azzerarli, i limiti di
+  // registrazione/accesso per IP si esauriscono dopo poche esecuzioni all'ora.
+  const { error } = await adminClient()
+    .from('rate_limit_events')
+    .delete()
+    .or('bucket.like.signup_ip:*,bucket.like.login_ip:*,bucket.like.reset_ip:*');
+  if (error) throw new Error(`Pulizia rate limit fallita: ${error.message}`);
 
   for (const tag of ['main', 'session'] as const) {
     const user = randomUser(tag);
