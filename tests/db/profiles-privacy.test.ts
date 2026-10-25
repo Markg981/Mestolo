@@ -58,6 +58,44 @@ d('profiles column privileges', () => {
     expect(await as(bob, q, [hidden])).toHaveLength(1);
   });
 
+  it('a stranger cannot enumerate hidden profiles in bulk or through search (M2)', async () => {
+    const s = Math.random().toString(36).slice(2, 7);
+    const [hidden, open, blocker, pending, stranger] = await Promise.all(['eh', 'eo', 'eb', 'ep', 'es'].map((n) => user(`${n}_${s}`)));
+    await admin('update public.profiles set discoverable = false where id = any($1)', [[hidden, pending]]);
+    await admin('insert into public.blocks (blocker_id, blocked_id) values ($1, $2)', [blocker, stranger]);
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'pending')", [pending, stranger]);
+    const seen = (await as<{ id: string }>(stranger, 'select id from public.profiles where username like $1', [`%_${s}`])).map((r) => r.id).sort();
+    expect(seen).toEqual([open, pending, stranger].sort());
+    const search = async (name: string) => (await as<{ id: string }>(stranger, 'select id from public.search_profiles($1)', [`${name}_${s}`])).map((r) => r.id);
+    expect(await search('eo')).toEqual([open]);
+    for (const name of ['eh', 'eb', 'ep', 'es']) expect(await search(name)).toEqual([]);
+    expect(await as(stranger, 'select public.can_see_profile($1) as ok', [hidden])).toEqual([{ ok: false }]);
+  });
+
+  it('a block hides even a discoverable profile with public recipes, both ways', async () => {
+    const s = Math.random().toString(36).slice(2, 7);
+    const [author, reader] = await Promise.all(['ba', 'br'].map((n) => user(`${n}_${s}`)));
+    await admin("insert into public.recipes (owner_id, title, visibility) values ($1, 'pubblica', 'public')", [author]);
+    const q = 'select id from public.profiles where id = $1';
+    expect(await as(reader, q, [author])).toHaveLength(1);
+    await admin('insert into public.blocks (blocker_id, blocked_id) values ($1, $2)', [reader, author]);
+    expect(await as(reader, q, [author])).toHaveLength(0);
+    expect(await as(author, q, [reader])).toHaveLength(0);
+    expect(await as(author, q, [author])).toHaveLength(1);
+  });
+
+  it('anon has no access to profiles', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('begin');
+      await c.query('set local role anon');
+      await expect(c.query('select id from public.profiles')).rejects.toThrow(/permission denied/);
+    } finally {
+      await c.query('rollback');
+      c.release();
+    }
+  });
+
   it('bio now goes through get_profile_card (migration 20261025000006)', async () => {
     await expect(as(bob, 'select bio from public.profiles where id = $1', [alice])).rejects.toThrow(/permission denied/);
   });

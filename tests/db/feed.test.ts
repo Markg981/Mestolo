@@ -187,6 +187,8 @@ d('feed_recipes', () => {
   });
 
   it('paginates without duplicates or gaps', async () => {
+    // own data: the fixture alone yields 7 rows, the test must not depend on other files' leftovers
+    for (const n of [1, 2]) await add(stranger, `Pagina ${n}`, 'public', ['zzpage']);
     const whole = (await feed(me, ', p_limit => 100')).map((r) => r.id);
     const paged = (await walk(me, 3)).map((r) => r.id);
     expect(new Set(paged).size).toBe(paged.length);
