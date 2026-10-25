@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACCOUNT_EXPORT_FORMAT, parseMestoloExport } from '@/lib/recipes/import-json';
+import { buildAccountExport } from '@/lib/recipes/account-export';
 import { MESTOLO_FORMAT } from '@/lib/recipes/export';
 
 const ing = (name: string) => ({ name, quantity: 100, unit: 'g', note: null, section: null, raw: null });
@@ -84,6 +85,25 @@ describe('import of Mestolo JSON exports', () => {
     expect(tiramisu.content.category_slug).not.toBe('my-own');
     expect(pane.source.url).toBeNull();
     expect(pane.source.type).toBe('text');
+  });
+
+  it('round-trips the real account export serialization (notes and categories)', () => {
+    const empty = [] as unknown[];
+    const body = buildAccountExport({
+      user: { id: 'u1', email: 'a@b.c', created_at: '2026-01-01' },
+      profile: null, versions: empty, images: empty, nutrition: empty, cookLogs: empty, ratings: empty, pantry: empty,
+      planPrefs: empty, notifPrefs: empty, pushSubs: empty, invites: empty, redemptions: empty, collMembers: empty,
+      listMembers: empty, aisles: empty, suggestions: empty, feedback: empty, favorites: empty, collections: empty,
+      shoppingLists: empty, shoppingItems: empty, plan: empty, friendships: empty, blocks: empty, reports: empty,
+      keys: empty, usage: empty,
+      recipes: [{ id: 'r1', title: 'Tiramisù', category_id: 'c1', ingredients: [ing('Mascarpone')], steps: [step('Monta')] }],
+      notes: [{ recipe_id: 'r1', body: 'Meno sale' }],
+      categories: [{ id: 'c1', slug: 'my-own' }],
+    });
+    const res = parseMestoloExport(JSON.stringify(body));
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.drafts[0].personal_note).toBe('Meno sale');
   });
 
   it('rejects invalid JSON, other formats and empty files', () => {
