@@ -75,6 +75,30 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(deleted).toEqual([['s1']]);
   });
 
+  const confirmCalls = () => rpc.mock.calls.filter((c) => (c as unknown[])[0] === 'confirm_meal_reminders');
+
+  it('confirms the reminder only after a successful push', async () => {
+    await GET(req('Bearer topsecret'));
+    expect(confirmCalls()).toEqual([['confirm_meal_reminders', { p_entry_ids: ['e1'] }]]);
+  });
+
+  it('does not confirm when every push fails transiently, so the claim can be retried', async () => {
+    sendNotification.mockRejectedValue(Object.assign(new Error('boom'), { statusCode: 503 }));
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 0, confirmed: 0 });
+    expect(confirmCalls()).toHaveLength(0);
+  });
+
+  it('confirms when at least one subscription received the push, or when all are permanently gone', async () => {
+    sendNotification.mockRejectedValueOnce(Object.assign(new Error('boom'), { statusCode: 500 }));
+    await GET(req('Bearer topsecret'));
+    expect(confirmCalls()).toHaveLength(1);
+    rpc.mockClear();
+    sendNotification.mockRejectedValue(Object.assign(new Error('gone'), { statusCode: 410 }));
+    await GET(req('Bearer topsecret'));
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
   it('removes subscriptions with a non-allowlisted endpoint without contacting them', async () => {
     subs.push({ id: 's3', user_id: 'u1', endpoint: 'https://169.254.169.254/latest', p256dh: 'p', auth: 'a' });
     const res = await GET(req('Bearer topsecret'));

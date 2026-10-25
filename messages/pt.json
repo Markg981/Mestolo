@@ -786,6 +786,7 @@
   },
   "shopping": {
     "title": "Lista de compras",
+    "toTaste": "q.b.",
     "lead": "Adiciona produtos à mão ou a partir dos ingredientes das receitas.",
     "addLabel": "Adicionar um produto",
     "addPlaceholder": "Ex.: 500 g de tomate",
@@ -1140,7 +1141,8 @@
     "permissionDenied": "Notificações não permitidas: ative-as nas definições do dispositivo ou do navegador.",
     "subscribeFailed": "Não foi possível ativar as notificações neste dispositivo.",
     "unsupported": "Este navegador não suporta notificações push. Experimente a app ou um navegador atualizado.",
-    "iosHint": "No iPhone e no iPad as notificações só funcionam depois de adicionar o Mestolo ao ecrã principal (Partilhar > Adicionar ao ecrã principal, iOS 16.4 ou superior)."
+    "iosHint": "No iPhone e no iPad as notificações só funcionam depois de adicionar o Mestolo ao ecrã principal (Partilhar > Adicionar ao ecrã principal, iOS 16.4 ou superior).",
+    "limitedSchedule": "Nesta instalação os lembretes só são verificados uma vez por dia (por volta das 08:00 UTC): os de outras horas podem não chegar. Para lembretes pontuais o administrador tem de agendar a rota a cada 15 minutos."
   },
   "cook": {
     "start": "Cozinhar",

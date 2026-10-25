@@ -136,11 +136,11 @@ export function parseMestoloExport(text: string): JsonImportResult {
   if (root.format === ACCOUNT_EXPORT_FORMAT) {
     const rows = Array.isArray(root.recipes) ? root.recipes.filter(isObj) : [];
     const catSlug = new Map<string, string>();
-    for (const c of Array.isArray(root.categories) ? root.categories.filter(isObj) : []) {
+    for (const c of Array.isArray(root.custom_categories) ? root.custom_categories.filter(isObj) : Array.isArray(root.categories) ? root.categories.filter(isObj) : []) {
       if (typeof c.id === 'string' && typeof c.slug === 'string') catSlug.set(c.id, c.slug);
     }
     const notes = new Map<string, string>();
-    for (const n of Array.isArray(root.recipe_notes) ? root.recipe_notes.filter(isObj) : []) {
+    for (const n of Array.isArray(root.personal_notes) ? root.personal_notes.filter(isObj) : Array.isArray(root.recipe_notes) ? root.recipe_notes.filter(isObj) : []) {
       if (typeof n.recipe_id === 'string' && typeof n.body === 'string') notes.set(n.recipe_id, n.body);
     }
     const drafts: ImportDraft[] = [];

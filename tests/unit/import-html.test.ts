@@ -100,3 +100,15 @@ describe('schema.org Recipe extraction', () => {
     expect(findRecipeNode({ '@type': 'Article' })).toBeNull();
   });
 });
+
+describe('performance on large pages without JSON-LD', () => {
+  it('extracts text in linear time from a ~3 MB page of <div> elements', () => {
+    const html = `<html><body>${'<div>x</div>'.repeat(250_000)}</body></html>`;
+    expect(html.length).toBeGreaterThan(2_500_000);
+    const t0 = performance.now();
+    const res = recipeFromHtml(html, 'https://example.com/r');
+    const elapsed = performance.now() - t0;
+    expect(res.pageText.length).toBeGreaterThan(0);
+    expect(elapsed).toBeLessThan(2000);
+  });
+});

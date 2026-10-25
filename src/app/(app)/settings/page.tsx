@@ -56,7 +56,7 @@ export default async function SettingsPage() {
         <LanguageSwitcher />
       </Card>
       {profile && <ProfileForm profile={profile} systemCategories={system} />}
-      <NotificationSettings initial={rowToPrefs(prefsRow as PrefsRow | null)} vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''} />
+      <NotificationSettings initial={rowToPrefs(prefsRow as PrefsRow | null)} vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''} frequentSchedule={process.env.NEXT_PUBLIC_FREQUENT_CRON === 'true'} />
       <CustomCategories categories={custom} />
       <Card>
         <SupportContact />
