@@ -246,7 +246,24 @@ Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambien
 
 **CI (GitHub Actions)**
 
-Il workflow `.github/workflows/e2e.yml` gira sulle pull request e a mano (*workflow_dispatch*). Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`. Se mancano (o se la PR viene da un fork, dove GitHub non espone i secret) il job salta i test e resta verde. Il report HTML è caricato come artifact `playwright-report`.
+Il workflow `.github/workflows/e2e.yml` gira su push a `main`, pull request, ogni notte (cron 04:00 UTC) e a mano (*workflow_dispatch*). Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY` (valori del progetto di staging, mai di produzione). **Se mancano il job fallisce** con un `::error::` esplicito. Unica eccezione: PR da fork o da Dependabot, dove GitHub non espone i secret per design; lì il job emette un warning e non esegue i test, quindi un maintainer deve rilanciare gli E2E (workflow_dispatch su un branch del repo) prima del merge. Il report HTML è caricato come artifact `playwright-report`.
+
+Le migrazioni dello staging non sono applicate dalla CI (evita modifiche allo schema non volute): prima di mergere migrazioni nuove esegui `npx supabase link --project-ref <ref-staging> && npx supabase db push`.
+
+**Check obbligatorio.** Il job si chiama `Playwright (Supabase staging)` (workflow `E2E`): è il nome del required status check, non rinominarlo. Per renderlo obbligatorio su `main` (decisione del owner; da eseguire a mano, adattando gli altri check richiesti):
+
+```bash
+gh api -X PUT repos/Markg981/mestolo/branches/main/protection --input - <<'EOF'
+{
+  "required_status_checks": { "strict": true, "contexts": ["Playwright (Supabase staging)"] },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```
+
+Attenzione: questo comando sovrascrive la protezione esistente; controllala prima con `gh api repos/Markg981/mestolo/branches/main/protection`. In alternativa usa *Settings → Branches → Branch protection rules*.
 
 ---
 
