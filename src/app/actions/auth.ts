@@ -102,7 +102,12 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
     if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
       return { error: 'rate_limited', email: parsed.data.email };
     }
-    if (/registered|exists/i.test(error.message)) return { error: 'auth_email_taken', email: parsed.data.email };
+    // Email già registrata: stessa risposta di una nuova registrazione (nessuna enumerazione degli account).
+    // Con la conferma email attiva Supabase non da' errore (utente finto con identities = []).
+    if (error.code === 'user_already_exists' || /registered|exists/i.test(error.message)) {
+      await setLocaleCookie(parsed.data.locale);
+      return { sent: true, email: parsed.data.email };
+    }
     if (/password/i.test(error.message)) return { error: 'auth_weak_password', email: parsed.data.email };
     return { error: 'generic', email: parsed.data.email };
   }
