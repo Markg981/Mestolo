@@ -785,6 +785,7 @@
   },
   "shopping": {
     "title": "Einkaufsliste",
+    "toTaste": "n. B.",
     "lead": "Füge Produkte von Hand oder aus den Zutaten deiner Rezepte hinzu.",
     "addLabel": "Produkt hinzufügen",
     "addPlaceholder": "z. B. 500 g Tomaten",

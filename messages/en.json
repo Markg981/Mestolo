@@ -785,6 +785,7 @@
   },
   "shopping": {
     "title": "Shopping list",
+    "toTaste": "to taste",
     "lead": "Add items manually or from recipe ingredients.",
     "addLabel": "Add an item",
     "addPlaceholder": "E.g. 500 g tomatoes",

@@ -27,7 +27,7 @@ export default async function PrintShoppingPage({ searchParams }: { searchParams
                 <span>
                   {i.quantity !== null && <strong>{formatQuantity(Number(i.quantity), locale)} {unit(i.unit)} </strong>}
                   {i.name}
-                  {i.note ? `, ${i.note}` : ''}
+                  {i.note ? `, ${i.note === 'q.b.' ? t('shopping.toTaste') : i.note}` : ''}
                 </span>
               </li>
             ))}

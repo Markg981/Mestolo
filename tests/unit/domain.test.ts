@@ -84,10 +84,17 @@ describe('shopping list merge', () => {
       { name: 'sale', quantity: null, unit: null }, // dedupe without quantity
       { name: 'latte', quantity: 250, unit: 'ml' }, // existing is checked → new line
     ]);
-    expect(plan.updates).toEqual([{ id: 'a', quantity: 500 }]);
+    expect(plan.updates).toEqual([{ id: 'a', quantity: 500, delta: 300 }]);
     expect(plan.inserts.map((i) => `${i.name}|${i.unit}|${i.quantity}`)).toEqual([
       'Farina 00|cup|1', 'Farina integrale|g|100', 'latte|ml|250',
     ]);
+  });
+  it('reports the delta to add, accumulated over repeated lines', () => {
+    const plan = planShoppingMerge([{ id: 'x', name: 'farina', quantity: 100.5, unit: 'g' }], [
+      { name: 'farina', quantity: 50, unit: 'g' },
+      { name: 'Farina', quantity: 25.25, unit: 'g' },
+    ]);
+    expect(plan.updates).toEqual([{ id: 'x', quantity: 175.75, delta: 75.25 }]);
   });
   it('does not merge "uovo" and "uova" (no guessing)', () => {
     const plan = planShoppingMerge([{ id: 'x', name: 'uovo', quantity: 1, unit: null }], [{ name: 'uova', quantity: 2, unit: null }]);

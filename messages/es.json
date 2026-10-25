@@ -785,6 +785,7 @@
   },
   "shopping": {
     "title": "Lista de la compra",
+    "toTaste": "al gusto",
     "lead": "Añade productos a mano o desde los ingredientes de las recetas.",
     "addLabel": "Añadir un producto",
     "addPlaceholder": "P. ej., 500 g de tomates",
