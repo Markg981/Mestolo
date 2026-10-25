@@ -26,8 +26,10 @@ type Due = { entry_id: string; user_id: string; slot: MealSlot; title: string; l
 type Sub = { id: string; user_id: string; endpoint: string; p256dh: string; auth: string };
 
 /**
- * Cron (vercel.json: giornaliero, compatibile Hobby; vercel.pro.json o scheduler esterno ogni 15 minuti): invia le notifiche Web Push dei pasti
+ * Cron (vercel.json: giornaliero, compatibile Hobby ma coprendo solo la finestra dopo le 08:00 UTC; per promemoria puntuali
+ * vercel.pro.json o uno scheduler esterno ogni 15 minuti, con NEXT_PUBLIC_FREQUENT_CRON=true per la UI): invia le notifiche Web Push dei pasti
  * pianificati il cui orario di promemoria, nel fuso dell'utente, e' appena trascorso.
+ * Claim e conferma sono separati: il pasto e' confermato (confirm_meal_reminders) solo dopo l'esito del push.
  * Autenticazione: `Authorization: Bearer $CRON_SECRET`. Le sottoscrizioni scadute (404/410) vengono eliminate.
  */
 export async function GET(request: Request) {
@@ -55,10 +57,16 @@ export async function GET(request: Request) {
   for (const s of (subs as Sub[] | null) ?? []) byUser.set(s.user_id, [...(byUser.get(s.user_id) ?? []), s]);
 
   let sent = 0;
+  // Pasti da confermare: almeno un push riuscito, oppure nessun errore transitorio (niente da ritentare).
+  // Se i tentativi falliscono in modo transitorio senza alcun successo il pasto resta non confermato: dopo il
+  // lease (5 min) il claim lo riseleziona, finche' e' nella finestra e fino a 3 tentativi.
+  const confirm: string[] = [];
   const gone = new Set<string>();
   for (const meal of meals) {
     const text = await mealReminderText(meal.locale, meal.slot, meal.title);
     const payload = JSON.stringify({ title: text.title, body: text.body, url: '/plan', tag: `meal-${meal.entry_id}` });
+    let delivered = false;
+    let transient = false;
     for (const s of byUser.get(meal.user_id) ?? []) {
       if (gone.has(s.id)) continue;
       if (!isAllowedPushEndpoint(s.endpoint)) {
@@ -68,13 +76,22 @@ export async function GET(request: Request) {
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 3600, urgency: 'normal', timeout: 10_000 });
         sent++;
+        delivered = true;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) gone.add(s.id);
-        else console.error(`[mestolo] meal-reminders: push failed (${status ?? 'network'})`);
+        else {
+          transient = true;
+          console.error(`[mestolo] meal-reminders: push failed (${status ?? 'network'})`);
+        }
       }
     }
+    if (delivered || !transient) confirm.push(meal.entry_id);
+  }
+  if (confirm.length > 0) {
+    const { error: confirmError } = await admin.rpc('confirm_meal_reminders', { p_entry_ids: confirm });
+    if (confirmError) console.error('[mestolo] meal-reminders: confirm failed');
   }
   if (gone.size > 0) await admin.from('push_subscriptions').delete().in('id', [...gone]);
-  return NextResponse.json({ ok: true, meals: meals.length, sent, removed: gone.size });
+  return NextResponse.json({ ok: true, meals: meals.length, sent, confirmed: confirm.length, removed: gone.size });
 }

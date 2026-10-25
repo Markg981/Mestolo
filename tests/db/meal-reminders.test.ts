@@ -86,6 +86,35 @@ d('meal plan notifications', () => {
     expect((await claim('2031-01-15T17:45:00Z')).filter((r) => r.user_id === u)).toHaveLength(0); // already sent
   });
 
+  it('keeps a claimed reminder retryable until confirmed (lease, max 3 attempts) and never after confirmation', async () => {
+    const u = await mkUser(`mr_k_${s}`);
+    await admin("insert into public.notification_preferences (user_id, enabled, timezone, dinner_time) values ($1, true, 'UTC', '19:00')", [u]);
+    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [u, `https://fcm.googleapis.com/fcm/send/k-${s}`]);
+    const [e] = await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-03-01', 'dinner', 'Retry') returning id", [u]);
+    const mine = async (now: string) => (await claim(now)).filter((r) => r.user_id === u);
+    const expire = () => admin("update public.meal_reminders_sent set claimed_at = now() - interval '10 minutes' where entry_id = $1", [e.id]);
+
+    expect(await mine('2031-03-01T19:02:00Z')).toHaveLength(1); // attempt 1
+    expect(await mine('2031-03-01T19:03:00Z')).toHaveLength(0); // lease still held: no duplicate
+    await expire();
+    expect(await mine('2031-03-01T19:04:00Z')).toHaveLength(1); // not confirmed: retried (attempt 2)
+    await admin('select public.confirm_meal_reminders($1::uuid[])', [[e.id]]);
+    await expire();
+    expect(await mine('2031-03-01T19:05:00Z')).toHaveLength(0); // confirmed: never again
+
+    const [e2] = await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-03-02', 'dinner', 'Cap') returning id", [u]);
+    for (let i = 0; i < 3; i++) {
+      expect(await mine('2031-03-02T19:02:00Z')).toHaveLength(1);
+      await admin("update public.meal_reminders_sent set claimed_at = now() - interval '10 minutes' where entry_id = $1", [e2.id]);
+    }
+    expect(await mine('2031-03-02T19:02:00Z')).toHaveLength(0); // max attempts reached
+  });
+
+  it('confirm_meal_reminders is not callable by authenticated users', async () => {
+    const u = await mkUser(`mr_l_${s}`);
+    await expect(as(u, "select public.confirm_meal_reminders('{}'::uuid[])")).rejects.toThrow(/permission denied/);
+  });
+
   it('does not claim for opted-out users or users without subscriptions', async () => {
     const off = await mkUser(`mr_h_${s}`);
     const nosub = await mkUser(`mr_i_${s}`);

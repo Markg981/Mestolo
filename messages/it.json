@@ -1139,7 +1139,8 @@
     "permissionDenied": "Notifiche non consentite: abilitale nelle impostazioni del dispositivo o del browser.",
     "subscribeFailed": "Impossibile attivare le notifiche su questo dispositivo.",
     "unsupported": "Questo browser non supporta le notifiche push. Prova con l’app o con un browser aggiornato.",
-    "iosHint": "Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Mestolo alla schermata Home (Condividi > Aggiungi alla schermata Home, iOS 16.4 o successivo)."
+    "iosHint": "Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Mestolo alla schermata Home (Condividi > Aggiungi alla schermata Home, iOS 16.4 o successivo).",
+    "limitedSchedule": "Su questa installazione i promemoria vengono controllati solo una volta al giorno (circa le 08:00 UTC): quelli con un altro orario potrebbero non arrivare. Per promemoria puntuali l'amministratore deve pianificare la route ogni 15 minuti."
   },
   "cook": {
     "start": "Cucina",
