@@ -143,9 +143,13 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
       setError(null);
       const fd = new FormData();
       valid.forEach((p, i) => fd.append('pages', new File([p.blob!], `page-${i + 1}.jpg`, { type: 'image/jpeg' })));
-      const res = await importFromPhotos(fd);
-      if (res.ok) setDraft(res.data);
-      else setError(te(res.error));
+      try {
+        const res = await importFromPhotos(fd);
+        if (res.ok) setDraft(res.data);
+        else setError(te(res.error));
+      } catch {
+        setError(te('generic'));
+      }
     });
 
   // Identifies the exact set/order/content of the readable pages (each blob has its own object URL)
@@ -180,9 +184,13 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   const parseOcr = () =>
     start(async () => {
       setError(null);
-      const res = await importFromText(ocrText ?? '', false, null, locale);
-      if (res.ok) setDraft({ ...res.data, source: { ...res.data.source, type: 'photo' } });
-      else setError(te(res.error));
+      try {
+        const res = await importFromText(ocrText ?? '', false, null, locale);
+        if (res.ok) setDraft({ ...res.data, source: { ...res.data.source, type: 'photo' } });
+        else setError(te(res.error));
+      } catch {
+        setError(te('generic'));
+      }
     });
 
   const pagesAside = valid.length ? (
