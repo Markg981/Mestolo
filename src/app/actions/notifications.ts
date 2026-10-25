@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { addDays, toIsoDate } from '@/lib/plan/week';
 import { PREFS_COLUMNS, TIME_RE, isMealSlot, isValidTimeZone, rowToPrefs, type PlannedMeal, type PrefsRow, type ReminderPrefs } from '@/lib/notifications/schedule';
+import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
 
 const time = z.string().regex(TIME_RE).nullable();
@@ -33,7 +34,7 @@ export async function saveNotificationPreferences(input: unknown): Promise<Actio
 }
 
 const subscriptionSchema = z.object({
-  endpoint: z.url().max(2048).startsWith('https://'),
+  endpoint: z.url().max(2048).refine(isAllowedPushEndpoint),
   keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(256) }),
 });
 

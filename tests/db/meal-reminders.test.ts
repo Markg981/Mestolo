@@ -39,9 +39,9 @@ d('meal plan notifications', () => {
   it('push_subscriptions: users see and manage only their own rows', async () => {
     const a = await mkUser(`mr_a_${s}`);
     const b = await mkUser(`mr_b_${s}`);
-    await as(a, 'select public.save_push_subscription($1, $2, $3, $4)', [`https://push.example/a-${s}`, 'p', 'k', 'UA']);
+    await as(a, 'select public.save_push_subscription($1, $2, $3, $4)', [`https://fcm.googleapis.com/fcm/send/a-${s}`, 'p', 'k', 'UA']);
     expect(await as(b, 'select id from public.push_subscriptions')).toHaveLength(0);
-    await expect(as(b, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://push.example/x-' || $2, 'p', 'k')", [a, s])).rejects.toThrow(/row-level security/);
+    await expect(as(b, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://fcm.googleapis.com/fcm/send/x-' || $2, 'p', 'k')", [a, s])).rejects.toThrow(/row-level security/);
     await as(b, 'delete from public.push_subscriptions');
     expect(await as(a, 'select id from public.push_subscriptions')).toHaveLength(1);
     await as(b, "update public.push_subscriptions set auth = 'hacked'");
@@ -53,7 +53,7 @@ d('meal plan notifications', () => {
   it('save_push_subscription reassigns a shared endpoint to the current user and is idempotent', async () => {
     const a = await mkUser(`mr_c_${s}`);
     const b = await mkUser(`mr_d_${s}`);
-    const ep = `https://push.example/shared-${s}`;
+    const ep = `https://fcm.googleapis.com/fcm/send/shared-${s}`;
     await as(a, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p1', 'k1']);
     await as(a, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p2', 'k2']);
     await as(b, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p3', 'k3']);
@@ -74,7 +74,7 @@ d('meal plan notifications', () => {
     const u = await mkUser(`mr_g_${s}`);
     // Rome in January is UTC+1: dinner 18:30 local = 17:30 UTC
     await admin("insert into public.notification_preferences (user_id, enabled, timezone, lunch_time, dinner_time) values ($1, true, 'Europe/Rome', '12:00', '18:30')", [u]);
-    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [u, `https://push.example/g-${s}`]);
+    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [u, `https://fcm.googleapis.com/fcm/send/g-${s}`]);
     const [dinner] = await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-01-15', 'dinner', 'Risotto') returning id", [u]);
     await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-01-15', 'snack', 'Mela')", [u]); // snack_time null
     await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-01-16', 'dinner', 'Domani')", [u]);
@@ -93,7 +93,7 @@ d('meal plan notifications', () => {
       await admin("insert into public.notification_preferences (user_id, enabled, timezone, dinner_time) values ($1, $2, 'UTC', '19:00')", [u, enabled]);
       await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-02-01', 'dinner', 'X')", [u]);
     }
-    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [off, `https://push.example/h-${s}`]);
+    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [off, `https://fcm.googleapis.com/fcm/send/h-${s}`]);
     const rows = await claim('2031-02-01T19:05:00Z');
     expect(rows.filter((r) => r.user_id === off || r.user_id === nosub)).toHaveLength(0);
   });
