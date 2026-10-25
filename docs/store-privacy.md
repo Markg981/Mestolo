@@ -1,46 +1,76 @@
-# Risposte per le schede privacy degli store (bozza)
+# Risposte per le schede privacy degli store (bozza verificata sul codice)
 
-Bozza basata su come funziona il codice. **Va verificata dal gestore** (che è il titolare del trattamento) prima dell'invio, in particolare per i provider AI e l'SMTP scelti.
+Basata sull'audit del codice (ottobre 2026). **Non è consulenza legale: va verificata dal gestore** (titolare del trattamento) prima dell'invio, in particolare per i provider AI, l'SMTP e le regioni scelte. Va tenuta coerente con `/privacy` (`messages/*.json`, chiavi `privacy.*`).
+
+## Audit: cosa raccoglie davvero l'app
+
+| Componente | Dove | Cosa invia / tratta |
+|---|---|---|
+| **Sentry** (`@sentry/nextjs`) | `src/instrumentation.ts`, `src/instrumentation-client.ts`, `src/lib/monitoring/scrub.ts` | **Attivo solo se è impostato un DSN** (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`). Crash ed errori (stack trace), prestazioni campionate (`tracesSampleRate` 5% di default). `sendDefaultPii: false`, **nessun Session Replay**, nessun feedback widget. `beforeSend`/`beforeSendTransaction`/`beforeBreadcrumb` rimuovono cookie, header di autorizzazione, email, token/JWT, query string, body e testo delle ricette; dell'utente resta **solo l'ID interno**. Restano: tipo di errore, URL senza query, browser/OS/dispositivo, timestamp. L'IP non è inviato dall'SDK (`sendDefaultPii` false); il server Sentry può comunque vederlo in rete: impostare in Sentry "Prevent Storing of IP Addresses". |
+| **Supabase** | auth, DB, storage | Email, hash password, profilo, ricette, immagini, note, raccolte, liste, piano, amicizie, preferenze, uso AI, chiavi API cifrate (AES-256-GCM). Responsabile del trattamento. |
+| **Provider AI** (Anthropic, endpoint compatibili OpenAI, `src/lib/ai/providers.ts`) | solo su azione dell'utente | Testo ricetta, foto di pagine, testo da tradurre/analizzare, eventuale trascrizione video. Chiave del gestore o dell'utente (BYOK). |
+| **Import da link/video** | `src/lib/import/safe-fetch.ts`, `video-import.ts` | Il server scarica la pagina indicata dall'utente (protezione SSRF); nessun dato personale verso terzi oltre all'URL richiesto. |
+| **SMTP** | email di Supabase Auth | Indirizzo email e testo del messaggio di servizio. |
+| **Hosting** (es. Vercel) | log di richiesta | IP e log tecnici, per sicurezza. |
+| **Capacitor** | `camera`, `filesystem`, `local-notifications`, `app`, `splash-screen`, `status-bar` | Fotocamera: solo su azione dell'utente (foto per import/ricetta), nessun accesso continuo alla libreria. Notifiche: **solo locali** (promemoria pasti), nessun push server, nessun token push. Nessun plugin di analytics/pubblicità/posizione. |
+| Analytics, SDK pubblicitari, geolocalizzazione, contatti | — | **Nessuno.** |
 
 ## Dati raccolti
 
-| Dato | Raccolto | Scopo | Collegato all'identità | Facoltativo |
+| Dato | Raccolto | Scopo | Collegato all'identità | Tracciamento |
 |---|---|---|---|---|
-| Email | Sì | Account, email di servizio (conferma, recupero) | Sì | No |
-| Nome utente, nome visualizzato, bio | Sì | Profilo, ricerca amici | Sì | Nome e bio sì |
-| Foto (immagini delle ricette caricate) | Sì | Funzionalità dell'app | Sì | Sì |
-| Foto delle pagine per l'import | Elaborate, **non conservate** | Lettura del testo tramite il provider AI scelto | — | Sì |
-| Contenuti generati dall'utente (ricette, note, raccolte, liste, piano) | Sì | Funzionalità dell'app | Sì | — |
-| Preferenze alimentari dichiarate | Sì | Filtro della sezione Scopri | Sì | Sì |
-| ID utente | Sì | Funzionamento del servizio | Sì | No |
-| Conteggio uso funzioni AI | Sì | Quote giornaliere, trasparenza costi | Sì | — |
-| Posizione | **No** (i metadati GPS delle foto vengono rimossi) | — | — | — |
+| Email | Sì | Account, email di servizio | Sì | No |
+| Nome utente, nome visualizzato, bio | Sì | Profilo, ricerca amici | Sì | No |
+| Foto (immagini delle ricette caricate) | Sì | Funzionalità dell'app | Sì | No |
+| Foto delle pagine per l'import | Elaborate, **non conservate** | Lettura del testo tramite il provider AI | — | No |
+| Contenuti generati dall'utente (ricette, note, raccolte, liste, piano) | Sì | Funzionalità dell'app | Sì | No |
+| Preferenze alimentari dichiarate (facoltative) | Sì | Filtro della sezione Scopri | Sì | No |
+| ID utente | Sì | Funzionamento del servizio; **anche inviato a Sentry** | Sì | No |
+| Conteggio uso funzioni AI | Sì | Quote giornaliere | Sì | No |
+| **Dati di crash / log di errori (Sentry)** | **Sì, se il DSN è configurato** | Diagnostica e stabilità (non analytics) | Sì (solo ID interno, non email) | No |
+| **Dati sulle prestazioni (Sentry, campione 5%)** | **Sì, se il DSN è configurato** | Diagnostica | Sì (solo ID interno) | No |
+| Indirizzo IP / log del server | Sì (hosting, Supabase) | Sicurezza e prevenzione abusi | Non usato per profilare | No |
+| Posizione | **No** (i metadati GPS delle foto sono rimossi) | — | — | — |
 | Contatti, cronologia di navigazione, dati finanziari, salute | **No** | — | — | — |
 | Identificatori pubblicitari, tracciamento tra app | **No** | — | — | — |
-| Analytics / crash reporting di terze parti | **No** (nessuno integrato) | — | — | — |
 
 ## Condivisione con terze parti
-- **Supabase** (database, autenticazione, file): fornitore di infrastruttura (responsabile del trattamento).
-- **Hosting** (es. Vercel): fornitore di infrastruttura.
-- **Provider AI** (Anthropic/OpenAI/altro configurato), **solo quando l'utente usa una funzione AI**: testo della ricetta o foto delle pagine. Da dichiarare come condivisione per "funzionalità dell'app".
+- **Supabase** (database, autenticazione, file): responsabile del trattamento.
+- **Hosting** (es. Vercel): responsabile del trattamento.
+- **Sentry**: responsabile del trattamento, diagnostica di errori e prestazioni con dati scrubbati.
+- **Provider AI** (Anthropic/OpenAI/altro configurato), **solo quando l'utente usa una funzione AI**: testo della ricetta o foto delle pagine ("funzionalità dell'app").
 - **SMTP** (es. Resend): email di servizio.
-- Nessuna vendita di dati, nessuna pubblicità.
+- Nessuna vendita di dati, nessuna pubblicità, nessun broker di dati.
 
 ## Sicurezza
 - Dati cifrati in transito (HTTPS).
 - Chiavi API personali cifrate a riposo (AES-256-GCM).
-- L'utente può **richiedere l'eliminazione** dei dati: sì, direttamente in app (*Impostazioni → Account e dati*), con effetto immediato su account, ricette e file.
+- **Eliminazione**: direttamente in app (*Impostazioni → Account e dati*), con effetto immediato su account, ricette e file.
 - **Esportazione** dei dati: sì, in JSON.
 
-## Google Play – Sicurezza dei dati (corrispondenza)
-- *Informazioni personali*: Email, Nome utente → raccolti, non condivisi (salvo fornitori), obbligatori.
-- *Foto e video*: Foto → raccolte, facoltative; condivise con il provider AI solo su richiesta dell'utente.
-- *Attività nell'app*: Altri contenuti generati dagli utenti → raccolti.
-- *Identificatori dispositivo*: no.
+## Google Play – Sicurezza dei dati
+Dichiarare "L'app raccoglie dati" = **Sì**; "Dati cifrati in transito" = **Sì**; "Possibilità di richiedere l'eliminazione" = **Sì** (in app; indicare anche l'URL web di eliminazione se richiesto).
 
-## Apple – Privacy Nutrition Label (corrispondenza)
+| Categoria / tipo | Raccolto | Condiviso | Obbligatorio | Scopo |
+|---|---|---|---|---|
+| Info personali → Indirizzo email | Sì | No (i fornitori che trattano per conto nostro non contano come "condivisione") | Sì | Funzionalità dell'app, gestione dell'account |
+| Info personali → Nome (nome utente/visualizzato) | Sì | No | Sì | Funzionalità dell'app, gestione dell'account |
+| Info personali → ID utente | Sì | No | Sì | Funzionalità dell'app, gestione dell'account, **analisi/diagnostica non pubblicitaria** (Sentry) |
+| Foto e video → Foto | Sì | **Sì**, con il provider AI solo su richiesta dell'utente | No | Funzionalità dell'app |
+| Attività nell'app → Altri contenuti generati dagli utenti | Sì | **Sì** (testo ricetta al provider AI solo su richiesta) | No | Funzionalità dell'app |
+| **Log di app e prestazioni → Log di arresto anomalo** | **Sì** | No (Sentry come responsabile) | Sì | **Analisi / Prestazioni** |
+| **Log di app e prestazioni → Diagnostica** | **Sì** | No | Sì | Analisi / Prestazioni |
+| Posizione, contatti, dati finanziari, salute, identificatori dispositivo o pubblicitari | No | — | — | — |
+
+## Apple – Privacy Nutrition Label
 - *Contact Info → Email Address*: App Functionality, Linked to You.
-- *User Content → Photos or Videos, Other User Content*: App Functionality, Linked to You.
+- *Contact Info → Name* (nome utente/visualizzato): App Functionality, Linked to You.
+- *User Content → Photos or Videos*, *Other User Content*: App Functionality, Linked to You.
 - *Identifiers → User ID*: App Functionality, Linked to You.
-- *Usage Data*: conteggio uso AI → App Functionality, Linked to You.
-- *Tracking*: No.
+- *Usage Data → Product Interaction* (conteggio uso AI): App Functionality, Linked to You.
+- ***Diagnostics → Crash Data*** e ***Performance Data***: App Functionality, **Linked to You** (inviamo l'ID utente interno a Sentry). Se si rimuove `user.id` dagli eventi (`scrubEvent`), diventa *Not Linked to You*.
+- *Tracking*: **No** (nessun dato usato per tracciare tra app/siti di terzi; nessun IDFA). Non serve ATT.
+- Privacy manifest iOS (`PrivacyInfo.xcprivacy`): se l'SDK Sentry/Capacitor lo richiede, dichiarare i motivi delle API "required reason" usate.
+
+## Da fare del gestore
+Vedi la checklist nella PR: variabili `NEXT_PUBLIC_LEGAL_*`, regioni Supabase/Sentry, DPA con i fornitori, URL di `/privacy` nelle schede degli store.

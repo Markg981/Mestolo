@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import { LOCALES, matchAcceptLanguage } from '@/i18n/config';
+import { PRIVACY_SECTIONS, TERMS_SECTIONS } from '@/lib/legal';
 
 type Tree = { [k: string]: string | Tree };
 
@@ -131,8 +132,8 @@ describe('i18n', () => {
       ...['manual', 'photo', 'url', 'text', 'copy', 'variant'].map((s) => `recipe.sourceType.${s}`),
       ...['description', 'captions', 'transcription'].flatMap((s) => [`videoImport.source.${s}`, `videoImport.sourceHint.${s}`]),
       ...['too_long', 'decode_failed', 'unsupported'].map((s) => `videoImport.extract.${s}`),
-      ...['conduct','content', 'rights', 'safety', 'moderation', 'account'].flatMap((s) => [`terms.${s}`, `terms.${s}Title`]),
-      ...['data', 'visibility', 'photos', 'ai', 'keys', 'images', 'export', 'logs'].flatMap((s) => [`privacy.${s}`, `privacy.${s}Title`]),
+      ...TERMS_SECTIONS.flatMap((s) => [`terms.${s}`, `terms.${s}Title`]),
+      ...PRIVACY_SECTIONS.flatMap((s) => [`privacy.${s}`, `privacy.${s}Title`]),
     ];
     const errorCodes = readFileSync(join(root, 'src/app/actions/_utils.ts'), 'utf8').match(/export type ErrorCode =([\s\S]*?);/)![1];
     for (const code of errorCodes.matchAll(/'(\w+)'/g)) families.push(`errors.${code[1]}`);

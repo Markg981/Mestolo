@@ -10,7 +10,8 @@
   "scripts": {
     "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-ocr-assets.mjs",
+    "prebuild": "node scripts/copy-ocr-assets.mjs && node scripts/check-legal.mjs",
+    "check:legal": "node scripts/check-legal.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
