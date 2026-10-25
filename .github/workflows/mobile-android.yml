@@ -80,7 +80,8 @@ jobs:
     steps:
       - name: Salta se manca il service account
         if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON == '' }}
-        run: echo "PLAY_SERVICE_ACCOUNT_JSON non impostato: upload su Play saltato."
+        run: |
+          echo "PLAY_SERVICE_ACCOUNT_JSON non impostato: upload su Play saltato."
       - uses: actions/download-artifact@v4.3.0
         if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
         with:
