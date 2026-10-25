@@ -10,7 +10,7 @@ import type { FieldFlags, Ingredient, ImportWarning, Step } from './types';
 
 const INGREDIENT_HEADERS = /^(?:ingredienti|ingredients?|ingredientes|ingrédients|zutaten|occorrente|per l['’]impasto|per la farcia)\b[\s:]*/i;
 const STEP_HEADERS = /^(?:procedimento|preparazione|istruzioni|metodo|esecuzione|steps?|method|directions|instructions|preparation|preparación|elaboración|instrucciones|modo de preparación|préparation|étapes|instructions|zubereitung|anleitung|modo de preparo|preparo|preparação|instruções)\b[\s:]*/i;
-const SERVINGS_RE = /(?:per|for|para|pour|für|serves|dosi per|porzioni|servings?|yield|rende|raciones|portions?|portionen|porções|rendimento)\D{0,12}(\d+(?:[.,]\d+)?)|(\d+(?:[.,]\d+)?)\s*(?:persone|porzioni|servings|people|personas|raciones|personnes|portions|portionen|personen|porções|pessoas|pax)\b/i;
+const SERVINGS_RE = /(?:per|for|para|pour|für|serves|dosi per|porzioni|servings?|yield|rende|raciones|portions?|portionen|porções|rendimento)\D{0,12}(\d+(?:[.,]\d+)?)(?!\d)(?!\s*(?:min|sec|or[ae]\b|h\b|hours?|hrs?\b|giorn|days?|°|gradi|%))|(\d+(?:[.,]\d+)?)\s*(?:persone|porzioni|servings|people|personas|raciones|personnes|portions|portionen|personen|porções|pessoas|pax)\b/i;
 const PREP_RE = /^(?:tempo di )?(?:preparazione|prep(?:aration)?(?: time)?|preparación|préparation|zubereitung(?:szeit)?|vorbereitung|preparo|preparação)\s*[:\-–]\s*(.+)$/i;
 const COOK_RE = /^(?:tempo di )?(?:cottura|cook(?:ing)?(?: time)?|cocción|cuisson|garzeit|backzeit|kochzeit|cozedura|cozimento)\s*[:\-–]\s*(.+)$/i;
 const TOTAL_RE = /^(?:tempo totale|total(?: time)?|tiempo total|temps total|gesamtzeit|tempo total)\s*[:\-–]\s*(.+)$/i;
