@@ -36,7 +36,7 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 
 ## 2. Provare l'app su un telefono Android (sviluppo)
 
-1. Installa **Android Studio** (include SDK e JDK).
+1. Installa **Android Studio** (include SDK e JDK). Per Gradle usa un **JDK 21** (es. Temurin 21): il JBR delle versioni recenti di Android Studio è Java 25 e Gradle 8.14 fallisce con `Unsupported class file major version 69`. Da riga di comando: `JAVA_HOME=<percorso-jdk-21> ./gradlew assembleDebug` dentro `android/`.
 2. Avvia il sito in locale raggiungibile dalla rete: `npm run build && npx next start -H 0.0.0.0 -p 3000`.
 3. `CAP_SERVER_URL=http://<IP-del-PC>:3000 npm run mobile:android` (l'HTTP in chiaro viene abilitato solo quando l'indirizzo è http://: mai per le build da store).
 4. In Android Studio: collega il telefono con *Debug USB* attivo e premi ▶ *Run*.
@@ -127,6 +127,6 @@ Il moderatore vede la voce *Moderazione* nel menu. Gli utenti non possono attrib
 
 ## Cosa NON è stato verificato
 
-**Android**: compilati con successo da riga di comando (Gradle 8.14.3, AGP 8.13, JDK 21 Temurin, SDK 36) `assembleDebug` (APK debug) e `bundleRelease` (AAB **non firmato**, senza keystore) con `CAP_SERVER_URL=https://mestolo.vercel.app`. Non sono invece stati verificati: la build **firmata** (serve la tua keystore), l'esecuzione su dispositivo/emulatore (in particolare la condivisione "→ Mestolo" e la fotocamera), il workflow GitHub Actions `mobile-android.yml` e l'upload su Play. Con JDK 25/26 (quello di Android Studio recente o di sistema) il wrapper Gradle attuale non è garantito: usa JDK 21.
+**Android**: compilati con successo da riga di comando (Gradle 8.14.3, AGP 8.13, JDK 21 Temurin, SDK 36) `assembleDebug` (APK debug) e `bundleRelease` (AAB **non firmato**, senza keystore) con `CAP_SERVER_URL=https://mestolo.vercel.app`. L'APK debug è stato installato e avviato su un emulatore (tablet, Android 16): l'app parte e, senza `CAP_SERVER_URL` nella build, mostra correttamente la pagina offline locale. Non sono invece stati verificati: la build **firmata** (serve la tua keystore), l'uso collegato al sito pubblicato su un telefono vero (in particolare la condivisione "→ Mestolo" e la fotocamera), il workflow GitHub Actions `mobile-android.yml` (parte solo con tag `v*` o manualmente e richiede la variabile di repository `CAP_SERVER_URL`, oggi non impostata) e l'upload su Play. Con JDK 25/26 (quello di Android Studio recente o di sistema) il wrapper Gradle attuale non è garantito: usa JDK 21.
 
 **iOS**: non compilato (serve un Mac con Xcode). I file di progetto (target `ShareExtension` nel `project.pbxproj`, plist, privacy manifest) e il workflow sono stati scritti e validati solo in modo statico (parsing dei plist, YAML, coerenza degli ID): **la prima esecuzione di `mobile-ios.yml` è il vero collaudo** e può richiedere aggiustamenti (nome dell'immagine/Xcode sul runner, permessi della chiave API, App Group non ancora registrato). Da provare su un iPhone vero: fotocamera, condivisione da Safari verso Mestolo, apertura offline.

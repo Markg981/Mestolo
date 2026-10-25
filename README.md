@@ -72,7 +72,8 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 - **Scopri e ricetta del giorno**: ricette pubbliche e degli amici (mai le proprie), filtro per categoria e preferenze (indicativo), scelta del giorno deterministica, stato vuoto onesto. Catalogo iniziale originale opzionale (`npm run seed:catalog`).
 - **Lista della spesa**: aggiunta manuale (con parsing “500 g pomodori”), da ricetta con porzioni scelte, spunta, svuota presi, **somma solo se nome e unità coincidono**, stampa.
 - **Piano pasti** settimanale (4 pasti al giorno), da ricette proprie o preferite o testo libero, “ingredienti della settimana nella lista”.
-- **Stampa** ricetta e lista; **export** ricetta in JSON Mestolo e Schema.org JSON-LD ([formato](docs/export-format.md)); **export di tutti i dati** dell’account; **eliminazione account** (file compresi).
+- **Stampa** ricetta e lista; **export** ricetta in JSON Mestolo e Schema.org JSON-LD ([formato](docs/export-format.md)); **export di tutti i dati** dell’account; **import dei file JSON esportati** (`/import/file`: singola ricetta con revisione, oppure export dell’account con importazione di tutte le ricette come private e salto dei titoli già presenti); **eliminazione account** (file compresi).
+- **Indicazioni dietetiche dell’autore** (`diet_hints`): l’autore può indicare vegetariana, vegana, pescetariana, senza maiale, senza alcol; nella ricetta compaiono come “secondo l’autore (non verificato)”. Mestolo non le calcola né le verifica e non gestisce allergeni.
 - **API key personali**: inserimento, sostituzione, rimozione; stato per funzione (“userà la tua chiave” / “servizio base: 7 di 10 oggi” / “non disponibile”); uso negli ultimi 30 giorni.
 - **Moderazione** (richiesta dagli store): ruolo moderatore assegnabile solo dal gestore, pannello `/moderation`, nascondi/ripristina/archivia, **nascondimento automatico dopo 3 segnalazioni** di utenti diversi, regole della community (`/terms`) accettate alla registrazione, contatto di supporto (`NEXT_PUBLIC_SUPPORT_EMAIL`).
 - **PWA e app**: installabile, copie offline delle pagine aperte (svuotate al logout), condivisione di link verso Mestolo, progetti Android/iOS Capacitor con fotocamera nativa e pagina offline locale.
@@ -85,17 +86,17 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 
 ### Parziali
 
-- **Verifica end-to-end con servizi reali**: non avendo credenziali Supabase e chiavi AI, non è stato possibile provare l’app collegata a un progetto Supabase reale né ai provider AI reali (vedi [Test](#test-eseguiti)).
+- **Verifica end-to-end con servizi reali**: i test Playwright girano in CI contro un progetto Supabase di staging (secret `STAGING_SUPABASE_*`, workflow `e2e.yml`). Manca ancora una prova con **chiavi AI reali** (import da foto/testo con AI, assistente, traduzione, immagini): vedi la checklist in [docs/acceptance-criteria.md](docs/acceptance-criteria.md).
 - **HEIC** (foto iPhone): funziona dove il browser sa decodificarlo (Safari); altrove l’app chiede di convertire in JPG.
-- **App Android/iOS**: progetti generati e configurati, ma **non compilati né provati su dispositivo** (nell’ambiente di sviluppo non era possibile scaricare SDK Android/Xcode). La Share Extension iOS è descritta in [docs/ios-share-extension.md](docs/ios-share-extension.md).
-- **Indicazioni dietetiche**: il campo `diet_hints` esiste ma non viene compilato automaticamente (scelta voluta: niente etichette di allergeni presentate come verificate); il filtro preferenze di Scopri è solo indicativo.
-- **Generazione immagini**: implementata solo con provider OpenAI.
+- **App Android**: compilata in locale (`assembleDebug` con JDK 21) e avviata sull’emulatore; per collegarla al sito serve `CAP_SERVER_URL` (senza, mostra la pagina offline). Il workflow `mobile-android.yml` richiede la variabile `CAP_SERVER_URL` e i secret del keystore. Vedi [docs/mobile.md](docs/mobile.md).
+- **App iOS**: progetto generato e configurato, ma **non compilato** (serve un Mac con Xcode). La Share Extension iOS è descritta in [docs/ios-share-extension.md](docs/ios-share-extension.md).
+- **Indicazioni dietetiche**: solo dichiarate dall’autore, mai dedotte né verificate; il filtro preferenze di Scopri è solo indicativo.
+- **Generazione immagini**: solo con provider OpenAI (scelta documentata: Anthropic non genera immagini; gli endpoint compatibili OpenAI raramente espongono `/images`).
 
-### Non implementate
+### Non implementate (per scelta)
 
-- Modifica dei dati offline (offline si consulta, le modifiche richiedono la connessione).
-- Link di condivisione per ricette private o per soli amici (voluto: non deve aggirare la modalità “amici”). Solo le ricette pubbliche hanno una pagina pubblica `/r/[slug]`.
-- Import di file JSON esportati (il formato è documentato e predisposto).
+- Modifica dei dati offline (offline si consulta, le modifiche richiedono la connessione): richiederebbe gestione dei conflitti con versioni e cronologia.
+- Link di condivisione per ricette private o per soli amici: non deve aggirare la modalità “amici”. Solo le ricette pubbliche hanno una pagina pubblica `/r/[slug]`; per gli altri ci sono gli inviti di amicizia con link a scadenza.
 
 ---
 
@@ -288,7 +289,7 @@ Attenzione: questo comando sovrascrive la protezione esistente; controllala prim
 
 ## Prossimi passi consigliati
 
-1. Collegare un progetto Supabase, configurare SMTP e fare un giro completo sui 14 criteri di accettazione con due account reali.
-2. Prima build delle app in Android Studio e Xcode, test su dispositivo, test chiuso su Google Play e TestFlight ([docs/mobile.md](docs/mobile.md)).
+1. Riportare i 14 criteri di accettazione della specifica in [docs/acceptance-criteria.md](docs/acceptance-criteria.md) e verificarli con due account reali; fare le prove con chiavi AI reali elencate nello stesso file.
+2. Impostare la variabile `CAP_SERVER_URL` e i secret del keystore nel repository, provare l'app Android su un telefono vero, prima build iOS con Xcode, test chiuso su Google Play e TestFlight ([docs/mobile.md](docs/mobile.md)).
 3. Provare su dispositivo la Share Extension iOS e le notifiche locali del piano pasti.
-4. Import del formato JSON esportato.
+4. Completare la parte del gestore in [docs/store-privacy.md](docs/store-privacy.md) (variabili `NEXT_PUBLIC_LEGAL_*`, regioni dei dati, DPA con i fornitori).
