@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { buildAccountExport } from '@/lib/recipes/account-export';
 import { enforceRateLimit, RateLimitedError } from '@/lib/rate-limit';
 
 /**
@@ -74,42 +75,39 @@ export async function GET() {
     return new NextResponse('Export failed', { status: 500, headers: { 'cache-control': 'no-store' } });
   }
 
-  const body = {
-    format: 'mestolo.account-export/v1',
-    exported_at: new Date().toISOString(),
-    account: { id: user.id, email: user.email, created_at: user.created_at },
+  const body = buildAccountExport({
+    user,
     profile: profile.data,
     recipes: recipes.data,
-    recipe_versions: versions.data,
-    recipe_images_metadata: images.data,
-    recipe_nutrition: nutrition.data,
-    cook_logs: cookLogs.data,
-    recipe_ratings: ratings.data,
-    pantry_items: pantry.data,
-    plan_preferences: planPrefs.data,
-    notification_preferences: notifPrefs.data,
-    push_subscriptions: pushSubs.data,
+    versions: versions.data,
+    images: images.data,
+    nutrition: nutrition.data,
+    cookLogs: cookLogs.data,
+    ratings: ratings.data,
+    pantry: pantry.data,
+    planPrefs: planPrefs.data,
+    notifPrefs: notifPrefs.data,
+    pushSubs: pushSubs.data,
     invites: invites.data,
-    invite_redemptions: redemptions.data,
-    collection_members: collMembers.data,
-    shopping_list_members: listMembers.data,
-    shopping_aisle_overrides: aisles.data,
-    ai_suggestions: suggestions.data,
-    app_feedback: feedback.data,
-    personal_notes: notes.data,
+    redemptions: redemptions.data,
+    collMembers: collMembers.data,
+    listMembers: listMembers.data,
+    aisles: aisles.data,
+    suggestions: suggestions.data,
+    feedback: feedback.data,
+    notes: notes.data,
     favorites: favorites.data,
-    custom_categories: categories.data,
+    categories: categories.data,
     collections: collections.data,
-    shopping_lists: shoppingLists.data,
-    shopping_items: shoppingItems.data,
-    meal_plan: plan.data,
+    shoppingLists: shoppingLists.data,
+    shoppingItems: shoppingItems.data,
+    plan: plan.data,
     friendships: friendships.data,
     blocks: blocks.data,
     reports: reports.data,
-    api_keys_configured: keys.data,
-    ai_usage: usage.data,
-    note: 'Image files can be downloaded from each recipe page. Avatar and cook-log photos are referenced by storage path (profile.avatar_path, cook_logs[].photo_path), not embedded. API key values are never exported.',
-  };
+    keys: keys.data,
+    usage: usage.data,
+  });
   return new NextResponse(JSON.stringify(body, null, 2), {
     headers: {
       'content-type': 'application/json; charset=utf-8',

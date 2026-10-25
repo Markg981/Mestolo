@@ -52,7 +52,10 @@ export interface EditorProps {
   recipeId?: string;
   initial: EditorState;
   categories: EditorCategory[];
+  /** nome logico della bozza locale (vedi lib/drafts: la chiave completa include l'id utente) */
   draftKey: string;
+  /** content_hash della versione sul server da cui parte la modifica (solo mode 'edit') */
+  baseVersion?: string;
   source?: ImportDraft['source'];
   warnings?: ImportWarning[];
   /** extra content shown next to the form (e.g. the photographed pages) */

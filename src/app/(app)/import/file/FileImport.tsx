@@ -1,5 +1,6 @@
 'use client';
 
+import { draftNames } from '@/lib/drafts';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
@@ -68,7 +69,7 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
   }
 
   if (drafts && picked !== null) {
-    return <ImportReview draft={drafts[picked]} categories={categories} draftKey="mestolo:draft:import-file" onBack={() => (drafts.length === 1 ? setDrafts(null) : setPicked(null))} />;
+    return <ImportReview draft={drafts[picked]} categories={categories} draftKey={draftNames.import('file')} onBack={() => (drafts.length === 1 ? setDrafts(null) : setPicked(null))} />;
   }
 
   return (

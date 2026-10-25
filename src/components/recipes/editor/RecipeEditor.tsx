@@ -18,6 +18,8 @@ import { compressImage } from '@/lib/images/client-compress';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import type { FieldFlag, Visibility } from '@/lib/recipes/types';
 import { Alert, Badge, Button, Field, Input, Select, Textarea, buttonClass, cx, inputClass } from '../../ui';
+import { clearLegacyDrafts, draftGet, draftSet, draftStorageKey, parseDraft, serializeDraft } from '@/lib/drafts';
+import { useDraftUser } from './DraftUser';
 import { emptyIngredient, emptyStep, toEditorIngredient, toPayload } from './convert';
 import type { EditorIngredient, EditorProps, EditorState, EditorStep } from './types';
 
@@ -35,23 +37,7 @@ function FlagBadges({ flags }: { flags?: FieldFlag[] }) {
   );
 }
 
-function storageGet(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function storageSet(key: string, value: string | null) {
-  try {
-    if (value === null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
-  } catch {
-    /* storage unavailable: the draft stays in memory */
-  }
-}
-
-export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
+export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, baseVersion, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
   const t = useTranslations('editor');
   const tc = useTranslations('common');
   const tu = useTranslations('units');
@@ -68,6 +54,8 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
   const ts = useTranslations('settings');
   const locale = useLocale();
   const router = useRouter();
+  const draftUserId = useDraftUser();
+  const storageKey = draftUserId ? draftStorageKey(draftUserId, draftKey) : null;
 
   const [s, setS] = useState<EditorState>(initial);
   const [restored, setRestored] = useState(false);
@@ -104,22 +92,24 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
 
   // Restore an unsaved draft (protects against errors, reloads, closed tabs)
   useEffect(() => {
-    const raw = storageGet(draftKey);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as { state: EditorState; at: number };
-        if (parsed?.state && Date.now() - parsed.at < 1000 * 60 * 60 * 24 * 7 && JSON.stringify(parsed.state) !== JSON.stringify(initial)) {
-          // Restoring from browser storage (an external system) once on mount.
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setS(parsed.state);
-          setRestored(true);
-        }
-      } catch {
-        storageSet(draftKey, null);
-      }
+    clearLegacyDrafts();
+    if (!storageKey) return;
+    const raw = draftGet(storageKey);
+    if (!raw) return;
+    // In edit mode the draft is valid only if it started from the current server version.
+    const res = parseDraft<EditorState>(raw, { serverVersion: mode === 'edit' ? (baseVersion ?? '') : null });
+    if (res.status !== 'ok') {
+      draftSet(storageKey, null);
+      return;
+    }
+    if (JSON.stringify(res.state) !== JSON.stringify(initial)) {
+      // Restoring from browser storage (an external system) once on mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setS(res.state);
+      setRestored(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey]);
+  }, [storageKey]);
 
   // Autosave
   useEffect(() => {
@@ -127,9 +117,10 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
       firstRender.current = false;
       return;
     }
-    const id = setTimeout(() => storageSet(draftKey, JSON.stringify({ state: s, at: Date.now() })), 500);
+    if (!storageKey) return;
+    const id = setTimeout(() => draftSet(storageKey, serializeDraft(s, baseVersion)), 500);
     return () => clearTimeout(id);
-  }, [s, draftKey]);
+  }, [s, storageKey, baseVersion]);
 
   // Possible duplicates (new recipes and imports)
   useEffect(() => {
@@ -258,7 +249,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
           const r = await importSourceImage(id, source.imageUrl, source.name ?? source.attribution ?? null);
           if (!r.ok) extras.push('image');
         }
-        storageSet(draftKey, null);
+        if (storageKey) draftSet(storageKey, null);
         router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
         router.refresh();
       } catch {
@@ -268,7 +259,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
   };
 
   const discardDraft = () => {
-    storageSet(draftKey, null);
+    if (storageKey) draftSet(storageKey, null);
     setS(initial);
     setRestored(false);
   };
