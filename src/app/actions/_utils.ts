@@ -33,6 +33,7 @@ export type ErrorCode =
   | 'image_invalid'
   | 'image_too_large'
   | 'too_many_files'
+  | 'storage_quota_exceeded'
   | 'auth_invalid'
   | 'auth_email_taken'
   | 'auth_weak_password'
