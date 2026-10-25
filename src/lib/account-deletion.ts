@@ -5,7 +5,7 @@ type ImgRow = { storage_path: string; thumb_path: string | null };
 
 /** Minimal slice of the Supabase admin client used here (keeps the flow unit-testable). */
 export interface DeletionAdmin {
-  from(table: 'recipe_images'): {
+  from(table: 'recipe_images' | 'cook_logs'): {
     select(cols: string): { eq(col: string, val: string): PromiseLike<{ data: unknown; error: { message: string } | null }> };
   };
   storage: {
@@ -28,6 +28,10 @@ export async function deleteAccountData(admin: DeletionAdmin, userId: string): P
   const { data, error: listError } = await admin.from('recipe_images').select('storage_path, thumb_path').eq('owner_id', userId);
   if (listError) throw new Error(`list images failed: ${listError.message}`);
   const paths = ((data as ImgRow[] | null) ?? []).flatMap((i) => [i.storage_path, i.thumb_path].filter(Boolean) as string[]);
+  // Foto del diario «L'ho cucinata»: stesso bucket, rimosse subito (il cron resta rete di sicurezza).
+  const { data: logs, error: logsError } = await admin.from('cook_logs').select('photo_path').eq('user_id', userId);
+  if (logsError) throw new Error(`list cook photos failed: ${logsError.message}`);
+  for (const l of (logs as { photo_path: string | null }[] | null) ?? []) if (l.photo_path) paths.push(l.photo_path);
   for (let i = 0; i < paths.length; i += CHUNK) {
     const { error } = await admin.storage.from(BUCKET).remove(paths.slice(i, i + CHUNK));
     if (error) throw new Error(`storage remove failed: ${error.message}`);

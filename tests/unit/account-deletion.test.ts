@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 
-function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[] } = {}) {
+function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[]; cook?: unknown[] } = {}) {
   const calls: string[] = [];
   const remove = vi.fn(async (p: string[]) => {
     calls.push(`remove:${p.length}`);
@@ -12,9 +12,10 @@ function make(opts: { removeError?: boolean; deleteError?: { status?: number; co
     return { error: opts.deleteError ?? null };
   });
   const admin = {
-    from: () => ({
+    from: (table: string) => ({
       select: () => ({
         eq: async () => {
+          if (table === 'cook_logs') return { data: opts.cook ?? [], error: null };
           calls.push('list');
           return { data: opts.rows ?? [{ storage_path: 'a', thumb_path: 'a_t' }, { storage_path: 'b', thumb_path: null }], error: null };
         },
@@ -31,6 +32,13 @@ describe('deleteAccountData', () => {
     const m = make();
     await deleteAccountData(m.admin, 'u1');
     expect(m.calls).toEqual(['list', 'remove:3', 'deleteUser']);
+  });
+
+  it('removes the cooked-diary photos too, skipping logs without photo', async () => {
+    const m = make({ rows: [], cook: [{ photo_path: 'u1/cook/x.webp' }, { photo_path: null }] });
+    await deleteAccountData(m.admin, 'u1');
+    expect(m.remove).toHaveBeenCalledWith(['u1/cook/x.webp']);
+    expect(m.calls).toEqual(['list', 'remove:1', 'deleteUser']);
   });
 
   it('chunks removals by 100', async () => {
