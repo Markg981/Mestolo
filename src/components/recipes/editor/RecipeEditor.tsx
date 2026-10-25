@@ -478,13 +478,13 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                   <FlagBadges flags={ing.flags} />
                   {ing.raw && ing.flags.length > 0 && <span className="text-sm text-muted">{t('originalText', { text: ing.raw })}</span>}
                   <span className="ml-auto flex gap-1">
-                    <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => setS((p) => ({ ...p, ingredients: move(p.ingredients, idx, -1) }))}>
+                    <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => setS((p) => ({ ...p, ingredients: move(p.ingredients, idx, -1) }))}>
                       <ArrowUp aria-hidden className="size-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveDown')} disabled={idx === s.ingredients.length - 1} onClick={() => setS((p) => ({ ...p, ingredients: move(p.ingredients, idx, 1) }))}>
+                    <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveDown')} disabled={idx === s.ingredients.length - 1} onClick={() => setS((p) => ({ ...p, ingredients: move(p.ingredients, idx, 1) }))}>
                       <ArrowDown aria-hidden className="size-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="size-10 px-0 text-tomato" aria-label={t('removeIngredient', { name: ing.name || String(idx + 1) })} onClick={() => setS((p) => ({ ...p, ingredients: p.ingredients.filter((i) => i.key !== ing.key) }))}>
+                    <Button size="sm" variant="ghost" className="size-11 px-0 text-tomato" aria-label={t('removeIngredient', { name: ing.name || String(idx + 1) })} onClick={() => setS((p) => ({ ...p, ingredients: p.ingredients.filter((i) => i.key !== ing.key) }))}>
                       <Trash2 aria-hidden className="size-4" />
                     </Button>
                   </span>
@@ -539,13 +539,13 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                   <div className="flex flex-wrap items-center gap-2">
                     <FlagBadges flags={st.flags} />
                     <span className="ml-auto flex gap-1">
-                      <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => setS((p) => ({ ...p, steps: move(p.steps, idx, -1) }))}>
+                      <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => setS((p) => ({ ...p, steps: move(p.steps, idx, -1) }))}>
                         <ArrowUp aria-hidden className="size-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveDown')} disabled={idx === s.steps.length - 1} onClick={() => setS((p) => ({ ...p, steps: move(p.steps, idx, 1) }))}>
+                      <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveDown')} disabled={idx === s.steps.length - 1} onClick={() => setS((p) => ({ ...p, steps: move(p.steps, idx, 1) }))}>
                         <ArrowDown aria-hidden className="size-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="size-10 px-0 text-tomato" aria-label={t('removeStep', { n: idx + 1 })} onClick={() => setS((p) => ({ ...p, steps: p.steps.filter((x) => x.key !== st.key) }))}>
+                      <Button size="sm" variant="ghost" className="size-11 px-0 text-tomato" aria-label={t('removeStep', { n: idx + 1 })} onClick={() => setS((p) => ({ ...p, steps: p.steps.filter((x) => x.key !== st.key) }))}>
                         <Trash2 aria-hidden className="size-4" />
                       </Button>
                     </span>

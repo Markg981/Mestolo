@@ -13,7 +13,7 @@ export function buttonClass(variant: Variant = 'secondary', size: Size = 'md', e
   return cx(
     'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors select-none',
     'disabled:opacity-55 disabled:cursor-not-allowed',
-    size === 'sm' && 'min-h-10 px-4 text-[0.95rem]',
+    size === 'sm' && 'min-h-11 px-4 text-[0.95rem]',
     size === 'md' && 'min-h-11 px-5',
     size === 'lg' && 'min-h-13 px-7 text-lg',
     variant === 'primary' && 'bg-saffron text-[#2a1a2e] hover:bg-saffron-deep hover:text-[#2a1a2e]',

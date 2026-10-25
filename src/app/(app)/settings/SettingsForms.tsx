@@ -201,7 +201,7 @@ export function CustomCategories({ categories }: { categories: { id: string; nam
           {categories.map((c) => (
             <li key={c.id} className="flex items-center gap-1 rounded-full border border-line bg-surface pl-4">
               {c.name}
-              <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={t('deleteCategory', { name: c.name })} disabled={pending} onClick={() => start(async () => { const r = await deleteCategory(c.id); if (r.ok) router.refresh(); else setError(te(r.error)); })}>
+              <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={t('deleteCategory', { name: c.name })} disabled={pending} onClick={() => start(async () => { const r = await deleteCategory(c.id); if (r.ok) router.refresh(); else setError(te(r.error)); })}>
                 <Trash2 aria-hidden className="size-4" />
               </Button>
             </li>

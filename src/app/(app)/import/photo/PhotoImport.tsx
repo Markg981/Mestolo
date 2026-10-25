@@ -294,16 +294,16 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
                   </div>
                 )}
                 <div className="flex flex-wrap gap-1">
-                  <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => move(idx, -1)}>
+                  <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveUp')} disabled={idx === 0} onClick={() => move(idx, -1)}>
                     <ArrowUp aria-hidden className="size-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={tc('moveDown')} disabled={idx === pages.length - 1} onClick={() => move(idx, 1)}>
+                  <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={tc('moveDown')} disabled={idx === pages.length - 1} onClick={() => move(idx, 1)}>
                     <ArrowDown aria-hidden className="size-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={t('replacePage', { n: idx + 1 })} onClick={() => { replaceTarget.current = p.id; replaceInput.current?.click(); }}>
+                  <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={t('replacePage', { n: idx + 1 })} onClick={() => { replaceTarget.current = p.id; replaceInput.current?.click(); }}>
                     <RefreshCw aria-hidden className="size-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="ml-auto size-10 px-0 text-tomato" aria-label={t('removePage', { n: idx + 1 })} onClick={() => { slots.current = Math.max(0, slots.current - 1); setPages((ps) => ps.filter((x) => x.id !== p.id)); }}>
+                  <Button size="sm" variant="ghost" className="ml-auto size-11 px-0 text-tomato" aria-label={t('removePage', { n: idx + 1 })} onClick={() => { slots.current = Math.max(0, slots.current - 1); setPages((ps) => ps.filter((x) => x.id !== p.id)); }}>
                     <Trash2 aria-hidden className="size-4" />
                   </Button>
                 </div>
