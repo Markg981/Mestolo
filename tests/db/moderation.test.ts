@@ -1,4 +1,4 @@
-/** Moderation rules (migration 20261021000001), executed on real PostgreSQL. */
+/** Moderation rules (migrations 20261021000001, 20261029000004), executed on real PostgreSQL. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 
@@ -37,6 +37,8 @@ d('moderation', () => {
     const s = Math.random().toString(36).slice(2, 7);
     [author, r1, r2, r3, mod] = await Promise.all(['au', 'ra', 'rb', 'rc', 'mo'].map((n) => user(`${n}_${s}`)));
     await admin('update public.profiles set is_moderator = true where id = $1', [mod]); // operator via SQL
+    // segnalatori affidabili ai fini dell'auto-hide: email confermata e account vecchio (anche l'autore, per il test sull'auto-segnalazione)
+    await admin("update auth.users set email_confirmed_at = now(), created_at = now() - interval '30 days' where id = any($1::uuid[])", [[author, r1, r2, r3]]);
   });
   afterAll(async () => pool?.end());
 
@@ -91,6 +93,18 @@ d('moderation', () => {
     await as(r3, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [r3, rid]);
     expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(true);
     expect(await as(r1, 'select id from public.recipes where id = $1', [rid])).toHaveLength(0);
+  });
+
+  it('reports from new/unconfirmed accounts and from the author do not count for the auto-hide', async () => {
+    const rid = await publicRecipe();
+    const s = Math.random().toString(36).slice(2, 7);
+    const fresh = await Promise.all(['fa', 'fb', 'fc'].map((n) => user(`${n}_${s}`))); // email non confermata, account nuovo
+    for (const u of fresh) await as(u, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [u, rid]);
+    // la policy RLS impedisce già all'autore di segnalarsi: inserita bypassando RLS per verificare il trigger
+    await admin("insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [author, rid]);
+    expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(false);
+    // le segnalazioni restano registrate per la revisione manuale
+    expect(await admin("select 1 from public.reports where recipe_id = $1 and status = 'open'", [rid])).toHaveLength(4);
   });
 
   it('dismiss closes a single report without changing visibility', async () => {
