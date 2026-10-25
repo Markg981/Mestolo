@@ -51,10 +51,13 @@ export interface EditorProps {
   mode: 'new' | 'edit' | 'review';
   recipeId?: string;
   /** recipe version read when the editor was opened (edit mode): saves fail with 'conflict' if it changed */
-  baseVersion?: number;
+  expectedVersion?: number;
   initial: EditorState;
   categories: EditorCategory[];
+  /** nome logico della bozza locale (vedi lib/drafts: la chiave completa include l'id utente) */
   draftKey: string;
+  /** content_hash della versione sul server da cui parte la modifica (solo mode 'edit') */
+  baseVersion?: string;
   source?: ImportDraft['source'];
   warnings?: ImportWarning[];
   /** extra content shown next to the form (e.g. the photographed pages) */

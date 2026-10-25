@@ -1140,7 +1140,8 @@
     "permissionDenied": "Notifications are not allowed: enable them in your device or browser settings.",
     "subscribeFailed": "Could not turn on notifications on this device.",
     "unsupported": "This browser does not support push notifications. Try the app or an up-to-date browser.",
-    "iosHint": "On iPhone and iPad notifications only work after adding Mestolo to the Home Screen (Share > Add to Home Screen, iOS 16.4 or later)."
+    "iosHint": "On iPhone and iPad notifications only work after adding Mestolo to the Home Screen (Share > Add to Home Screen, iOS 16.4 or later).",
+    "limitedSchedule": "On this installation reminders are only checked once a day (around 08:00 UTC): reminders at other times may not arrive. For on-time reminders the administrator must schedule the route every 15 minutes."
   },
   "cook": {
     "start": "Cook",

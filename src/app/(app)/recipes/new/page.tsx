@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { RecipeEditor } from '@/components/recipes/editor/RecipeEditor';
 import { emptyState } from '@/components/recipes/editor/convert';
+import { draftNames } from '@/lib/drafts';
 import { editorCategories } from '@/lib/data/editor';
 import { PageHeader } from '@/components/ui';
 
@@ -14,7 +15,7 @@ export default async function NewRecipePage() {
   return (
     <div>
       <PageHeader title={t('newTitle')} lead={t('newLead')} />
-      <RecipeEditor mode="new" initial={emptyState(locale)} categories={categories} draftKey="mestolo:draft:new" />
+      <RecipeEditor mode="new" initial={emptyState(locale)} categories={categories} draftKey={draftNames.new} />
     </div>
   );
 }

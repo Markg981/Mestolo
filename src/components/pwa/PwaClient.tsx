@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
+import { clearAllDrafts } from '@/lib/drafts';
 
 /** Registers the service worker (production only, secure contexts only). */
 export function ServiceWorkerRegister() {
@@ -15,6 +16,7 @@ export function ServiceWorkerRegister() {
 
 /** Deletes cached private pages/images (called on logout and before login). */
 export async function clearUserCache() {
+  clearAllDrafts();
   try {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear-user-data' });
     if ('caches' in window) {

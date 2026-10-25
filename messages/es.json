@@ -1140,7 +1140,8 @@
     "permissionDenied": "Notificaciones no permitidas: actívalas en los ajustes del dispositivo o del navegador.",
     "subscribeFailed": "No se pudieron activar las notificaciones en este dispositivo.",
     "unsupported": "Este navegador no admite notificaciones push. Prueba con la app o con un navegador actualizado.",
-    "iosHint": "En iPhone y iPad las notificaciones solo funcionan tras añadir Mestolo a la pantalla de inicio (Compartir > Añadir a pantalla de inicio, iOS 16.4 o posterior)."
+    "iosHint": "En iPhone y iPad las notificaciones solo funcionan tras añadir Mestolo a la pantalla de inicio (Compartir > Añadir a pantalla de inicio, iOS 16.4 o posterior).",
+    "limitedSchedule": "En esta instalación los recordatorios se comprueban solo una vez al día (hacia las 08:00 UTC): los de otras horas pueden no llegar. Para recordatorios puntuales el administrador debe programar la ruta cada 15 minutos."
   },
   "cook": {
     "start": "Cocinar",

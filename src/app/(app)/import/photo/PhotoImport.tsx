@@ -1,5 +1,6 @@
 'use client';
 
+import { draftNames } from '@/lib/drafts';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -211,7 +212,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   ) : undefined;
 
   if (draft) {
-    return <ImportReview draft={draft} categories={categories} draftKey="mestolo:draft:import-photo" aside={pagesAside} onBack={() => setDraft(null)} />;
+    return <ImportReview draft={draft} categories={categories} draftKey={draftNames.import('photo')} aside={pagesAside} onBack={() => setDraft(null)} />;
   }
 
   if (ocrOpen && ocrText !== null) {

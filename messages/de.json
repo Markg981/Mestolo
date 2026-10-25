@@ -1140,7 +1140,8 @@
     "permissionDenied": "Benachrichtigungen nicht erlaubt: Aktiviere sie in den Einstellungen deines Geräts oder Browsers.",
     "subscribeFailed": "Benachrichtigungen konnten auf diesem Gerät nicht aktiviert werden.",
     "unsupported": "Dieser Browser unterstützt keine Push-Benachrichtigungen. Probiere die App oder einen aktuellen Browser.",
-    "iosHint": "Auf iPhone und iPad funktionieren Benachrichtigungen erst, nachdem Mestolo zum Home-Bildschirm hinzugefügt wurde (Teilen > Zum Home-Bildschirm, iOS 16.4 oder neuer)."
+    "iosHint": "Auf iPhone und iPad funktionieren Benachrichtigungen erst, nachdem Mestolo zum Home-Bildschirm hinzugefügt wurde (Teilen > Zum Home-Bildschirm, iOS 16.4 oder neuer).",
+    "limitedSchedule": "Auf dieser Installation werden Erinnerungen nur einmal täglich geprüft (etwa 08:00 UTC): Erinnerungen zu anderen Zeiten kommen eventuell nicht an. Für pünktliche Erinnerungen muss der Administrator die Route alle 15 Minuten planen."
   },
   "cook": {
     "start": "Kochen",
