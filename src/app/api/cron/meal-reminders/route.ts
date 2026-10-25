@@ -15,11 +15,17 @@ function authorized(request: Request): boolean {
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
+/** Finestra di recupero in minuti (default 20, coerente con una chiamata ogni 15; la funzione SQL la limita a 1..120). */
+function windowMinutes(): number {
+  const n = Number.parseInt(process.env.MEAL_REMINDERS_WINDOW_MINUTES ?? '', 10);
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 120) : 20;
+}
+
 type Due = { entry_id: string; user_id: string; slot: MealSlot; title: string; locale: string };
 type Sub = { id: string; user_id: string; endpoint: string; p256dh: string; auth: string };
 
 /**
- * Cron (vercel.json o scheduler esterno ogni 15 minuti): invia le notifiche Web Push dei pasti
+ * Cron (vercel.json: giornaliero, compatibile Hobby; vercel.pro.json o scheduler esterno ogni 15 minuti): invia le notifiche Web Push dei pasti
  * pianificati il cui orario di promemoria, nel fuso dell'utente, e' appena trascorso.
  * Autenticazione: `Authorization: Bearer $CRON_SECRET`. Le sottoscrizioni scadute (404/410) vengono eliminate.
  */
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
   if (!publicKey || !privateKey || !subject) return NextResponse.json({ ok: true, skipped: 'vapid_not_configured' });
 
   const admin = createAdminClient();
-  const { data: due, error } = await admin.rpc('claim_due_meal_reminders', { p_window_minutes: 20 });
+  const { data: due, error } = await admin.rpc('claim_due_meal_reminders', { p_window_minutes: windowMinutes() });
   if (error) return NextResponse.json({ error: 'claim_failed' }, { status: 500 });
   const meals = (due as Due[] | null) ?? [];
   if (meals.length === 0) return NextResponse.json({ ok: true, meals: 0, sent: 0, removed: 0 });
