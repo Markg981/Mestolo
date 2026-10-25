@@ -69,7 +69,7 @@ export interface ApplyResult {
   content: RecipeContent;
   fieldFlags: FieldFlags;
   applied: string[];
-  skipped: { id: string; reason: 'stale' | 'not_applicable' | 'out_of_range' }[];
+  skipped: { id: string; reason: 'stale' | 'not_applicable' | 'out_of_range' | 'duplicate' }[];
 }
 
 /**
@@ -117,16 +117,26 @@ export function applySuggestions(
           name: s.after.name,
           quantity: s.after.quantity,
           unit: s.after.unit,
+          // il suggerimento ha una quantità singola: azzera intervallo e "q.b." precedenti
+          quantityMax: null,
+          toTaste: false,
           note: s.after.note ?? ing.note ?? null,
           flags: undefined,
         };
         applied.push(s.id);
         break;
       }
-      case 'ingredient_add':
+      case 'ingredient_add': {
+        // idempotente: se un ingrediente con lo stesso nome c'è già (o è già in coda) non si duplica
+        const key = s.after.name.trim().toLowerCase();
+        if ([...original.ingredients, ...adds].some((i) => i.name.trim().toLowerCase() === key)) {
+          skipped.push({ id: s.id, reason: 'duplicate' });
+          break;
+        }
         adds.push({ name: s.after.name, quantity: s.after.quantity, unit: s.after.unit, note: s.after.note ?? null });
         applied.push(s.id);
         break;
+      }
       case 'time_estimate':
         if ((original[s.field] ?? null) !== (s.before ?? null)) { skipped.push({ id: s.id, reason: 'stale' }); break; }
         content[s.field] = s.after;
