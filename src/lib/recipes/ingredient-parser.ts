@@ -8,7 +8,7 @@ const UNICODE_FRACTIONS: Record<string, number> = {
 const FRACTION_CHARS = Object.keys(UNICODE_FRACTIONS).join('');
 
 // A single number: "1", "1,5", "1.5", "1/2", "1 1/2", "1½", "½", "1.000"
-const NUM = `(?:\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\/\\d+|\\s*[${FRACTION_CHARS}])?|\\d+\\/\\d+|[${FRACTION_CHARS}])`;
+const NUM = `(?:\\d+\\/\\d+|\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\/\\d+|\\s*[${FRACTION_CHARS}])?|[${FRACTION_CHARS}])`;
 const RANGE_RE = new RegExp(`^(${NUM})(?:\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\s*(${NUM}))?`, 'i');
 
 /** Parses a numeric token; returns null if it is not a valid positive number. */

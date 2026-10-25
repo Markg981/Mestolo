@@ -12,6 +12,15 @@ describe('parseNumber', () => {
 });
 
 describe('parseIngredientLine', () => {
+  it('parses simple fractions on whole lines', () => {
+    expect(parseIngredientLine('1/2 cipolla')).toMatchObject({ quantity: 0.5, name: 'cipolla' });
+    expect(parseIngredientLine('3/4 tsp salt')).toMatchObject({ quantity: 0.75, unit: 'tsp', name: 'salt' });
+    expect(parseIngredientLine('1/4 l latte')).toMatchObject({ quantity: 0.25, unit: 'l', name: 'latte' });
+  });
+  it('keeps mixed numbers and unicode fractions', () => {
+    expect(parseIngredientLine('1 1/2 tazze farina')).toMatchObject({ quantity: 1.5 });
+    expect(parseIngredientLine('½ cipolla')).toMatchObject({ quantity: 0.5, name: 'cipolla' });
+  });
   it('parses italian quantity + unit + connector + note', () => {
     expect(parseIngredientLine('200 g di farina 00 (setacciata)')).toMatchObject({
       quantity: 200, unit: 'g', name: 'farina 00', note: 'setacciata',
