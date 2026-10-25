@@ -100,7 +100,8 @@ d('moderation', () => {
     const s = Math.random().toString(36).slice(2, 7);
     const fresh = await Promise.all(['fa', 'fb', 'fc'].map((n) => user(`${n}_${s}`))); // email non confermata, account nuovo
     for (const u of fresh) await as(u, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [u, rid]);
-    await as(author, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [author, rid]);
+    // la policy RLS impedisce già all'autore di segnalarsi: inserita bypassando RLS per verificare il trigger
+    await admin("insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [author, rid]);
     expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(false);
     // le segnalazioni restano registrate per la revisione manuale
     expect(await admin("select 1 from public.reports where recipe_id = $1 and status = 'open'", [rid])).toHaveLength(4);
