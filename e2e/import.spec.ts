@@ -1,4 +1,19 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * Carica il file finche' la pagina reagisce: se l'input riceve il file prima dell'idratazione
+ * di React, l'evento change va perso e non compare nulla.
+ */
+async function uploadUntil(page: Page, json: unknown, ready: () => Promise<void>) {
+  await expect(async () => {
+    await page.getByLabel('File JSON di Mestolo').setInputFiles({
+      name: 'ricetta.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(json)),
+    });
+    await ready();
+  }).toPass({ timeout: 20_000 });
+}
 
 // Import senza rete esterna ne' AI: testo (parser euristico lato server) e file JSON (nel browser)
 test.describe('importazione', () => {
@@ -28,12 +43,7 @@ test.describe('importazione', () => {
       recipe: { title, ingredients: [{ name: 'ceci', quantity: 250, unit: 'g' }], steps: [{ text: 'Cuoci i ceci.' }] },
     };
     await page.goto('/import/file');
-    await page.getByLabel('File JSON di Mestolo').setInputFiles({
-      name: 'ricetta.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(file)),
-    });
-    await expect(page.getByLabel('Titolo')).toHaveValue(title);
+    await uploadUntil(page, file, () => expect(page.getByLabel('Titolo')).toHaveValue(title, { timeout: 3_000 }));
     await page.getByRole('button', { name: 'Salva la ricetta' }).click();
 
     await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]{36}\?created=1/);
@@ -42,12 +52,9 @@ test.describe('importazione', () => {
 
   test('un file che non e\' un\'esportazione di Mestolo viene rifiutato', async ({ page }) => {
     await page.goto('/import/file');
-    await page.getByLabel('File JSON di Mestolo').setInputFiles({
-      name: 'altro.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify({ hello: 'world' })),
-    });
     // Il testo usa l'apostrofo tipografico (’)
-    await expect(page.getByText(/Questo file non è un.esportazione di Mestolo\./)).toBeVisible();
+    await uploadUntil(page, { hello: 'world' }, () =>
+      expect(page.getByText(/Questo file non è un.esportazione di Mestolo\./)).toBeVisible({ timeout: 3_000 }),
+    );
   });
 });
