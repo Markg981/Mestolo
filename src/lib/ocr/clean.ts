@@ -28,11 +28,16 @@ export function cleanOcrText(raw: string): string {
 /** Letters whose upper and lower case look the same: OCR often picks the wrong case. */
 const SAME_SHAPE = /^[COSUVWXZ]$/;
 
+/** Legit mixed case that is not an OCR error: "McDonald", "MacBook", "iPhone", "eBay". */
+const LEGIT_MIXED = /^(?:Mc|Mac|[ie])\p{Lu}\p{Ll}+$/u;
+
 /**
  * Fixes OCR case errors inside a word: "ZUCchine" -> "zucchine", "qUadrati" -> "quadrati",
- * "GIi" -> "Gli" (I read for l). All-caps and normally capitalized words are left alone.
+ * "GIi" -> "Gli" (I read for l). All-caps, normally capitalized words and legit brand-style
+ * mixed case (Mc/Mac prefix, "i"/"e" + capital) are left alone.
  */
 function fixMixedCase(w: string): string {
+  if (LEGIT_MIXED.test(w)) return w;
   const rest = w.slice(1);
   if (!/\p{Ll}/u.test(w) || !/\p{Lu}/u.test(rest)) return w;
   const body = rest.replace(/I(?=\p{Ll})|(?<=\p{Ll})I/gu, 'l').toLowerCase();
