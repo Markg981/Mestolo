@@ -27,28 +27,33 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
 
   const run = (target: string) =>
     start(async () => {
-      setError(null);
-      setFallback(null);
-      setVideo(null);
-      if (detectVideoUrl(target)) {
-        const vr = await importFromVideoUrl(target, locale);
-        if (!vr.ok) {
-          setError(te(vr.error));
+      try {
+        setError(null);
+        setFallback(null);
+        setVideo(null);
+        if (detectVideoUrl(target)) {
+          const vr = await importFromVideoUrl(target, locale);
+          if (!vr.ok) {
+            setError(te(vr.error));
+            setFallback({ text: '', reason: 'error' });
+            return;
+          }
+          const v = vr.data.video;
+          setVideo({ source: v.source, text: v.text, sourceUrl: v.sourceUrl });
+          return;
+        }
+        const res = await importFromUrl(target);
+        if (!res.ok) {
+          setError(te(res.error));
           setFallback({ text: '', reason: 'error' });
           return;
         }
-        const v = vr.data.video;
-        setVideo({ source: v.source, text: v.text, sourceUrl: v.sourceUrl });
-        return;
-      }
-      const res = await importFromUrl(target);
-      if (!res.ok) {
-        setError(te(res.error));
+        if (res.data.draft) setDraft(res.data.draft);
+        else setFallback({ text: res.data.pageText, reason: 'no_recipe' });
+      } catch {
+        setError(te('generic'));
         setFallback({ text: '', reason: 'error' });
-        return;
       }
-      if (res.data.draft) setDraft(res.data.draft);
-      else setFallback({ text: res.data.pageText, reason: 'no_recipe' });
     });
 
   const submit = (e: React.FormEvent) => {

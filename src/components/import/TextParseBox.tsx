@@ -19,9 +19,13 @@ export function TextParseBox({ initialText = '', sourceUrl, status, onDraft }: {
   const run = (useAi: boolean) =>
     start(async () => {
       setError(null);
-      const res = await importFromText(text, useAi, sourceUrl ?? null, locale);
-      if (res.ok) onDraft(res.data);
-      else setError(te(res.error));
+      try {
+        const res = await importFromText(text, useAi, sourceUrl ?? null, locale);
+        if (res.ok) onDraft(res.data);
+        else setError(te(res.error));
+      } catch {
+        setError(te('generic'));
+      }
     });
 
   return (

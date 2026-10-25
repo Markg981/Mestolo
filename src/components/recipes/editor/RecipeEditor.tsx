@@ -231,33 +231,37 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
       nutrition: mode === 'review' ? importedNutrition ?? null : null,
     };
     startSaving(async () => {
-      const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);
-      if (!res.ok) {
-        setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
-        return;
-      }
-      const id = res.data.id;
-      const extras: string[] = [];
-      if (imageFile) {
-        try {
-          const blob = await compressImage(imageFile, 2000, 0.85);
-          const fd = new FormData();
-          fd.set('recipeId', id);
-          fd.set('file', new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
-          fd.set('alt', s.title);
-          const up = await uploadRecipeImage(fd);
-          if (!up.ok) extras.push('image');
-        } catch {
-          extras.push('image');
+      try {
+        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);
+        if (!res.ok) {
+          setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
+          return;
         }
+        const id = res.data.id;
+        const extras: string[] = [];
+        if (imageFile) {
+          try {
+            const blob = await compressImage(imageFile, 2000, 0.85);
+            const fd = new FormData();
+            fd.set('recipeId', id);
+            fd.set('file', new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+            fd.set('alt', s.title);
+            const up = await uploadRecipeImage(fd);
+            if (!up.ok) extras.push('image');
+          } catch {
+            extras.push('image');
+          }
+        }
+        if (mode === 'review' && keepSourceImage && source?.imageUrl) {
+          const r = await importSourceImage(id, source.imageUrl, source.name ?? source.attribution ?? null);
+          if (!r.ok) extras.push('image');
+        }
+        storageSet(draftKey, null);
+        router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
+        router.refresh();
+      } catch {
+        setError(te('generic'));
       }
-      if (mode === 'review' && keepSourceImage && source?.imageUrl) {
-        const r = await importSourceImage(id, source.imageUrl, source.name ?? source.attribution ?? null);
-        if (!r.ok) extras.push('image');
-      }
-      storageSet(draftKey, null);
-      router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
-      router.refresh();
     });
   };
 
