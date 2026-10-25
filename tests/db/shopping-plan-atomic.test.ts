@@ -69,7 +69,8 @@ d('lista della spesa e piano: operazioni atomiche', () => {
     const rows = JSON.stringify([{ plan_date: '2026-11-02', slot: 'lunch', recipe_id: null, title: 'Nuovo', servings: 2 }]);
     expect((await as<{ n: number }>(a, 'select public.replace_plan_entries($1::jsonb) as n', [rows]))[0].n).toBe(1);
     const t = await admin("select title from public.meal_plan_entries where owner_id = $1 order by slot", [a]);
-    expect(t.map((r) => r.title)).toEqual(['Resta', 'Nuovo']);
+    // meal_slot enum order: lunch before dinner
+    expect(t.map((r) => r.title)).toEqual(['Nuovo', 'Resta']);
   });
 
   it('replace_plan_entries e atomico: se l inserimento fallisce, le voci vecchie restano', async () => {
