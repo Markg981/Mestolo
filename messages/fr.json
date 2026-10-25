@@ -785,6 +785,7 @@
   },
   "shopping": {
     "title": "Liste de courses",
+    "toTaste": "à volonté",
     "lead": "Ajoutez des produits à la main ou à partir des ingrédients de vos recettes.",
     "addLabel": "Ajouter un produit",
     "addPlaceholder": "Ex. : 500 g de tomates",

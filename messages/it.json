@@ -785,6 +785,7 @@
   },
   "shopping": {
     "title": "Lista della spesa",
+    "toTaste": "q.b.",
     "lead": "Aggiungi prodotti a mano o dagli ingredienti delle ricette.",
     "addLabel": "Aggiungi un prodotto",
     "addPlaceholder": "Es. 500 g pomodori",
