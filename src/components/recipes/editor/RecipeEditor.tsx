@@ -51,7 +51,7 @@ function storageSet(key: string, value: string | null) {
   }
 }
 
-export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
+export function RecipeEditor({ mode, recipeId, baseVersion, initial, categories, draftKey, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
   const t = useTranslations('editor');
   const tc = useTranslations('common');
   const tu = useTranslations('units');
@@ -234,7 +234,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, so
     };
     startSaving(async () => {
       try {
-        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null);
+        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null, mode === 'edit' ? baseVersion : null);
         if (!res.ok) {
           setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
           return;

@@ -133,6 +133,7 @@
     "username_taken": "Dieser Benutzername ist schon vergeben.",
     "translation_failed": "Die Übersetzung hat nicht geklappt. Das Original bleibt verfügbar.",
     "already_exists": "Existiert bereits.",
+    "conflict": "Dieses Rezept wurde anderswo geändert (anderer Tab oder anderes Gerät). Lade die Seite neu, um die letzte Version zu sehen, bevor du speicherst.",
     "pageTitle": "Diese Seite wurde nicht geladen",
     "pageLead": "Das kann bei instabiler Verbindung passieren. Deine Eingaben bleiben als Entwurf gespeichert.",
     "retry": "Erneut versuchen",

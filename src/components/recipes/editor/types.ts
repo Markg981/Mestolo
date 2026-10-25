@@ -50,6 +50,8 @@ export interface EditorCategory {
 export interface EditorProps {
   mode: 'new' | 'edit' | 'review';
   recipeId?: string;
+  /** recipe version read when the editor was opened (edit mode): saves fail with 'conflict' if it changed */
+  baseVersion?: number;
   initial: EditorState;
   categories: EditorCategory[];
   draftKey: string;

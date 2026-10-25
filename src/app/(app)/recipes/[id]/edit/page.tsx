@@ -16,7 +16,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-10">
       <PageHeader title={t('editTitle')} lead={t('editLead')} />
       <ImageManager recipeId={id} title={detail.recipe.title} images={detail.images} />
-      <RecipeEditor mode="edit" recipeId={id} initial={stateFromRecipe(detail.recipe, detail.note, unitLabel)} categories={categories} draftKey={`mestolo:draft:edit:${id}`} />
+      <RecipeEditor mode="edit" recipeId={id} baseVersion={detail.recipe.version} initial={stateFromRecipe(detail.recipe, detail.note, unitLabel)} categories={categories} draftKey={`mestolo:draft:edit:${id}`} />
     </div>
   );
 }
