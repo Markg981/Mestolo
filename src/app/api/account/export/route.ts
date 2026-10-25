@@ -14,6 +14,8 @@ export async function GET() {
     await enforceRateLimit('export_data', user.id);
   } catch (e) {
     if (e instanceof RateLimitedError) return new NextResponse('Too many requests', { status: 429 });
+    // Fail-closed: se il rate limit non e' verificabile (RPC in errore) non esportiamo.
+    return new NextResponse('Service unavailable', { status: 503, headers: { 'retry-after': '30' } });
   }
   const supabase = await createClient();
   const own = (table: string, col = 'owner_id') => supabase.from(table).select('*').eq(col, user.id);
@@ -33,13 +35,30 @@ export async function GET() {
     own('ai_usage', 'user_id'),
     own('categories'),
   ]);
+  const [cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback] = await Promise.all([
+    own('cook_logs', 'user_id'),
+    own('recipe_ratings', 'user_id'),
+    own('pantry_items'),
+    own('plan_preferences', 'user_id'),
+    own('notification_preferences', 'user_id'),
+    // Niente chiavi crittografiche (p256dh/auth): solo i dispositivi registrati.
+    supabase.from('push_subscriptions').select('id, endpoint, user_agent, created_at').eq('user_id', user.id),
+    own('invites', 'inviter_id'),
+    own('invite_redemptions', 'redeemer_id'),
+    own('collection_members', 'user_id'),
+    own('shopping_list_members', 'user_id'),
+    own('shopping_aisle_overrides', 'set_by'),
+    own('ai_suggestions', 'user_id'),
+    own('app_feedback', 'user_id'),
+  ]);
   const recipeIds = ((recipes.data as { id: string }[]) ?? []).map((r) => r.id);
-  const [versions, images] = recipeIds.length
+  const [versions, images, nutrition] = recipeIds.length
     ? await Promise.all([
         supabase.from('recipe_versions').select('*').in('recipe_id', recipeIds),
         supabase.from('recipe_images').select('id, recipe_id, kind, source_url, attribution, alt_text, created_at').in('recipe_id', recipeIds),
+        supabase.from('recipe_nutrition').select('*').in('recipe_id', recipeIds),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
   const body = {
     format: 'mestolo.account-export/v1',
@@ -49,6 +68,20 @@ export async function GET() {
     recipes: recipes.data,
     recipe_versions: versions.data,
     recipe_images_metadata: images.data,
+    recipe_nutrition: nutrition.data,
+    cook_logs: cookLogs.data,
+    recipe_ratings: ratings.data,
+    pantry_items: pantry.data,
+    plan_preferences: planPrefs.data,
+    notification_preferences: notifPrefs.data,
+    push_subscriptions: pushSubs.data,
+    invites: invites.data,
+    invite_redemptions: redemptions.data,
+    collection_members: collMembers.data,
+    shopping_list_members: listMembers.data,
+    shopping_aisle_overrides: aisles.data,
+    ai_suggestions: suggestions.data,
+    app_feedback: feedback.data,
     personal_notes: notes.data,
     favorites: favorites.data,
     custom_categories: categories.data,
