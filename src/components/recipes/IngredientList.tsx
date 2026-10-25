@@ -113,7 +113,7 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags 
               type="button"
               role="radio"
               aria-checked={system === s}
-              className={`min-h-9 rounded-full px-3 text-sm ${system === s ? 'bg-basil font-semibold text-white' : ''}`}
+              className={`min-h-11 rounded-full px-3 text-sm ${system === s ? 'bg-basil font-semibold text-white' : ''}`}
               onClick={() => pickSystem(s)}
             >
               {t(s === 'original' ? 'unitSystemOriginal' : s === 'metric' ? 'unitSystemMetric' : 'unitSystemUs')}

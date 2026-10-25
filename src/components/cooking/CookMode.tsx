@@ -439,7 +439,7 @@ export function CookMode({
               {tm.done ? <Bell aria-hidden className="size-4" /> : <Timer aria-hidden className="size-4" />}
               <span className="text-sm">{tm.label}</span>
               <span className="tabular font-bold">{tm.done ? t('timerEnded') : formatClock(remainingSeconds(tm.endAt, now))}</span>
-              <button type="button" className="inline-flex size-8 items-center justify-center rounded-full hover:bg-black/10" aria-label={t('timerDismiss', { label: tm.label })} onClick={() => stopTimer(tm.id)}>
+              <button type="button" className="inline-flex size-11 items-center justify-center rounded-full hover:bg-black/10" aria-label={t('timerDismiss', { label: tm.label })} onClick={() => stopTimer(tm.id)}>
                 <X aria-hidden className="size-4" />
               </button>
             </li>
