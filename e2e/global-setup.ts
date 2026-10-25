@@ -1,4 +1,4 @@
-import { adminClient, createTestUser, deleteTestUsers, randomUser, requireEnv } from './helpers';
+import { adminClient, createTestUser, deleteTestUsers, randomUser, requireEnv, runId } from './helpers';
 
 /**
  * Crea due utenti di test sul progetto di staging tramite l'API admin:
@@ -11,8 +11,9 @@ export default async function globalSetup() {
   requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
   requireEnv('SUPABASE_SERVICE_ROLE_KEY');
 
-  // Pulisce eventuali residui di esecuzioni interrotte
-  await deleteTestUsers();
+  // Pulisce i residui di esecuzioni interrotte, non gli utenti di quelle ancora in corso
+  runId();
+  await deleteTestUsers({ ownRun: false });
 
   // In CI l'IP del client e' sempre "unknown": senza azzerarli, i limiti di
   // registrazione/accesso per IP si esauriscono dopo poche esecuzioni all'ora.
