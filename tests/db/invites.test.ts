@@ -115,6 +115,21 @@ d('Inviti', () => {
     await expect(invite(user)).rejects.toMatchObject({ code: 'RL002' });
   });
 
+  it('la revoca e\' irreversibile: non si puo\' azzerare ne\' cambiare revoked_at', async () => {
+    const inv = await invite(a);
+    await as(a, 'update public.invites set revoked_at = now() where id = $1', [inv.id]);
+    await expect(as(a, 'update public.invites set revoked_at = null where id = $1', [inv.id])).rejects.toMatchObject({ code: 'IV002' });
+    await expect(as(a, "update public.invites set revoked_at = now() + interval '1 day' where id = $1", [inv.id])).rejects.toMatchObject({ code: 'IV002' });
+  });
+
+  it('accept_invite: i tentativi falliti sono limitati per utente (RL001)', async () => {
+    const u = await createUser(`invr_${Math.random().toString(36).slice(2, 7)}`);
+    for (let i = 0; i < 10; i++) expect(await accept(u, randomBytes(32).toString('base64url'))).toBe('invalid_invite');
+    await expect(accept(u, randomBytes(32).toString('base64url'))).rejects.toMatchObject({ code: 'RL001' });
+    const good = await invite(a);
+    await expect(accept(u, good.token)).rejects.toMatchObject({ code: 'RL001' });
+  });
+
   it('anteprima pubblica: solo username e nome, uguale per ogni causa di invalidita\'', async () => {
     const inv = await invite(a);
     const ok = await as<{ username: string; display_name: string }>(null, 'select * from public.invite_preview($1)', [inv.token]);
@@ -149,9 +164,9 @@ d('Inviti', () => {
     await admin('update public.invites set max_uses = 1, uses = 1 where id = $1', [exhausted.id]);
     const own = await invite(a);
     for (const tok of [unknown, expired.token, revoked.token, exhausted.token]) {
-      await expect(accept(f, tok)).rejects.toMatchObject({ code: 'IV001', message: 'invalid_invite' });
+      expect(await accept(f, tok)).toBe('invalid_invite');
     }
-    await expect(accept(a, own.token)).rejects.toMatchObject({ code: 'IV001' });
+    expect(await accept(a, own.token)).toBe('invalid_invite');
     expect(await status(a, f)).toEqual([]);
   });
 
@@ -159,7 +174,7 @@ d('Inviti', () => {
     const x = await createUser(`invx_${Math.random().toString(36).slice(2, 7)}`);
     const inv = await invite(a);
     await admin('insert into public.blocks (blocker_id, blocked_id) values ($1, $2)', [x, a]);
-    await expect(accept(x, inv.token)).rejects.toMatchObject({ code: 'IV001' });
+    expect(await accept(x, inv.token)).toBe('invalid_invite');
   });
 
   it('accept_invite: gia\' amici e riuso dello stesso utente non consumano usi', async () => {
@@ -191,7 +206,7 @@ d('Inviti', () => {
     const users = [await createUser(`invu1_${Math.random().toString(36).slice(2, 7)}`), await createUser(`invu2_${Math.random().toString(36).slice(2, 7)}`), await createUser(`invu3_${Math.random().toString(36).slice(2, 7)}`)];
     expect(await accept(users[0], inv.token)).toBe('accepted');
     expect(await accept(users[1], inv.token)).toBe('accepted');
-    await expect(accept(users[2], inv.token)).rejects.toMatchObject({ code: 'IV001' });
+    expect(await accept(users[2], inv.token)).toBe('invalid_invite');
     const counts = await admin<{ n: number }>("select coalesce(sum(n), 0)::int as n from public.daily_action_counts where user_id = $1 and action = 'friend_request'", [a]);
     expect(counts[0].n).toBeLessThan(5);
   });
