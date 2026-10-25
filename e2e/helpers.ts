@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { expect, type Page } from '@playwright/test';
+import { expect, type Browser, type Page, type TestInfo } from '@playwright/test';
 
 /** Prefisso di tutti gli utenti creati dai test: il teardown cancella quelli che lo hanno. */
 export const E2E_PREFIX = 'e2e-';
@@ -98,4 +98,33 @@ export async function logout(page: Page) {
   if (!(await button.isVisible())) await page.goto('/more');
   await button.click();
   await expect(page).toHaveURL(/\/welcome/);
+}
+
+/**
+ * Crea un utente nuovo e lo fa accedere in un contesto separato (sessione vuota): per i flussi
+ * con piu' utenti. Il contesto non eredita le opzioni del progetto, quindi baseURL e locale
+ * vanno passati qui.
+ */
+export async function newUserPage(browser: Browser, testInfo: TestInfo, tag: string) {
+  const user = randomUser(tag);
+  const id = await createTestUser(user);
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL,
+    locale: 'it-IT',
+    storageState: { cookies: [], origins: [] },
+  });
+  const page = await context.newPage();
+  await login(page, user);
+  return { user, id, page, close: () => context.close() };
+}
+
+/** Ricetta creata direttamente con il service role, per preparare i flussi che non la creano. */
+export async function createTestRecipe(ownerId: string, title: string, visibility: 'private' | 'friends' | 'public') {
+  const { data, error } = await adminClient()
+    .from('recipes')
+    .insert({ owner_id: ownerId, title, visibility, ingredients: [{ name: 'farina', quantity: 100, unit: 'g' }] })
+    .select('id')
+    .single();
+  if (error || !data) throw new Error(`Creazione ricetta di test fallita: ${error?.message}`);
+  return data.id as string;
 }
