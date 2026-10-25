@@ -117,6 +117,7 @@ Il moderatore vede la voce *Moderazione* nel menu. Gli utenti non possono attrib
 ## 6. Modifiche fatte ai progetti generati (da riapplicare se rigeneri `android/` o `ios/`)
 
 - `android/app/src/main/AndroidManifest.xml`: `intent-filter` `ACTION_SEND` `text/plain` sulla `MainActivity`.
+- Backup Android disattivato (`allowBackup="false"`, `fullBackupContent="false"`, `res/xml/data_extraction_rules.xml` per Android 12+): token di sessione e preferenze non finiscono nei backup cloud né nei trasferimenti tra dispositivi.
 - `android/app/src/main/java/.../MainActivity.java`: gestione della condivisione verso `/share`.
 - `android/app/build.gradle`: firma release da `android/keystore.properties` o variabili `ANDROID_*` (senza, build non firmata); `versionCode`/`versionName` sono riscritti da `scripts/mobile-version.mjs` (fonte: `package.json`).
 - `android/keystore.properties.example`: modello per la keystore locale.
