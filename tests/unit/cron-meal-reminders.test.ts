@@ -10,8 +10,8 @@ const rpc = vi.fn(async () => ({
   error: null,
 }));
 const subs = [
-  { id: 's1', user_id: 'u1', endpoint: 'https://push.example/1', p256dh: 'p', auth: 'a' },
-  { id: 's2', user_id: 'u1', endpoint: 'https://push.example/2', p256dh: 'p', auth: 'a' },
+  { id: 's1', user_id: 'u1', endpoint: 'https://fcm.googleapis.com/fcm/send/1', p256dh: 'p', auth: 'a' },
+  { id: 's2', user_id: 'u1', endpoint: 'https://fcm.googleapis.com/fcm/send/2', p256dh: 'p', auth: 'a' },
 ];
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
@@ -73,5 +73,13 @@ describe('GET /api/cron/meal-reminders', () => {
     const res = await GET(req('Bearer topsecret'));
     expect(await res.json()).toMatchObject({ sent: 0, removed: 1 });
     expect(deleted).toEqual([['s1']]);
+  });
+
+  it('removes subscriptions with a non-allowlisted endpoint without contacting them', async () => {
+    subs.push({ id: 's3', user_id: 'u1', endpoint: 'https://169.254.169.254/latest', p256dh: 'p', auth: 'a' });
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 2, removed: 1 });
+    expect(sendNotification).toHaveBeenCalledTimes(2);
+    expect(deleted).toEqual([['s3']]);
   });
 });

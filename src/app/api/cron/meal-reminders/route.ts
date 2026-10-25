@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mealReminderText } from '@/lib/notifications/texts';
+import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
 import type { MealSlot } from '@/lib/plan/week';
 
 export const dynamic = 'force-dynamic';
@@ -60,8 +61,12 @@ export async function GET(request: Request) {
     const payload = JSON.stringify({ title: text.title, body: text.body, url: '/plan', tag: `meal-${meal.entry_id}` });
     for (const s of byUser.get(meal.user_id) ?? []) {
       if (gone.has(s.id)) continue;
+      if (!isAllowedPushEndpoint(s.endpoint)) {
+        gone.add(s.id);
+        continue;
+      }
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 3600, urgency: 'normal' });
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 3600, urgency: 'normal', timeout: 10_000 });
         sent++;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;
