@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { addDays, MEAL_SLOTS, startOfWeek, weekDays } from '@/lib/plan/week';
+import { addDays, MEAL_SLOTS, currentWeekStart, todayIso, weekDays } from '@/lib/plan/week';
 import { PageHeader, buttonClass } from '@/components/ui';
 import { MealReminderSync } from '@/components/pwa/MealReminderSync';
 import { categoryLabel, type CategoryRow } from '@/lib/recipes/categories';
@@ -17,7 +17,7 @@ export async function generateMetadata() {
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const sp = await searchParams;
   const [t, format, user] = await Promise.all([getTranslations('plan'), getFormatter(), getUser()]);
-  const base = sp.week && /^\d{4}-\d{2}-\d{2}$/.test(sp.week) ? sp.week : startOfWeek(new Date());
+  const base = sp.week && /^\d{4}-\d{2}-\d{2}$/.test(sp.week) ? sp.week : currentWeekStart();
   const days = weekDays(base);
   const supabase = await createClient();
   const tAll = await getTranslations();
@@ -30,7 +30,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   ]);
   const favRecipes = ((favs as unknown as { recipes: { id: string; title: string } | null }[]) ?? []).map((f) => f.recipes).filter(Boolean) as { id: string; title: string }[];
   const options = [...((mine as { id: string; title: string }[]) ?? []), ...favRecipes.filter((f) => !(mine ?? []).some((m: { id: string }) => m.id === f.id))];
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const dayItems = days.map((d) => ({ iso: d, label: format.dateTime(new Date(`${d}T12:00:00Z`), { weekday: 'long', day: 'numeric', timeZone: 'UTC' }) }));
 
   return (
