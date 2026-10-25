@@ -482,6 +482,7 @@
     "title": "Titel",
     "titlePlaceholder": "z. B. Auberginen-Parmigiana",
     "titleRequired": "Der Titel ist erforderlich.",
+    "quantityInvalid": "Die Menge \"{value}\" für \"{name}\" ist ungültig. Verwende eine Zahl, einen Bruch (1 1/2) oder lasse das Feld leer.",
     "description": "Beschreibung",
     "category": "Kategorie",
     "categorySuggested": "Automatisch vorgeschlagen – du kannst sie ändern.",

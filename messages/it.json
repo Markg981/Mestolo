@@ -482,6 +482,7 @@
     "title": "Titolo",
     "titlePlaceholder": "Es. Parmigiana di melanzane",
     "titleRequired": "Il titolo è obbligatorio.",
+    "quantityInvalid": "La quantità \"{value}\" di \"{name}\" non è valida. Usa un numero, una frazione (1 1/2) o lascia il campo vuoto.",
     "description": "Descrizione",
     "category": "Categoria",
     "categorySuggested": "Proposta in automatico: puoi cambiarla.",

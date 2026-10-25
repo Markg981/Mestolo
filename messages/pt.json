@@ -482,6 +482,7 @@
     "title": "Título",
     "titlePlaceholder": "Ex.: Beringelas à parmigiana",
     "titleRequired": "O título é obrigatório.",
+    "quantityInvalid": "A quantidade \"{value}\" de \"{name}\" não é válida. Use um número, uma fração (1 1/2) ou deixe o campo vazio.",
     "description": "Descrição",
     "category": "Categoria",
     "categorySuggested": "Sugerida automaticamente: podes alterá-la.",
