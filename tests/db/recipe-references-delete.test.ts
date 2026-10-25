@@ -1,5 +1,5 @@
 /**
- * ON DELETE SET NULL dei riferimenti tra ricette (migration 20261031000002): eliminare una ricetta con
+ * ON DELETE SET NULL dei riferimenti tra ricette (migration 20261025035000): eliminare una ricetta con
  * varianti o copiata da altri, o l'account del suo autore, non fallisce piu' per violazione della FK,
  * e il client continua a non poter azzerare l'attribuzione.
  */
