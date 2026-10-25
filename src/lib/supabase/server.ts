@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { ConfigError, env } from '@/lib/env';
+import { createTimeoutFetch } from '@/lib/supabase/fetch';
 
 /** Supabase client acting AS the signed-in user: every query is subject to RLS. */
 export async function createClient(): Promise<SupabaseClient> {
@@ -12,6 +13,7 @@ export async function createClient(): Promise<SupabaseClient> {
   if (!supabaseUrl || !supabaseAnonKey) throw new ConfigError('Supabase is not configured');
   const cookieStore = await cookies();
   return createServerClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: createTimeoutFetch() },
     cookies: {
       getAll() {
         return cookieStore.getAll();

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { buildCsp, cspHeaderName, generateNonce } from '@/lib/csp';
+import { createTimeoutFetch } from '@/lib/supabase/fetch';
 
 const PUBLIC_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/auth', '/setup', '/privacy', '/terms', '/offline', '/invite', '/r', '/sitemap.xml', '/robots.txt'];
 
@@ -43,6 +44,7 @@ export async function proxy(request: NextRequest) {
 
   let response = next();
   const supabase = createServerClient(url, anon, {
+    global: { fetch: createTimeoutFetch() },
     cookies: {
       getAll() {
         return request.cookies.getAll();
