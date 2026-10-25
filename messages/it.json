@@ -997,7 +997,8 @@
     "passwordHint": "Almeno 8 caratteri.",
     "passwordButton": "Cambia password",
     "passwordSaving": "Salvataggio…",
-    "passwordChanged": "Password cambiata."
+    "passwordChanged": "Password cambiata.",
+    "importButton": "Importa da file"
   },
   "setup": {
     "title": "Configurazione necessaria",
@@ -1400,5 +1401,24 @@
     "reopen": "Riapri",
     "adminEmptyTitle": "Nessun feedback",
     "adminEmpty": "Non ci sono messaggi con questo filtro."
+  },
+  "fileImport": {
+    "title": "Importa da file",
+    "lead": "Carica un file esportato da Mestolo: una singola ricetta o l’esportazione completa del tuo account.",
+    "fileLabel": "File JSON di Mestolo",
+    "fileHint": "Formati accettati: mestolo.recipe/v1 e mestolo.account-export/v1. Le ricette vengono importate come private; immagini, valutazioni e amicizie non vengono importate.",
+    "found": "{count, plural, one {# ricetta nel file} other {# ricette nel file}}",
+    "skipped": "{count, plural, one {# ricetta saltata perché senza titolo.} other {# ricette saltate perché senza titolo.}}",
+    "importAll": "Importa tutte come private",
+    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate.",
+    "progress": "{done} di {total}: {created} importate, {duplicates} già presenti, {failed} non riuscite.",
+    "goToRecipes": "Vai alle ricette",
+    "review": "Rivedi e salva",
+    "errors": {
+      "invalid_json": "Il file non è un JSON valido.",
+      "unsupported_format": "Questo file non è un’esportazione di Mestolo.",
+      "no_recipes": "Nel file non ci sono ricette importabili.",
+      "too_large": "Il file è troppo grande (massimo 10 MB)."
+    }
   }
 }
