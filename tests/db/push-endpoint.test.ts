@@ -1,4 +1,4 @@
-/** Allowlist degli endpoint push (migration 20261029000003): niente SSRF verso host arbitrari. */
+/** Allowlist degli endpoint push (migration 20261025022000): niente SSRF verso host arbitrari. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

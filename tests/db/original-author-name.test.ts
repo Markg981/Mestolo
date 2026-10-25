@@ -1,4 +1,4 @@
-/** original_author_name derivato lato server (migration 20261029000001): il client non puo' falsificarlo. */
+/** original_author_name derivato lato server (migration 20261025020000): il client non puo' falsificarlo. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

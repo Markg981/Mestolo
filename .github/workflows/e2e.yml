@@ -24,6 +24,13 @@ jobs:
     # SALTATO (stato "skipped", non "success") invece di passare senza test.
     # Un maintainer deve rilanciare gli E2E (workflow_dispatch su un branch del repo).
     if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' }}
+    # Tutte le esecuzioni condividono lo stesso Supabase di staging e gli stessi
+    # utenti di test: due job in parallelo si disturbano (es. il logout globale
+    # di uno invalida la sessione dell'altro). Un solo job alla volta; GitHub
+    # tiene in coda al massimo un job per gruppo e annulla gli altri in attesa.
+    concurrency:
+      group: e2e-staging
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:

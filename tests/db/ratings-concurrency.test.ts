@@ -1,5 +1,5 @@
 /**
- * Voti concorrenti sulla stessa ricetta (migrations 20261029000017, 20261031000001):
+ * Voti concorrenti sulla stessa ricetta (migrations 20261025025000, 20261025034000):
  * gli aggregati restano esatti e i voti simultanei non vanno in deadlock.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
