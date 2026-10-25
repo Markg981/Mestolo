@@ -31,3 +31,7 @@ public/ocr/
 
 # Store listing screenshots (generated)
 store/screenshots/
+
+# IDE e worktree degli agenti
+.claude/
+**/.idea/
