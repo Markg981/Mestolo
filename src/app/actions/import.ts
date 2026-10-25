@@ -12,6 +12,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/i18n/config';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { prepareOcrPage, ImageValidationError } from '@/lib/images/process';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
+import { refundQuota } from '@/lib/ai/refund';
 import { EXTRACT_SYSTEM, extractUserPrompt } from '@/lib/ai/prompts';
 import { draftFromExtraction } from '@/lib/ai/extraction';
 import type { ImportDraft } from '@/lib/recipes/types';
@@ -58,9 +59,16 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
     if (useAi) {
       await enforceRateLimit('ai_text', user.id);
       const resolved = await resolveProvider(user.id, 'text', 'text', 'extract_text');
-      const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
+      let draft: ImportDraft;
+      try {
+        const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
+        draft = draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' });
+      } catch (e) {
+        await refundQuota(resolved, 'text', 'extract_text');
+        throw e;
+      }
       await recordUsage(user.id, 'text', 'extract_text', resolved);
-      return ok(draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' }));
+      return ok(draft);
     }
 
     const language = detectRecipeLanguage(t.data, isLocale(uiLocale) ? uiLocale : DEFAULT_LOCALE);
@@ -106,23 +114,30 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
     const total = files.reduce((s, f) => s + f.size, 0);
     if (files.some((f) => f.size > MAX_PAGE_BYTES) || total > MAX_TOTAL_BYTES) return fail('image_too_large');
 
-    // Resolve the provider before doing heavy work, so "not configured" is immediate.
-    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
+    // Rate limit and image validation come first: the quota is consumed by resolveProvider.
     await enforceRateLimit('import_photo', user.id);
-
     const images = [];
     for (const f of files) {
       const jpeg = await prepareOcrPage(Buffer.from(await f.arrayBuffer()));
       images.push({ mime: 'image/jpeg' as const, base64: jpeg.toString('base64') });
     }
-    const raw = await resolved.provider.completeJson({
-      system: EXTRACT_SYSTEM,
-      user: extractUserPrompt(images.length),
-      images,
-      maxTokens: 6000,
-    });
+
+    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
+    let draft: ImportDraft;
+    try {
+      const raw = await resolved.provider.completeJson({
+        system: EXTRACT_SYSTEM,
+        user: extractUserPrompt(images.length),
+        images,
+        maxTokens: 6000,
+      });
+      draft = draftFromExtraction(raw, { type: 'photo', method: 'ai' });
+    } catch (e) {
+      await refundQuota(resolved, 'vision', 'extract_photo');
+      throw e;
+    }
     await recordUsage(user.id, 'vision', 'extract_photo', resolved);
-    return ok(draftFromExtraction(raw, { type: 'photo', method: 'ai' }));
+    return ok(draft);
   } catch (e) {
     if (e instanceof ImageValidationError) return fail(e.code);
     return toFailure(e, 'importFromPhotos');
@@ -163,16 +178,29 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
     const file = formData.get('audio');
     if (!(file instanceof File) || file.size === 0) return fail('invalid_input');
     if (file.size > MAX_AUDIO_BYTES || !AUDIO_MIME.test(file.type.split(';')[0])) return fail('invalid_input');
-    const resolved = await resolveProvider(user.id, 'audio', 'text', 'transcribe');
     await enforceRateLimit('import_video_ai', user.id);
-    if (!resolved.provider.transcribe) return fail('ai_unsupported');
-    const text = await resolved.provider.transcribe({
-      data: new Uint8Array(await file.arrayBuffer()),
-      mime: file.type.split(';')[0],
-      filename: /wav|wave/i.test(file.type) ? 'audio.wav' : 'audio.m4a',
-    });
+    const data = new Uint8Array(await file.arrayBuffer());
+    const resolved = await resolveProvider(user.id, 'audio', 'text', 'transcribe');
+    if (!resolved.provider.transcribe) {
+      await refundQuota(resolved, 'text', 'transcribe');
+      return fail('ai_unsupported');
+    }
+    let text: string;
+    try {
+      text = await resolved.provider.transcribe({
+        data,
+        mime: file.type.split(';')[0],
+        filename: /wav|wave/i.test(file.type) ? 'audio.wav' : 'audio.m4a',
+      });
+    } catch (e) {
+      await refundQuota(resolved, 'text', 'transcribe');
+      throw e;
+    }
+    if (!text) {
+      await refundQuota(resolved, 'text', 'transcribe');
+      return fail('ai_bad_output');
+    }
     await recordUsage(user.id, 'text', 'transcribe', resolved);
-    if (!text) return fail('ai_bad_output');
     return ok({ text: text.slice(0, 20000) });
   } catch (e) {
     return toFailure(e, 'transcribeVideoAudio');
