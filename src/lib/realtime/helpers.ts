@@ -6,7 +6,6 @@ export const REALTIME_TABLES = [
   { table: 'shopping_items', column: 'owner_id' },
   { table: 'meal_plan_entries', column: 'owner_id' },
   { table: 'recipes', column: 'owner_id' },
-  { table: 'favorites', column: 'user_id' },
 ] as const;
 
 /** postgres_changes filter limiting events to the signed-in user's rows. */

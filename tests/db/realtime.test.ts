@@ -15,7 +15,8 @@ d('realtime publication', () => {
   it('contiene le tabelle sincronizzate', async () => {
     const { rows } = await pool.query("select tablename from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public'");
     const names = rows.map((r) => r.tablename);
-    for (const t of ['shopping_items', 'meal_plan_entries', 'recipes', 'favorites']) expect(names).toContain(t);
+    for (const t of ['shopping_items', 'meal_plan_entries', 'recipes']) expect(names).toContain(t);
+    expect(names).not.toContain('favorites');
   });
 
   it('non espone tabelle sensibili e non cambia la replica identity', async () => {
