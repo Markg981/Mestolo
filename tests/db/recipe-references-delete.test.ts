@@ -29,6 +29,12 @@ async function as<T = Record<string, unknown>>(uid: string, sql: string, params:
 const admin = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await pool.query(sql, params)).rows as T[];
 const mkUser = async (name: string) =>
   (await admin<{ id: string }>('insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id', [`${name}@example.test`, JSON.stringify({ username: name })]))[0].id;
+// Il default e' 'friends': original_author_name compare solo se l'autore ha un profilo pubblico.
+const mkPublicUser = async (name: string) => {
+  const id = await mkUser(name);
+  await admin("update public.profiles set profile_visibility = 'public' where id = $1", [id]);
+  return id;
+};
 const refs = async (rid: string) =>
   (await admin<{ parent: string | null; copied: string | null; author: string | null; name: string | null }>(
     'select parent_recipe_id as parent, copied_from_recipe_id as copied, original_author_id as author, original_author_name as name from public.recipes where id = $1',
@@ -57,7 +63,7 @@ d('db recipe references on delete', () => {
   });
 
   it('the owner can delete a recipe that someone else copied; the copy keeps its attribution', async () => {
-    const a = await mkUser(`rd_a_${s}`);
+    const a = await mkPublicUser(`rd_a_${s}`);
     const b = await mkUser(`rd_b_${s}`);
     const src = await recipe(a, 'Fonte');
     const copy = await recipe(b, 'Copia', { copied_from_recipe_id: src, original_author_id: a });
@@ -66,7 +72,7 @@ d('db recipe references on delete', () => {
   });
 
   it('deleting the author account keeps the copies of other users but clears the author name (privacy)', async () => {
-    const a = await mkUser(`rd_x_${s}`);
+    const a = await mkPublicUser(`rd_x_${s}`);
     const b = await mkUser(`rd_y_${s}`);
     const src = await recipe(a, 'Fonte');
     const copy = await recipe(b, 'Copia', { copied_from_recipe_id: src, original_author_id: a });
@@ -75,7 +81,7 @@ d('db recipe references on delete', () => {
   });
 
   it('a client still cannot clear the attribution while the source exists', async () => {
-    const a = await mkUser(`rd_c_${s}`);
+    const a = await mkPublicUser(`rd_c_${s}`);
     const b = await mkUser(`rd_d_${s}`);
     const src = await recipe(a, 'Fonte');
     const base = await recipe(b, 'Base');
