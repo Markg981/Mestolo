@@ -11,6 +11,11 @@ const uuid = z.uuid();
 export async function searchUsers(q: string): Promise<{ id: string; username: string; display_name: string }[]> {
   const user = await getUser();
   if (!user || typeof q !== 'string' || q.trim().length < 2) return [];
+  try {
+    await enforceRateLimit('user_search', user.id);
+  } catch {
+    return [];
+  }
   const supabase = await createClient();
   const { data } = await supabase.rpc('search_profiles', { q: q.slice(0, 40) });
   return (data as { id: string; username: string; display_name: string }[]) ?? [];

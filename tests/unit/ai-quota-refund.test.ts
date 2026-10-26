@@ -46,7 +46,8 @@ vi.mock('@/lib/rate-limit', async (orig) => ({ ...(await orig<object>()), enforc
 vi.mock('@/lib/supabase/server', () => ({
   getUser: async () => USER,
   getProfile: async () => ({ locale: 'it' }),
-  createClient: async () => ({ from: () => chain() }),
+  // rpc lato utente: insert_recipe_image (A-12) restituisce l'id della nuova immagine.
+  createClient: async () => ({ from: () => chain(), rpc: async () => ({ data: 'new-id', error: null }) }),
 }));
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({

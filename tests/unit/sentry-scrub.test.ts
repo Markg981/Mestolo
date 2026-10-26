@@ -100,6 +100,36 @@ describe('scrubBreadcrumb', () => {
   });
 });
 
+describe('scrubBreadcrumb: query string e fragment degli URL', () => {
+  const url = 'https://x.supabase.co/rest/v1/profiles?username=eq.mario&select=*';
+  it('fetch e xhr perdono la query string', () => {
+    for (const category of ['fetch', 'xhr']) {
+      const j = JSON.stringify(scrubBreadcrumb({ category, data: { url, method: 'GET' } }));
+      expect(j).not.toContain('username');
+      expect(j).not.toContain('mario');
+    }
+  });
+  it('navigation perde query e fragment in from/to', () => {
+    const b = scrubBreadcrumb({
+      category: 'navigation',
+      data: { from: '/a?x=1', to: '/auth/cb#access_token=abc123&type=magiclink' },
+    });
+    const j = JSON.stringify(b);
+    expect(j).not.toContain('abc123');
+    expect(j).not.toContain('x=1');
+  });
+  it('scrubEvent pulisce i breadcrumb e request.url con fragment', () => {
+    const out = scrubEvent({
+      request: { url: 'https://m.app/p?q=1#access_token=zzz' },
+      breadcrumbs: [{ category: 'fetch', data: { url } }],
+    }) as { request: { url: string } };
+    expect(out.request.url).toBe('https://m.app/p');
+    expect(JSON.stringify(out)).not.toContain('mario');
+    const frag = scrubEvent({ request: { url: 'https://m.app/cb#access_token=zzz' } }) as { request: { url: string } };
+    expect(frag.request.url).toBe('https://m.app/cb');
+  });
+});
+
 describe('sentryOptions', () => {
   it('è disattivato senza DSN e non invia PII', () => {
     const o = sentryOptions(undefined);

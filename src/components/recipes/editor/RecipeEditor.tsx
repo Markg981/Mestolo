@@ -63,6 +63,9 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
+  // one key per editor mount: a double submit or retry of a creation returns the same recipe
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const submitting = useRef(false);
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -226,6 +229,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
     setError(null);
     if (!s.title.trim()) {
       setError(t('titleRequired'));
@@ -246,9 +250,10 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       source_attribution: mode === 'review' ? source?.attribution ?? null : null,
       nutrition: mode === 'review' ? importedNutrition ?? null : null,
     };
+    submitting.current = true;
     startSaving(async () => {
       try {
-        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null, mode === 'edit' ? expectedVersion : null);
+        const res = await saveRecipe(payload, mode === 'edit' ? recipeId : null, mode === 'edit' ? expectedVersion : null, mode === 'edit' ? null : idempotencyKey);
         if (!res.ok) {
           setError(res.error === 'invalid_input' && res.detail ? te('invalid_input_field', { field: fieldLabel(res.detail) }) : te(res.error));
           return;
@@ -278,6 +283,8 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
         router.refresh();
       } catch {
         setError(te('generic'));
+      } finally {
+        submitting.current = false;
       }
     });
   };

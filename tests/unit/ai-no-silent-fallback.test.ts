@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
@@ -5,6 +6,7 @@ vi.mock('server-only', () => ({}));
 const state = vi.hoisted(() => ({
   result: { data: null as unknown, error: null as unknown },
   encryptionKey: undefined as string | undefined,
+  previousKey: undefined as string | undefined,
   rpcCalls: [] as { name: string; args: Record<string, unknown> }[],
 }));
 
@@ -22,13 +24,14 @@ vi.mock('@/lib/env', () => ({
   ConfigError: class ConfigError extends Error {},
   env: () => ({
     encryptionKey: state.encryptionKey,
+    encryptionKeyPrevious: state.previousKey,
     ai: { appProvider: 'openai', appApiKey: 'sk-app-key-1234567890', limits: { text: 5, vision: 5, image: 5, translate: 5 }, userAnthropicModel: 'm', userOpenaiTextModel: 'm', userOpenaiImageModel: 'm', transcribeModel: 'm' },
   }),
 }));
 
 import { capabilityStatus, resolveProvider } from '@/lib/ai/service';
 import { AiError } from '@/lib/ai/providers';
-import { EncryptionConfigError } from '@/lib/crypto/secrets';
+import { EncryptionConfigError, encryptSecret, keyAad } from '@/lib/crypto/secrets';
 import { toFailure } from '@/app/actions/_utils';
 
 const row = { provider: 'openai', ciphertext: 'x', iv: 'y', auth_tag: 'z' };
@@ -37,6 +40,7 @@ describe('no silent fallback to the base service', () => {
   beforeEach(() => {
     state.result = { data: [], error: null };
     state.encryptionKey = undefined;
+    state.previousKey = undefined;
     state.rpcCalls = [];
   });
 
@@ -55,6 +59,22 @@ describe('no silent fallback to the base service', () => {
   it('reports "not available" instead of "uses your key" when the key cannot be used', async () => {
     state.result = { data: [row], error: null };
     await expect(capabilityStatus('u1', 'text', 'text')).resolves.toMatchObject({ available: false, keySource: null });
+  });
+
+  it('reports an undecryptable key as unavailable (no crash)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    state.encryptionKey = randomBytes(32).toString('base64');
+    state.result = { data: [row], error: null };
+    await expect(capabilityStatus('u1', 'text', 'text')).resolves.toMatchObject({ available: false, keySource: null });
+  });
+
+  it('reports available when the key was encrypted with the previous key', async () => {
+    const oldKey = randomBytes(32);
+    const e = encryptSecret('sk-user-key', oldKey, keyAad('u1', 'openai'));
+    state.encryptionKey = randomBytes(32).toString('base64');
+    state.previousKey = oldKey.toString('base64');
+    state.result = { data: [{ provider: 'openai', ciphertext: e.ciphertext, iv: e.iv, auth_tag: e.authTag }], error: null };
+    await expect(capabilityStatus('u1', 'text', 'text')).resolves.toMatchObject({ available: true, keySource: 'user' });
   });
 
   it('still uses the base service when the user has no key', async () => {
