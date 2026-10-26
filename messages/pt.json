@@ -1445,6 +1445,16 @@
     "stop": "Parar",
     "selectAll": "Selecionar todas",
     "selectNone": "Desmarcar todas",
-    "stopped": "Interrompida após {done} receitas: {created} importadas, {duplicates} já presentes, {failed} com falha. Inicie de novo para retomar: as receitas já importadas são ignoradas."
+    "stopped": "Interrompida após {done} receitas: {created} importadas, {duplicates} já presentes, {failed} com falha. Inicie de novo para retomar: as receitas já importadas são ignoradas.",
+    "failuresTitle": "{count, plural, one {# receita não importada} other {# receitas não importadas}}",
+    "retryFailed": "Tentar novamente as falhadas ({count})",
+    "failReasons": {
+      "rate_limited": "Demasiados pedidos: tenta novamente dentro de alguns minutos.",
+      "invalid_input": "Dados da receita inválidos.",
+      "forbidden": "Sem permissão para guardar: inicia sessão novamente.",
+      "config": "Serviço mal configurado.",
+      "generic": "Erro ao guardar.",
+      "unexpected": "Erro inesperado ou de rede."
+    }
   }
 }

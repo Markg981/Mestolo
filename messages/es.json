@@ -1445,6 +1445,16 @@
     "stop": "Detener",
     "selectAll": "Seleccionar todas",
     "selectNone": "Deseleccionar todas",
-    "stopped": "Detenida tras {done} recetas: {created} importadas, {duplicates} ya presentes, {failed} fallidas. Vuelve a iniciar para reanudar: las recetas ya importadas se omiten."
+    "stopped": "Detenida tras {done} recetas: {created} importadas, {duplicates} ya presentes, {failed} fallidas. Vuelve a iniciar para reanudar: las recetas ya importadas se omiten.",
+    "failuresTitle": "{count, plural, one {# receta no importada} other {# recetas no importadas}}",
+    "retryFailed": "Reintentar las fallidas ({count})",
+    "failReasons": {
+      "rate_limited": "Demasiadas solicitudes: inténtalo de nuevo en unos minutos.",
+      "invalid_input": "Datos de la receta no válidos.",
+      "forbidden": "No tienes permiso para guardar: vuelve a iniciar sesión.",
+      "config": "Servicio mal configurado.",
+      "generic": "Error al guardar.",
+      "unexpected": "Error inesperado o de red."
+    }
   }
 }

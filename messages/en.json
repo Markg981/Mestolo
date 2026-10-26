@@ -1445,6 +1445,16 @@
     "stop": "Stop",
     "selectAll": "Select all",
     "selectNone": "Deselect all",
-    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped."
+    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped.",
+    "failuresTitle": "{count, plural, one {# recipe not imported} other {# recipes not imported}}",
+    "retryFailed": "Retry failed ({count})",
+    "failReasons": {
+      "rate_limited": "Too many requests: try again in a few minutes.",
+      "invalid_input": "Invalid recipe data.",
+      "forbidden": "You are not allowed to save: sign in again.",
+      "config": "Service not configured correctly.",
+      "generic": "Error while saving.",
+      "unexpected": "Unexpected or network error."
+    }
   }
 }
