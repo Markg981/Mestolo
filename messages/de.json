@@ -796,6 +796,7 @@
     "addPlaceholder": "z. B. 500 g Tomaten",
     "added": "Hinzugefügt.",
     "merged": "Mit vorhandenem Eintrag zusammengefasst.",
+    "offline": "Du bist offline: Die Änderung wurde nicht gespeichert. Versuche es erneut, sobald du wieder online bist.",
     "mergeNote": "Einträge werden nur zusammengefasst, wenn Name und Einheit übereinstimmen: 200 g und 1 Tasse bleiben getrennt.",
     "emptyTitle": "Die Liste ist leer",
     "empty": "Füge oben Produkte hinzu – oder über eine Rezeptseite bzw. den Essensplan.",
