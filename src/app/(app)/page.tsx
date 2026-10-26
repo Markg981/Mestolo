@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Camera, Compass, Link2, Plus } from 'lucide-react';
-import { getProfile, createClient, getUser } from '@/lib/supabase/server';
+import { getProfile, createClient, getUser, getUserTimeZone } from '@/lib/supabase/server';
 import { listCategories, listCollections, listMyRecipes } from '@/lib/data/recipes';
 import { todayIso } from '@/lib/plan/week';
 import { discover } from '@/lib/data/discover';
@@ -14,7 +14,7 @@ import { Alert, EmptyState, LadleMark, LinkButton } from '@/components/ui';
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ password?: string }> }) {
   const t = await getTranslations();
   const { password } = await searchParams;
-  const [profile, user, categories] = await Promise.all([getProfile(), getUser(), listCategories()]);
+  const [profile, user, categories, timeZone] = await Promise.all([getProfile(), getUser(), listCategories(), getUserTimeZone()]);
   const [recent, review, collections, community] = await Promise.all([
     listMyRecipes({ limit: 6 }),
     listMyRecipes({ review: true, limit: 50 }),
@@ -22,7 +22,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     discover(categories, { limit: 60 }),
   ]);
   const supabase = await createClient();
-  const today = todayIso();
+  const today = todayIso(new Date(), timeZone);
   const { data: todayPlan } = await supabase
     .from('meal_plan_entries')
     .select('id, slot, title, recipe_id')
