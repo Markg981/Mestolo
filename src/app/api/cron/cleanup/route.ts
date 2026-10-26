@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 // Margine ampio rispetto a maxDuration: l'ultimo blocco avviato puo' durare qualche secondo.
 const BUDGET_MS = 40_000;
+/** Retention: expired/revoked invites and sent meal reminders are deleted after this many days. */
+const INVITE_GRACE_DAYS = 30;
+const REMINDER_RETENTION_DAYS = 30;
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -27,6 +30,7 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
   let usage: unknown = null;
+  let stale: unknown = null;
   const orphanTask = (bucket: string, rpcName: string): CleanupTask => ({
     name: `orphans:${bucket}`,
     runBatch: async (limit) => {
@@ -50,6 +54,18 @@ export async function GET(request: Request) {
         return 0; // singola chiamata, non a blocchi
       },
     },
+    {
+      name: 'stale-rows',
+      runBatch: async () => {
+        const { data, error } = await admin.rpc('cleanup_stale_rows', {
+          p_invite_grace_days: INVITE_GRACE_DAYS,
+          p_reminder_days: REMINDER_RETENTION_DAYS,
+        });
+        if (error) throw new Error(`cleanup_failed: ${error.message}`);
+        stale = data;
+        return 0; // singola chiamata, non a blocchi
+      },
+    },
     orphanTask('recipe-images', 'list_orphan_images'),
     orphanTask('avatars', 'list_orphan_avatars'),
   ];
@@ -66,7 +82,7 @@ export async function GET(request: Request) {
     .filter((r) => r.name.startsWith('orphans:'))
     .reduce((n, r) => n + r.processed, 0);
   return NextResponse.json(
-    { ok: failed.length === 0, usage, orphansRemoved, results },
+    { ok: failed.length === 0, usage, stale, orphansRemoved, results },
     { status: failed.length ? 500 : 200 },
   );
 }

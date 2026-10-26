@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Clock, Users } from 'lucide-react';
 import { getUser } from '@/lib/supabase/server';
-import { getPublicRecipe } from '@/lib/data/public-recipes';
+import { getPublicRecipe, resolveOldPublicSlug } from '@/lib/data/public-recipes';
 import { getPublicRecipeNutrition } from '@/lib/data/nutrition';
 import { nutritionJsonLd } from '@/lib/nutrition';
 import { env } from '@/lib/env';
@@ -46,7 +46,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function PublicRecipePage({ params }: Params) {
   const { slug } = await params;
   const r = await getPublicRecipe(slug).catch(() => null);
-  if (!r) notFound();
+  if (!r) {
+    const current = await resolveOldPublicSlug(slug).catch(() => null);
+    if (current) permanentRedirect(publicRecipePath(current));
+    notFound();
+  }
   const [t, user] = await Promise.all([getTranslations(), getUser()]);
   const lang = r.original_language;
   const labels = { h: t('common.hoursShort'), min: t('common.minShort') };
