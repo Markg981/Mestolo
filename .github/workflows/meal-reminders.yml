@@ -1,0 +1,34 @@
+name: Meal reminders
+
+# Scheduler esterno per i promemoria Web Push: il piano Vercel Hobby ammette solo un cron giornaliero
+# (vercel.json), troppo poco per promemoria puntuali. Chiama la route ogni 15 minuti; i duplicati sono
+# esclusi da meal_reminders_sent. Senza i secret APP_URL e CRON_SECRET non fa nulla.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: meal-reminders
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      APP_URL: ${{ secrets.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Call /api/cron/meal-reminders
+        run: |
+          set -euo pipefail
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::notice::APP_URL o CRON_SECRET non impostati: promemoria non inviati da questo scheduler."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 60 --retry 2 --retry-all-errors \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "${APP_URL%/}/api/cron/meal-reminders"
