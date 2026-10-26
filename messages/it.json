@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# ricetta nel file} other {# ricette nel file}}",
     "skipped": "{count, plural, one {# ricetta saltata perché senza titolo.} other {# ricette saltate perché senza titolo.}}",
     "importAll": "Importa tutte come private",
-    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate.",
+    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate: puoi deselezionare quelle che non vuoi, interrompere e riprendere in qualsiasi momento.",
     "progress": "{done} di {total}: {created} importate, {duplicates} già presenti, {failed} non riuscite.",
     "goToRecipes": "Vai alle ricette",
     "review": "Rivedi e salva",
@@ -1428,6 +1428,11 @@
       "unsupported_format": "Questo file non è un’esportazione di Mestolo.",
       "no_recipes": "Nel file non ci sono ricette importabili.",
       "too_large": "Il file è troppo grande (massimo 10 MB)."
-    }
+    },
+    "importSelected": "Importa selezionate ({count})",
+    "stop": "Interrompi",
+    "selectAll": "Seleziona tutte",
+    "selectNone": "Deseleziona tutte",
+    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate."
   }
 }

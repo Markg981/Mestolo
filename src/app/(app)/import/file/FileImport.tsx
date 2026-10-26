@@ -2,7 +2,7 @@
 
 import { draftNames } from '@/lib/drafts';
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { checkDuplicates, saveRecipe } from '@/app/actions/recipes';
 import { ImportReview, useResumeImport } from '@/components/import/ImportReview';
@@ -10,6 +10,7 @@ import { stateFromDraft, toPayload } from '@/components/recipes/editor/convert';
 import type { EditorCategory } from '@/components/recipes/editor/types';
 import { Alert, Button, Card } from '@/components/ui';
 import { MAX_IMPORT_FILE_BYTES, parseMestoloExport } from '@/lib/recipes/import-json';
+import { runBulkImport, type BulkProgress } from '@/lib/recipes/bulk-import';
 import type { ImportDraft } from '@/lib/recipes/types';
 
 const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -37,7 +38,9 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
     setPicked(0);
   });
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<{ done: number; created: number; duplicates: number; failed: number } | null>(null);
+  const [progress, setProgress] = useState<BulkProgress | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const stopRef = useRef(false);
   const [running, start] = useTransition();
 
   async function onFile(file: File | undefined) {
@@ -49,26 +52,30 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
     if (!res.ok) return setError(t(`errors.${res.error}`));
     setSkipped(res.skipped);
     setDrafts(res.drafts);
+    setSelected(new Set(res.drafts.map((_, i) => i)));
     setPicked(res.drafts.length === 1 ? 0 : null);
   }
 
   function importAll() {
-    if (!drafts) return;
+    if (!drafts || selected.size === 0) return;
+    stopRef.current = false;
+    const chosen = drafts.filter((_, i) => selected.has(i));
     start(async () => {
-      const p = { done: 0, created: 0, duplicates: 0, failed: 0 };
-      setProgress({ ...p });
-      for (const d of drafts) {
-        try {
-          const dup = await checkDuplicates({ title: d.content.title, source_url: d.source.url ?? null });
-          if (dup.some((m) => sameTitle(m.title, d.content.title))) p.duplicates++;
-          else if ((await saveRecipe(bulkPayload(d, categories), null)).ok) p.created++;
-          else p.failed++;
-        } catch {
-          p.failed++;
-        }
-        p.done++;
-        setProgress({ ...p });
-      }
+      await runBulkImport(chosen, {
+        isDuplicate: async (d) => (await checkDuplicates({ title: d.content.title, source_url: d.source.url ?? null })).some((m) => sameTitle(m.title, d.content.title)),
+        save: async (d) => (await saveRecipe(bulkPayload(d, categories), null)).ok,
+        onProgress: setProgress,
+        shouldStop: () => stopRef.current,
+      });
+    });
+  }
+
+  function toggle(i: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
     });
   }
 
@@ -94,15 +101,19 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
           </h2>
           {skipped > 0 && <Alert tone="warn">{t('skipped', { count: skipped })}</Alert>}
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="primary" disabled={running} onClick={importAll}>
-              {t('importAll')}
+            <Button variant="primary" disabled={running || selected.size === 0} onClick={importAll}>
+              {t('importSelected', { count: selected.size })}
+            </Button>
+            {running && <Button onClick={() => (stopRef.current = true)}>{t('stop')}</Button>}
+            <Button disabled={running} onClick={() => setSelected(selected.size === drafts.length ? new Set() : new Set(drafts.map((_, i) => i)))}>
+              {selected.size === drafts.length ? t('selectNone') : t('selectAll')}
             </Button>
             <p className="text-sm text-muted">{t('importAllHint')}</p>
           </div>
           {progress && (
-            <Alert tone={progress.done === drafts.length ? (progress.failed ? 'warn' : 'success') : 'info'}>
-              <span role="status">{t('progress', { ...progress, total: drafts.length })}</span>
-              {progress.done === drafts.length && (
+            <Alert tone={running ? 'info' : progress.failed || progress.stopped ? 'warn' : 'success'}>
+              <span role="status">{t(progress.stopped ? 'stopped' : 'progress', { done: progress.done, created: progress.created, duplicates: progress.duplicates, failed: progress.failed, total: selected.size })}</span>
+              {!running && (
                 <>
                   {' '}
                   <Link href="/recipes" className="font-semibold underline underline-offset-4">
@@ -115,7 +126,10 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
           <ul className="flex flex-col gap-2">
             {drafts.map((d, i) => (
               <li key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3">
-                <span className="font-semibold">{d.content.title}</span>
+                <label className="flex min-h-11 flex-1 items-center gap-3 font-semibold">
+                  <input type="checkbox" className="size-5" checked={selected.has(i)} disabled={running} onChange={() => toggle(i)} />
+                  {d.content.title}
+                </label>
                 <Button disabled={running} onClick={() => setPicked(i)}>
                   {t('review')}
                 </Button>

@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# Rezept in der Datei} other {# Rezepte in der Datei}}",
     "skipped": "{count, plural, one {# Rezept ohne Titel übersprungen.} other {# Rezepte ohne Titel übersprungen.}}",
     "importAll": "Alle als privat importieren",
-    "importAllHint": "Rezepte mit demselben Titel wie ein bereits vorhandenes werden übersprungen.",
+    "importAllHint": "Rezepte mit demselben Titel wie ein vorhandenes werden übersprungen: Wähle ab, was du nicht willst, und stoppe oder setze jederzeit fort.",
     "progress": "{done} von {total}: {created} importiert, {duplicates} bereits vorhanden, {failed} fehlgeschlagen.",
     "goToRecipes": "Zu den Rezepten",
     "review": "Prüfen und speichern",
@@ -1428,6 +1428,11 @@
       "unsupported_format": "Diese Datei ist kein Mestolo-Export.",
       "no_recipes": "Die Datei enthält keine importierbaren Rezepte.",
       "too_large": "Die Datei ist zu groß (maximal 10 MB)."
-    }
+    },
+    "importSelected": "Auswahl importieren ({count})",
+    "stop": "Stoppen",
+    "selectAll": "Alle auswählen",
+    "selectNone": "Alle abwählen",
+    "stopped": "Nach {done} Rezepten gestoppt: {created} importiert, {duplicates} bereits vorhanden, {failed} fehlgeschlagen. Starte erneut, um fortzufahren: bereits importierte Rezepte werden übersprungen."
   }
 }

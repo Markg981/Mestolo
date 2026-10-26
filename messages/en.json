@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# recipe in the file} other {# recipes in the file}}",
     "skipped": "{count, plural, one {# recipe skipped because it has no title.} other {# recipes skipped because they have no title.}}",
     "importAll": "Import all as private",
-    "importAllHint": "Recipes with the same title as one you already have are skipped.",
+    "importAllHint": "Recipes with the same title as one you already have are skipped: deselect the ones you do not want, and stop or resume at any time.",
     "progress": "{done} of {total}: {created} imported, {duplicates} already there, {failed} failed.",
     "goToRecipes": "Go to recipes",
     "review": "Review and save",
@@ -1428,6 +1428,11 @@
       "unsupported_format": "This file is not a Mestolo export.",
       "no_recipes": "The file has no recipes that can be imported.",
       "too_large": "The file is too large (10 MB max)."
-    }
+    },
+    "importSelected": "Import selected ({count})",
+    "stop": "Stop",
+    "selectAll": "Select all",
+    "selectNone": "Deselect all",
+    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped."
   }
 }
