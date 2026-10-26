@@ -40,6 +40,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      # Il test di performance di import-html e' escluso dalla coverage (strumentazione v8 = timing falsato).
+      - run: npm run test:coverage
       - run: npm run build
 
   db-tests:

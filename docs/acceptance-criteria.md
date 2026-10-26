@@ -41,9 +41,12 @@ Finché la tabella resta vuota non si può costruire la matrice requisiti → te
 | Ricetta del giorno: scelta "deterministica" | 🟡 → corretto (`tests/unit/recipe-of-the-day.test.ts`) | C-26 |
 | Promemoria dei pasti | 🟡 → corretto: claim e conferma con ritentativi (`tests/unit/cron-meal-reminders.test.ts`), chiamata ogni 15 min da `.github/workflows/meal-reminders.yml` (secret `APP_URL`, `CRON_SECRET`). Da verificare: workflow attivo sul repository e consegna su dispositivo reale | C-02 |
 | Export "di tutti i dati" dell'account | 🟡 → corretto (`tests/unit/account-export.test.ts`) | C-05, C-06 |
+| Export "di tutti i dati": anche i file | 🟡 → README corretto: il JSON contiene i metadati delle immagini e i percorsi di avatar e foto, non i file; escluse le traduzioni in cache. Un export con i file richiederebbe uno ZIP | A-02 |
+| "Bozza salvata" anche al login | ❌ → corretto: la pagina di login cancellava tutte le bozze, quindi una sessione scaduta durante la modifica le perdeva. Ora il login le tiene e dopo l'accesso restano solo quelle dell'utente entrato (`tests/unit/drafts.test.ts`) | A-01 |
+| "Revisione obbligatoria" degli import | ❌ per l'importazione massiva → corretto: resta senza schermata di revisione (ripristino di molte ricette), ma ogni ricetta è salvata "Da verificare" invece che verificata, e README e testo della pagina lo dicono (`tests/unit/bulk-import.test.ts`) | A-11 |
 | Aree cliccabili ≥ 44 px | ❌ → corretto nei componenti, nei link del logo e nei link isolati (intestazioni, "indietro", azioni degli avvisi); misurato da `e2e/tap-targets.spec.ts` (progetto mobile, 15 pagine). Esenti come da WCAG 2.5.5 i link dentro una frase. Le pagine di accesso/registrazione e il dettaglio ricetta non sono misurati | C-27 |
 
-Restano da fare, come già indicato nelle sezioni 3 e 4: prove con chiavi AI reali, build iOS (mai compilata) e Android su dispositivo reale.
+Restano da fare, come già indicato nelle sezioni 3 e 4: prove con chiavi AI reali, build iOS (mai compilata) e Android su dispositivo reale con `CAP_SERVER_URL`, dati del titolare (`NEXT_PUBLIC_LEGAL_*`) in produzione, perché finché mancano `/privacy` e `/terms` mostrano un avviso e gli store le richiedono complete.
 
 ## 2. Già coperto in automatico
 

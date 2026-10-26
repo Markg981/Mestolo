@@ -61,7 +61,7 @@ Pagina `/import/file` (anche da *Impostazioni → Account e dati → Importa da 
 - `mestolo.recipe/v1`: la ricetta apre la schermata di revisione, come ogni altra importazione.
 - `mestolo.account-export/v1`: elenco delle ricette; ognuna si può rivedere singolarmente, oppure *Importa tutte come private* le salva in sequenza saltando quelle con lo stesso titolo di una ricetta già presente.
 
-Regole: non vengono mai ripresi id, proprietario, versioni, visibilità (sempre **privata**), immagini, valutazioni, amicizie, raccolte e liste. Ingredienti e passaggi non validi vengono scartati con l'avviso "contenuto parziale"; categorie personali e categorie di sistema assenti dall'export vengono riproposte automaticamente; le indicazioni dietetiche sconosciute vengono ignorate; la nota personale viene ripresa. Il server rivalida tutto al salvataggio.
+Regole: non vengono mai ripresi id, proprietario, versioni, visibilità (sempre **privata**), immagini, valutazioni, amicizie, raccolte e liste. Ingredienti e passaggi non validi vengono scartati con l'avviso "contenuto parziale"; categorie personali e categorie di sistema assenti dall'export vengono riproposte automaticamente; le indicazioni dietetiche sconosciute vengono ignorate; la nota personale viene ripresa. Il server rivalida tutto al salvataggio. Con l'importazione di tutte le ricette di un export account non c'è la schermata di revisione: ogni ricetta viene salvata con stato "Da verificare" (`needs_review`) e diventa verificata quando l'utente la salva dall'editor.
 
 ## 5. Stampa / PDF
 

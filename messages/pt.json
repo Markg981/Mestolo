@@ -1421,7 +1421,7 @@
     "found": "{count, plural, one {# receita no arquivo} other {# receitas no arquivo}}",
     "skipped": "{count, plural, one {# receita ignorada por não ter título.} other {# receitas ignoradas por não terem título.}}",
     "importAll": "Importar todas como privadas",
-    "importAllHint": "Receitas com o mesmo título de uma que já tens são ignoradas: desmarca as que não queres, e pára ou retoma a qualquer momento.",
+    "importAllHint": "Receitas com o mesmo título de uma que já tens são ignoradas: desmarca as que não queres, e pára ou retoma a qualquer momento. Não passam pelo ecrã de revisão: são guardadas como privadas e marcadas “Por verificar”.",
     "progress": "{done} de {total}: {created} importadas, {duplicates} já existentes, {failed} com erro.",
     "goToRecipes": "Ir para as receitas",
     "review": "Revisar e salvar",
