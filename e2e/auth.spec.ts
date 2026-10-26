@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { envUser } from './fixtures';
-import { login, logout, randomUser } from './helpers';
+import { login, logout, newUserPage, randomUser } from './helpers';
 
 // Questi test partono da una sessione vuota
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -35,5 +35,21 @@ test.describe('autenticazione', () => {
     // Dopo l'uscita le pagine private rimandano al login
     await page.goto('/recipes');
     await expect(page).toHaveURL(/\/(login|welcome)/);
+  });
+
+  test('sessione scaduta: la bozza non salvata sopravvive al nuovo accesso', async ({ browser }, testInfo) => {
+    const { user, id, page, close } = await newUserPage(browser, testInfo, 'draft');
+    try {
+      const key = `mestolo:draft:${id}:new`;
+      await page.evaluate((k) => localStorage.setItem(k, '{"v":1}'), key);
+      // sessione scaduta: i cookie spariscono, /login si apre da solo
+      await page.context().clearCookies();
+      await page.goto('/recipes');
+      await expect(page).toHaveURL(/\/(login|welcome)/);
+      await login(page, user);
+      expect(await page.evaluate((k) => localStorage.getItem(k), key)).toBe('{"v":1}');
+    } finally {
+      await close();
+    }
   });
 });
