@@ -67,7 +67,7 @@ Questa opzione esiste **solo per il gestore**: gli utenti non possono indicare U
 - La tabella `user_api_keys` non ha policy RLS: nessun client può leggerla. Il browser vede solo provider e ultime 4 cifre (`my_api_keys()`).
 - Non compaiono in URL, log, analytics, risposte API o esportazioni. Gli errori dei provider vengono ripuliti con `redactSecrets` prima di qualsiasi log.
 - L'utente può sostituirle o rimuoverle; per revocarle del tutto va disattivata anche nel pannello del provider.
-- **Rotazione della chiave di cifratura**: la colonna `key_version` è predisposta; ruotare `APP_ENCRYPTION_KEY` rende illeggibili le chiavi esistenti, che gli utenti dovranno reinserire (oppure va scritto uno script di ri-cifratura).
+- **Rotazione della chiave di cifratura**: 1) genera una nuova chiave (`npm run gen:key`); 2) imposta `APP_ENCRYPTION_KEY_PREVIOUS` = vecchia chiave e `APP_ENCRYPTION_KEY` = nuova, poi rilascia; 3) le chiavi utente si decifrano con la nuova o, in fallback, con la precedente, e vengono ri-cifrate con la nuova al primo uso; 4) quando non restano chiavi sotto la vecchia rimuovi `APP_ENCRYPTION_KEY_PREVIOUS`. Una chiave non decifrabile risulta "non disponibile" (e viene loggata): l'utente deve reinserirla.
 
 ### Termini dei provider
 

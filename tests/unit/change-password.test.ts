@@ -16,6 +16,7 @@ vi.mock('@/lib/rate-limit', () => ({
   clientIpHash: async () => 'ip',
   hashKey: (s: string) => `h:${s}`,
   enforceRateLimit: (...a: unknown[]) => enforceRateLimit(...a),
+  enforceAuthRateLimit: (...a: unknown[]) => enforceRateLimit(...a),
 }));
 
 import { changePassword } from '@/app/actions/auth';

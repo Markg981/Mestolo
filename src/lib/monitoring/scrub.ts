@@ -80,7 +80,7 @@ export function scrubEvent<T extends object>(event: T): T {
     );
     e.request = {
       ...(scrubValue(rest) as Loose),
-      ...(typeof url === 'string' ? { url: redactText(url.split('?')[0]) } : {}),
+      ...(typeof url === 'string' ? { url: redactText(url.split(/[?#]/)[0]) } : {}),
       ...(headers ? { headers: scrubValue(headers) } : {}),
     };
   }
@@ -99,6 +99,7 @@ export function scrubBreadcrumb<T extends object>(crumb: T): T {
   if (c.category === 'console') {
     return { ...c, message: redactText(String(c.message ?? '')), data: undefined } as T;
   }
+  // `data` is a sensitive key: fetch/xhr url and navigation from/to are dropped whole.
   return scrubValue(c) as T;
 }
 
