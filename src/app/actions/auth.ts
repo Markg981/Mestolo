@@ -7,24 +7,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { safeNextPath } from '@/lib/safe-redirect';
-import { RateLimitedError, clientIpHash, enforceRateLimit, hashKey, type LimitName } from '@/lib/rate-limit';
+import { clientIpHash, enforceAuthRateLimit, hashKey } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
 import { passwordSchema } from '@/lib/password';
 import { fail, type ErrorCode } from './_utils';
 
 export type AuthState = { error?: ErrorCode; sent?: boolean; email?: string } | undefined;
 
-/**
- * For auth we only surface our own limit; if the limiter is unavailable we rely
- * on Supabase Auth's built-in rate limits instead of locking everybody out.
- */
-async function authRateLimit(limit: LimitName, subject: string) {
-  try {
-    await enforceRateLimit(limit, subject);
-  } catch (e) {
-    if (e instanceof RateLimitedError) throw e;
-  }
-}
+const authRateLimit = enforceAuthRateLimit;
 
 const credentials = z.object({
   email: z.email().max(320),
@@ -41,8 +31,12 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
   const parsed = credentials.safeParse({ email: formData.get('email'), password: formData.get('password') });
   if (!parsed.success) return { error: 'auth_invalid', email: String(formData.get('email') ?? '') };
   try {
-    await authRateLimit('login_ip', await clientIpHash());
-    await authRateLimit('login_email', hashKey(parsed.data.email.toLowerCase()));
+    const ipHash = await clientIpHash();
+    const emailHash = hashKey(parsed.data.email.toLowerCase());
+    await authRateLimit('login_ip', ipHash);
+    // Tight limit per (email, IP); the email-only ceiling is loose so a third party cannot lock a victim out.
+    await authRateLimit('login_email_ip', `${emailHash}:${ipHash}`);
+    await authRateLimit('login_email', emailHash);
   } catch {
     return { error: 'rate_limited', email: parsed.data.email };
   }
