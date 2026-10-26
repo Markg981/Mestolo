@@ -185,6 +185,7 @@ Fonti: [Supabase pricing (riepilogo)](https://makerkit.dev/blog/saas/supabase-pr
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | per gli store | Contatto di supporto mostrato in app |
 | `CAP_SERVER_URL`, `CAP_APP_ID` | per le app | Sito che le app caricano e identificativo dell’app ([docs/mobile.md](docs/mobile.md)) |
 | `APP_ENCRYPTION_KEY` | per le chiavi utente | 32 byte base64 (`npm run gen:key`); senza, il salvataggio di chiavi personali è disabilitato |
+| `APP_ENCRYPTION_KEY_PREVIOUS` | no | chiave precedente, solo durante la rotazione (vedi `docs/ai-providers.md`) |
 | `AI_APP_PROVIDER` | no | `anthropic` \| `openai` \| `openai-compatible` – servizio base pagato dal gestore |
 | `AI_APP_API_KEY`, `AI_APP_BASE_URL` | no | Chiave del gestore; base URL solo per `openai-compatible` |
 | `AI_APP_TEXT_MODEL`, `AI_APP_VISION_MODEL` | no | Modelli del servizio base |
