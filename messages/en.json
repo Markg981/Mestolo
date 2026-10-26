@@ -993,6 +993,7 @@
     "deleteTitle": "Delete account",
     "deleteLead": "Permanently delete your account, recipes, images, and all related data. This can't be undone.",
     "deleteConfirmLabel": "To confirm, type your username ({username})",
+    "deletePasswordLabel": "Enter your current password to confirm",
     "deleteButton": "Delete permanently",
     "deleting": "Deleting…",
     "passwordTitle": "Change password",

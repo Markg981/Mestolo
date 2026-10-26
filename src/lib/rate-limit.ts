@@ -21,6 +21,7 @@ export const LIMITS = {
   api_key_change: [10, 60 * 60],
   upload_image: [60, 60 * 60],
   upload_image_day: [150, 24 * 60 * 60],
+  account_delete: [5, 60 * 60],
   export_data: [10, 60 * 60],
   invite_create: [10, 60 * 60],
   invite_accept: [20, 60 * 60],

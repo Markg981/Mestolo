@@ -993,6 +993,7 @@
     "deleteTitle": "Konto löschen",
     "deleteLead": "Löscht Konto, Rezepte, Bilder und alle zugehörigen Daten endgültig. Das kann nicht rückgängig gemacht werden.",
     "deleteConfirmLabel": "Gib zur Bestätigung deinen Benutzernamen ein ({username})",
+    "deletePasswordLabel": "Gib zur Bestätigung dein aktuelles Passwort ein",
     "deleteButton": "Endgültig löschen",
     "deleting": "Wird gelöscht…",
     "passwordTitle": "Passwort ändern",

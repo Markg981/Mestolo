@@ -354,6 +354,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
   const t = useTranslations('account');
   const te = useTranslations('errors');
   const [value, setValue] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   return (
@@ -362,7 +363,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
       onSubmit={(e) => {
         e.preventDefault();
         start(async () => {
-          const res = await deleteAccount(value);
+          const res = await deleteAccount(value, password);
           if (res && !res.ok) setError(te(res.error));
         });
       }}
@@ -370,9 +371,12 @@ export function DeleteAccountForm({ username }: { username: string }) {
       <Field label={t('deleteConfirmLabel', { username })} htmlFor="confirm-del">
         <Input id="confirm-del" value={value} onChange={(e) => setValue(e.target.value)} autoComplete="off" autoCapitalize="none" />
       </Field>
+      <Field label={t('deletePasswordLabel')} htmlFor="confirm-del-pw">
+        <Input id="confirm-del-pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+      </Field>
       {error && <Alert tone="error">{error}</Alert>}
       <div>
-        <button type="submit" className={buttonClass('danger')} disabled={pending || value.trim().toLowerCase() !== username}>
+        <button type="submit" className={buttonClass('danger')} disabled={pending || !password || value.trim().toLowerCase() !== username}>
           {pending ? t('deleting') : t('deleteButton')}
         </button>
       </div>
