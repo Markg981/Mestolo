@@ -132,12 +132,13 @@ describe('deleteAccount action', () => {
   });
 
   it('accepts the username case-insensitively and trimmed', async () => {
-    await expect(deleteAccount('  ADA ', 'pw')).rejects.toBeInstanceOf(RedirectSignal);
+    expect(await deleteAccount('  ADA ', 'pw')).toEqual({ ok: true, data: undefined });
     expect(deleteUser).toHaveBeenCalledWith('u1');
   });
 
-  it('runs in order: avatar, listing, storage cleanup, auth user, sign out, redirect', async () => {
-    await expect(deleteAccount('ada', 'pw')).rejects.toMatchObject({ url: '/welcome?deleted=1' });
+  // Niente redirect lato server: il client svuota prima cache del service worker e bozze locali.
+  it('runs in order: avatar, listing, storage cleanup, auth user, sign out, without redirecting', async () => {
+    expect(await deleteAccount('ada', 'pw')).toEqual({ ok: true, data: undefined });
     expect(calls).toEqual([
       'rpc:my_profile',
       'remove:avatars',
@@ -146,7 +147,6 @@ describe('deleteAccount action', () => {
       'remove:recipe-images',
       'deleteUser',
       'signOut',
-      'redirect:/welcome?deleted=1',
     ]);
     expect(removed).toEqual([
       { bucket: 'avatars', paths: ['u1/face.webp'] },
@@ -157,7 +157,7 @@ describe('deleteAccount action', () => {
 
   it('skips the avatar removal when the profile has no avatar', async () => {
     myProfile = { data: { avatar_path: null } };
-    await expect(deleteAccount('ada', 'pw')).rejects.toBeInstanceOf(RedirectSignal);
+    expect(await deleteAccount('ada', 'pw')).toEqual({ ok: true, data: undefined });
     expect(removed.map((r) => r.bucket)).toEqual(['recipe-images']);
   });
 
@@ -186,9 +186,9 @@ describe('deleteAccount action', () => {
     expect(calls.some((c) => c.startsWith('redirect'))).toBe(false);
   });
 
-  it('treats an already deleted auth user as success (idempotent retry) and still signs out and redirects', async () => {
+  it('treats an already deleted auth user as success (idempotent retry) and still signs out', async () => {
     deleteUserError = { status: 404, code: 'user_not_found' };
-    await expect(deleteAccount('ada', 'pw')).rejects.toMatchObject({ url: '/welcome?deleted=1' });
+    expect(await deleteAccount('ada', 'pw')).toEqual({ ok: true, data: undefined });
     expect(calls).toContain('signOut');
   });
 
