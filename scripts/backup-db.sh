@@ -13,7 +13,7 @@ umask 077
 mkdir -p "$out"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 "${bin}pg_dump" "$db" --format=custom --compress=9 --no-owner --no-privileges \
-  --schema=public --file="$out/public-$stamp.dump"
+  --schema=public --schema=private --file="$out/public-$stamp.dump"
 # Utenti: auth.users e auth.identities (schema + dati) per ripristinare le FK di public
 "${bin}pg_dump" "$db" --format=custom --compress=9 --no-owner --no-privileges \
   --table=auth.users --table=auth.identities --file="$out/auth-$stamp.dump"

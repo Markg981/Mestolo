@@ -19,7 +19,11 @@ function invalidatePublicPage(slug: string | null | undefined) {
 }
 
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
-export async function saveRecipe(payload: unknown, recipeId?: string | null): Promise<ActionResult<{ id: string }>> {
+/**
+ * `expectedVersion` is the recipe version read when the editor was opened: if the row moved on in the
+ * meantime (another tab or device saved), nothing is overwritten and the result is 'conflict'.
+ */
+export async function saveRecipe(payload: unknown, recipeId?: string | null, expectedVersion?: number | null): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getUser();
     if (!user) return fail('forbidden');
@@ -49,15 +53,22 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null): Pr
     let id = recipeId ?? null;
     if (id) {
       if (!uuid.safeParse(id).success) return fail('invalid_input');
-      const { data, error } = await supabase
+      let q = supabase
         .from('recipes')
         .update({ ...content, last_change_source: 'edit' })
         .eq('id', id)
-        .eq('owner_id', user.id)
-        .select('id, public_slug')
-        .maybeSingle();
+        .eq('owner_id', user.id);
+      if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion);
+      const { data, error } = await q.select('id, public_slug').maybeSingle();
       if (error) return dbFailure(error, 'saveRecipe.update');
-      if (!data) return fail('not_found');
+      if (!data) {
+        if (typeof expectedVersion === 'number') {
+          // 0 righe: la ricetta non esiste piu' oppure la versione e' cambiata
+          const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
+          if (cur) return fail('conflict');
+        }
+        return fail('not_found');
+      }
       invalidatePublicPage(data.public_slug as string | null);
     } else {
       const { data, error } = await supabase

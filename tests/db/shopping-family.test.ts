@@ -1,4 +1,4 @@
-/** Lista della spesa condivisa (migration 20261026000002) su PostgreSQL reale. */
+/** Lista della spesa condivisa (migration 20261025011000) su PostgreSQL reale. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

@@ -40,7 +40,8 @@ async function addItems(userId: string, items: NewItem[], targetListId?: string)
     if (!listId) return fail('forbidden');
   } else listId = await defaultListId(userId);
   if (!listId) return fail('generic');
-  const { data: existing } = await supabase.from('shopping_items').select('id, name, quantity, unit, checked').eq('list_id', listId);
+  const { data: existing, error: readError } = await supabase.from('shopping_items').select('id, name, quantity, unit, checked').eq('list_id', listId);
+  if (readError) return dbFailure(readError, 'addItems.read');
   const plan = planShoppingMerge(
     ((existing as { id: string; name: string; quantity: number | null; unit: string | null; checked: boolean }[]) ?? []).map((e) => ({
       ...e,
@@ -48,8 +49,12 @@ async function addItems(userId: string, items: NewItem[], targetListId?: string)
     })),
     items,
   );
-  for (const u of plan.updates) {
-    await supabase.from('shopping_items').update({ quantity: u.quantity }).eq('id', u.id);
+  if (plan.updates.length) {
+    // Incremento atomico lato DB (quantity = quantity + delta): due aggiunte concorrenti non si perdono.
+    const { data: bumped, error } = await supabase.rpc('add_shopping_quantities', { p_items: plan.updates.map((u) => ({ id: u.id, delta: u.delta })) } as never);
+    if (error) return dbFailure(error, 'addItems.merge');
+    // Meno righe del previsto: una voce e' stata spuntata o cancellata nel frattempo.
+    if ((bumped as unknown as number) < plan.updates.length) return fail('not_found');
   }
   if (plan.inserts.length) {
     const { error } = await supabase.from('shopping_items').insert(
@@ -331,14 +336,11 @@ export async function applyPlan(input: unknown): Promise<ActionResult<{ saved: n
   const { data: recipes } = await supabase.from('recipes').select('id, title').in('id', [...new Set(todo.map((x) => x.recipeId))]);
   const titles = new Map(((recipes as { id: string; title: string }[]) ?? []).map((r) => [r.id, r.title]));
   const rows = todo.filter((x) => titles.has(x.recipeId)).map((x) => ({ owner_id: user.id, plan_date: x.date, slot: x.slot, recipe_id: x.recipeId, title: titles.get(x.recipeId) as string, servings: x.servings }));
-  if (p.data.replaceFilled) {
-    const ids = taken.filter((e) => rows.some((r) => r.plan_date === e.plan_date && r.slot === e.slot)).map((e) => e.id);
-    if (ids.length) {
-      const { error } = await supabase.from('meal_plan_entries').delete().in('id', ids).eq('owner_id', user.id);
-      if (error) return dbFailure(error, 'applyPlan.delete');
-    }
-  }
-  if (rows.length) {
+  if (p.data.replaceFilled && rows.length) {
+    // Cancellazione + inserimento nella stessa transazione: se l'inserimento fallisce il piano resta intatto.
+    const { error } = await supabase.rpc('replace_plan_entries', { p_rows: rows.map((r) => ({ plan_date: r.plan_date, slot: r.slot, recipe_id: r.recipe_id, title: r.title, servings: r.servings })) } as never);
+    if (error) return dbFailure(error, 'applyPlan.replace');
+  } else if (rows.length) {
     const { error } = await supabase.from('meal_plan_entries').insert(rows);
     if (error) return dbFailure(error, 'applyPlan.insert');
   }

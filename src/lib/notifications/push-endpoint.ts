@@ -1,6 +1,6 @@
 // Allowlist degli host dei push service noti. L'endpoint arriva dal client: senza questo controllo il cron
 // invierebbe una POST verso un URL https arbitrario (SSRF cieco). Tenere allineata con il CHECK DB
-// (migration 20261029000003_push_endpoint_allowlist.sql).
+// (migration 20261025022000_push_endpoint_allowlist.sql).
 const EXACT_HOSTS = new Set(['fcm.googleapis.com', 'android.googleapis.com', 'updates.push.services.mozilla.com']);
 const HOST_SUFFIXES = ['.push.apple.com', '.notify.windows.com'];
 

@@ -1,5 +1,5 @@
 /**
- * ON DELETE SET NULL dei riferimenti tra ricette (migration 20261031000002): eliminare una ricetta con
+ * ON DELETE SET NULL dei riferimenti tra ricette (migration 20261025035000): eliminare una ricetta con
  * varianti o copiata da altri, o l'account del suo autore, non fallisce piu' per violazione della FK,
  * e il client continua a non poter azzerare l'attribuzione.
  */
@@ -65,13 +65,13 @@ d('db recipe references on delete', () => {
     expect(await refs(copy)).toEqual({ parent: null, copied: null, author: a, name: `@rd_a_${s}` });
   });
 
-  it('deleting the author account keeps the copies of other users', async () => {
+  it('deleting the author account keeps the copies of other users but clears the author name (privacy)', async () => {
     const a = await mkUser(`rd_x_${s}`);
     const b = await mkUser(`rd_y_${s}`);
     const src = await recipe(a, 'Fonte');
     const copy = await recipe(b, 'Copia', { copied_from_recipe_id: src, original_author_id: a });
     await admin('delete from auth.users where id = $1', [a]);
-    expect(await refs(copy)).toEqual({ parent: null, copied: null, author: null, name: `@rd_x_${s}` });
+    expect(await refs(copy)).toEqual({ parent: null, copied: null, author: null, name: null });
   });
 
   it('a client still cannot clear the attribution while the source exists', async () => {

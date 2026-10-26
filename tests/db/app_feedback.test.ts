@@ -1,4 +1,4 @@
-/** In-app feedback (migration 20261027000001): own insert/select, moderators read all and change status, anon denied. */
+/** In-app feedback (migration 20261025014000): own insert/select, moderators read all and change status, anon denied. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

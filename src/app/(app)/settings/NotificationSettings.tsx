@@ -14,7 +14,7 @@ import { REMINDERS_CHANGED_EVENT } from '@/components/pwa/MealReminderSync';
 type Env = 'checking' | 'native' | 'web' | 'unsupported';
 const noopSubscribe = () => () => undefined;
 
-export function NotificationSettings({ initial, vapidPublicKey }: { initial: ReminderPrefs; vapidPublicKey: string }) {
+export function NotificationSettings({ initial, vapidPublicKey, frequentSchedule = true }: { initial: ReminderPrefs; vapidPublicKey: string; frequentSchedule?: boolean }) {
   const t = useTranslations('notifications');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
@@ -69,6 +69,7 @@ export function NotificationSettings({ initial, vapidPublicKey }: { initial: Rem
         <h2 className="text-xl font-bold">{t('settingsTitle')}</h2>
         <p className="text-muted">{t('settingsLead')}</p>
         {env === 'unsupported' && <Alert tone="info">{iosTab ? t('iosHint') : t('unsupported')}</Alert>}
+        {env === 'web' && !frequentSchedule && <Alert tone="info">{t('limitedSchedule')}</Alert>}
         {env === 'web' && iosTab && <Alert tone="info">{t('iosHint')}</Alert>}
         <label className="flex items-start gap-3">
           <input type="checkbox" checked={enabled} disabled={env === 'unsupported'} onChange={(e) => setEnabled(e.target.checked)} className="mt-1 size-5 accent-[var(--basil)]" />

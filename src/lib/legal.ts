@@ -42,5 +42,5 @@ export function missingLegalFields(cfg: LegalConfig = legalConfig()): string[] {
 }
 
 /** Sezioni renderizzate da /privacy e /terms (chiavi privacy.<s> e privacy.<s>Title). */
-export const PRIVACY_SECTIONS = ['data', 'purposes', 'basis', 'visibility', 'recipients', 'ai', 'transfers', 'retention', 'security', 'rights', 'deletion', 'complaint', 'minors'] as const;
+export const PRIVACY_SECTIONS = ['data', 'purposes', 'basis', 'visibility', 'recipients', 'push', 'ai', 'transfers', 'retention', 'security', 'rights', 'deletion', 'complaint', 'minors'] as const;
 export const TERMS_SECTIONS = ['service', 'conduct', 'content', 'rights', 'safety', 'moderation', 'account', 'liability', 'law', 'changes'] as const;

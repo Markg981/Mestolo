@@ -10,7 +10,7 @@ export interface ShoppingItemLike {
 
 export interface MergePlan<T extends ShoppingItemLike> {
   /** existing items whose quantity must be increased */
-  updates: { id: string; quantity: number | null }[];
+  updates: { id: string; quantity: number | null; /** amount to ADD to the stored quantity (applied atomically by the DB) */ delta: number }[];
   /** new rows to insert */
   inserts: T[];
 }
@@ -64,7 +64,10 @@ export function planShoppingMerge<T extends ShoppingItemLike>(existing: Shopping
         const orig = existing.find((e) => e.id === id);
         return orig && orig.quantity !== q;
       })
-      .map(([id, quantity]) => ({ id, quantity })),
+      .map(([id, quantity]) => {
+        const orig = existing.find((e) => e.id === id)?.quantity ?? null;
+        return { id, quantity, delta: quantity !== null && orig !== null ? Math.round((quantity - orig) * 1000) / 1000 : 0 };
+      }),
     inserts,
   };
 }

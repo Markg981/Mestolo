@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui';
 import { sortByExpiry, suggestRecipes, type PantryItem } from '@/lib/pantry/match';
+import { todayIso } from '@/lib/plan/week';
 import { PantryView } from './PantryView';
 
 export async function generateMetadata() {
@@ -18,7 +19,7 @@ export default async function PantryPage() {
     supabase.from('recipes').select('id, title, ingredients').order('created_at', { ascending: false }).limit(500),
   ]);
   const items = sortByExpiry(((rows as PantryItem[]) ?? []).map((i) => ({ ...i, quantity: i.quantity === null ? null : Number(i.quantity) })));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const suggestions = suggestRecipes(
     ((recipes as { id: string; title: string; ingredients: { name: string; toTaste?: boolean }[] | null }[]) ?? []).map((r) => ({ ...r, ingredients: r.ingredients ?? [] })),
     items,
