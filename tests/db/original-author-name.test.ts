@@ -36,6 +36,8 @@ d('db original_author_name server-side', () => {
     alice = await mkUser(`oa_a_${s}`);
     bob = await mkUser(`oa_b_${s}`);
     carol = await mkUser(`oa_c_${s}`);
+    // Il default e' 'friends': l'username compare solo se l'autore ha un profilo pubblico.
+    await admin("update public.profiles set profile_visibility = 'public' where id = $1", [alice]);
     src = (await as<{ id: string }>(alice, "insert into public.recipes (owner_id, title, visibility) values ($1, 'Fonte', 'public') returning id", [alice]))[0].id;
   });
   afterAll(async () => pool?.end());
@@ -73,5 +75,12 @@ d('db original_author_name server-side', () => {
 
   it('a spoofed original_author_id is rejected', async () => {
     await expect(copy(bob, src, carol, 'x')).rejects.toThrow();
+  });
+  it('a private author profile is not exposed in original_author_name', async () => {
+    const dave = await mkUser(`oa_d_${s}`);
+    await admin("update public.profiles set profile_visibility = 'private' where id = $1", [dave]);
+    const [pub] = await as<{ id: string }>(dave, "insert into public.recipes (owner_id, title, visibility) values ($1, 'Fonte', 'public') returning id", [dave]);
+    const r = await copy(bob, pub.id, dave, 'x');
+    expect(await authorName(r)).toBeNull();
   });
 });
