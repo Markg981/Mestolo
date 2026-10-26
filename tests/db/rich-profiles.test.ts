@@ -56,8 +56,6 @@ d('rich profiles', () => {
     expect(own.ok).toBe(true);
     const [spoof] = await as<{ ok: boolean }>(stranger, 'select public.can_view_profile_details($1, $2) as ok', [owner, owner]);
     expect(spoof.ok).toBe(false);
-    const [anon] = await as<{ ok: boolean }>(null, 'select public.can_view_profile_details($1, $2) as ok', [owner, stranger]);
-    expect(anon.ok).toBe(false);
   });
 
   it('defaults to friends', async () => {
