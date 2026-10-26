@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# recipe in the file} other {# recipes in the file}}",
     "skipped": "{count, plural, one {# recipe skipped because it has no title.} other {# recipes skipped because they have no title.}}",
     "importAll": "Import all as private",
-    "importAllHint": "Recipes with the same title as one you already have are skipped.",
+    "importAllHint": "Recipes with the same title as one you already have are skipped. They skip the review screen: they are saved as private and marked “Needs review”.",
     "progress": "{done} of {total}: {created} imported, {duplicates} already there, {failed} failed.",
     "goToRecipes": "Go to recipes",
     "review": "Review and save",

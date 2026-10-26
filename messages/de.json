@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# Rezept in der Datei} other {# Rezepte in der Datei}}",
     "skipped": "{count, plural, one {# Rezept ohne Titel übersprungen.} other {# Rezepte ohne Titel übersprungen.}}",
     "importAll": "Alle als privat importieren",
-    "importAllHint": "Rezepte mit demselben Titel wie ein bereits vorhandenes werden übersprungen.",
+    "importAllHint": "Rezepte mit demselben Titel wie ein bereits vorhandenes werden übersprungen. Sie überspringen die Prüfansicht: Sie werden privat gespeichert und als „Zu prüfen“ markiert.",
     "progress": "{done} von {total}: {created} importiert, {duplicates} bereits vorhanden, {failed} fehlgeschlagen.",
     "goToRecipes": "Zu den Rezepten",
     "review": "Prüfen und speichern",

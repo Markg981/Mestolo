@@ -3,6 +3,7 @@ import {
   DRAFT_MAX_AGE_MS,
   clearAllDrafts,
   clearLegacyDrafts,
+  clearOtherUsersDrafts,
   draftNames,
   draftSet,
   draftStorageKey,
@@ -85,6 +86,20 @@ describe('pulizia', () => {
   it('clearUserCache (logout) cancella tutte le bozze', async () => {
     await clearUserCache();
     expect(store.length).toBe(1);
+    expect(store.getItem('mestolo:unit-system')).toBe('metric');
+  });
+
+  it('clearUserCache prima del login tiene le bozze (sessione scaduta durante la modifica)', async () => {
+    await clearUserCache({ keepDrafts: true });
+    expect(store.length).toBe(5);
+  });
+
+  it('clearOtherUsersDrafts tiene solo le bozze dell\'utente entrato', () => {
+    clearOtherUsersDrafts(A);
+    expect(store.getItem(draftStorageKey(A, 'new'))).toBe('x');
+    expect(store.getItem(draftStorageKey(B, 'import-text:h'))).toBeNull();
+    expect(store.getItem('mestolo:draft:new')).toBeNull();
+    expect(store.getItem(`mestolo:draft:edit:${RID}`)).toBeNull();
     expect(store.getItem('mestolo:unit-system')).toBe('metric');
   });
 });

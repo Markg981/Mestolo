@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
-import { clearAllDrafts } from '@/lib/drafts';
+import { clearAllDrafts, clearOtherUsersDrafts } from '@/lib/drafts';
 
 /** Registers the service worker (production only, secure contexts only). */
 export function ServiceWorkerRegister() {
@@ -14,9 +14,13 @@ export function ServiceWorkerRegister() {
   return null;
 }
 
-/** Deletes cached private pages/images (called on logout and before login). */
-export async function clearUserCache() {
-  clearAllDrafts();
+/**
+ * Deletes cached private pages/images (called on logout and before login).
+ * Before login the drafts are kept: they are keyed by user id, and a session that
+ * expired mid-edit must not cost the draft (other users' drafts go after login).
+ */
+export async function clearUserCache({ keepDrafts = false }: { keepDrafts?: boolean } = {}) {
+  if (!keepDrafts) clearAllDrafts();
   try {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear-user-data' });
     if ('caches' in window) {
@@ -37,6 +41,7 @@ async function hashUserId(userId: string) {
 /** Tells the service worker who is logged in; it drops the caches of any other user. */
 export function UserCacheSync({ userId }: { userId: string }) {
   useEffect(() => {
+    clearOtherUsersDrafts(userId);
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
     let cancelled = false;
     (async () => {
@@ -51,10 +56,10 @@ export function UserCacheSync({ userId }: { userId: string }) {
   return null;
 }
 
-/** Clears the private cache when mounted (used on the login page). */
+/** Clears the private cache when mounted (used on the login page); drafts are kept. */
 export function ClearUserCacheOnMount() {
   useEffect(() => {
-    clearUserCache();
+    clearUserCache({ keepDrafts: true });
   }, []);
   return null;
 }

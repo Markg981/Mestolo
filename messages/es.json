@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# receta en el archivo} other {# recetas en el archivo}}",
     "skipped": "{count, plural, one {# receta omitida por no tener título.} other {# recetas omitidas por no tener título.}}",
     "importAll": "Importar todas como privadas",
-    "importAllHint": "Se omiten las recetas con el mismo título que una que ya tienes.",
+    "importAllHint": "Se omiten las recetas con el mismo título que una que ya tienes. No pasan por la pantalla de revisión: se guardan como privadas y marcadas «Por revisar».",
     "progress": "{done} de {total}: {created} importadas, {duplicates} ya existentes, {failed} con error.",
     "goToRecipes": "Ir a las recetas",
     "review": "Revisar y guardar",

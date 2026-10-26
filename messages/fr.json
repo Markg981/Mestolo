@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# recette dans le fichier} other {# recettes dans le fichier}}",
     "skipped": "{count, plural, one {# recette ignorée car sans titre.} other {# recettes ignorées car sans titre.}}",
     "importAll": "Tout importer en privé",
-    "importAllHint": "Les recettes portant le même titre qu’une recette que vous avez déjà sont ignorées.",
+    "importAllHint": "Les recettes portant le même titre qu’une recette que vous avez déjà sont ignorées. Elles ne passent pas par l’écran de vérification : elles sont enregistrées en privé et marquées « À vérifier ».",
     "progress": "{done} sur {total} : {created} importées, {duplicates} déjà présentes, {failed} en échec.",
     "goToRecipes": "Aller aux recettes",
     "review": "Vérifier et enregistrer",

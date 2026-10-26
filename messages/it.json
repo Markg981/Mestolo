@@ -1419,7 +1419,7 @@
     "found": "{count, plural, one {# ricetta nel file} other {# ricette nel file}}",
     "skipped": "{count, plural, one {# ricetta saltata perché senza titolo.} other {# ricette saltate perché senza titolo.}}",
     "importAll": "Importa tutte come private",
-    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate.",
+    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate. Non passano dalla schermata di revisione: entrano private e segnate “Da verificare”.",
     "progress": "{done} di {total}: {created} importate, {duplicates} già presenti, {failed} non riuscite.",
     "goToRecipes": "Vai alle ricette",
     "review": "Rivedi e salva",
