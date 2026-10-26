@@ -11,7 +11,7 @@ Durata indicativa: 4-5 settimane (14 giorni di closed test Play sono il vincolo 
 - [ ] Bundle id / application id definiti e identici in Play, App Store Connect e Capacitor (vedi docs/mobile.md).
 - [ ] Informativa privacy e termini raggiungibili da URL pubblico (`/privacy`, `/terms`); indirizzo di supporto attivo.
 - [ ] Almeno un account moderatore (`profiles.is_moderator = true`, assegnato via SQL) per leggere i feedback in `/moderation/feedback`.
-- [ ] Migrazione `20261027000001_app_feedback.sql` applicata in produzione prima di invitare i tester.
+- [ ] Migrazione `20261025014000_app_feedback.sql` applicata in produzione prima di invitare i tester.
 - [ ] Monitoraggio errori attivo e dashboard per le metriche della sezione 7.
 
 ## 2. Primo build

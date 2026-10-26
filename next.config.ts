@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      // Photo import pages are compressed client-side; keep below Vercel's 4.5 MB limit.
+      // Keep below Vercel's 4.5 MB limit and above MAX_UPLOAD_BYTES (src/lib/images/limits.ts).
       bodySizeLimit: '4mb',
     },
   },

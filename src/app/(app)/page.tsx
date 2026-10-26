@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Camera, Compass, Link2, Plus } from 'lucide-react';
 import { getProfile, createClient, getUser } from '@/lib/supabase/server';
 import { listCategories, listCollections, listMyRecipes } from '@/lib/data/recipes';
+import { todayIso } from '@/lib/plan/week';
 import { discover } from '@/lib/data/discover';
 import { categoryLabel } from '@/lib/recipes/categories';
 import { RecipeCard, RecipeGrid } from '@/components/recipes/RecipeCard';
@@ -21,7 +22,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     discover(categories, { limit: 60 }),
   ]);
   const supabase = await createClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const { data: todayPlan } = await supabase
     .from('meal_plan_entries')
     .select('id, slot, title, recipe_id')

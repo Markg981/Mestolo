@@ -37,8 +37,15 @@ export function conflictsWithPreferences(ingredients: Pick<Ingredient, 'name'>[]
   return false;
 }
 
-/** Deterministic daily pick: same recipe all day for a user, changes the next day. */
-export function pickOfTheDay<T extends { id: string }>(pool: T[], userId: string, isoDate: string): T | null {
+/**
+ * Deterministic daily pick: same recipe all day for a user, changes the next day.
+ * Only recipes created before the start of the day (UTC, like isoDate) are eligible,
+ * so publishing a new recipe during the day does not change the pick.
+ */
+export function pickOfTheDay<T extends { id: string; created_at?: string }>(all: T[], userId: string, isoDate: string): T | null {
+  const dayStart = Date.parse(`${isoDate}T00:00:00Z`);
+  const older = all.filter((r) => !r.created_at || Date.parse(r.created_at) < dayStart);
+  const pool = older.length ? older : all;
   if (!pool.length) return null;
   const key = `${userId}:${isoDate}`;
   let h = 2166136261;

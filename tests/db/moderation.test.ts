@@ -1,4 +1,4 @@
-/** Moderation rules (migrations 20261021000001, 20261029000004), executed on real PostgreSQL. */
+/** Moderation rules (migrations 20261021000001, 20261025023000), executed on real PostgreSQL. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 
