@@ -364,7 +364,8 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             </dl>
             {source.imageUrl && (
               <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:items-start">
-                <img src={source.imageUrl} alt="" referrerPolicy="no-referrer" className="h-24 w-32 shrink-0 rounded-xl object-cover" />
+                {/* Niente anteprima remota: la CSP vieta img-src https: arbitrario (e l'host terzo vedrebbe l'IP dell'utente). */}
+                <div aria-hidden className="flex h-24 w-32 shrink-0 items-center justify-center rounded-xl bg-line/40 text-muted"><ImagePlus className="size-6" /></div>
                 <label className="flex items-start gap-3">
                   <input type="checkbox" checked={keepSourceImage} onChange={(e) => setKeepSourceImage(e.target.checked)} className="mt-1 size-5 accent-[var(--basil)]" />
                   <span>
