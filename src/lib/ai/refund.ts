@@ -16,3 +16,21 @@ export async function refundQuota(userId: string, resolved: ResolvedProvider, gr
     // ignorato di proposito
   }
 }
+
+/**
+ * Esegue `run` (la chiamata AI e cio' che ne dipende) e rimborsa la quota se l'azione non
+ * produce nulla: eccezione, oppure risultato `{ ok: false }` (output non valido, salvataggio
+ * fallito). Nessun rimborso in caso di successo. L'errore originale o il risultato di
+ * fallimento vengono sempre restituiti intatti.
+ */
+export async function withRefund<T>(userId: string, resolved: ResolvedProvider, group: QuotaGroup, action: string, run: () => Promise<T>): Promise<T> {
+  let result: T;
+  try {
+    result = await run();
+  } catch (e) {
+    await refundQuota(userId, resolved, group, action);
+    throw e;
+  }
+  if (typeof result === 'object' && result !== null && 'ok' in result && result.ok === false) await refundQuota(userId, resolved, group, action);
+  return result;
+}

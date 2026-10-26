@@ -796,6 +796,7 @@
     "addPlaceholder": "Es. 500 g pomodori",
     "added": "Aggiunto.",
     "merged": "Sommato alla voce già presente.",
+    "offline": "Sei offline: la modifica non è stata salvata. Riprova quando torna la connessione.",
     "mergeNote": "Le voci vengono sommate solo se nome e unità coincidono: 200 g e 1 tazza restano separate.",
     "emptyTitle": "La lista è vuota",
     "empty": "Aggiungi prodotti qui sopra, dalla pagina di una ricetta o dal piano pasti.",
@@ -993,6 +994,7 @@
     "deleteTitle": "Elimina l'account",
     "deleteLead": "Elimina definitivamente account, ricette, immagini e tutti i dati collegati. L'operazione non si può annullare.",
     "deleteConfirmLabel": "Per confermare scrivi il tuo nome utente ({username})",
+    "deletePasswordLabel": "Inserisci la password attuale per confermare",
     "deleteButton": "Elimina definitivamente",
     "deleting": "Eliminazione…",
     "passwordTitle": "Cambia password",
@@ -1419,7 +1421,7 @@
     "found": "{count, plural, one {# ricetta nel file} other {# ricette nel file}}",
     "skipped": "{count, plural, one {# ricetta saltata perché senza titolo.} other {# ricette saltate perché senza titolo.}}",
     "importAll": "Importa tutte come private",
-    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate. Non passano dalla schermata di revisione: entrano private e segnate “Da verificare”.",
+    "importAllHint": "Le ricette con lo stesso titolo di una che hai già vengono saltate: puoi deselezionare quelle che non vuoi, interrompere e riprendere in qualsiasi momento. Non passano dalla schermata di revisione: entrano private e segnate “Da verificare”.",
     "progress": "{done} di {total}: {created} importate, {duplicates} già presenti, {failed} non riuscite.",
     "goToRecipes": "Vai alle ricette",
     "review": "Rivedi e salva",
@@ -1428,6 +1430,11 @@
       "unsupported_format": "Questo file non è un’esportazione di Mestolo.",
       "no_recipes": "Nel file non ci sono ricette importabili.",
       "too_large": "Il file è troppo grande (massimo 10 MB)."
-    }
+    },
+    "importSelected": "Importa selezionate ({count})",
+    "stop": "Interrompi",
+    "selectAll": "Seleziona tutte",
+    "selectNone": "Deseleziona tutte",
+    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate."
   }
 }

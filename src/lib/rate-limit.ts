@@ -7,7 +7,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 /** Limits per action: [max events, window in seconds]. */
 export const LIMITS = {
   login_ip: [20, 15 * 60],
-  login_email: [8, 15 * 60],
+  login_email: [60, 15 * 60],
+  login_email_ip: [8, 15 * 60],
   signup_ip: [6, 60 * 60],
   reset_ip: [5, 60 * 60],
   import_url: [30, 60 * 60],
@@ -21,9 +22,12 @@ export const LIMITS = {
   api_key_change: [10, 60 * 60],
   upload_image: [60, 60 * 60],
   upload_image_day: [150, 24 * 60 * 60],
+  account_delete: [5, 60 * 60],
   export_data: [10, 60 * 60],
   invite_create: [10, 60 * 60],
   invite_accept: [20, 60 * 60],
+  user_search: [60, 15 * 60],
+  push_subscribe: [20, 60 * 60],
   feedback_send: [10, 24 * 60 * 60],
 } as const satisfies Record<string, readonly [number, number]>;
 
@@ -55,4 +59,18 @@ export async function enforceRateLimit(limit: LimitName, subject: string): Promi
   });
   if (error) throw new Error('rate_limit_unavailable');
   if (data !== true) throw new RateLimitedError(limit);
+}
+
+/**
+ * Rate limit for unauthenticated auth flows. Only our own RateLimitedError is
+ * surfaced as such; if the limiter itself errors we log it and fail closed
+ * (the error is rethrown), so an outage cannot be used to bypass throttling.
+ */
+export async function enforceAuthRateLimit(limit: LimitName, subject: string): Promise<void> {
+  try {
+    await enforceRateLimit(limit, subject);
+  } catch (e) {
+    if (!(e instanceof RateLimitedError)) console.error(`[mestolo] auth rate limiter unavailable (${limit}):`, e);
+    throw e;
+  }
 }

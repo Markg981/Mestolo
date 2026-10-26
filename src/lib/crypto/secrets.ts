@@ -28,6 +28,14 @@ export function loadEncryptionKey(b64: string | undefined): Buffer {
   return key;
 }
 
+/** Optional previous key (APP_ENCRYPTION_KEY_PREVIOUS), used only as a decrypt fallback during rotation. */
+export function loadPreviousEncryptionKey(b64: string | undefined): Buffer | null {
+  if (!b64 || !b64.trim()) return null;
+  const key = Buffer.from(b64.trim(), 'base64');
+  if (key.length !== 32) throw new EncryptionConfigError('APP_ENCRYPTION_KEY_PREVIOUS must be 32 bytes (base64)');
+  return key;
+}
+
 export function encryptSecret(plaintext: string, key: Buffer, aad: string): EncryptedSecret {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);
@@ -48,6 +56,25 @@ export function decryptSecret(secret: EncryptedSecret, key: Buffer, aad: string)
   }
 }
 
+/**
+ * Tries the current key first, then the previous one (rotation). `usedPrevious` tells the
+ * caller the ciphertext is still under the old key and should be re-encrypted.
+ * Legacy ciphertexts (same format, single key) decrypt unchanged with the current key.
+ */
+export function decryptWithKeys(
+  secret: EncryptedSecret,
+  current: Buffer,
+  previous: Buffer | null,
+  aad: string,
+): { plaintext: string; usedPrevious: boolean } {
+  try {
+    return { plaintext: decryptSecret(secret, current, aad), usedPrevious: false };
+  } catch (e) {
+    if (!previous) throw e;
+    return { plaintext: decryptSecret(secret, previous, aad), usedPrevious: true };
+  }
+}
+
 export function keyAad(userId: string, provider: string): string {
   return `mestolo:api-key:${userId}:${provider}`;
 }
@@ -58,10 +85,6 @@ export function keyHint(plaintext: string): string {
   return `…${t.slice(-4)}`;
 }
 
-/** Redacts anything that looks like an API key from a string (for logs/errors). */
-export function redactSecrets(s: string): string {
-  return s
-    .replace(/sk-[A-Za-z0-9_\-]{8,}/g, 'sk-***')
-    .replace(/(api[_-]?key|authorization|x-api-key)(["'\s:=]+)(Bearer\s+)?[A-Za-z0-9_\-.]{8,}/gi, '$1$2***')
-    .replace(/AIza[0-9A-Za-z_\-]{20,}/g, 'AIza***');
-}
+// Re-exported so existing callers keep working; the pure implementation lives in
+// ./redact (no node:crypto) so it can be bundled for the browser and Edge.
+export { redactSecrets } from './redact';

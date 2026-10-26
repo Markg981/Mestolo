@@ -50,19 +50,29 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
     const parsed = parseIngredientLine(text);
     if (!parsed.name) return;
     start(async () => {
-      const res = await addShoppingItem({ list_id: listId, name: parsed.name, quantity: parsed.quantity, unit: parsed.unit, note: parsed.note ?? null });
-      if (res.ok) {
-        setText('');
-        setMsg({ text: res.data.merged ? t('merged') : t('added'), tone: 'success' });
-        router.refresh();
-      } else setMsg({ text: te(res.error), tone: 'error' });
+      try {
+        const res = await addShoppingItem({ list_id: listId, name: parsed.name, quantity: parsed.quantity, unit: parsed.unit, note: parsed.note ?? null });
+        if (res.ok) {
+          setText('');
+          setMsg({ text: res.data.merged ? t('merged') : t('added'), tone: 'success' });
+          router.refresh();
+        } else setMsg({ text: te(res.error), tone: 'error' });
+      } catch {
+        setMsg({ text: t('offline'), tone: 'error' });
+      }
     });
   };
 
   // L'aggiornamento ottimistico rientra da solo a fine transizione: se l'azione fallisce basta non rinfrescare e avvisare.
-  const run = (res: { ok: boolean; error?: Parameters<typeof te>[0] }) => {
-    if (res.ok) router.refresh();
-    else setMsg({ text: te(res.error ?? 'generic'), tone: 'error' });
+  // Senza rete la server action lancia: si annulla l'ottimistico (a fine transizione) e si avvisa, senza pagina d'errore.
+  const run = async (fn: () => Promise<{ ok: boolean; error?: Parameters<typeof te>[0] }>) => {
+    try {
+      const res = await fn();
+      if (res.ok) router.refresh();
+      else setMsg({ text: te(res.error ?? 'generic'), tone: 'error' });
+    } catch {
+      setMsg({ text: t('offline'), tone: 'error' });
+    }
   };
 
   const row = (i: Item) => (
@@ -76,7 +86,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
           const checked = e.target.checked;
           start(async () => {
             setOptimistic({ id: i.id, checked });
-            run(await toggleShoppingItem(i.id, checked));
+            await run(() => toggleShoppingItem(i.id, checked));
           });
         }}
       />
@@ -102,8 +112,10 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
           const aisle = e.target.value as Aisle;
           start(async () => {
             setLocalOverride({ key: normalizeName(i.name), aisle });
-            await setItemAisle(listId, i.name, aisle);
-            router.refresh();
+            await run(async () => {
+              await setItemAisle(listId, i.name, aisle);
+              return { ok: true };
+            });
           });
         }}
       >
@@ -121,7 +133,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
         onClick={() =>
           start(async () => {
             setOptimistic({ id: i.id, removed: true });
-            run(await deleteShoppingItem(i.id));
+            await run(() => deleteShoppingItem(i.id));
           })
         }
       >
@@ -169,7 +181,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
                 <h2 id="bought" className="text-xl font-bold">
                   {t('bought', { n: bought.length })}
                 </h2>
-                <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(async () => run(await clearCheckedItems(listId)))}>
+                <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(async () => run(() => clearCheckedItems(listId)))}>
                   {t('clearBought')}
                 </Button>
               </div>

@@ -1,36 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { bulkImportPayload, toPayload, stateFromDraft } from '@/components/recipes/editor/convert';
-import { parseMestoloExport } from '@/lib/recipes/import-json';
-import { MESTOLO_FORMAT } from '@/lib/recipes/export';
+import { runBulkImport } from '@/lib/recipes/bulk-import';
 
-const clean = () => {
-  const res = parseMestoloExport(
-    JSON.stringify({
-      format: MESTOLO_FORMAT,
-      recipe: {
-        title: 'Pasta al pomodoro',
-        original_language: 'it',
-        servings: 4,
-        ingredients: [{ name: 'Spaghetti', quantity: 320, unit: 'g', note: null, section: null, raw: null }],
-        steps: [{ text: 'Cuoci la pasta', section: null }],
-        visibility: 'public',
+const noop = () => {};
+
+describe('runBulkImport', () => {
+  it('counts created, duplicates and failures', async () => {
+    const p = await runBulkImport(['a', 'dup', 'bad', 'boom'], {
+      isDuplicate: async (i) => i === 'dup',
+      save: async (i) => {
+        if (i === 'boom') throw new Error('x');
+        return i !== 'bad';
       },
-    }),
-  );
-  if (!res.ok) throw new Error(res.error);
-  return res.drafts[0];
-};
-
-describe('bulk import (account export)', () => {
-  it('a recipe without flags would otherwise be saved as verified', () => {
-    const d = clean();
-    expect(toPayload(stateFromDraft(d, [], (k) => k), new Map(), { verified: false, review: true }).verification_status).toBe('verified');
+      onProgress: noop,
+      shouldStop: () => false,
+    });
+    expect(p).toEqual({ done: 4, created: 1, duplicates: 1, failed: 2, stopped: false });
   });
 
-  it('saves every recipe as private and "needs review", since it skips the review screen', () => {
-    const p = bulkImportPayload(clean(), []);
-    expect(p.verification_status).toBe('needs_review');
-    expect(p.visibility).toBe('private');
-    expect(p.title).toBe('Pasta al pomodoro');
+  it('stops between items and reports how many were saved', async () => {
+    let stop = false;
+    const p = await runBulkImport([1, 2, 3, 4], {
+      isDuplicate: async () => false,
+      save: async (i) => {
+        if (i === 2) stop = true;
+        return true;
+      },
+      onProgress: noop,
+      shouldStop: () => stop,
+    });
+    expect(p).toMatchObject({ done: 2, created: 2, stopped: true });
   });
 });

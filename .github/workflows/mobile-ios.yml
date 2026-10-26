@@ -22,8 +22,35 @@ permissions:
   contents: read
 
 jobs:
+  ci-gate:
+    name: Verifica CI del commit (solo tag)
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      checks: read
+    steps:
+      # Il tag fa partire anche il workflow CI sullo stesso commit: la release aspetta che il check passi.
+      - name: Attendi il check CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for _ in $(seq 1 90); do
+            res=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs?filter=latest"               --jq '[.check_runs[] | select(.name == "Lint, typecheck, test, build")] | if length == 0 then "pending" elif all(.status == "completed") then (if all(.conclusion == "success") then "success" else "failure" end) else "pending" end')
+            echo "CI: $res"
+            case "$res" in
+              success) exit 0 ;;
+              failure) echo "::error::CI fallita sul commit ${{ github.sha }}: release bloccata."; exit 1 ;;
+            esac
+            sleep 20
+          done
+          echo "::error::Timeout in attesa della CI: release bloccata."
+          exit 1
+
   ios:
     name: Archive e TestFlight
+    needs: ci-gate
+    if: ${{ !cancelled() && (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') }}
     runs-on: macos-15
     timeout-minutes: 60
     env:
@@ -135,7 +162,7 @@ jobs:
             | tail -n 40
           ls -l "$RUNNER_TEMP/export"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Mestolo-ios-build-${{ github.run_number }}
           path: ${{ runner.temp }}/export/*.ipa

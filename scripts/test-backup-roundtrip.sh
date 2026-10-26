@@ -43,7 +43,7 @@ SQL
 
 stamp="$("$here/backup-db.sh" "$src" "$tmp/out")"
 psql "$src" -q -c "drop database if exists $restore_db" -c "create database $restore_db"
-RESTORE_EXACT=1 "$here/restore-verify-db.sh" "$tmp/out/backup-$stamp.tar.gpg" "$restore" "$tmp/work"
+"$here/restore-verify-db.sh" "$tmp/out/backup-$stamp.tar.gpg" "$restore" "$tmp/work"
 
 # Contenuto e schema: identici tra sorgente e ripristino
 probe="select

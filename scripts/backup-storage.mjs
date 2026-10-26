@@ -1,5 +1,6 @@
 // Downloads every file of the storage buckets (recipe-images, which also holds the cook-log photos, and avatars) into a local directory.
 // Usage: NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/backup-storage.mjs [outDir]
+import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
@@ -39,16 +40,23 @@ async function* walk(bucket, prefix = '') {
   }
 }
 
+// Manifest of everything downloaded: bucket, path, size, sha256. Verified by verify-storage-backup.mjs.
+const manifest = [];
 for (const bucketName of bucketNames) {
   const bucket = client.storage.from(bucketName);
   let count = 0;
   for await (const path of walk(bucket)) {
     const { data, error } = await bucket.download(path);
     if (error) throw new Error(`download ${bucketName}/${path}: ${error.message}`);
+    const buf = Buffer.from(await data.arrayBuffer());
     const dest = join(outDir, bucketName, path);
     await mkdir(dirname(dest), { recursive: true });
-    await writeFile(dest, Buffer.from(await data.arrayBuffer()));
+    await writeFile(dest, buf);
+    manifest.push({ bucket: bucketName, path, size: buf.length, sha256: createHash('sha256').update(buf).digest('hex') });
     count++;
   }
   console.log(`Downloaded ${count} files from "${bucketName}" into ${outDir}`);
 }
+manifest.sort((a, b) => (a.bucket + '/' + a.path).localeCompare(b.bucket + '/' + b.path));
+await writeFile(join(outDir, 'storage-manifest.json'), JSON.stringify({ createdAt: new Date().toISOString(), buckets: bucketNames, files: manifest }, null, 1));
+console.log(`Manifest: ${manifest.length} files`);

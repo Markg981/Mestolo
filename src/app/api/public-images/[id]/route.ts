@@ -7,7 +7,8 @@ import { downloadPublicCover, getPublicCoverPaths } from '@/lib/data/public-reci
  * (public.public_cover_paths) and the storage policy for the anon role both check that
  * visibility is public, the page is enabled and the recipe is not hidden. Other images
  * keep going through /api/images, which requires a signed-in user.
- * The cache is short and shared: if the owner turns the page off, the image stops quickly.
+ * The cache is short (no stale-while-revalidate) so a revoked or hidden cover stops being served within minutes;
+ * the path lookup is uncached, so server-side visibility changes take effect immediately.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return new NextResponse(file.stream(), {
     headers: {
       'content-type': 'image/webp',
-      'cache-control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      'cache-control': 'public, max-age=60, s-maxage=120',
       'x-content-type-options': 'nosniff',
       'content-security-policy': "default-src 'none'",
     },

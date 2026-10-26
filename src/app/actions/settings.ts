@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptSecret, keyAad, keyHint, loadEncryptionKey } from '@/lib/crypto/secrets';
@@ -93,10 +94,18 @@ export async function deleteApiKey(provider: string): Promise<ActionResult> {
 }
 
 /** Permanently deletes the account: storage files first, the auth user last (all rows cascade), then sign out. Safe to retry. */
-export async function deleteAccount(confirmUsername: string): Promise<ActionResult> {
+export async function deleteAccount(confirmUsername: string, password: string): Promise<ActionResult> {
   try {
     const user = await getUser();
     if (!user) return fail('forbidden');
+    await enforceRateLimit('account_delete', user.id);
+    // Nuova autenticazione: una sessione rubata non basta. Client separato, senza persistenza,
+    // cosi' la sessione corrente non viene toccata.
+    const { supabaseUrl, supabaseAnonKey } = env();
+    if (!user.email || typeof password !== 'string' || !password || password.length > 256) return fail('auth_invalid');
+    const verifier = createSupabaseClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+    const { data: verified, error: authError } = await verifier.auth.signInWithPassword({ email: user.email, password });
+    if (authError || verified.user?.id !== user.id) return fail('auth_invalid');
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
     if (!profile || profile.username !== String(confirmUsername ?? '').trim().toLowerCase()) return fail('invalid_input');

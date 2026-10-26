@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { resolveProvider, recordUsage, type KeySource } from '@/lib/ai/service';
+import { withRefund } from '@/lib/ai/refund';
 import { NUTRITION_SYSTEM, nutritionUserPrompt } from '@/lib/ai/prompts';
 import { parseAiNutrition, validateNutrition, type NutritionValues } from '@/lib/nutrition';
 import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
@@ -71,24 +72,26 @@ export async function estimateNutrition(recipeId: string): Promise<ActionResult<
     if (!(r.ingredients ?? []).length) return fail('invalid_input', 'ingredients');
     await enforceRateLimit('ai_text', o.user.id);
     const resolved = await resolveProvider(o.user.id, 'text', 'text', 'nutrition');
-    const raw = await resolved.provider.completeJson({
-      system: NUTRITION_SYSTEM,
-      user: nutritionUserPrompt({
-        title: r.title,
-        description: r.description,
-        servings: r.servings === null ? null : Number(r.servings),
-        prep_minutes: r.prep_minutes,
-        cook_minutes: r.cook_minutes,
-        total_minutes: r.total_minutes,
-        ingredients: r.ingredients ?? [],
-        steps: [],
-      }),
-      maxTokens: 600,
+    return await withRefund(o.user.id, resolved, 'text', 'nutrition', async () => {
+      const raw = await resolved.provider.completeJson({
+        system: NUTRITION_SYSTEM,
+        user: nutritionUserPrompt({
+          title: r.title,
+          description: r.description,
+          servings: r.servings === null ? null : Number(r.servings),
+          prep_minutes: r.prep_minutes,
+          cook_minutes: r.cook_minutes,
+          total_minutes: r.total_minutes,
+          ingredients: r.ingredients ?? [],
+          steps: [],
+        }),
+        maxTokens: 600,
+      });
+      await recordUsage(o.user.id, 'text', 'nutrition', resolved);
+      const values = parseAiNutrition(raw);
+      if (!values) return fail('ai_bad_output');
+      return ok({ values, keySource: resolved.keySource, providerName: resolved.providerName });
     });
-    await recordUsage(o.user.id, 'text', 'nutrition', resolved);
-    const values = parseAiNutrition(raw);
-    if (!values) return fail('ai_bad_output');
-    return ok({ values, keySource: resolved.keySource, providerName: resolved.providerName });
   } catch (e) {
     return toFailure(e, 'estimateNutrition');
   }

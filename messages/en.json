@@ -796,6 +796,7 @@
     "addPlaceholder": "E.g. 500 g tomatoes",
     "added": "Added.",
     "merged": "Combined with an existing item.",
+    "offline": "You're offline: the change wasn't saved. Try again when you're back online.",
     "mergeNote": "Items are combined only if the name and unit match: 200 g and 1 cup stay separate.",
     "emptyTitle": "Your list is empty",
     "empty": "Add items above, from a recipe page, or from the meal plan.",
@@ -993,6 +994,7 @@
     "deleteTitle": "Delete account",
     "deleteLead": "Permanently delete your account, recipes, images, and all related data. This can't be undone.",
     "deleteConfirmLabel": "To confirm, type your username ({username})",
+    "deletePasswordLabel": "Enter your current password to confirm",
     "deleteButton": "Delete permanently",
     "deleting": "Deleting…",
     "passwordTitle": "Change password",
@@ -1419,7 +1421,7 @@
     "found": "{count, plural, one {# recipe in the file} other {# recipes in the file}}",
     "skipped": "{count, plural, one {# recipe skipped because it has no title.} other {# recipes skipped because they have no title.}}",
     "importAll": "Import all as private",
-    "importAllHint": "Recipes with the same title as one you already have are skipped. They skip the review screen: they are saved as private and marked “Needs review”.",
+    "importAllHint": "Recipes with the same title as one you already have are skipped: deselect the ones you do not want, and stop or resume at any time. They skip the review screen: they are saved as private and marked “Needs review”.",
     "progress": "{done} of {total}: {created} imported, {duplicates} already there, {failed} failed.",
     "goToRecipes": "Go to recipes",
     "review": "Review and save",
@@ -1428,6 +1430,11 @@
       "unsupported_format": "This file is not a Mestolo export.",
       "no_recipes": "The file has no recipes that can be imported.",
       "too_large": "The file is too large (10 MB max)."
-    }
+    },
+    "importSelected": "Import selected ({count})",
+    "stop": "Stop",
+    "selectAll": "Select all",
+    "selectNone": "Deselect all",
+    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped."
   }
 }

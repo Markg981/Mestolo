@@ -796,6 +796,7 @@
     "addPlaceholder": "P. ej., 500 g de tomates",
     "added": "Añadido.",
     "merged": "Sumado al artículo ya presente.",
+    "offline": "Estás sin conexión: el cambio no se guardó. Inténtalo de nuevo cuando vuelva la conexión.",
     "mergeNote": "Los artículos solo se suman si coinciden el nombre y la unidad: 200 g y 1 taza se mantienen separados.",
     "emptyTitle": "La lista está vacía",
     "empty": "Añade productos aquí arriba, desde la página de una receta o desde el plan de comidas.",
@@ -993,6 +994,7 @@
     "deleteTitle": "Eliminar la cuenta",
     "deleteLead": "Elimina para siempre la cuenta, las recetas, las imágenes y todos los datos asociados. No se puede deshacer.",
     "deleteConfirmLabel": "Para confirmar, escribe tu nombre de usuario ({username})",
+    "deletePasswordLabel": "Introduce tu contraseña actual para confirmar",
     "deleteButton": "Eliminar para siempre",
     "deleting": "Eliminando…",
     "passwordTitle": "Cambiar contraseña",
@@ -1419,7 +1421,7 @@
     "found": "{count, plural, one {# receta en el archivo} other {# recetas en el archivo}}",
     "skipped": "{count, plural, one {# receta omitida por no tener título.} other {# recetas omitidas por no tener título.}}",
     "importAll": "Importar todas como privadas",
-    "importAllHint": "Se omiten las recetas con el mismo título que una que ya tienes. No pasan por la pantalla de revisión: se guardan como privadas y marcadas «Por revisar».",
+    "importAllHint": "Las recetas con el mismo título que una que ya tienes se omiten: deselecciona las que no quieras, y detén o reanuda cuando quieras. No pasan por la pantalla de revisión: se guardan como privadas y marcadas «Por revisar».",
     "progress": "{done} de {total}: {created} importadas, {duplicates} ya existentes, {failed} con error.",
     "goToRecipes": "Ir a las recetas",
     "review": "Revisar y guardar",
@@ -1428,6 +1430,11 @@
       "unsupported_format": "Este archivo no es una exportación de Mestolo.",
       "no_recipes": "El archivo no contiene recetas importables.",
       "too_large": "El archivo es demasiado grande (máximo 10 MB)."
-    }
+    },
+    "importSelected": "Importar seleccionadas ({count})",
+    "stop": "Detener",
+    "selectAll": "Seleccionar todas",
+    "selectNone": "Deseleccionar todas",
+    "stopped": "Detenida tras {done} recetas: {created} importadas, {duplicates} ya presentes, {failed} fallidas. Vuelve a iniciar para reanudar: las recetas ya importadas se omiten."
   }
 }

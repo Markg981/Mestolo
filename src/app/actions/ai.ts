@@ -6,6 +6,7 @@ import { createClient, getUser, getProfile } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { resolveProvider, recordUsage, type KeySource } from '@/lib/ai/service';
+import { withRefund } from '@/lib/ai/refund';
 import { analyzeSystem, analyzeUserPrompt, substituteSystem, substituteUserPrompt, translateSystem } from '@/lib/ai/prompts';
 import { analysisSchema, applySuggestions, type Analysis } from '@/lib/recipes/suggestions';
 import { findBuiltinSubstitutions, substitutionResultSchema, type SubstitutionResult } from '@/lib/recipes/substitutions';
@@ -49,24 +50,26 @@ export async function analyzeRecipe(recipeId: string): Promise<ActionResult<Anal
     const r = data as RecipeRow;
     await enforceRateLimit('ai_text', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'text', 'analyze');
-    const raw = await resolved.provider.completeJson({ system: analyzeSystem(await uiLocale()), user: analyzeUserPrompt(contentOf(r)), maxTokens: 4000 });
-    await recordUsage(user.id, 'text', 'analyze', resolved);
-    const parsed = analysisSchema.safeParse(raw);
-    if (!parsed.success) return fail('ai_bad_output');
-    // Drop suggestions that point outside the recipe
-    const analysis: Analysis = {
-      summary: parsed.data.summary,
-      suggestions: parsed.data.suggestions.filter((s) =>
-        s.type === 'step_rewrite' ? s.stepIndex < r.steps.length : s.type === 'ingredient_fix' ? s.ingredientIndex < r.ingredients.length : true,
-      ),
-    };
-    const { data: row, error } = await createAdminClient()
-      .from('ai_suggestions')
-      .insert({ recipe_id: r.id, user_id: user.id, kind: 'analysis', payload: analysis, recipe_hash: r.content_hash, provider: resolved.provider.id, key_source: resolved.keySource })
-      .select('id')
-      .single();
-    if (error) return dbFailure(error, 'analyzeRecipe.store');
-    return ok({ analysisId: row.id as string, analysis, keySource: resolved.keySource, providerName: resolved.providerName });
+    return await withRefund(user.id, resolved, 'text', 'analyze', async () => {
+      const raw = await resolved.provider.completeJson({ system: analyzeSystem(await uiLocale()), user: analyzeUserPrompt(contentOf(r)), maxTokens: 4000 });
+      await recordUsage(user.id, 'text', 'analyze', resolved);
+      const parsed = analysisSchema.safeParse(raw);
+      if (!parsed.success) return fail('ai_bad_output');
+      // Drop suggestions that point outside the recipe
+      const analysis: Analysis = {
+        summary: parsed.data.summary,
+        suggestions: parsed.data.suggestions.filter((s) =>
+          s.type === 'step_rewrite' ? s.stepIndex < r.steps.length : s.type === 'ingredient_fix' ? s.ingredientIndex < r.ingredients.length : true,
+        ),
+      };
+      const { data: row, error } = await createAdminClient()
+        .from('ai_suggestions')
+        .insert({ recipe_id: r.id, user_id: user.id, kind: 'analysis', payload: analysis, recipe_hash: r.content_hash, provider: resolved.provider.id, key_source: resolved.keySource })
+        .select('id')
+        .single();
+      if (error) return dbFailure(error, 'analyzeRecipe.store');
+      return ok({ analysisId: row.id as string, analysis, keySource: resolved.keySource, providerName: resolved.providerName });
+    });
   } catch (e) {
     return toFailure(e, 'analyzeRecipe');
   }
@@ -112,12 +115,16 @@ export async function applyAnalysis(
       field_flags: result.fieldFlags,
     };
     if (mode === 'apply') {
-      const { error } = await supabase
+      // concorrenza ottimistica: aggiorna solo se il contenuto e' ancora quello analizzato
+      const { data: updated, error } = await supabase
         .from('recipes')
         .update({ ...fields, last_change_source: 'ai_suggestions', last_change_note: `${result.applied.length}` })
         .eq('id', recipeId)
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id)
+        .eq('content_hash', r.content_hash)
+        .select('id');
       if (error) return dbFailure(error, 'applyAnalysis.update');
+      if (!updated?.length) return fail('conflict');
       revalidatePath(`/recipes/${recipeId}`);
       return ok({ id: recipeId, applied: result.applied.length, skipped: result.skipped.length });
     }
@@ -172,14 +179,16 @@ export async function suggestSubstitutions(recipeId: string, missing: string[], 
 
     await enforceRateLimit('ai_text', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'text', 'substitute');
-    const raw = await resolved.provider.completeJson({ system: substituteSystem(locale), user: substituteUserPrompt(contentOf(data as RecipeRow), list.data), maxTokens: 3000 });
-    await recordUsage(user.id, 'text', 'substitute', resolved);
-    const parsed = substitutionResultSchema.safeParse(raw);
-    if (!parsed.success) return fail('ai_bad_output');
-    await createAdminClient()
-      .from('ai_suggestions')
-      .insert({ recipe_id: recipeId, user_id: user.id, kind: 'substitution', payload: { missing: list.data, result: parsed.data }, recipe_hash: (data as RecipeRow).content_hash, provider: resolved.provider.id, key_source: resolved.keySource });
-    return ok({ builtin, ai: parsed.data, aiSource: { keySource: resolved.keySource, providerName: resolved.providerName } });
+    return await withRefund(user.id, resolved, 'text', 'substitute', async () => {
+      const raw = await resolved.provider.completeJson({ system: substituteSystem(locale), user: substituteUserPrompt(contentOf(data as RecipeRow), list.data), maxTokens: 3000 });
+      await recordUsage(user.id, 'text', 'substitute', resolved);
+      const parsed = substitutionResultSchema.safeParse(raw);
+      if (!parsed.success) return fail('ai_bad_output');
+      await createAdminClient()
+        .from('ai_suggestions')
+        .insert({ recipe_id: recipeId, user_id: user.id, kind: 'substitution', payload: { missing: list.data, result: parsed.data }, recipe_hash: (data as RecipeRow).content_hash, provider: resolved.provider.id, key_source: resolved.keySource });
+      return ok({ builtin, ai: parsed.data, aiSource: { keySource: resolved.keySource, providerName: resolved.providerName } });
+    });
   } catch (e) {
     return toFailure(e, 'suggestSubstitutions');
   }
@@ -205,23 +214,25 @@ export async function translateRecipe(recipeId: string, target: string): Promise
 
     await enforceRateLimit('ai_translate', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'translate', 'recipe');
-    const payload = buildTranslatable(r);
-    const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: JSON.stringify(payload), maxTokens: 6000 });
-    await recordUsage(user.id, 'translate', 'recipe', resolved);
-    const parsed = translatedPayloadSchema.safeParse(raw);
-    if (!parsed.success) return fail('translation_failed');
-    try {
-      mergeTranslation(r, parsed.data); // validates the structure
-    } catch (e) {
-      if (e instanceof TranslationShapeError) return fail('translation_failed');
-      throw e;
-    }
-    const { error } = await createAdminClient()
-      .from('recipe_translations')
-      .upsert({ recipe_id: recipeId, locale: target, content: guardTranslatedNumbers(r, parsed.data), source_hash: r.content_hash, provider: resolved.provider.id, created_at: new Date().toISOString() });
-    if (error) return dbFailure(error, 'translateRecipe.store');
-    revalidatePath(`/recipes/${recipeId}`);
-    return ok({ cached: false });
+    return await withRefund(user.id, resolved, 'translate', 'recipe', async () => {
+      const payload = buildTranslatable(r);
+      const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: JSON.stringify(payload), maxTokens: 6000 });
+      await recordUsage(user.id, 'translate', 'recipe', resolved);
+      const parsed = translatedPayloadSchema.safeParse(raw);
+      if (!parsed.success) return fail('translation_failed');
+      try {
+        mergeTranslation(r, parsed.data); // validates the structure
+      } catch (e) {
+        if (e instanceof TranslationShapeError) return fail('translation_failed');
+        throw e;
+      }
+      const { error } = await createAdminClient()
+        .from('recipe_translations')
+        .upsert({ recipe_id: recipeId, locale: target, content: guardTranslatedNumbers(r, parsed.data), source_hash: r.content_hash, provider: resolved.provider.id, created_at: new Date().toISOString() });
+      if (error) return dbFailure(error, 'translateRecipe.store');
+      revalidatePath(`/recipes/${recipeId}`);
+      return ok({ cached: false });
+    });
   } catch (e) {
     return toFailure(e, 'translateRecipe');
   }

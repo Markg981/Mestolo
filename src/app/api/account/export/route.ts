@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { buildAccountExport } from '@/lib/recipes/account-export';
+import { fetchAllChunked, fetchAllPages } from '@/lib/supabase/paginate';
 import { enforceRateLimit, RateLimitedError } from '@/lib/rate-limit';
 
 /**
@@ -19,18 +20,26 @@ export async function GET() {
     return new NextResponse('Service unavailable', { status: 503, headers: { 'retry-after': '30' } });
   }
   const supabase = await createClient();
-  const own = (table: string, col = 'owner_id') => supabase.from(table).select('*').eq(col, user.id);
+  // Ogni tabella e' letta a pagine (max_rows di PostgREST = 1000, troncamento silenzioso)
+  // con un ordine stabile e univoco, cosi' le pagine non si sovrappongono ne' saltano righe.
+  const paged = (table: string, filter: (q: any) => any, order: string[], columns = '*') => // eslint-disable-line @typescript-eslint/no-explicit-any
+    fetchAllPages((from, to) => {
+      let q = filter(supabase.from(table).select(columns));
+      for (const o of order) q = q.order(o);
+      return q.range(from, to);
+    });
+  const own = (table: string, col = 'owner_id', order: string[] = ['id']) => paged(table, (q) => q.eq(col, user.id), order);
   const [profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories] = await Promise.all([
     supabase.rpc('my_profile').maybeSingle(),
     own('recipes'),
-    own('recipe_notes'),
-    own('favorites', 'user_id'),
-    supabase.from('collections').select('*, collection_recipes(recipe_id, added_at)').eq('owner_id', user.id),
+    own('recipe_notes', 'owner_id', ['recipe_id']),
+    own('favorites', 'user_id', ['recipe_id']),
+    paged('collections', (q) => q.eq('owner_id', user.id), ['id'], '*, collection_recipes(recipe_id, added_at)'),
     own('shopping_lists'),
     own('shopping_items'),
     own('meal_plan_entries'),
-    supabase.from('friendships').select('*'),
-    own('blocks', 'blocker_id'),
+    paged('friendships', (q) => q, ['id']),
+    own('blocks', 'blocker_id', ['blocked_id']),
     own('reports', 'reporter_id'),
     supabase.rpc('my_api_keys'),
     own('ai_usage', 'user_id'),
@@ -38,26 +47,33 @@ export async function GET() {
   ]);
   const [cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback] = await Promise.all([
     own('cook_logs', 'user_id'),
-    own('recipe_ratings', 'user_id'),
+    own('recipe_ratings', 'user_id', ['recipe_id']),
     own('pantry_items'),
-    own('plan_preferences', 'user_id'),
-    own('notification_preferences', 'user_id'),
+    own('plan_preferences', 'user_id', ['user_id']),
+    own('notification_preferences', 'user_id', ['user_id']),
     // Niente chiavi crittografiche (p256dh/auth): solo i dispositivi registrati.
-    supabase.from('push_subscriptions').select('id, endpoint, user_agent, created_at').eq('user_id', user.id),
+    paged('push_subscriptions', (q) => q.eq('user_id', user.id), ['id'], 'id, endpoint, user_agent, created_at'),
     own('invites', 'inviter_id'),
-    own('invite_redemptions', 'redeemer_id'),
-    own('collection_members', 'user_id'),
-    own('shopping_list_members', 'user_id'),
-    own('shopping_aisle_overrides', 'set_by'),
+    own('invite_redemptions', 'redeemer_id', ['invite_id']),
+    own('collection_members', 'user_id', ['collection_id']),
+    own('shopping_list_members', 'user_id', ['list_id']),
+    own('shopping_aisle_overrides', 'set_by', ['list_id', 'name_key']),
     own('ai_suggestions', 'user_id'),
     own('app_feedback', 'user_id'),
   ]);
+  // `.in('recipe_id', ...)` con centinaia di id supera il limite di lunghezza dell'URL: a blocchi da 100.
+  const chunked = (table: string, ids: string[], order: string[], columns = '*') =>
+    fetchAllChunked(ids, (chunk, from, to) => {
+      let q = supabase.from(table).select(columns).in('recipe_id', chunk);
+      for (const o of order) q = q.order(o);
+      return q.range(from, to);
+    });
   const recipeIds = ((recipes.data as { id: string }[]) ?? []).map((r) => r.id);
   const [versions, images, nutrition] = recipeIds.length
     ? await Promise.all([
-        supabase.from('recipe_versions').select('*').in('recipe_id', recipeIds),
-        supabase.from('recipe_images').select('id, recipe_id, kind, source_url, attribution, alt_text, created_at').in('recipe_id', recipeIds),
-        supabase.from('recipe_nutrition').select('*').in('recipe_id', recipeIds),
+        chunked('recipe_versions', recipeIds, ['id']),
+        chunked('recipe_images', recipeIds, ['id'], 'id, recipe_id, kind, source_url, attribution, alt_text, created_at'),
+        chunked('recipe_nutrition', recipeIds, ['recipe_id']),
       ])
     : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
 

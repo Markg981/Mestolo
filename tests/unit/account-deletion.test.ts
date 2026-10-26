@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 
-function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[]; cook?: unknown[]; cookError?: boolean } = {}) {
+function make(opts: { removeError?: boolean; deleteError?: { status?: number; code?: string; message?: string }; rows?: unknown[]; cook?: unknown[]; cookError?: boolean; listed?: { name: string; id: string | null }[][]; listError?: boolean } = {}) {
   const calls: string[] = [];
   const filters: string[] = [];
   const remove = vi.fn(async (p: string[]) => {
@@ -23,7 +23,15 @@ function make(opts: { removeError?: boolean; deleteError?: { status?: number; co
         },
       }),
     }),
-    storage: { from: () => ({ remove }) },
+    storage: {
+      from: () => ({
+        remove,
+        list: vi.fn(async () => {
+          if (opts.listError) return { data: null, error: { message: 'boom' } };
+          return { data: (opts.listed ?? []).shift() ?? [], error: null };
+        }),
+      }),
+    },
     auth: { admin: { deleteUser } },
   } as unknown as DeletionAdmin;
   return { admin, calls, filters, remove, deleteUser };
@@ -84,5 +92,28 @@ describe('deleteAccountData', () => {
   it('fails on other deleteUser errors so it can be retried', async () => {
     const m = make({ deleteError: { status: 500, message: 'x' } });
     await expect(deleteAccountData(m.admin, 'u1')).rejects.toThrow();
+  });
+
+  it('sweeps the <uid>/ prefix page by page, including subfolders, until empty', async () => {
+    const m = make({
+      rows: [],
+      listed: [
+        [{ name: 'f1', id: 'x' }, { name: 'cook', id: null }],
+        [{ name: 'c1', id: 'y' }],
+        [],
+        [{ name: 'f2', id: 'z' }],
+      ],
+    });
+    await deleteAccountData(m.admin, 'u1');
+    expect(m.remove).toHaveBeenCalledWith(['u1/cook/c1']);
+    expect(m.remove).toHaveBeenCalledWith(['u1/f1']);
+    expect(m.remove).toHaveBeenCalledWith(['u1/f2']);
+    expect(m.calls.at(-1)).toBe('deleteUser');
+  });
+
+  it('does not delete the auth user if listing the prefix fails', async () => {
+    const m = make({ rows: [], listError: true });
+    await expect(deleteAccountData(m.admin, 'u1')).rejects.toThrow(/storage list/);
+    expect(m.deleteUser).not.toHaveBeenCalled();
   });
 });

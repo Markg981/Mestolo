@@ -1,8 +1,8 @@
 /**
  * Bozze locali dell'editor ricette (localStorage).
  * Le chiavi contengono l'id utente, cosi' due account sullo stesso browser non si vedono le bozze;
- * tutte le chiavi `mestolo:draft:*` vengono cancellate al logout (clearUserCache); alla pagina di login
- * restano, e dopo il login si tengono solo quelle dell'utente entrato (clearOtherUsersDrafts).
+ * tutte le chiavi `mestolo:draft:*` vengono cancellate al logout esplicito; quelle di altri utenti anche al login (clearDraftsOfOtherUsers).
+ * Non vanno cancellate quando si apre /login per sessione scaduta: sono lavoro non salvato.
  */
 
 export const DRAFT_PREFIX = 'mestolo:draft:';
@@ -111,16 +111,12 @@ export function clearAllDrafts() {
   }
 }
 
-/**
- * Cancella le bozze di ogni altro utente (e quelle del vecchio formato), tenendo quelle di `userId`.
- * Chiamata dopo il login: una sessione scaduta non fa perdere la bozza a chi rientra,
- * ma un account diverso sullo stesso browser non eredita le bozze del precedente.
- */
-export function clearOtherUsersDrafts(userId: string) {
+/** Cancella le bozze di ogni altro utente (e del vecchio formato), tenendo quelle di `userId`. */
+export function clearDraftsOfOtherUsers(userId: string) {
   try {
     const st = storage();
     if (!st) return;
-    const own = draftStorageKey(userId, '');
+    const own = `${DRAFT_PREFIX}${userId}:`;
     for (const k of allDraftKeys(st)) if (!k.startsWith(own)) st.removeItem(k);
   } catch {
     /* niente da pulire */

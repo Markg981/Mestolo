@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
-import { clearAllDrafts, clearOtherUsersDrafts } from '@/lib/drafts';
+import { clearAllDrafts, clearDraftsOfOtherUsers } from '@/lib/drafts';
 
 /** Registers the service worker (production only, secure contexts only). */
 export function ServiceWorkerRegister() {
@@ -16,11 +16,9 @@ export function ServiceWorkerRegister() {
 
 /**
  * Deletes cached private pages/images (called on logout and before login).
- * Before login the drafts are kept: they are keyed by user id, and a session that
- * expired mid-edit must not cost the draft (other users' drafts go after login).
+ * Does not touch the editor drafts: /login also opens when the session expires, and the drafts are unsaved work.
  */
-export async function clearUserCache({ keepDrafts = false }: { keepDrafts?: boolean } = {}) {
-  if (!keepDrafts) clearAllDrafts();
+export async function clearUserCache() {
   try {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear-user-data' });
     if ('caches' in window) {
@@ -41,7 +39,8 @@ async function hashUserId(userId: string) {
 /** Tells the service worker who is logged in; it drops the caches of any other user. */
 export function UserCacheSync({ userId }: { userId: string }) {
   useEffect(() => {
-    clearOtherUsersDrafts(userId);
+    // shared device: drafts left by a previous account are dropped once we know who is logged in
+    clearDraftsOfOtherUsers(userId);
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
     let cancelled = false;
     (async () => {
@@ -56,10 +55,10 @@ export function UserCacheSync({ userId }: { userId: string }) {
   return null;
 }
 
-/** Clears the private cache when mounted (used on the login page); drafts are kept. */
+/** Clears the private cache when mounted (used on the login page). */
 export function ClearUserCacheOnMount() {
   useEffect(() => {
-    clearUserCache({ keepDrafts: true });
+    clearUserCache();
   }, []);
   return null;
 }
@@ -91,6 +90,7 @@ export function SignOutButton({ action, label, className }: { action: () => Prom
     <form
       action={action}
       onSubmit={() => {
+        clearAllDrafts();
         clearUserCache();
       }}
     >
