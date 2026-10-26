@@ -59,7 +59,6 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
     if (useAi) {
       await enforceRateLimit('ai_text', user.id);
       const resolved = await resolveProvider(user.id, 'text', 'text', 'extract_text');
-      let draft: ImportDraft;
       let extracted: unknown;
       try {
         const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
@@ -69,7 +68,7 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
         throw e;
       }
       // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
-      draft = draftFromExtraction(extracted, { type: src ? 'url' : 'text', url: src, method: 'ai' });
+      const draft = draftFromExtraction(extracted, { type: src ? 'url' : 'text', url: src, method: 'ai' });
       await recordUsage(user.id, 'text', 'extract_text', resolved);
       return ok(draft);
     }
@@ -126,7 +125,6 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
     }
 
     const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
-    let draft: ImportDraft;
     let extracted: unknown;
     try {
       const raw = await resolved.provider.completeJson({
@@ -141,7 +139,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
       throw e;
     }
     // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
-    draft = draftFromExtraction(extracted, { type: 'photo', method: 'ai' });
+    const draft = draftFromExtraction(extracted, { type: 'photo', method: 'ai' });
     await recordUsage(user.id, 'vision', 'extract_photo', resolved);
     return ok(draft);
   } catch (e) {
