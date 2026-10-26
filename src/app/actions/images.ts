@@ -18,6 +18,12 @@ import type { Ingredient } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
+const attributionSchema = z
+  .string()
+  .transform((v) => v.replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().max(300))
+  .nullable();
 
 async function storeImage(opts: {
   userId: string;
@@ -106,11 +112,18 @@ export async function importSourceImage(recipeId: string, imageUrl: string, attr
   try {
     const user = await getUser();
     if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
+    const attr = attributionSchema.safeParse(attribution ?? null);
+    if (!attr.success) return fail('invalid_input');
+    const cleanAttribution = attr.data ? attr.data : null;
+    // Ownership check BEFORE any outbound fetch (no SSRF/bandwidth for non-owners).
+    const supabase = await createClient();
+    const { data: owned } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+    if (!owned) return fail('not_found');
     await enforceRateLimit('upload_image', user.id);
     await enforceRateLimit('upload_image_day', user.id);
     const res = await safeFetch(imageUrl, { maxBytes: MAX_UPLOAD_BYTES, accept: 'image/*', allowedContentTypes: /^image\/(jpeg|png|webp|avif|gif)/i });
     if (res.truncated) return fail('image_too_large');
-    return await storeImage({ userId: user.id, recipeId, buffer: res.body, kind: 'imported', alt: '', sourceUrl: res.finalUrl, attribution });
+    return await storeImage({ userId: user.id, recipeId, buffer: res.body, kind: 'imported', alt: '', sourceUrl: res.finalUrl, attribution: cleanAttribution });
   } catch (e) {
     if (e instanceof ImageValidationError) return fail(e.code);
     return toFailure(e, 'importSourceImage');
