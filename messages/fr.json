@@ -1436,6 +1436,16 @@
     "stop": "Arrêter",
     "selectAll": "Tout sélectionner",
     "selectNone": "Tout désélectionner",
-    "stopped": "Arrêté après {done} recettes : {created} importées, {duplicates} déjà présentes, {failed} en échec. Relancez pour reprendre : les recettes déjà importées sont ignorées."
+    "stopped": "Arrêté après {done} recettes : {created} importées, {duplicates} déjà présentes, {failed} en échec. Relancez pour reprendre : les recettes déjà importées sont ignorées.",
+    "failuresTitle": "{count, plural, one {# recette non importée} other {# recettes non importées}}",
+    "retryFailed": "Réessayer les échecs ({count})",
+    "failReasons": {
+      "rate_limited": "Trop de requêtes : réessayez dans quelques minutes.",
+      "invalid_input": "Données de la recette invalides.",
+      "forbidden": "Vous n’avez pas l’autorisation d’enregistrer : reconnectez-vous.",
+      "config": "Service mal configuré.",
+      "generic": "Erreur lors de l’enregistrement.",
+      "unexpected": "Erreur inattendue ou réseau."
+    }
   }
 }

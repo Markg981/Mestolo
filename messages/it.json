@@ -1436,6 +1436,16 @@
     "stop": "Interrompi",
     "selectAll": "Seleziona tutte",
     "selectNone": "Deseleziona tutte",
-    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate."
+    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate.",
+    "failuresTitle": "{count, plural, one {# ricetta non importata} other {# ricette non importate}}",
+    "retryFailed": "Riprova i falliti ({count})",
+    "failReasons": {
+      "rate_limited": "Troppe richieste: riprova tra qualche minuto.",
+      "invalid_input": "Dati della ricetta non validi.",
+      "forbidden": "Non hai i permessi per salvare: effettua di nuovo l’accesso.",
+      "config": "Servizio non configurato correttamente.",
+      "generic": "Errore durante il salvataggio.",
+      "unexpected": "Errore imprevisto o di rete."
+    }
   }
 }
