@@ -123,6 +123,8 @@ npm run dev                    # http://localhost:3000
 
 **Opzione B – Supabase CLI**: `npx supabase init` (solo la prima volta), `npx supabase link --project-ref <ref>`, poi `npx supabase db push`.
 
+**Regola per le nuove migrazioni**: il timestamp del file deve essere strettamente maggiore del massimo già in `main`, anche se è nel futuro rispetto alla data corrente. Le migrazioni già pubblicate non si rinominano (romperebbe la cronologia di `supabase_migrations`). Il controllo è `npm run check:migrations` (ref di base configurabile con `MIGRATIONS_BASE_REF`, default `origin/main`) e gira in CI.
+
 Catalogo iniziale facoltativo per la sezione Scopri:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run seed:catalog

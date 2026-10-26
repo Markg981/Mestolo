@@ -88,6 +88,22 @@ d('Social graph functions', () => {
     await expect(blocked(null, a, e)).rejects.toThrow(/permission denied/);
   });
 
+  it('no policy or public function uses the one-directional public.is_blocked_between', async () => {
+    const pol = await admin(
+      `select c.relname || '.' || p.polname as n
+         from pg_policy p join pg_class c on c.oid = p.polrelid
+        where coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '')
+              ~ '(^|[^.])is_blocked_between\\('`,
+    );
+    expect(pol).toEqual([]);
+    const fns = await admin(
+      `select p.proname as n from pg_proc p join pg_namespace s on s.oid = p.pronamespace
+        where s.nspname = 'public' and p.proname <> 'is_blocked_between'
+          and p.prosrc ~ '(^|[^.])is_blocked_between\\('`,
+    );
+    expect(fns).toEqual([]);
+  });
+
   it('policies relying on the functions still work', async () => {
     const [{ id }] = await as<{ id: string }>(a, "insert into public.recipes (owner_id, title, visibility) values ($1, 'Amici', 'friends') returning id", [a]);
     expect(await as(b, 'select id from public.recipes where id = $1', [id])).toHaveLength(1);
