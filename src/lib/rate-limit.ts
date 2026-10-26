@@ -11,6 +11,7 @@ export const LIMITS = {
   login_email_ip: [8, 15 * 60],
   signup_ip: [6, 60 * 60],
   reset_ip: [5, 60 * 60],
+  password_update: [10, 60 * 60],
   import_url: [30, 60 * 60],
   import_photo: [12, 60 * 60],
   import_video_ai: [6, 60 * 60],
