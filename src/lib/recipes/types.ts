@@ -106,6 +106,7 @@ export interface ImportWarning {
     | 'low_confidence'
     | 'no_structured_data'
     | 'partial_content'
+    | 'invalid_items_dropped'
     | 'paywall_or_js'
     | 'no_ingredients'
     | 'no_steps';

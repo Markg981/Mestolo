@@ -311,6 +311,7 @@
     "low_confidence": "Structure reconnue avec peu de certitude : vérifiez les ingrédients et les étapes.",
     "no_structured_data": "La page ne contient pas de données de recette structurées : les informations ont été extraites du texte.",
     "partial_content": "La page était très longue et n'a été lue qu'en partie.",
+    "invalid_items_dropped": "Certains ingrédients ou étapes n'ont pas été reconnus et ont été omis : vérifiez la recette.",
     "paywall_or_js": "Le contenu est peut-être payant ou chargé par script : certaines parties peuvent manquer.",
     "no_ingredients": "Ingrédients introuvables.",
     "no_steps": "Étapes introuvables."

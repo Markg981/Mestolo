@@ -311,6 +311,7 @@
     "low_confidence": "Struktur nur unsicher erkannt: Prüfe Zutaten und Schritte.",
     "no_structured_data": "Die Seite enthält keine strukturierten Rezeptdaten: Die Angaben wurden aus dem Text gewonnen.",
     "partial_content": "Die Seite war sehr lang und wurde nur teilweise gelesen.",
+    "invalid_items_dropped": "Einige Zutaten oder Schritte wurden nicht erkannt und ausgelassen: Bitte Rezept prüfen.",
     "paywall_or_js": "Der Inhalt ist eventuell kostenpflichtig oder wird per Skript geladen: Es könnten Teile fehlen.",
     "no_ingredients": "Keine Zutaten gefunden.",
     "no_steps": "Keine Schritte gefunden."

@@ -94,8 +94,7 @@ export function draftFromExtraction(raw: unknown, source: ImportDraft['source'])
   if (!steps.length) field_flags.steps = ['missing'];
 
   const warnings: ImportWarning[] = x.warnings.map((w) => ({ code: w.code, page: w.page ?? undefined, message: w.message || undefined }));
-  if (parsedIngredients.dropped) warnings.push({ code: 'partial_content', message: `${parsedIngredients.dropped} invalid ingredient(s) dropped` });
-  if (parsedSteps.dropped) warnings.push({ code: 'partial_content', message: `${parsedSteps.dropped} invalid step(s) dropped` });
+  if (parsedIngredients.dropped || parsedSteps.dropped) warnings.push({ code: 'invalid_items_dropped' });
   if (!ingredients.length) warnings.push({ code: 'no_ingredients' });
   if (!steps.length) warnings.push({ code: 'no_steps' });
 

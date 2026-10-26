@@ -311,6 +311,7 @@
     "low_confidence": "Structure detected with low confidence: check the ingredients and steps.",
     "no_structured_data": "The page has no structured recipe data: details were taken from the text.",
     "partial_content": "The page was very long and only part of it was read.",
+    "invalid_items_dropped": "Some ingredients or steps were not recognised and were left out: check the recipe.",
     "paywall_or_js": "The content may be paywalled or loaded by scripts: parts may be missing.",
     "no_ingredients": "No ingredients found.",
     "no_steps": "No steps found."

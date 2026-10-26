@@ -13,8 +13,7 @@ describe('draftFromExtraction partial arrays', () => {
     );
     expect(d.content.ingredients.map((i) => i.name)).toEqual(['Farina', 'Uova']);
     expect(d.content.steps).toHaveLength(1);
-    const msgs = d.warnings.filter((w) => w.code === 'partial_content').map((w) => w.message);
-    expect(msgs).toEqual(['2 invalid ingredient(s) dropped', '1 invalid step(s) dropped']);
+    expect(d.warnings.filter((w) => w.code === 'invalid_items_dropped')).toHaveLength(1);
     expect(d.warnings.some((w) => w.code === 'no_ingredients')).toBe(false);
   });
 });
