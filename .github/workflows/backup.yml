@@ -69,7 +69,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "::notice::Secret BACKUP_S3_* non impostati: upload S3 saltato."
+            echo "::warning::Secret BACKUP_S3_* non impostati: upload S3 saltato (copia solo negli artifact, retention 30 giorni)."
             exit 0
           fi
           endpoint=()
@@ -77,16 +77,25 @@ jobs:
           export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
           aws s3 cp "${endpoint[@]}" "out/backup-${STAMP}.tar.gpg" "s3://${BACKUP_S3_BUCKET}/mestolo/db/backup-${STAMP}.tar.gpg"
 
-      - name: Backup storage files (optional)
+      # Fallisce se mancano i secret dello storage, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
+      - name: Backup storage files
+        env:
+          BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
         run: |
           set -euo pipefail
-          if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
-            echo "::notice::NEXT_PUBLIC_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY non impostati: backup immagini saltato."
+          if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
+            echo "::warning::BACKUP_SKIP_STORAGE=true: backup delle immagini disattivato esplicitamente."
             exit 0
+          fi
+          if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+            echo "::error::NEXT_PUBLIC_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY non impostati: il backup delle immagini NON e stato eseguito. Configurare i secret oppure impostare la variabile BACKUP_SKIP_STORAGE=true per escluderlo."
+            exit 1
           fi
           umask 077
           npm ci --ignore-scripts --no-audit --no-fund
           node scripts/backup-storage.mjs storage-out
+          # Rilettura del backup appena creato contro il manifest (dimensione + sha256 di ogni file)
+          node scripts/verify-storage-backup.mjs storage-out
           tar -cf "out/storage-${STAMP}.tar" -C storage-out .
           gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
             --passphrase-fd 3 --output "out/storage-${STAMP}.tar.gpg" "out/storage-${STAMP}.tar" 3<<<"$BACKUP_PASSPHRASE"
@@ -104,4 +113,4 @@ jobs:
           name: storage-backup-${{ env.STAMP }}
           path: out/storage-*.gpg
           retention-days: 30
-          if-no-files-found: ignore
+          if-no-files-found: ${{ vars.BACKUP_SKIP_STORAGE == 'true' && 'ignore' || 'error' }}
