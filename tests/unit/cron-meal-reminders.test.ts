@@ -5,6 +5,7 @@ const setVapidDetails = vi.fn();
 vi.mock('web-push', () => ({ default: { sendNotification: (e: unknown, p: unknown, o?: unknown) => sendNotification(e, p, o), setVapidDetails: (...a: unknown[]) => setVapidDetails(...a) } }));
 
 const deleted: string[][] = [];
+const rangeCalls: number[][] = [];
 const rpc = vi.fn(async () => ({
   data: [{ entry_id: 'e1', user_id: 'u1', slot: 'dinner', title: 'Risotto ai funghi', locale: 'it' }],
   error: null,
@@ -17,7 +18,7 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     rpc,
     from: () => ({
-      select: () => ({ in: async () => ({ data: subs, error: null }) }),
+      select: () => ({ in: () => ({ order: () => ({ range: async (from: number, to: number) => (rangeCalls.push([from, to]), { data: subs.slice(from, to + 1), error: null }) }) }) }),
       delete: () => ({ in: async (_c: string, ids: string[]) => (deleted.push(ids), { error: null }) }),
     }),
   }),
@@ -37,6 +38,7 @@ describe('GET /api/cron/meal-reminders', () => {
     sendNotification.mockClear();
     sendNotification.mockResolvedValue({ statusCode: 201 });
     deleted.length = 0;
+    rangeCalls.length = 0;
   });
   afterEach(() => vi.unstubAllEnvs());
 
@@ -105,5 +107,21 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(await res.json()).toMatchObject({ sent: 2, removed: 1 });
     expect(sendNotification).toHaveBeenCalledTimes(2);
     expect(deleted).toEqual([['s3']]);
+  });
+
+  it('reads subscriptions page by page and does not drop users beyond the first page', async () => {
+    const saved = subs.splice(0, subs.length);
+    for (let i = 0; i < 1001; i++) subs.push({ id: `p${String(i).padStart(4, '0')}`, user_id: 'u1', endpoint: 'https://fcm.googleapis.com/fcm/send/x', p256dh: 'p', auth: 'a' });
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 1001 });
+    expect(rangeCalls).toEqual([[0, 999], [1000, 1999]]);
+    subs.splice(0, subs.length, ...saved);
+  });
+
+  it('declares a max duration and a 45 minute default window', async () => {
+    const mod = await import('@/app/api/cron/meal-reminders/route');
+    expect(mod.maxDuration).toBeGreaterThan(0);
+    await GET(req('Bearer topsecret'));
+    expect(rpc).toHaveBeenCalledWith('claim_due_meal_reminders', { p_window_minutes: 45 });
   });
 });

@@ -2,7 +2,10 @@ name: Meal reminders
 
 # Scheduler esterno per i promemoria Web Push: il piano Vercel Hobby ammette solo un cron giornaliero
 # (vercel.json), troppo poco per promemoria puntuali. Chiama la route ogni 15 minuti; i duplicati sono
-# esclusi da meal_reminders_sent. Senza i secret APP_URL e CRON_SECRET non fa nulla.
+# esclusi da meal_reminders_sent. Un errore della route (non 2xx) fa fallire il job: GitHub
+# invia la notifica di workflow fallito. GitHub puo' ritardare o saltare le esecuzioni pianificate (la finestra di
+# recupero e' di 45 minuti) e disattiva gli schedule dopo 60 giorni senza attivita' nel repo: controllare la tab
+# Actions e riabilitare il workflow se serve. Senza i secret APP_URL e CRON_SECRET non fa nulla.
 on:
   schedule:
     - cron: '*/15 * * * *'

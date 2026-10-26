@@ -7,6 +7,11 @@ import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
 import type { MealSlot } from '@/lib/plan/week';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+const USER_CHUNK = 100;
+const PAGE_SIZE = 1000;
+const SEND_CONCURRENCY = 10;
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -16,10 +21,10 @@ function authorized(request: Request): boolean {
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
-/** Finestra di recupero in minuti (default 20, coerente con una chiamata ogni 15; la funzione SQL la limita a 1..120). */
+/** Finestra di recupero in minuti (default 45: copre esecuzioni GitHub Actions ritardate o saltate; i duplicati sono esclusi da meal_reminders_sent; la funzione SQL la limita a 1..120). */
 function windowMinutes(): number {
   const n = Number.parseInt(process.env.MEAL_REMINDERS_WINDOW_MINUTES ?? '', 10);
-  return Number.isFinite(n) && n > 0 ? Math.min(n, 120) : 20;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 120) : 45;
 }
 
 type Due = { entry_id: string; user_id: string; slot: MealSlot; title: string; locale: string };
@@ -46,15 +51,28 @@ export async function GET(request: Request) {
   const meals = (due as Due[] | null) ?? [];
   if (meals.length === 0) return NextResponse.json({ ok: true, meals: 0, sent: 0, removed: 0 });
 
-  const { data: subs, error: subsError } = await admin
-    .from('push_subscriptions')
-    .select('id, user_id, endpoint, p256dh, auth')
-    .in('user_id', [...new Set(meals.map((m) => m.user_id))]);
-  if (subsError) return NextResponse.json({ error: 'subscriptions_failed' }, { status: 500 });
+  // Sottoscrizioni lette a blocchi di utenti e a pagine: un limite di righe del server non deve far perdere sottoscrizioni.
+  const allSubs: Sub[] = [];
+  const userIds = [...new Set(meals.map((m) => m.user_id))];
+  for (let i = 0; i < userIds.length; i += USER_CHUNK) {
+    const chunk = userIds.slice(i, i + USER_CHUNK);
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error: subsError } = await admin
+        .from('push_subscriptions')
+        .select('id, user_id, endpoint, p256dh, auth')
+        .in('user_id', chunk)
+        .order('id')
+        .range(from, from + PAGE_SIZE - 1);
+      if (subsError) return NextResponse.json({ error: 'subscriptions_failed' }, { status: 500 });
+      const rows = (data as Sub[] | null) ?? [];
+      allSubs.push(...rows);
+      if (rows.length < PAGE_SIZE) break;
+    }
+  }
 
   webpush.setVapidDetails(subject, publicKey, privateKey);
   const byUser = new Map<string, Sub[]>();
-  for (const s of (subs as Sub[] | null) ?? []) byUser.set(s.user_id, [...(byUser.get(s.user_id) ?? []), s]);
+  for (const s of allSubs) byUser.set(s.user_id, [...(byUser.get(s.user_id) ?? []), s]);
 
   let sent = 0;
   // Pasti da confermare: almeno un push riuscito, oppure nessun errore transitorio (niente da ritentare).
@@ -62,7 +80,7 @@ export async function GET(request: Request) {
   // lease (5 min) il claim lo riseleziona, finche' e' nella finestra e fino a 3 tentativi.
   const confirm: string[] = [];
   const gone = new Set<string>();
-  for (const meal of meals) {
+  const processMeal = async (meal: Due) => {
     const text = await mealReminderText(meal.locale, meal.slot, meal.title);
     const payload = JSON.stringify({ title: text.title, body: text.body, url: '/plan', tag: `meal-${meal.entry_id}` });
     let delivered = false;
@@ -86,8 +104,16 @@ export async function GET(request: Request) {
         }
       }
     }
+    // Confermato solo se almeno un push e' riuscito o l'utente ha davvero zero sottoscrizioni (letture complete).
     if (delivered || !transient) confirm.push(meal.entry_id);
-  }
+  };
+  // Invii con concorrenza limitata (la route ha un tetto di durata, maxDuration).
+  const queue = [...meals];
+  await Promise.all(
+    Array.from({ length: Math.min(SEND_CONCURRENCY, queue.length) }, async () => {
+      for (let meal = queue.shift(); meal; meal = queue.shift()) await processMeal(meal);
+    }),
+  );
   if (confirm.length > 0) {
     const { error: confirmError } = await admin.rpc('confirm_meal_reminders', { p_entry_ids: confirm });
     if (confirmError) console.error('[mestolo] meal-reminders: confirm failed');
