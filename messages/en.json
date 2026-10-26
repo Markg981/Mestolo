@@ -526,6 +526,7 @@
     "personalNote": "Personal notes",
     "personalNoteHint": "They stay private even if you share the recipe.",
     "draftRestored": "We restored your unsaved draft.",
+    "draftNotStored": "The draft can't be stored in this browser (storage full or blocked): don't close the page before saving.",
     "discardDraft": "Discard draft",
     "reviewIntroTitle": "Review the details before saving",
     "reviewIntro": "Nothing was made up: values that weren't found are left blank and flagged. Fix whatever you need.",

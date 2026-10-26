@@ -526,6 +526,7 @@
     "personalNote": "Persönliche Notizen",
     "personalNoteHint": "Bleiben privat, auch wenn du das Rezept teilst.",
     "draftRestored": "Wir haben deinen ungespeicherten Entwurf wiederhergestellt.",
+    "draftNotStored": "Der Entwurf kann in diesem Browser nicht gespeichert werden (Speicher voll oder blockiert): Schließe die Seite nicht vor dem Speichern.",
     "discardDraft": "Entwurf verwerfen",
     "reviewIntroTitle": "Prüfe die Daten vor dem Speichern",
     "reviewIntro": "Nichts wurde erfunden: Nicht gefundene Werte sind leer und markiert. Korrigiere, was nötig ist.",

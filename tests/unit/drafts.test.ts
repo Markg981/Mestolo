@@ -4,6 +4,7 @@ import {
   clearAllDrafts,
   clearLegacyDrafts,
   draftNames,
+  draftSet,
   draftStorageKey,
   isLegacyDraftKey,
   parseDraft,
@@ -47,6 +48,7 @@ describe('chiavi delle bozze', () => {
     expect(draftStorageKey(A, draftNames.new)).not.toBe(draftStorageKey(B, draftNames.new));
     expect(draftStorageKey(A, draftNames.edit(RID))).toBe(`mestolo:draft:${A}:edit:${RID}`);
     expect(draftStorageKey(A, draftNames.import('link'))).toBe(`mestolo:draft:${A}:import-link`);
+    expect(draftStorageKey(A, draftNames.importPending(draftNames.import('photo')))).toBe(`mestolo:draft:${A}:import-photo:pending`);
   });
 
   it('riconosce le chiavi del vecchio formato', () => {
@@ -115,5 +117,23 @@ describe('bozze stantie', () => {
   it('segnala JSON non valido', () => {
     expect(parseDraft('{no', {})).toEqual({ status: 'invalid' });
     expect(parseDraft('null', {})).toEqual({ status: 'invalid' });
+  });
+});
+
+describe('draftSet', () => {
+  it('restituisce true quando la bozza e\' scritta o rimossa', () => {
+    expect(draftSet('k', 'v')).toBe(true);
+    expect(store.getItem('k')).toBe('v');
+    expect(draftSet('k', null)).toBe(true);
+    expect(store.getItem('k')).toBeNull();
+  });
+
+  it('restituisce false se lo storage e\' pieno o assente, senza lanciare', () => {
+    store.setItem = () => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    };
+    expect(draftSet('k', 'v')).toBe(false);
+    vi.stubGlobal('window', {});
+    expect(draftSet('k', 'v')).toBe(false);
   });
 });

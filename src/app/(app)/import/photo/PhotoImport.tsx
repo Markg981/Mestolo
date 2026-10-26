@@ -13,7 +13,7 @@ import { compressImage, MAX_ORIGINAL_BYTES } from '@/lib/images/client-compress'
 import { isNativeApp, takeNativePhoto } from '@/lib/native/camera';
 import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/limits';
 import { AiSourceNote, type AiStatusProps } from '@/components/recipes/RecipeIslands';
-import { ImportReview, emptyDraft } from '@/components/import/ImportReview';
+import { ImportReview, emptyDraft, useResumeImport } from '@/components/import/ImportReview';
 import type { EditorCategory } from '@/components/recipes/editor/types';
 import type { ImportDraft } from '@/lib/recipes/types';
 import { Alert, Button, buttonClass, cx } from '@/components/ui';
@@ -35,6 +35,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   const locale = useLocale();
   const [pages, setPages] = useState<Page[]>([]);
   const [draft, setDraft] = useState<ImportDraft | null>(null);
+  useResumeImport(draftNames.import('photo'), setDraft);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();

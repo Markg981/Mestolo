@@ -37,7 +37,7 @@ function FlagBadges({ flags }: { flags?: FieldFlag[] }) {
   );
 }
 
-export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, baseVersion, expectedVersion, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack }: EditorProps) {
+export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, baseVersion, expectedVersion, source, warnings, aside, categoryAutoSuggested, importedNutrition, onBack, onSaved }: EditorProps) {
   const t = useTranslations('editor');
   const tc = useTranslations('common');
   const tu = useTranslations('units');
@@ -59,6 +59,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
 
   const [s, setS] = useState<EditorState>(initial);
   const [restored, setRestored] = useState(false);
+  const [notStored, setNotStored] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
@@ -118,8 +119,24 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       return;
     }
     if (!storageKey) return;
-    const id = setTimeout(() => draftSet(storageKey, serializeDraft(s, baseVersion)), 500);
-    return () => clearTimeout(id);
+    let pending = true;
+    const write = () => {
+      if (!pending) return;
+      pending = false;
+      setNotStored(!draftSet(storageKey, serializeDraft(s, baseVersion)));
+    };
+    const id = setTimeout(write, 500);
+    // Tab hidden or closed before the debounce fires: write now so the last edits are not lost.
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') write();
+    };
+    window.addEventListener('pagehide', write);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener('pagehide', write);
+      document.removeEventListener('visibilitychange', onHide);
+    };
   }, [s, storageKey, baseVersion]);
 
   // Possible duplicates (new recipes and imports)
@@ -256,6 +273,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
           if (!r.ok) extras.push('image');
         }
         if (storageKey) draftSet(storageKey, null);
+        onSaved?.();
         router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
         router.refresh();
       } catch {
@@ -290,6 +308,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
         {restored && (
           <Alert tone="info" title={t('draftRestored')} action={<Button size="sm" onClick={discardDraft}>{t('discardDraft')}</Button>} />
         )}
+        {notStored && <Alert tone="warn" title={t('draftNotStored')} />}
 
         {mode === 'review' && (
           <Alert tone={flaggedCount ? 'warn' : 'info'} title={t('reviewIntroTitle')}>

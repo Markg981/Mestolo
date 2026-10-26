@@ -8,7 +8,7 @@ import { useLocale } from 'next-intl';
 import { importFromUrl, importFromVideoUrl } from '@/app/actions/import';
 import { detectVideoUrl } from '@/lib/import/video';
 import { VideoTextStep, VideoUpload, type VideoText } from '@/components/import/VideoImport';
-import { ImportReview } from '@/components/import/ImportReview';
+import { ImportReview, useResumeImport } from '@/components/import/ImportReview';
 import { TextParseBox } from '@/components/import/TextParseBox';
 import type { AiStatusProps } from '@/components/recipes/RecipeIslands';
 import type { EditorCategory } from '@/components/recipes/editor/types';
@@ -22,6 +22,7 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
   const [video, setVideo] = useState<VideoText | null>(null);
   const [url, setUrl] = useState(initialUrl);
   const [draft, setDraft] = useState<ImportDraft | null>(null);
+  useResumeImport(draftNames.import('link'), setDraft);
   const [fallback, setFallback] = useState<{ text: string; reason: 'no_recipe' | 'error' } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();

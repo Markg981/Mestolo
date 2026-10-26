@@ -14,6 +14,8 @@ export const draftNames = {
   new: 'new',
   edit: (recipeId: string) => `edit:${recipeId}`,
   import: (kind: 'text' | 'photo' | 'link' | 'file') => `import-${kind}`,
+  /** import in revisione (il risultato dell'importazione), per riproporlo dopo un ricaricamento */
+  importPending: (importName: string) => `${importName}:pending`,
 };
 
 export function draftStorageKey(userId: string, name: string): string {
@@ -74,14 +76,17 @@ export function draftGet(key: string): string | null {
   }
 }
 
-export function draftSet(key: string, value: string | null) {
+/** Restituisce false se la bozza non è stata scritta (storage pieno, bloccato o assente). */
+export function draftSet(key: string, value: string | null): boolean {
   try {
     const st = storage();
-    if (!st) return;
+    if (!st) return false;
     if (value === null) st.removeItem(key);
     else st.setItem(key, value);
+    return true;
   } catch {
     /* storage non disponibile: la bozza resta in memoria */
+    return false;
   }
 }
 

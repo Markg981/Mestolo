@@ -526,6 +526,7 @@
     "personalNote": "Notas personales",
     "personalNoteHint": "Siguen siendo privadas aunque compartas la receta.",
     "draftRestored": "Hemos recuperado el borrador sin guardar.",
+    "draftNotStored": "No se puede guardar el borrador en este navegador (almacenamiento lleno o bloqueado): no cierres la página antes de guardar.",
     "discardDraft": "Descartar borrador",
     "reviewIntroTitle": "Revisa los datos antes de guardar",
     "reviewIntro": "No nos hemos inventado nada: los valores no encontrados están vacíos y marcados. Corrige lo que haga falta.",
