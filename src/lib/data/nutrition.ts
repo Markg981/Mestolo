@@ -2,6 +2,7 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { createClient as createAnon } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
+import { createTimeoutFetch } from '@/lib/supabase/fetch';
 import { createClient } from '@/lib/supabase/server';
 import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
 import { isNutritionSource, NUTRIENT_KEYS, type RecipeNutrition } from '@/lib/nutrition';
@@ -27,7 +28,7 @@ export function getPublicRecipeNutrition(slug: string): Promise<RecipeNutrition 
   return unstable_cache(
     async () => {
       const { supabaseUrl, supabaseAnonKey } = env();
-      const anon = createAnon(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const anon = createAnon(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: createTimeoutFetch() } });
       const { data, error } = await anon.rpc('get_public_recipe_nutrition', { p_slug: slug }).maybeSingle();
       if (error) throw error;
       return toNutrition(data as Record<string, unknown> | null);

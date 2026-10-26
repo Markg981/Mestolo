@@ -2,6 +2,7 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
+import { createTimeoutFetch } from '@/lib/supabase/fetch';
 import { isValidSlug } from '@/lib/recipes/slug';
 import type { PublicRecipe } from '@/lib/recipes/public-page';
 
@@ -18,7 +19,7 @@ const REVALIDATE_SECONDS = 3600;
  */
 function anonClient() {
   const { supabaseUrl, supabaseAnonKey } = env();
-  return createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: createTimeoutFetch() } });
 }
 
 async function fetchPublicRecipe(slug: string): Promise<PublicRecipe | null> {
