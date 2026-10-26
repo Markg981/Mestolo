@@ -26,11 +26,15 @@ jobs:
       APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW1teQ==
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # serve origin/main per check:migrations
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Migrazioni in ordine (timestamp maggiore del massimo su main)
+        run: npm run check:migrations
       - name: Info.plist senza host di sviluppo
         run: node scripts/check-mobile-config.mjs
       - run: npm run lint
