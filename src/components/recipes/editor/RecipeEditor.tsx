@@ -59,6 +59,8 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
 
   const [s, setS] = useState<EditorState>(initial);
   const [restored, setRestored] = useState(false);
+  // draft started from an older server version (recipe saved in another tab/device): offered, never dropped silently
+  const [conflictDraft, setConflictDraft] = useState<EditorState | null>(null);
   const [notStored, setNotStored] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,15 +102,19 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     if (!storageKey) return;
     const raw = draftGet(storageKey);
     if (!raw) return;
-    // In edit mode the draft is valid only if it started from the current server version.
+    // In edit mode the draft is restored directly only if it started from the current server version.
     const res = parseDraft<EditorState>(raw, { serverVersion: mode === 'edit' ? (baseVersion ?? '') : null });
+    if (res.status === 'conflict') {
+      // Restoring from browser storage (an external system) once on mount; the user decides whether to apply it.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (JSON.stringify(res.state) !== JSON.stringify(initial)) setConflictDraft(res.state);
+      return;
+    }
     if (res.status !== 'ok') {
       draftSet(storageKey, null);
       return;
     }
     if (JSON.stringify(res.state) !== JSON.stringify(initial)) {
-      // Restoring from browser storage (an external system) once on mount.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setS(res.state);
       setRestored(true);
     }
@@ -121,7 +127,8 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       firstRender.current = false;
       return;
     }
-    if (!storageKey) return;
+    // A pending conflict draft stays untouched in storage until the user restores or discards it.
+    if (!storageKey || conflictDraft) return;
     let pending = true;
     const write = () => {
       if (!pending) return;
@@ -140,7 +147,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       window.removeEventListener('pagehide', write);
       document.removeEventListener('visibilitychange', onHide);
     };
-  }, [s, storageKey, baseVersion]);
+  }, [s, storageKey, baseVersion, conflictDraft]);
 
   // Possible duplicates (new recipes and imports)
   useEffect(() => {
@@ -295,6 +302,19 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     setRestored(false);
   };
 
+  // Apply the conflicting draft over the current version: the next autosave rebases it on baseVersion
+  // and saving overwrites the version saved elsewhere.
+  const restoreConflictDraft = () => {
+    if (!conflictDraft) return;
+    setS(conflictDraft);
+    setConflictDraft(null);
+    setRestored(true);
+  };
+  const discardConflictDraft = () => {
+    if (storageKey) draftSet(storageKey, null);
+    setConflictDraft(null);
+  };
+
   const flaggedCount =
     Object.values(s.field_flags).filter((v) => v.some((f) => f !== 'ai_estimate')).length +
     s.ingredients.filter((i) => i.flags.some((f) => f !== 'ai_estimate')).length +
@@ -314,6 +334,18 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       <div className="flex min-w-0 flex-col gap-8">
         {restored && (
           <Alert tone="info" title={t('draftRestored')} action={<Button size="sm" onClick={discardDraft}>{t('discardDraft')}</Button>} />
+        )}
+        {conflictDraft && (
+          <Alert
+            tone="warn"
+            title={t('draftConflict')}
+            action={
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={restoreConflictDraft}>{t('restoreConflictDraft')}</Button>
+                <Button size="sm" variant="ghost" onClick={discardConflictDraft}>{t('discardDraft')}</Button>
+              </div>
+            }
+          />
         )}
         {notStored && <Alert tone="warn" title={t('draftNotStored')} />}
 
