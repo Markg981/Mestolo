@@ -32,7 +32,7 @@ alter table public.recipe_slug_history enable row level security;
 revoke all on public.recipe_slug_history from anon, authenticated;
 
 create or replace function public.recipes_public_page_guard()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   v_new text;
 begin
@@ -57,6 +57,9 @@ begin
   return new;
 end;
 $$;
+
+-- Definer: il trigger scrive nello storico, su cui i client non hanno privilegi.
+revoke execute on function public.recipes_public_page_guard() from public, anon, authenticated;
 
 -- Slug corrente di una pagina pubblica attiva a partire da un vecchio slug (null se non applicabile)
 create or replace function public.resolve_public_recipe_slug(p_slug text)

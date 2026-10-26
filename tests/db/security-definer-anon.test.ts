@@ -46,7 +46,7 @@ d('security definer: privilegi EXECUTE', () => {
     const rows = await admin<{ proname: string }>(
       `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'public' and p.prosecdef and has_function_privilege('anon', p.oid, 'execute')
-         and p.proname <> all (array['get_public_recipe','list_public_recipe_slugs','count_public_recipes','public_cover_paths','is_public_cover_object','invite_preview','get_profile_card','get_public_recipe_nutrition'])`,
+         and p.proname <> all (array['get_public_recipe','list_public_recipe_slugs','count_public_recipes','public_cover_paths','is_public_cover_object','invite_preview','get_profile_card','get_public_recipe_nutrition','resolve_public_recipe_slug'])`,
     );
     expect(rows).toEqual([]);
   });
