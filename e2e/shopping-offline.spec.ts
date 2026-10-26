@@ -14,7 +14,8 @@ test.describe('lista della spesa offline', () => {
     // click, non check: dopo l'errore la spunta torna indietro e check() riproverebbe all'infinito.
     await page.getByRole('checkbox', { name: new RegExp(item) }).click();
 
-    await expect(page.getByRole('status').filter({ hasText: /offline/i })).toBeVisible();
+    // Non /offline/ generico: anche il banner globale "Sei offline" e' un role=status.
+    await expect(page.getByRole('status').filter({ hasText: /modifica non .* salvata/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Lista della spesa' })).toBeVisible();
     await expect(page.getByText(item)).toBeVisible();
 
