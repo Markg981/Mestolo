@@ -66,3 +66,28 @@ jobs:
       # stesso script provato in CI dal job backup-roundtrip
       - name: Restore and compare with manifest
         run: scripts/restore-verify-db.sh "$BACKUP_FILE" "$TARGET" work
+
+      # Decifra, estrae e riverifica ogni file dello storage contro storage-manifest.json (size + sha256).
+      # Backup storage assente = errore, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
+      - name: Download and verify storage backup
+        env:
+          BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
+            echo "::warning::BACKUP_SKIP_STORAGE=true: verifica del backup storage disattivata esplicitamente."
+            exit 0
+          fi
+          run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          mkdir -p dl-storage
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'storage-backup-*' --dir dl-storage || true
+          f="$(ls dl-storage/*/storage-*.tar.gpg 2>/dev/null | head -n1 || true)"
+          if [ -z "$f" ]; then
+            echo "::error::Nessun backup storage nell'ultimo run di backup.yml. Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
+            exit 1
+          fi
+          mkdir -p storage-restore
+          gpg --batch --pinentry-mode loopback --passphrase-fd 3 --output storage-restore.tar --decrypt "$f" 3<<<"$BACKUP_PASSPHRASE"
+          tar -xf storage-restore.tar -C storage-restore
+          node scripts/verify-storage-backup.mjs storage-restore

@@ -6,9 +6,13 @@ Il workflow `.github/workflows/backup.yml` gira ogni giorno alle 03:17 UTC (e a 
 
 - `public-<ts>.dump`: schema `public` (tabelle, funzioni, trigger, policy RLS) e dati, `pg_dump` 17 in formato custom.
 - `auth-<ts>.dump`: tabelle `auth.users` e `auth.identities` (schema + dati, incluso hash password: restano cifrate nel tar.gpg).
-- `manifest-<ts>.txt`: conteggi righe delle tabelle chiave al momento del backup, usati dalla verifica di restore.
+- `manifest-<ts>.txt`: righe `<tipo> <nome> <valore>` calcolate nello stesso snapshot dei dump: `count` (conteggio esatto righe), `hash` (md5 del contenuto ordinato di `recipes`, `profiles`, `categories`, `auth.users`) e `schema` (numero di policy, trigger, funzioni, indici, vincoli, tabelle). Usato dalla verifica di restore.
 - `storage-meta-<ts>.dump`: solo dati di `storage.buckets` e `storage.objects` (metadati, non i file).
-- `storage-<ts>.tar.gpg` (opzionale): i file dei bucket `recipe-images` (ricette e foto del diario) e `avatars`, scaricati (elenco modificabile con `BACKUP_BUCKETS`) con `scripts/backup-storage.mjs`. Richiede `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; se mancano il passo viene saltato.
+- `storage-<ts>.tar.gpg`: i file dei bucket `recipe-images` (ricette e foto del diario) e `avatars`, scaricati (elenco modificabile con `BACKUP_BUCKETS`) con `scripts/backup-storage.mjs`, piu `storage-manifest.json` (bucket, percorso, dimensione, sha256 di ogni file). Richiede `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; se mancano il workflow FALLISCE con `::error::`, salvo opt-out esplicito con la variabile di repository `BACKUP_SKIP_STORAGE=true` (Settings > Secrets and variables > Actions > Variables).
+
+## Snapshot consistente
+
+`scripts/backup-db.sh` apre una sessione `psql` dedicata con una transazione `REPEATABLE READ` e ne esporta lo snapshot (`pg_export_snapshot`); i tre `pg_dump` usano `--snapshot` e il manifest e calcolato nella stessa transazione. Dump e manifest descrivono quindi lo stesso istante, anche con scritture concorrenti. Funziona con la connessione diretta e con il session pooler (porta 5432); NON con il transaction pooler (6543), dove lo script fallisce con un errore esplicito.
 
 Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`) prima di ogni upload. Artifact con retention 30 giorni; copia opzionale su bucket S3 compatibile.
 
@@ -16,7 +20,7 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
 
 - Dell'schema `auth` sono salvate solo `users` e `identities` (bastano per le FK di `public` e per il login con email/OAuth). Sessioni, MFA e refresh token non sono inclusi: gli utenti dovranno riaccedere.
 - Ruoli e configurazione del progetto Supabase (secret, provider auth) non sono inclusi: lo schema e le policy vivono in `supabase/migrations`.
-- Le immagini sono salvate solo se i secret per lo storage sono presenti.
+- Le immagini sono salvate se i secret per lo storage sono presenti; altrimenti il workflow fallisce (opt-out: `BACKUP_SKIP_STORAGE=true`). Il conteggio dei file storage non e confrontato con `storage.objects`: sono due letture in istanti diversi.
 - Gli artifact di GitHub scadono: per una conservazione piu lunga configurare S3.
 
 ## Secret
@@ -25,7 +29,7 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
 | --- | --- | --- |
 | `SUPABASE_DB_URL` | si | URI del session pooler (porta 5432) con password. Se assente il workflow FALLISCE con `::error::` (nessun salto silenzioso) |
 | `BACKUP_PASSPHRASE` | si | Passphrase lunga e casuale; conservarla fuori da GitHub (password manager). Senza di essa i backup sono illeggibili |
-| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | no | Abilitano il backup delle immagini |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | si (salvo `BACKUP_SKIP_STORAGE=true`) | Abilitano il backup delle immagini; se mancano il workflow fallisce |
 | `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY`, `BACKUP_S3_ENDPOINT` | no | Copia su S3 compatibile (l'endpoint serve per R2, B2, ecc.) |
 
 ## Restore
@@ -54,7 +58,7 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
 
 ## Verifica automatica del restore
 
-Il workflow `.github/workflows/restore-verify.yml` gira ogni lunedi (04:47 UTC) e a mano. Scarica l'ultimo artifact di `backup.yml` riuscito, lo decifra con `BACKUP_PASSPHRASE`, lo ripristina in un Postgres 17 effimero (service container) e confronta i conteggi con `manifest-<ts>.txt` (tolleranza 2%, minimo 5 righe; `recipes`, `profiles`, `auth.users` devono essere > 0). Fallisce se manca il backup, il secret o i conteggi divergono.
+Il workflow `.github/workflows/restore-verify.yml` gira ogni lunedi (04:47 UTC) e a mano. Scarica l'ultimo artifact di `backup.yml` riuscito, lo decifra con `BACKUP_PASSPHRASE`, lo ripristina in un Postgres 17 effimero (service container) e confronta in modo ESATTO (nessuna tolleranza) conteggi, checksum del contenuto e conteggi di oggetti di schema con `manifest-<ts>.txt` (`recipes`, `profiles`, `auth.users` devono essere > 0). Poi scarica il backup storage, lo decifra e verifica ogni file (dimensione + sha256) contro `storage-manifest.json` con `scripts/verify-storage-backup.mjs`. Fallisce se manca il backup, il secret, il backup storage (salvo `BACKUP_SKIP_STORAGE=true`) o qualunque valore diverge.
 
 ## Provare un restore a mano
 

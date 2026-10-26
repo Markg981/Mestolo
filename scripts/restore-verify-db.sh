@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Verifica un backup di backup-db.sh: lo decifra, lo ripristina su un database vuoto e confronta
-# i conteggi con il manifest (tolleranza 2%, min 5 righe: i dump per schema non condividono lo snapshot).
+# con il manifest (calcolato nello stesso snapshot dei dump) in modo ESATTO: conteggi righe, checksum del
+# contenuto ordinato delle tabelle chiave, conteggi di oggetti di schema. Qualsiasi differenza fallisce.
 # I metadati storage si contano nel dump: le tabelle storage reali di Supabase non esistono nel target.
 # Uso: BACKUP_PASSPHRASE=... scripts/restore-verify-db.sh <backup.tar.gpg> <target_url> <work_dir>
 set -uo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib/backup-probes.sh
+. "$here/lib/backup-probes.sh"
 backup="$1"
 target="$2"
 work="$3"
@@ -56,23 +60,32 @@ dump_rows() {
   pg_restore --data-only --file=- "$work"/storage-meta-*.dump | awk -v t="COPY $1 " 'index($0, t) == 1 { on = 1; next } on && $0 == "\\." { on = 0 } on { n++ } END { print n + 0 }'
 }
 
+# Stesse sonde del backup sul database ripristinato; confronto con il manifest ESATTO, nessuna tolleranza
+psql "$target" -At -F ' ' -q -v ON_ERROR_STOP=1 -c "$(probe_sql no-storage)" > "$work/actual.txt" || { echo "::error::sonde sul database ripristinato fallite"; exit 1; }
+
 fail=0
-while read -r table expected; do
-  case "$table" in
-    storage.*) actual="$(dump_rows "$table")" ;;
-    *) actual="$(psql "$target" -At -c "select count(*) from $table" 2>/dev/null || echo ERR)" ;;
+checked=0
+while read -r line; do
+  [ -z "$line" ] && continue
+  # riga = "<tipo> <nome...> <valore>": il valore e' l'ultimo campo
+  expected="${line##* }"
+  name="${line% *}"
+  case "$name" in
+    "count storage."*) actual="$(dump_rows "${name#count }")" ;;
+    *) actual="$(awk -v k="$name" '{ v = $NF; $NF = ""; sub(/ $/, ""); if ($0 == k) print v }' "$work/actual.txt")" ;;
   esac
-  if [ "$actual" = "ERR" ]; then
-    echo "::error::$table: tabella non ripristinata (atteso $expected)"; fail=1; continue
+  checked=$((checked + 1))
+  if [ -z "$actual" ]; then
+    echo "::error::$name: non ripristinato (atteso $expected)"; fail=1; continue
   fi
-  echo "$table atteso=$expected ripristinato=$actual"
-  case "$table" in public.recipes|public.profiles|auth.users)
-    if [ "$actual" -le 0 ]; then echo "::error::$table vuota dopo il restore"; fail=1; fi ;;
+  if [ "$actual" = "$expected" ]; then
+    echo "OK   $name = $expected"
+  else
+    echo "::error::$name: ripristinato $actual, atteso dal manifest $expected"; fail=1
+  fi
+  case "$name" in "count public.recipes"|"count public.profiles"|"count auth.users")
+    if [ "$actual" -le 0 ] 2>/dev/null; then echo "::error::$name vuota dopo il restore"; fail=1; fi ;;
   esac
-  tol=$(( expected / 50 )); [ "$tol" -lt 5 ] && tol=5
-  # RESTORE_EXACT=1: sorgente ferma (test di round trip), i conteggi devono coincidere
-  [ "${RESTORE_EXACT:-0}" = 1 ] && tol=0
-  diff=$(( actual > expected ? actual - expected : expected - actual ))
-  if [ "$diff" -gt "$tol" ]; then echo "::error::$table: conteggio $actual diverso dal manifest $expected"; fail=1; fi
 done < <(cat "$work"/manifest-*.txt)
+if [ "$checked" -lt 18 ]; then echo "::error::manifest con soli $checked controlli (attesi almeno 18)"; fail=1; fi
 exit $fail
