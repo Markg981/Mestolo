@@ -265,24 +265,11 @@ Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambien
 
 **CI (GitHub Actions)**
 
-Il workflow `.github/workflows/e2e.yml` gira su push a `main`, pull request, ogni notte (cron 04:00 UTC) e a mano (*workflow_dispatch*). Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY` (valori del progetto di staging, mai di produzione). **Se mancano il job fallisce** con un `::error::` esplicito. Unica eccezione: PR da fork o da Dependabot, dove GitHub non espone i secret per design; lì il job emette un warning e non esegue i test, quindi un maintainer deve rilanciare gli E2E (workflow_dispatch su un branch del repo) prima del merge. Il report HTML è caricato come artifact `playwright-report`.
+Il workflow `.github/workflows/e2e.yml` gira su push a `main`, ogni notte (cron 04:00 UTC) e a mano (*workflow_dispatch*), **non sulle pull request**: lo staging è condiviso e accetta un job alla volta, quindi con più PR aperte insieme GitHub cancellava i job in coda e le PR risultavano rosse senza aver eseguito nulla. Per verificare una PR prima del merge (auth, flussi critici) lancialo a mano sul suo branch: `gh workflow run e2e.yml --ref <branch>`. Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY` (valori del progetto di staging, mai di produzione). **Se mancano il job fallisce** con un `::error::` esplicito. Il report HTML è caricato come artifact `playwright-report`.
 
 Le migrazioni dello staging non sono applicate dalla CI (evita modifiche allo schema non volute): prima di mergere migrazioni nuove esegui `npx supabase link --project-ref <ref-staging> && npx supabase db push`.
 
-**Check obbligatorio.** Il job si chiama `Playwright (Supabase staging)` (workflow `E2E`): è il nome del required status check, non rinominarlo. Per renderlo obbligatorio su `main` (decisione del owner; da eseguire a mano, adattando gli altri check richiesti):
-
-```bash
-gh api -X PUT repos/Markg981/mestolo/branches/main/protection --input - <<'EOF'
-{
-  "required_status_checks": { "strict": true, "contexts": ["Playwright (Supabase staging)"] },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
-  "restrictions": null
-}
-EOF
-```
-
-Attenzione: questo comando sovrascrive la protezione esistente; controllala prima con `gh api repos/Markg981/mestolo/branches/main/protection`. In alternativa usa *Settings → Branches → Branch protection rules*.
+**Niente check obbligatorio sulle PR.** Il job `Playwright (Supabase staging)` non gira sulle pull request, quindi non va inserito tra i required status check di `main`: bloccherebbe ogni merge in attesa di un check che non arriva mai. Una regressione E2E si vede sul run di `main` dopo il merge o su quello notturno.
 
 ---
 
