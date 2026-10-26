@@ -91,6 +91,28 @@ d('consume_ai_quota', () => {
     await expect(consume(alice, 'text', 1000, 'anon')).rejects.toThrow(/permission denied/);
   });
 
+  it('refund_ai_quota: non eseguibile da authenticated e anon', async () => {
+    const sql = 'select public.refund_ai_quota($1, $2, $3) as ok';
+    await expect(asRole('authenticated', alice, sql, [alice, 'text', 'test'])).rejects.toThrow(/permission denied/);
+    await expect(asRole('anon', null, sql, [alice, 'text', 'test'])).rejects.toThrow(/permission denied/);
+  });
+
+  it('refund_ai_quota (service role) rimuove una sola riga, solo dell\'utente indicato', async () => {
+    const uid = await createUser(`quota_r_${Math.random().toString(36).slice(2, 8)}`);
+    expect(await consume(uid, 'image', 5)).toBe(true);
+    expect(await consume(uid, 'image', 5)).toBe(true);
+    expect(await consume(bob, 'image', 5)).toBe(true);
+    const refund = async (u: string | null, a = 'test') =>
+      (await asRole<{ ok: boolean }>('service_role', null, 'select public.refund_ai_quota($1, $2, $3) as ok', [u, 'image', a]))[0].ok;
+    expect(await refund(uid, 'altra_azione')).toBe(false);
+    expect(await refund(uid)).toBe(true);
+    expect(await usedCount(uid, 'image')).toBe(1);
+    expect(await usedCount(bob, 'image')).toBe(1);
+    expect(await refund(uid)).toBe(true);
+    expect(await refund(uid)).toBe(false);
+    await expect(refund(null)).rejects.toThrow();
+  });
+
   it('richiede un utente e rifiuta gruppi non validi', async () => {
     await expect(consume(null, 'text', 5)).rejects.toThrow();
     await expect(consume(alice, 'bogus', 5)).rejects.toThrow();

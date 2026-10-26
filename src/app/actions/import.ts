@@ -64,7 +64,7 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
         const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
         draft = draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' });
       } catch (e) {
-        await refundQuota(resolved, 'text', 'extract_text');
+        await refundQuota(user.id, resolved, 'text', 'extract_text');
         throw e;
       }
       await recordUsage(user.id, 'text', 'extract_text', resolved);
@@ -133,7 +133,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
       });
       draft = draftFromExtraction(raw, { type: 'photo', method: 'ai' });
     } catch (e) {
-      await refundQuota(resolved, 'vision', 'extract_photo');
+      await refundQuota(user.id, resolved, 'vision', 'extract_photo');
       throw e;
     }
     await recordUsage(user.id, 'vision', 'extract_photo', resolved);
@@ -182,7 +182,7 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
     const data = new Uint8Array(await file.arrayBuffer());
     const resolved = await resolveProvider(user.id, 'audio', 'text', 'transcribe');
     if (!resolved.provider.transcribe) {
-      await refundQuota(resolved, 'text', 'transcribe');
+      await refundQuota(user.id, resolved, 'text', 'transcribe');
       return fail('ai_unsupported');
     }
     let text: string;
@@ -193,11 +193,11 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
         filename: /wav|wave/i.test(file.type) ? 'audio.wav' : 'audio.m4a',
       });
     } catch (e) {
-      await refundQuota(resolved, 'text', 'transcribe');
+      await refundQuota(user.id, resolved, 'text', 'transcribe');
       throw e;
     }
     if (!text) {
-      await refundQuota(resolved, 'text', 'transcribe');
+      await refundQuota(user.id, resolved, 'text', 'transcribe');
       return fail('ai_bad_output');
     }
     await recordUsage(user.id, 'text', 'transcribe', resolved);

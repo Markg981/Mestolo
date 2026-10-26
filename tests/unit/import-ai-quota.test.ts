@@ -70,7 +70,7 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
     const r = await importFromPhotos(photoForm());
     expect(r.ok).toBe(false);
     expect(mocks.refundQuota).toHaveBeenCalledTimes(1);
-    expect(mocks.refundQuota.mock.calls[0].slice(1)).toEqual(['vision', 'extract_photo']);
+    expect(mocks.refundQuota.mock.calls[0].slice(2)).toEqual(['vision', 'extract_photo']);
     expect(mocks.recordUsage).not.toHaveBeenCalled();
   });
 
@@ -96,7 +96,7 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
     mocks.completeJson.mockRejectedValue(new Error('boom'));
     const r = await importFromText('una ricetta abbastanza lunga', true);
     expect(r.ok).toBe(false);
-    expect(mocks.refundQuota.mock.calls[0].slice(1)).toEqual(['text', 'extract_text']);
+    expect(mocks.refundQuota.mock.calls[0].slice(2)).toEqual(['text', 'extract_text']);
   });
 
   it('audio: rate limit prima della quota; provider in errore -> rimborso', async () => {
@@ -106,7 +106,7 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
 
     mocks.transcribe.mockRejectedValue(new Error('boom'));
     expect((await transcribeVideoAudio(audioForm())).ok).toBe(false);
-    expect(mocks.refundQuota.mock.calls[0].slice(1)).toEqual(['text', 'transcribe']);
+    expect(mocks.refundQuota.mock.calls[0].slice(2)).toEqual(['text', 'transcribe']);
   });
 
   it('audio: trascrizione vuota -> rimborso', async () => {
