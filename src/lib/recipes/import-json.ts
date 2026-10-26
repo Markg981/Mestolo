@@ -80,7 +80,7 @@ export function draftFromExportedRecipe(r: Obj, categorySlug: string | null): Im
   const cat = slug ? { slug, confidence: 1 } : suggestCategory({ title, description, tags: t, ingredients: ing.items });
 
   const warnings: ImportDraft['warnings'] = [];
-  if (ing.dropped || st.dropped) warnings.push({ code: 'partial_content' });
+  if (ing.dropped || st.dropped) warnings.push({ code: 'invalid_items_dropped' });
   if (!ing.items.length) warnings.push({ code: 'no_ingredients' });
   if (!st.items.length) warnings.push({ code: 'no_steps' });
 

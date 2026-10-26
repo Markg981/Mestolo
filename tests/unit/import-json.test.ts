@@ -57,7 +57,7 @@ describe('import of Mestolo JSON exports', () => {
     if (!res.ok) return;
     const d = res.drafts[0];
     expect(d.content.ingredients.map((i) => i.name)).toEqual(['Farina']);
-    expect(d.warnings.map((w) => w.code)).toEqual(['partial_content', 'no_steps']);
+    expect(d.warnings.map((w) => w.code)).toEqual(['invalid_items_dropped', 'no_steps']);
     expect(d.source.type).toBe('text');
   });
 

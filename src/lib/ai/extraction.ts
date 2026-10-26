@@ -5,6 +5,31 @@ import type { FieldFlags, ImportDraft, ImportWarning, Ingredient, Step } from '@
 
 const num = z.number().nonnegative().max(100000).nullable().catch(null);
 
+const ingredientSchema = z.object({
+  name: z.string().max(300),
+  quantity: z.number().positive().max(100000).nullable().catch(null),
+  unit: z.string().max(60).nullable().catch(null),
+  note: z.string().max(300).nullable().optional().catch(null),
+  section: z.string().max(100).nullable().optional().catch(null),
+  confidence: z.enum(['high', 'low']).catch('low'),
+});
+
+const stepSchema = z.object({
+  text: z.string().max(4000),
+  section: z.string().max(100).nullable().optional().catch(null),
+  confidence: z.enum(['high', 'low']).catch('low'),
+});
+
+/** Keeps the valid items of an array and counts the dropped ones. */
+function parseItems<T>(schema: z.ZodType<T>, items: unknown[]): { valid: T[]; dropped: number } {
+  const valid: T[] = [];
+  for (const item of items) {
+    const r = schema.safeParse(item);
+    if (r.success) valid.push(r.data);
+  }
+  return { valid, dropped: items.length - valid.length };
+}
+
 export const extractionSchema = z.object({
   language: z.string().max(10).nullable().catch(null),
   title: z.string().max(300).nullable().catch(null),
@@ -13,29 +38,9 @@ export const extractionSchema = z.object({
   prep_minutes: num,
   cook_minutes: num,
   total_minutes: num,
-  ingredients: z
-    .array(
-      z.object({
-        name: z.string().max(300),
-        quantity: z.number().positive().max(100000).nullable().catch(null),
-        unit: z.string().max(60).nullable().catch(null),
-        note: z.string().max(300).nullable().optional().catch(null),
-        section: z.string().max(100).nullable().optional().catch(null),
-        confidence: z.enum(['high', 'low']).catch('low'),
-      }),
-    )
-    .max(200)
-    .catch([]),
-  steps: z
-    .array(
-      z.object({
-        text: z.string().max(4000),
-        section: z.string().max(100).nullable().optional().catch(null),
-        confidence: z.enum(['high', 'low']).catch('low'),
-      }),
-    )
-    .max(200)
-    .catch([]),
+  // Items are validated one by one in draftFromExtraction so a single bad item doesn't drop the whole array.
+  ingredients: z.array(z.unknown()).max(200).catch([]),
+  steps: z.array(z.unknown()).max(200).catch([]),
   uncertain: z.array(z.string().max(60)).max(50).catch([]),
   warnings: z
     .array(
@@ -53,7 +58,9 @@ export const extractionSchema = z.object({
 export function draftFromExtraction(raw: unknown, source: ImportDraft['source']): ImportDraft {
   const x = extractionSchema.parse(raw);
   const uncertain = new Set(x.uncertain);
-  const ingredients: Ingredient[] = x.ingredients
+  const parsedIngredients = parseItems(ingredientSchema, x.ingredients);
+  const parsedSteps = parseItems(stepSchema, x.steps);
+  const ingredients: Ingredient[] = parsedIngredients.valid
     .filter((i) => i.name.trim())
     .map((i) => {
       const unitKey = normalizeUnit(i.unit);
@@ -69,7 +76,7 @@ export function draftFromExtraction(raw: unknown, source: ImportDraft['source'])
         flags: flags.length ? flags : undefined,
       };
     });
-  const steps: Step[] = x.steps
+  const steps: Step[] = parsedSteps.valid
     .filter((s) => s.text.trim())
     .map((s) => ({ text: s.text.trim(), section: s.section?.trim() || null, flags: s.confidence === 'low' ? ['low_confidence'] : undefined }));
 
@@ -87,6 +94,7 @@ export function draftFromExtraction(raw: unknown, source: ImportDraft['source'])
   if (!steps.length) field_flags.steps = ['missing'];
 
   const warnings: ImportWarning[] = x.warnings.map((w) => ({ code: w.code, page: w.page ?? undefined, message: w.message || undefined }));
+  if (parsedIngredients.dropped || parsedSteps.dropped) warnings.push({ code: 'invalid_items_dropped' });
   if (!ingredients.length) warnings.push({ code: 'no_ingredients' });
   if (!steps.length) warnings.push({ code: 'no_steps' });
 
