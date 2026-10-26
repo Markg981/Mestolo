@@ -15,7 +15,7 @@ function authorized(request: Request): boolean {
 }
 
 /**
- * Vercel Cron (vercel.json): rimuove dallo Storage i file orfani di recipe-images
+ * Vercel Cron (vercel.json): rimuove dallo Storage i file orfani di recipe-images e avatars
  * e pulisce i dati di quota vecchi. Vercel invia `Authorization: Bearer $CRON_SECRET`.
  */
 export async function GET(request: Request) {
@@ -25,15 +25,18 @@ export async function GET(request: Request) {
   const { data: usage, error: usageError } = await admin.rpc('cleanup_old_usage', { p_days: 90 });
   if (usageError) return NextResponse.json({ error: 'cleanup_failed' }, { status: 500 });
 
-  const { data: orphans, error: listError } = await admin.rpc('list_orphan_images', { p_limit: BATCH });
-  if (listError) return NextResponse.json({ error: 'list_failed', usage }, { status: 500 });
-  const paths = ((orphans as { name: string }[] | null) ?? []).map((o) => o.name);
-
   let removed = 0;
-  if (paths.length > 0) {
-    const { error: removeError } = await admin.storage.from('recipe-images').remove(paths);
+  for (const { bucket, rpcName } of [
+    { bucket: 'recipe-images', rpcName: 'list_orphan_images' },
+    { bucket: 'avatars', rpcName: 'list_orphan_avatars' },
+  ]) {
+    const { data: orphans, error: listError } = await admin.rpc(rpcName, { p_limit: BATCH });
+    if (listError) return NextResponse.json({ error: 'list_failed', usage }, { status: 500 });
+    const paths = ((orphans as { name: string }[] | null) ?? []).map((o) => o.name);
+    if (paths.length === 0) continue;
+    const { error: removeError } = await admin.storage.from(bucket).remove(paths);
     if (removeError) return NextResponse.json({ error: 'remove_failed', usage }, { status: 500 });
-    removed = paths.length;
+    removed += paths.length;
   }
   return NextResponse.json({ ok: true, usage, orphansRemoved: removed });
 }
