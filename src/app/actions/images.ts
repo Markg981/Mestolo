@@ -11,6 +11,7 @@ import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
+import { withRefund } from '@/lib/ai/refund';
 import { imagePrompt } from '@/lib/ai/prompts';
 import { AiError } from '@/lib/ai/providers';
 import type { Ingredient } from '@/lib/recipes/types';
@@ -143,16 +144,18 @@ export async function generateRecipeImage(recipeId: string, confirmed: boolean):
     if (!r) return fail('not_found');
     await enforceRateLimit('ai_image', user.id);
     const resolved = await resolveProvider(user.id, 'image', 'image', 'generate');
-    if (!resolved.provider.generateImage) throw new AiError('unsupported');
-    const img = await resolved.provider.generateImage(imagePrompt(r.title, r.description, ((r.ingredients as Ingredient[]) ?? []).map((i) => i.name)));
-    await recordUsage(user.id, 'image', 'generate', resolved);
-    return await storeImage({
-      userId: user.id,
-      recipeId,
-      buffer: Buffer.from(img.base64, 'base64'),
-      kind: 'ai_generated',
-      alt: r.title,
-      attribution: resolved.providerName,
+    return await withRefund(user.id, resolved, 'image', 'generate', async () => {
+      if (!resolved.provider.generateImage) throw new AiError('unsupported');
+      const img = await resolved.provider.generateImage(imagePrompt(r.title, r.description, ((r.ingredients as Ingredient[]) ?? []).map((i) => i.name)));
+      await recordUsage(user.id, 'image', 'generate', resolved);
+      return await storeImage({
+        userId: user.id,
+        recipeId,
+        buffer: Buffer.from(img.base64, 'base64'),
+        kind: 'ai_generated',
+        alt: r.title,
+        attribution: resolved.providerName,
+      });
     });
   } catch (e) {
     if (e instanceof ImageValidationError) return fail('ai_bad_output');
