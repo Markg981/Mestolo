@@ -53,11 +53,15 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          # Run dell'artifact db-backup-* piu' recente: un run puo' avere il dump ma fallire dopo (es. upload S3)
+          run_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | "\(.created_at) \(.workflow_run.id)"' \
+            | sort -r | head -n1 | cut -d' ' -f2)"
           if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
-            echo "::error::Nessun run riuscito di backup.yml: nessun backup da verificare."
+            echo "::error::Nessun artifact db-backup-*: nessun backup da verificare."
             exit 1
           fi
+          echo "BACKUP_RUN_ID=$run_id" >> "$GITHUB_ENV"
           mkdir -p dl
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'db-backup-*' --dir dl
           echo "BACKUP_FILE=$(ls dl/*/backup-*.tar.gpg | head -n1)" >> "$GITHUB_ENV"
@@ -79,9 +83,8 @@ jobs:
             echo "::warning::BACKUP_SKIP_STORAGE=true: verifica del backup storage disattivata esplicitamente."
             exit 0
           fi
-          run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
           mkdir -p dl-storage
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'storage-backup-*' --dir dl-storage || true
+          gh run download "$BACKUP_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'storage-backup-*' --dir dl-storage || true
           f="$(ls dl-storage/*/storage-*.tar.gpg 2>/dev/null | head -n1 || true)"
           if [ -z "$f" ]; then
             echo "::error::Nessun backup storage nell'ultimo run di backup.yml. Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
