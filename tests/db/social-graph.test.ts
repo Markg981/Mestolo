@@ -70,7 +70,12 @@ d('Social graph functions', () => {
     expect(await friends(a, a, b)).toBe(true);
     expect(await friends(b, a, b)).toBe(true);
     expect(await blocked(a, a, e)).toBe(true);
-    expect(await blocked(e, a, e)).toBe(true);
+    expect(await blocked(e, a, e)).toBe(false); // il bloccato non deve scoprirlo
+  });
+
+  it('RLS still hides content from the blocked user', async () => {
+    const [{ id }] = await as<{ id: string }>(a, "insert into public.recipes (owner_id, title, visibility) values ($1, 'Blk', 'public') returning id", [a]);
+    expect(await as(e, 'select id from public.recipes where id = $1', [id])).toHaveLength(0);
   });
 
   it('a third user cannot probe the relationship between two others', async () => {

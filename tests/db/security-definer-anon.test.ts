@@ -1,4 +1,4 @@
-/** Hardening SECURITY DEFINER (migration 20261030000003): anon non esegue le funzioni interne. */
+/** Hardening SECURITY DEFINER (migration 20261025033000): anon non esegue le funzioni interne. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

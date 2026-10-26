@@ -102,13 +102,24 @@ describe('schema.org Recipe extraction', () => {
 });
 
 describe('performance on large pages without JSON-LD', () => {
-  it('extracts text in linear time from a ~3 MB page of <div> elements', () => {
-    const html = `<html><body>${'<div>x</div>'.repeat(250_000)}</body></html>`;
-    expect(html.length).toBeGreaterThan(2_500_000);
-    const t0 = performance.now();
-    const res = recipeFromHtml(html, 'https://example.com/r');
-    const elapsed = performance.now() - t0;
-    expect(res.pageText.length).toBeGreaterThan(0);
-    expect(elapsed).toBeLessThan(2000);
+  it('extracts text in linear time from a large page of <div> elements', () => {
+    const page = (n: number) => `<html><body>${'<div>x</div>'.repeat(n)}</body></html>`;
+    const time = (html: string) => {
+      const t0 = performance.now();
+      const res = recipeFromHtml(html, 'https://example.com/r');
+      expect(res.pageText.length).toBeGreaterThan(0);
+      return performance.now() - t0;
+    };
+    const small = page(20_000);
+    const large = page(80_000);
+    expect(large.length).toBeGreaterThan(800_000);
+    time(small); // warm-up (JIT)
+    // Best of 3 per size, to reduce noise from slow/shared CI runners.
+    const tSmall = Math.min(time(small), time(small), time(small));
+    const tLarge = Math.min(time(large), time(large), time(large));
+    // 4x the input: linear ~4x, quadratic ~16x. Threshold sits well in between.
+    expect(tLarge / Math.max(tSmall, 1)).toBeLessThan(9);
+    // Generous backstop against catastrophic regressions.
+    expect(tLarge).toBeLessThan(10_000);
   });
 });

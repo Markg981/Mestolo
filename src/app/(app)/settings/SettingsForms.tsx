@@ -12,6 +12,7 @@ import { createCategory, deleteCategory } from '@/app/actions/organize';
 import { LiveMessage, Modal } from '@/components/client-ui';
 import { Alert, Button, Card, Field, Input, Select, Textarea, buttonClass } from '@/components/ui';
 import type { Profile } from '@/lib/supabase/server';
+import { MAX_UPLOAD_BYTES } from '@/lib/images/limits';
 import { DIETS } from '@/lib/recipes/diets';
 
 function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string; hasImage: boolean }) {
@@ -43,6 +44,10 @@ function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string
               const file = e.target.files?.[0];
               e.target.value = '';
               if (!file) return;
+              if (file.size > MAX_UPLOAD_BYTES) {
+                setMsg({ text: te('image_too_large'), tone: 'error' });
+                return;
+              }
               const fd = new FormData();
               fd.set('file', file);
               run(() => uploadAvatar(fd));
