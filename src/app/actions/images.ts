@@ -7,6 +7,7 @@ import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
+import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { safeFetch } from '@/lib/import/safe-fetch';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
@@ -29,6 +30,7 @@ async function storeImage(opts: {
   const supabase = await createClient();
   const { data: recipe } = await supabase.from('recipes').select('id').eq('id', opts.recipeId).eq('owner_id', opts.userId).maybeSingle();
   if (!recipe) return fail('not_found');
+  if (await userOverImageQuota(supabase, opts.userId)) return fail('storage_quota_exceeded');
 
   const processed = await processRecipeImage(opts.buffer);
   const name = randomUUID();

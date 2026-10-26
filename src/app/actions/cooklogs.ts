@@ -7,6 +7,7 @@ import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
+import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { cookPhotoPath, parseCookLogInput } from '@/lib/cooking/cook-log';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
@@ -41,6 +42,7 @@ export async function createCookLog(formData: FormData): Promise<ActionResult<{ 
     if (hasFile) {
       await enforceRateLimit('upload_image', user.id);
       await enforceRateLimit('upload_image_day', user.id);
+      if (await userOverImageQuota(supabase, user.id)) return fail('storage_quota_exceeded');
       const processed = await processRecipeImage(Buffer.from(await file.arrayBuffer()));
       if (processed.full.length > MAX_PROCESSED_BYTES) return fail('image_too_large');
       photoPath = cookPhotoPath(user.id, randomUUID());
