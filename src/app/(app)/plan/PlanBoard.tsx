@@ -133,7 +133,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
                 <div key={slot} data-cell-date={d.iso} data-cell-slot={slot} className={cx('flex flex-col gap-1 rounded-lg', drag && drag.overCell === `${d.iso}|${slot}` && 'bg-basil/10 outline outline-2 outline-basil')}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-muted">{t(`slots.${slot}`)}</span>
-                    <button type="button" className="inline-flex size-9 items-center justify-center rounded-full hover:bg-sunk" aria-label={t('addTo', { slot: t(`slots.${slot}`), day: d.label })} onClick={() => setTarget({ date: d.iso, slot })}>
+                    <button type="button" className="inline-flex size-11 items-center justify-center rounded-full hover:bg-sunk" aria-label={t('addTo', { slot: t(`slots.${slot}`), day: d.label })} onClick={() => setTarget({ date: d.iso, slot })}>
                       <Plus aria-hidden className="size-4" />
                     </button>
                   </div>
@@ -141,7 +141,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
                     <div key={e.id} data-entry={e.id} className={cx('flex items-center gap-1 rounded-lg bg-saffron-wash px-2 py-1', drag?.id === e.id && 'opacity-40', drag && drag.id !== e.id && drag.overEntry === e.id && 'ring-2 ring-basil')}>
                       <button
                         type="button"
-                        className="inline-flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-full hover:bg-saffron/40 active:cursor-grabbing"
+                        className="inline-flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-full hover:bg-saffron/40 active:cursor-grabbing"
                         aria-label={t('dragHandle', { title: e.title })}
                         onPointerDown={(ev) => onPointerDown(ev, e)}
                         onPointerMove={onPointerMove}
@@ -158,10 +158,10 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
                         <span className="min-w-0 flex-1 line-clamp-2 text-sm">{e.title}</span>
                       )}
                       {e.servings && <span className="text-xs text-muted">×{Number(e.servings)}</span>}
-                      <button type="button" className="inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('moveEntry', { title: e.title })} onClick={() => openMove(e)}>
+                      <button type="button" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('moveEntry', { title: e.title })} onClick={() => openMove(e)}>
                         <MoveRight aria-hidden className="size-4" />
                       </button>
-                      <button type="button" className="inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('remove', { title: e.title })} onClick={() => start(async () => { await deletePlanEntry(e.id); router.refresh(); })}>
+                      <button type="button" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('remove', { title: e.title })} onClick={() => start(async () => { await deletePlanEntry(e.id); router.refresh(); })}>
                         <X aria-hidden className="size-4" />
                       </button>
                     </div>

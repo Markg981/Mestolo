@@ -116,7 +116,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
       <Button
         size="sm"
         variant="ghost"
-        className="no-print size-10 shrink-0 px-0"
+        className="no-print size-11 shrink-0 px-0"
         aria-label={t('removeItem', { name: i.name })}
         onClick={() =>
           start(async () => {
