@@ -9,7 +9,7 @@ import { resolveProvider, recordUsage, type KeySource } from '@/lib/ai/service';
 import { analyzeSystem, analyzeUserPrompt, substituteSystem, substituteUserPrompt, translateSystem } from '@/lib/ai/prompts';
 import { analysisSchema, applySuggestions, type Analysis } from '@/lib/recipes/suggestions';
 import { findBuiltinSubstitutions, substitutionResultSchema, type SubstitutionResult } from '@/lib/recipes/substitutions';
-import { buildTranslatable, isTranslationFresh, mergeTranslation, translatedPayloadSchema, TranslationShapeError } from '@/lib/recipes/translation';
+import { buildTranslatable, guardTranslatedNumbers, isTranslationFresh, mergeTranslation, translatedPayloadSchema, TranslationShapeError } from '@/lib/recipes/translation';
 import { isLocale } from '@/i18n/config';
 import type { RecipeContent, RecipeRow } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
@@ -218,7 +218,7 @@ export async function translateRecipe(recipeId: string, target: string): Promise
     }
     const { error } = await createAdminClient()
       .from('recipe_translations')
-      .upsert({ recipe_id: recipeId, locale: target, content: parsed.data, source_hash: r.content_hash, provider: resolved.provider.id, created_at: new Date().toISOString() });
+      .upsert({ recipe_id: recipeId, locale: target, content: guardTranslatedNumbers(r, parsed.data), source_hash: r.content_hash, provider: resolved.provider.id, created_at: new Date().toISOString() });
     if (error) return dbFailure(error, 'translateRecipe.store');
     revalidatePath(`/recipes/${recipeId}`);
     return ok({ cached: false });

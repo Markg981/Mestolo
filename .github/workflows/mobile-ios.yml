@@ -53,9 +53,9 @@ jobs:
             *) echo "::error::CAP_SERVER_URL deve essere un indirizzo https:// per le build da store."; exit 1 ;;
           esac
 
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -135,7 +135,7 @@ jobs:
             | tail -n 40
           ls -l "$RUNNER_TEMP/export"
 
-      - uses: actions/upload-artifact@v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Mestolo-ios-build-${{ github.run_number }}
           path: ${{ runner.temp }}/export/*.ipa

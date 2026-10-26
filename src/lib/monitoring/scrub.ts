@@ -39,6 +39,36 @@ export function scrubValue(value: unknown, depth = 0): unknown {
 
 type Loose = Record<string, unknown>;
 
+/** Removes query string and fragment from every URL found in a text (PostgREST filters like `username=eq.x`). */
+function stripQuery(s: string): string {
+  return redactText(s.replace(/\?[^\s#]*/g, '').replace(/#\S*/g, ''));
+}
+
+/** Span data keys that carry a URL or a query string. */
+const SPAN_URL_KEY = /^(url|url\.full|http\.url|http\.query|url\.query|url\.fragment|http\.fragment|server\.address\.query)$/;
+
+/** Scrubs one span of a transaction: URLs lose their query string, any other value is redacted. */
+export function scrubSpan<T extends object>(span: T): T {
+  const sp = { ...(span as Loose) };
+  // Static spans use description/data, streamed spans use name/attributes.
+  for (const key of ['description', 'name']) {
+    if (typeof sp[key] === 'string') sp[key] = stripQuery(sp[key]);
+  }
+  for (const key of ['data', 'attributes']) {
+    const data = sp[key] as Loose | undefined;
+    if (!data || typeof data !== 'object') continue;
+    const out: Loose = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (/query$|fragment$/.test(k) && k !== 'url') out[k] = REDACTED;
+      else if (SPAN_URL_KEY.test(k) || (typeof v === 'string' && /^https?:\/\/|^\//.test(v))) {
+        out[k] = typeof v === 'string' ? stripQuery(v) : scrubValue(v);
+      } else out[k] = scrubValue(v);
+    }
+    sp[key] = out;
+  }
+  return sp as T;
+}
+
 /** Scrubs a Sentry event (beforeSend): keeps stack frames, drops personal data. Returns a copy. */
 export function scrubEvent<T extends object>(event: T): T {
   const e = { ...(event as Loose) };
@@ -56,6 +86,7 @@ export function scrubEvent<T extends object>(event: T): T {
   }
   const user = e.user as Loose | undefined;
   if (user) e.user = typeof user.id === 'string' ? { id: user.id } : undefined;
+  if (Array.isArray(e.spans)) e.spans = e.spans.map((sp) => scrubSpan(sp as object));
   for (const key of ['message', 'transaction', 'logentry', 'extra', 'contexts', 'tags', 'breadcrumbs', 'exception', 'threads']) {
     if (e[key] !== undefined) e[key] = scrubValue(e[key]);
   }
@@ -81,6 +112,7 @@ export function sentryOptions(dsn: string | undefined) {
     tracesSampleRate: Number.isFinite(rate) && rate >= 0 && rate <= 1 ? rate : 0.05,
     beforeSend: <T extends object>(e: T): T => scrubEvent(e),
     beforeSendTransaction: <T extends object>(e: T): T => scrubEvent(e),
+    beforeSendSpan: <T extends object>(sp: T): T => scrubSpan(sp),
     beforeBreadcrumb: <T extends object>(b: T): T => scrubBreadcrumb(b),
   };
 }

@@ -33,6 +33,7 @@ export type ErrorCode =
   | 'image_invalid'
   | 'image_too_large'
   | 'too_many_files'
+  | 'storage_quota_exceeded'
   | 'auth_invalid'
   | 'auth_email_taken'
   | 'auth_weak_password'
@@ -40,7 +41,8 @@ export type ErrorCode =
   | 'auth_not_confirmed'
   | 'username_taken'
   | 'translation_failed'
-  | 'already_exists';
+  | 'already_exists'
+  | 'conflict';
 
 export type ActionResult<T = undefined> = ({ ok: true } & (T extends undefined ? { data?: undefined } : { data: T })) | { ok: false; error: ErrorCode; detail?: string };
 

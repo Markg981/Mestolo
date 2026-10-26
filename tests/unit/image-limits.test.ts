@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
+import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType, isOverImageQuota } from '@/lib/images/limits';
+import { userOverImageQuota } from '@/lib/images/quota';
 import { readFileSync } from 'node:fs';
 
 describe('image upload limits', () => {
@@ -11,8 +12,32 @@ describe('image upload limits', () => {
     expect(isAllowedUploadType('')).toBe(false);
   });
 
-  it('keeps the processed size within the upload size', () => {
-    expect(MAX_PROCESSED_BYTES).toBeLessThanOrEqual(MAX_UPLOAD_BYTES);
+  it('keeps the upload size below the server action body limit and Vercel 4.5 MB', () => {
+    const cfg = readFileSync('next.config.ts', 'utf8');
+    const m = /bodySizeLimit:\s*'(\d+)mb'/.exec(cfg);
+    expect(m).not.toBeNull();
+    const bodyLimit = Number(m![1]) * 1024 * 1024;
+    expect(MAX_UPLOAD_BYTES).toBeLessThan(bodyLimit);
+    expect(bodyLimit).toBeLessThanOrEqual(4.5 * 1024 * 1024);
+  });
+
+  it('enforces the per-user stored image cap', () => {
+    expect(isOverImageQuota(MAX_IMAGES_PER_USER - 1)).toBe(false);
+    expect(isOverImageQuota(MAX_IMAGES_PER_USER)).toBe(true);
+    expect(MAX_IMAGES_PER_USER).toBeGreaterThan(150);
+  });
+
+  it('counts recipe images and cook-log photos against the cap', async () => {
+    const q = (count: number) => {
+      const b: Record<string, unknown> = { then: (res: (v: unknown) => unknown) => res({ count }) };
+      b.select = () => b;
+      b.eq = () => b;
+      b.not = () => b;
+      return b;
+    };
+    const client = (a: number, b: number) => ({ from: (t: string) => q(t === 'recipe_images' ? a : b) }) as never;
+    expect(await userOverImageQuota(client(10, 5), 'u')).toBe(false);
+    expect(await userOverImageQuota(client(MAX_IMAGES_PER_USER - 5, 5), 'u')).toBe(true);
   });
 
   it('migration drops client write policies and sets bucket limits matching the code', () => {

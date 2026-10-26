@@ -240,16 +240,45 @@ function microdataRecipe($: cheerio.CheerioAPI): Obj | null {
   };
 }
 
+interface DomNode {
+  type: string;
+  name?: string;
+  data?: string;
+  children?: DomNode[];
+}
+
+const BLOCK_TAGS = new Set(['p', 'li', 'h1', 'h2', 'h3', 'h4', 'div', 'tr']);
+
+/** Single linear DOM walk: text nodes, '\n' for <br> and after block elements. */
+function collectText(roots: DomNode[]): string {
+  const out: string[] = [];
+  // Iterative (explicit stack): deep nesting must not overflow the call stack.
+  const stack: Array<DomNode | '\n'> = [];
+  for (let i = roots.length - 1; i >= 0; i--) stack.push(roots[i]);
+  while (stack.length) {
+    const n = stack.pop()!;
+    if (n === '\n') {
+      out.push('\n');
+    } else if (n.type === 'text') {
+      out.push(n.data ?? '');
+    } else if (n.type === 'tag') {
+      if (n.name === 'br') {
+        out.push('\n');
+        continue;
+      }
+      if (BLOCK_TAGS.has(n.name ?? '')) stack.push('\n');
+      const kids = n.children ?? [];
+      for (let i = kids.length - 1; i >= 0; i--) stack.push(kids[i]);
+    }
+  }
+  return out.join('');
+}
+
 /** Visible main text, used when the page has no structured data. */
 export function extractReadableText($: cheerio.CheerioAPI): string {
   $('script, style, noscript, nav, header, footer, aside, form, iframe, svg, [aria-hidden="true"]').remove();
   const root = $('article').first().length ? $('article').first() : $('main').first().length ? $('main').first() : $('body');
-  root.find('br').replaceWith('\n');
-  root.find('p, li, h1, h2, h3, h4, div, tr').each((_, el) => {
-    $(el).append('\n');
-  });
-  return root
-    .text()
+  return collectText(root.get())
     .split('\n')
     .map((l) => l.replace(/\s+/g, ' ').trim())
     .filter(Boolean)

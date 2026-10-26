@@ -138,7 +138,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
               {recipe.tags.map((tag) => (
                 <li key={tag}>
                   {isOwner ? (
-                    <Link href={`/recipes?tag=${encodeURIComponent(tag)}`} className="inline-flex min-h-9 items-center rounded-full bg-sunk px-3 text-sm hover:underline">
+                    <Link href={`/recipes?tag=${encodeURIComponent(tag)}`} className="inline-flex min-h-11 items-center rounded-full bg-sunk px-3 text-sm hover:underline">
                       #{tag}
                     </Link>
                   ) : (

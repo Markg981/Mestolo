@@ -1,4 +1,4 @@
-/** pantry_items: RLS solo owner (migration 20261026000001), su PostgreSQL reale. */
+/** pantry_items: RLS solo owner (migration 20261025010000), su PostgreSQL reale. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

@@ -44,7 +44,7 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
    pg_restore --data-only --disable-triggers --no-owner --dbname "$TARGET_DB_URL" auth-<ts>.dump
    pg_restore --data-only --disable-triggers --no-owner --dbname "$TARGET_DB_URL" public-<ts>.dump
    ```
-   Su un database vuoto, senza migration, si puo ripristinare anche lo schema: `pg_restore --no-owner --no-privileges --clean --if-exists --dbname "$TARGET_DB_URL" public-<ts>.dump`.
+   Su un database vuoto, senza migration, si puo ripristinare anche lo schema: `pg_restore --no-owner --no-privileges --clean --if-exists --dbname "$TARGET_DB_URL" public-<ts>.dump` (il dump include anche lo schema `private`). Poiche `--no-privileges` non ripristina i grant, dopo un restore dello schema rieseguire: `grant usage on schema private to authenticated; grant execute on function private.is_blocked_between(uuid, uuid) to authenticated;` (senza, le policy RLS danno "permission denied for schema private").
 4. Ripristinare i metadati storage, solo se i bucket `recipe-images` e `avatars` esistono gia (creato dalle migration):
    ```bash
    pg_restore --data-only --disable-triggers --dbname "$TARGET_DB_URL" storage-meta-<ts>.dump
