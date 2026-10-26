@@ -376,7 +376,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             <ul className="mt-2 flex flex-col gap-1">
               {duplicatesShown.map((d) => (
                 <li key={d.id}>
-                  <Link href={`/recipes/${d.id}`} target="_blank" className="font-semibold text-basil underline underline-offset-4">
+                  <Link href={`/recipes/${d.id}`} target="_blank" className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">
                     {d.title}
                   </Link>{' '}
                   <span className="text-sm text-muted">({t(`duplicateReason.${d.reason}`)})</span>
@@ -427,7 +427,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             </Field>
           </div>
           <details className="rounded-xl border border-line bg-surface px-4 py-2">
-            <summary className="min-h-10 cursor-pointer py-2 font-semibold">{t('newCategory')}</summary>
+            <summary className="min-h-11 cursor-pointer py-2 font-semibold">{t('newCategory')}</summary>
             <div className="flex gap-2 pb-3">
               <label htmlFor="newcat" className="sr-only">
                 {t('newCategoryName')}
@@ -490,7 +490,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                   <input id={`note-${ing.key}`} className={cx(inputClass, 'col-span-3 sm:col-span-1')} maxLength={RECIPE_LIMITS.ingredientNote} value={ing.note} placeholder={t('notePlaceholder')} onChange={(e) => updIng(ing.key, { note: e.target.value })} />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <label className="flex min-h-10 items-center gap-2 text-sm">
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
                     <input type="checkbox" checked={ing.toTaste} onChange={(e) => updIng(ing.key, { toTaste: e.target.checked })} className="size-5 accent-[var(--basil)]" />
                     {t('toTaste')}
                   </label>
@@ -523,7 +523,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             </Button>
           </div>
           <details className="rounded-xl border border-line bg-surface px-4 py-2">
-            <summary className="min-h-10 cursor-pointer py-2 font-semibold">{t('pasteIngredients')}</summary>
+            <summary className="min-h-11 cursor-pointer py-2 font-semibold">{t('pasteIngredients')}</summary>
             <div className="flex flex-col gap-2 pb-3">
               <label htmlFor="bulk" className="text-sm text-muted">
                 {t('pasteIngredientsHint')}

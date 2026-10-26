@@ -93,7 +93,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <h2 id="plan-title" className="text-2xl font-bold">
               {t('home.todayPlanTitle')}
             </h2>
-            <Link href="/plan" className="text-basil underline underline-offset-4">
+            <Link href="/plan" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
               {t('home.openPlan')}
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {t('home.recentTitle')}
           </h2>
           {recent.length > 0 && (
-            <Link href="/recipes" className="text-basil underline underline-offset-4">
+            <Link href="/recipes" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
               {t('home.seeAll')}
             </Link>
           )}
@@ -158,7 +158,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <h2 id="col-title" className="text-2xl font-bold">
             {t('home.collectionsTitle')}
           </h2>
-          <Link href="/collections" className="text-basil underline underline-offset-4">
+          <Link href="/collections" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
             {t('home.manage')}
           </Link>
         </div>

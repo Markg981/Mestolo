@@ -317,7 +317,7 @@ export function CookMode({
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-porcelain p-6 text-center">
         <p className="text-lg">{t('noSteps')}</p>
-        <Link href={`/recipes/${recipeId}`} className="text-basil underline underline-offset-4">
+        <Link href={`/recipes/${recipeId}`} className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
           {t('exit')}
         </Link>
       </div>

@@ -27,7 +27,7 @@ export default async function NutritionEditPage({ params }: { params: Promise<{ 
         initialSource={nutrition?.source ?? null}
         ai={{ available: !!status?.available, providerName: status?.providerName ?? null, remainingToday: status?.remainingToday ?? null }}
       />
-      <Link href={`/recipes/${id}`} className="self-start font-semibold text-basil underline underline-offset-4">
+      <Link href={`/recipes/${id}`} className="inline-flex min-h-11 items-center self-start font-semibold text-basil underline underline-offset-4">
         {t('back')}
       </Link>
     </div>

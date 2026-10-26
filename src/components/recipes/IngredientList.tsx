@@ -92,7 +92,7 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags 
             </Button>
           </div>
           {changed && (
-            <button type="button" className="text-sm text-basil underline underline-offset-4" onClick={() => setServings(baseServings)}>
+            <button type="button" className="inline-flex min-h-11 items-center text-sm text-basil underline underline-offset-4" onClick={() => setServings(baseServings)}>
               {t('resetServings', { n: baseServings })}
             </button>
           )}

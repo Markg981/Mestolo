@@ -29,10 +29,10 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
       </Field>
       <SubmitButton pendingLabel={t('pendingLogin')}>{t('submitLogin')}</SubmitButton>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
-        <Link href="/forgot-password" className="text-basil underline underline-offset-4">
+        <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
           {t('forgot')}
         </Link>
-        <Link href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'} className="text-basil underline underline-offset-4">
+        <Link href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'} className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
           {t('noAccount')}
         </Link>
       </div>
@@ -83,7 +83,7 @@ export function SignupForm({ next }: { next?: string }) {
         </span>
       </label>
       <SubmitButton pendingLabel={t('pendingSignup')}>{t('submitSignup')}</SubmitButton>
-      <Link href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'} className="text-sm text-basil underline underline-offset-4">
+      <Link href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'} className="inline-flex min-h-11 items-center self-start text-sm text-basil underline underline-offset-4">
         {t('haveAccount')}
       </Link>
     </form>

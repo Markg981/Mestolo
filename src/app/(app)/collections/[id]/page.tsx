@@ -65,7 +65,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
         title={col.name}
         lead={col.description || undefined}
         back={
-          <Link href="/collections" className="text-basil underline underline-offset-4">
+          <Link href="/collections" className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
             {t('title')}
           </Link>
         }

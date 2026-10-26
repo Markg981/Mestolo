@@ -25,7 +25,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             router.refresh();
           });
         }}
-        className="min-h-10 w-auto py-1 text-sm"
+        className="min-h-11 w-auto py-1 text-sm"
       >
         {LOCALES.map((l) => (
           <option key={l} value={l}>

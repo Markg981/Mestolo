@@ -190,7 +190,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       )}
 
       {recipe.verification_status === 'needs_review' && isOwner && (
-        <Alert tone="warn" title={t('recipe.needsReviewTitle')} action={<Link href={`/recipes/${id}/edit`} className="font-semibold text-basil underline underline-offset-4">{t('recipe.reviewNow')}</Link>}>
+        <Alert tone="warn" title={t('recipe.needsReviewTitle')} action={<Link href={`/recipes/${id}/edit`} className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">{t('recipe.reviewNow')}</Link>}>
           {t('recipe.needsReviewBanner')}
         </Alert>
       )}
@@ -242,7 +242,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             <NutritionBox values={nutrition} source={nutrition.source} updatedAt={nutrition.updated_at} baseServings={recipe.servings === null ? null : Number(recipe.servings)} editHref={isOwner ? `/recipes/${id}/nutrition` : undefined} />
           ) : (
             isOwner && (
-              <Link href={`/recipes/${id}/nutrition`} className="self-start font-semibold text-basil underline underline-offset-4">
+              <Link href={`/recipes/${id}/nutrition`} className="inline-flex min-h-11 items-center self-start font-semibold text-basil underline underline-offset-4">
                 {t('nutrition.add')}
               </Link>
             )

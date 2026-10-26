@@ -91,7 +91,7 @@ export default async function PublicRecipePage({ params }: Params) {
     <div className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-8 px-4 py-6 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <header className="flex items-center justify-between">
-        <Link href={user ? '/' : '/welcome'} aria-label="Mestolo">
+        <Link href={user ? '/' : '/welcome'} aria-label="Mestolo" className="inline-flex min-h-11 items-center">
           <Logo />
         </Link>
       </header>

@@ -38,7 +38,7 @@ export default async function ModerationPage() {
         title={t('title')}
         lead={t('lead')}
         actions={
-          <Link href="/moderation/feedback" className="font-semibold text-basil underline underline-offset-4">
+          <Link href="/moderation/feedback" className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">
             {t('feedbackLink')}
           </Link>
         }

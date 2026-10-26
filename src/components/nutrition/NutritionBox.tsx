@@ -68,7 +68,7 @@ export function NutritionBox({ values, source, updatedAt, baseServings, editHref
         {t(`note.${source}`)} {t('updatedOn', { date })}
       </p>
       {editHref && (
-        <Link href={editHref} className="self-start font-semibold text-basil underline underline-offset-4">
+        <Link href={editHref} className="inline-flex min-h-11 items-center self-start font-semibold text-basil underline underline-offset-4">
           {t('edit')}
         </Link>
       )}

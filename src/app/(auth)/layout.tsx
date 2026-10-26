@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link href="/welcome" aria-label="Mestolo">
+        <Link href="/welcome" aria-label="Mestolo" className="inline-flex min-h-11 items-center">
           <Logo />
         </Link>
         <LanguageSwitcher />
