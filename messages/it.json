@@ -391,7 +391,11 @@
     "saveNote": "Salva nota",
     "noteSaved": "Nota salvata.",
     "hiddenTitle": "Ricetta nascosta dalla moderazione",
-    "hiddenLead": "Dopo alcune segnalazioni questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore, contatta il supporto.",
+    "hiddenLead": "Dopo la revisione di un moderatore questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore puoi chiedere un riesame.",
+    "inReviewTitle": "In revisione",
+    "inReviewLead": "Dopo alcune segnalazioni questa ricetta è stata messa in coda per la revisione dei moderatori. Resta visibile finché non viene esaminata.",
+    "appeal": "Chiedi un riesame",
+    "appealPending": "Hai chiesto il riesame: la ricetta è tornata in coda per un moderatore.",
     "dietHints": "Secondo l'autore (non verificato): {diets}"
   },
   "nutrition": {
@@ -1077,6 +1081,8 @@
     "reportedBy": "Segnalata da {name}",
     "recipeGone": "Ricetta eliminata",
     "hiddenBadge": "Nascosta",
+    "inReviewBadge": "In revisione",
+    "appealBadge": "Ricorso dell'autore",
     "hide": "Nascondi la ricetta",
     "restore": "Rendi di nuovo visibile",
     "dismiss": "Archivia la segnalazione",
