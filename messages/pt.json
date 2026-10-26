@@ -596,6 +596,7 @@
     "useAi": "Usar a IA"
   },
   "link": {
+    "sharedConfirm": "Link recebido de outra app: confira-o e carregue no botão para importar a receita.",
     "title": "Importar de link",
     "lead": "Cola o endereço de uma receita. Lemos os dados estruturados da página e mostramos-tos para revisão.",
     "urlLabel": "Endereço da receita",

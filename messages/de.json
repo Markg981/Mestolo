@@ -596,6 +596,7 @@
     "useAi": "KI nutzen"
   },
   "link": {
+    "sharedConfirm": "Link aus einer anderen App empfangen: Prüfe ihn und tippe auf die Schaltfläche, um das Rezept zu importieren.",
     "title": "Aus Link importieren",
     "lead": "Füge die Adresse eines Rezepts ein. Wir lesen die strukturierten Daten der Seite und zeigen sie dir zur Prüfung.",
     "urlLabel": "Adresse des Rezepts",
