@@ -1,11 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { env } from '@/lib/env';
 import { loadAisleOverrides, loadItems, resolveShoppingList } from '@/lib/shopping/data';
 import { PageHeader } from '@/components/ui';
 import { ShoppingList, type Item } from './ShoppingList';
 import { ShoppingMembers } from './ShoppingMembers';
-import { ShoppingRealtime } from './ShoppingRealtime';
 
 export async function generateMetadata() {
   const t = await getTranslations('shopping');
@@ -53,12 +51,10 @@ export default async function ShoppingPage({ searchParams }: { searchParams: Pro
     added_by: r.owner_id === me ? null : nameOf(r.owner_id),
     checked_by: r.checked_by === me ? null : nameOf(r.checked_by),
   }));
-  const { supabaseUrl, supabaseAnonKey } = env();
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('title')} lead={t('lead')} />
-      <ShoppingRealtime supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} />
       <ShoppingMembers
         listId={selected.id}
         listName={selected.name === 'default' ? '' : selected.name}

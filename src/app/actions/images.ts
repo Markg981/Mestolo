@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
+import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
 import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -18,6 +18,12 @@ import type { Ingredient } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
+const attributionSchema = z
+  .string()
+  .transform((v) => v.replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().max(300))
+  .nullable();
 
 async function storeImage(opts: {
   userId: string;
@@ -48,30 +54,29 @@ async function storeImage(opts: {
     await bucket.remove([path]);
     return fail('generic');
   }
-  const { count } = await supabase.from('recipe_images').select('id', { count: 'exact', head: true }).eq('recipe_id', opts.recipeId);
-  const { data, error } = await supabase
-    .from('recipe_images')
-    .insert({
-      recipe_id: opts.recipeId,
-      owner_id: opts.userId,
-      storage_path: path,
-      thumb_path: thumbPath,
-      kind: opts.kind,
-      source_url: opts.sourceUrl ?? null,
-      attribution: opts.attribution ?? null,
-      alt_text: opts.alt.slice(0, 300),
-      width: processed.width,
-      height: processed.height,
-      position: count ?? 0,
-    })
-    .select('id')
-    .single();
+  // Posizione e quota calcolate nel DB sotto lock: due upload simultanei non si sovrappongono.
+  const { data: newId, error } = await supabase.rpc('insert_recipe_image', {
+    p_recipe_id: opts.recipeId,
+    p_storage_path: path,
+    p_thumb_path: thumbPath,
+    p_kind: opts.kind,
+    p_source_url: opts.sourceUrl ?? null,
+    p_attribution: opts.attribution ?? null,
+    p_alt: opts.alt.slice(0, 300),
+    p_width: processed.width,
+    p_height: processed.height,
+    p_max_images: MAX_IMAGES_PER_USER,
+  });
   if (error) {
     await bucket.remove([path, thumbPath]);
     return dbFailure(error, 'storeImage');
   }
+  if (!newId) {
+    await bucket.remove([path, thumbPath]);
+    return fail('storage_quota_exceeded');
+  }
   revalidatePath(`/recipes/${opts.recipeId}`);
-  return ok({ id: data.id as string });
+  return ok({ id: newId as string });
 }
 
 export async function uploadRecipeImage(formData: FormData): Promise<ActionResult<{ id: string }>> {
@@ -107,11 +112,18 @@ export async function importSourceImage(recipeId: string, imageUrl: string, attr
   try {
     const user = await getUser();
     if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
+    const attr = attributionSchema.safeParse(attribution ?? null);
+    if (!attr.success) return fail('invalid_input');
+    const cleanAttribution = attr.data ? attr.data : null;
+    // Ownership check BEFORE any outbound fetch (no SSRF/bandwidth for non-owners).
+    const supabase = await createClient();
+    const { data: owned } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+    if (!owned) return fail('not_found');
     await enforceRateLimit('upload_image', user.id);
     await enforceRateLimit('upload_image_day', user.id);
     const res = await safeFetch(imageUrl, { maxBytes: MAX_UPLOAD_BYTES, accept: 'image/*', allowedContentTypes: /^image\/(jpeg|png|webp|avif|gif)/i });
     if (res.truncated) return fail('image_too_large');
-    return await storeImage({ userId: user.id, recipeId, buffer: res.body, kind: 'imported', alt: '', sourceUrl: res.finalUrl, attribution });
+    return await storeImage({ userId: user.id, recipeId, buffer: res.body, kind: 'imported', alt: '', sourceUrl: res.finalUrl, attribution: cleanAttribution });
   } catch (e) {
     if (e instanceof ImageValidationError) return fail(e.code);
     return toFailure(e, 'importSourceImage');

@@ -4,3 +4,36 @@ updates:
     directory: /
     schedule:
       interval: weekly
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      gradle-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: swift
+    directory: /ios/App/CapApp-SPM
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      swift-minor-patch:
+        update-types:
+          - minor
+          - patch

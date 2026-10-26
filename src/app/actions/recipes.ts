@@ -22,8 +22,9 @@ function invalidatePublicPage(slug: string | null | undefined) {
 /**
  * `expectedVersion` is the recipe version read when the editor was opened: if the row moved on in the
  * meantime (another tab or device saved), nothing is overwritten and the result is 'conflict'.
+ * `idempotencyKey` (creation only): a client-generated UUID; a repeated submit with the same key returns the recipe already created.
  */
-export async function saveRecipe(payload: unknown, recipeId?: string | null, expectedVersion?: number | null): Promise<ActionResult<{ id: string }>> {
+export async function saveRecipe(payload: unknown, recipeId?: string | null, expectedVersion?: number | null, idempotencyKey?: string | null): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getUser();
     if (!user) return fail('forbidden');
@@ -71,10 +72,19 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       }
       invalidatePublicPage(data.public_slug as string | null);
     } else {
+      const key = idempotencyKey && uuid.safeParse(idempotencyKey).success ? idempotencyKey : null;
+      const existingByKey = async () => {
+        if (!key) return null;
+        const { data: ex } = await supabase.from('recipes').select('id').eq('owner_id', user.id).eq('idempotency_key', key).maybeSingle();
+        return (ex?.id as string | undefined) ?? null;
+      };
+      const already = await existingByKey();
+      if (already) return ok({ id: already });
       const { data, error } = await supabase
         .from('recipes')
         .insert({
           ...content,
+          idempotency_key: key,
           owner_id: user.id,
           source_type: d.source_type,
           source_url: d.source_url,
@@ -84,7 +94,14 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
         })
         .select('id')
         .single();
-      if (error) return dbFailure(error, 'saveRecipe.insert');
+      if (error) {
+        // doppio invio concorrente: l'altra richiesta ha vinto sulla chiave univoca
+        if (error.code === '23505') {
+          const dup = await existingByKey();
+          if (dup) return ok({ id: dup });
+        }
+        return dbFailure(error, 'saveRecipe.insert');
+      }
       id = data.id as string;
       // Valori nutrizionali trovati dall'import (schema.org): rivalidati qui, fonte sempre 'imported'.
       const imported = validateNutrition((payload as { nutrition?: unknown } | null)?.nutrition);
