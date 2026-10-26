@@ -58,10 +58,6 @@ export function keyHint(plaintext: string): string {
   return `…${t.slice(-4)}`;
 }
 
-/** Redacts anything that looks like an API key from a string (for logs/errors). */
-export function redactSecrets(s: string): string {
-  return s
-    .replace(/sk-[A-Za-z0-9_\-]{8,}/g, 'sk-***')
-    .replace(/(api[_-]?key|authorization|x-api-key)(["'\s:=]+)(Bearer\s+)?[A-Za-z0-9_\-.]{8,}/gi, '$1$2***')
-    .replace(/AIza[0-9A-Za-z_\-]{20,}/g, 'AIza***');
-}
+// Re-exported so existing callers keep working; the pure implementation lives in
+// ./redact (no node:crypto) so it can be bundled for the browser and Edge.
+export { redactSecrets } from './redact';

@@ -1,4 +1,4 @@
-import { redactSecrets } from '@/lib/crypto/secrets';
+import { redactSecrets } from '@/lib/crypto/redact';
 
 /**
  * Data scrubbing for error monitoring (Sentry). Builds on `redactSecrets`, the
