@@ -32,7 +32,7 @@ export async function AppShell({ children, username, isModerator = false, userId
 
       {/* Desktop sidebar */}
       <aside className="no-print sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-4 py-6 lg:flex">
-        <Link href="/" className="px-2">
+        <Link href="/" className="inline-flex min-h-11 items-center px-2">
           <Logo />
         </Link>
         <div className="flex flex-col gap-2 rounded-[var(--radius-card)] bg-saffron-wash p-3">
@@ -50,7 +50,7 @@ export async function AppShell({ children, username, isModerator = false, userId
           {isModerator && <NavLink href="/moderation" icon="shield" label={t('moderation')} />}
         </nav>
         <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
-          <Link href={`/u/${username}`} className="flex items-center gap-2 truncate px-3 text-sm text-muted hover:text-ink">
+          <Link href={`/u/${username}`} className="flex min-h-11 items-center gap-2 truncate px-3 text-sm text-muted hover:text-ink">
             {userId && <Avatar userId={userId} name={username} hasImage={hasAvatar} size="sm" />}
             @{username}
           </Link>
@@ -62,7 +62,7 @@ export async function AppShell({ children, username, isModerator = false, userId
         <OfflineBanner />
         {/* Mobile top bar */}
         <header className="no-print sticky top-0 z-30 flex items-center justify-between border-b border-line bg-porcelain/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur lg:hidden">
-          <Link href="/" aria-label="Mestolo">
+          <Link href="/" aria-label="Mestolo" className="inline-flex min-h-11 items-center">
             <Logo />
           </Link>
           <Link href="/more" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-sunk" aria-label={t('more')}>

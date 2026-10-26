@@ -46,7 +46,7 @@ export async function CookLogCard({ log, locale, mine, isRecipeOwner, title }: {
       {log.has_photo && <img src={`/api/cook-photos/${log.id}`} alt={t('photoAlt', { date: formatCookDate(log.cooked_at, locale) })} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />}
       <div className="flex flex-col gap-1 p-4">
         {title && (
-          <Link href={`/recipes/${title.id}`} className="font-semibold text-basil underline underline-offset-4">
+          <Link href={`/recipes/${title.id}`} className="inline-flex min-h-11 items-center self-start font-semibold text-basil underline underline-offset-4">
             {title.text}
           </Link>
         )}

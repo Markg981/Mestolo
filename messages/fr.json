@@ -526,6 +526,7 @@
     "personalNote": "Notes personnelles",
     "personalNoteHint": "Elles restent privées même si vous partagez la recette.",
     "draftRestored": "Nous avons restauré votre brouillon non enregistré.",
+    "draftNotStored": "Le brouillon ne peut pas être enregistré dans ce navigateur (stockage plein ou bloqué) : ne fermez pas la page avant d'enregistrer.",
     "discardDraft": "Supprimer le brouillon",
     "reviewIntroTitle": "Vérifiez les données avant d'enregistrer",
     "reviewIntro": "Rien n'a été inventé : les valeurs introuvables sont laissées vides et signalées. Corrigez ce qui doit l'être.",

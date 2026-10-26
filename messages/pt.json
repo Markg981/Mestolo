@@ -526,6 +526,7 @@
     "personalNote": "Notas pessoais",
     "personalNoteHint": "Continuam privadas mesmo que partilhes a receita.",
     "draftRestored": "Recuperámos o rascunho não guardado.",
+    "draftNotStored": "Não é possível guardar o rascunho neste navegador (armazenamento cheio ou bloqueado): não feche a página antes de guardar.",
     "discardDraft": "Descartar rascunho",
     "reviewIntroTitle": "Verifica os dados antes de guardar",
     "reviewIntro": "Nada foi inventado: os valores não encontrados estão vazios e assinalados. Corrige o que for preciso.",

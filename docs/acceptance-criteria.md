@@ -26,6 +26,25 @@ Copia il testo di ogni criterio dalla specifica. Per lo stato usa: ✅ verificat
 | 13 | | ⏳ | |
 | 14 | | ⏳ | |
 
+Finché la tabella resta vuota non si può costruire la matrice requisiti → test: è il limite principale dell'audit di ottobre 2026.
+
+## 1bis. Affermazioni del README verificate a campione (audit ottobre 2026)
+
+| Affermazione del README | Esito | Riferimento audit |
+|---|---|---|
+| Lista della spesa: somma solo se nome e unità coincidono | ✅ vera | |
+| Scalatura lineare delle porzioni | ✅ vera | |
+| Conversione di unità solo in visualizzazione | ✅ vera | |
+| Suggerimenti AI obsoleti scartati | ✅ vera | |
+| i18n completa in 6 lingue (chiavi identiche) | ✅ vera | |
+| Bozza dell'editor: "nessuna perdita dati" | 🟡 → corretto: bozze per utente e scartate se più vecchie della ricetta (`tests/unit/drafts.test.ts`), scrittura immediata quando la scheda viene nascosta o chiusa, avviso se lo storage non è disponibile, revisione di un'importazione riproposta dopo un ricaricamento. Resta il limite intrinseco: la bozza vive in un solo browser | C-03, C-04 |
+| Ricetta del giorno: scelta "deterministica" | 🟡 → corretto (`tests/unit/recipe-of-the-day.test.ts`) | C-26 |
+| Promemoria dei pasti | 🟡 → corretto: claim e conferma con ritentativi (`tests/unit/cron-meal-reminders.test.ts`), chiamata ogni 15 min da `.github/workflows/meal-reminders.yml` (secret `APP_URL`, `CRON_SECRET`). Da verificare: workflow attivo sul repository e consegna su dispositivo reale | C-02 |
+| Export "di tutti i dati" dell'account | 🟡 → corretto (`tests/unit/account-export.test.ts`) | C-05, C-06 |
+| Aree cliccabili ≥ 44 px | ❌ → corretto nei componenti, nei link del logo e nei link isolati (intestazioni, "indietro", azioni degli avvisi); misurato da `e2e/tap-targets.spec.ts` (progetto mobile, 15 pagine). Esenti come da WCAG 2.5.5 i link dentro una frase. Le pagine di accesso/registrazione e il dettaglio ricetta non sono misurati | C-27 |
+
+Restano da fare, come già indicato nelle sezioni 3 e 4: prove con chiavi AI reali, build iOS (mai compilata) e Android su dispositivo reale.
+
 ## 2. Già coperto in automatico
 
 - **Unit test** (`npm test`, Vitest): parser, import da HTML/testo/OCR, import JSON, schema e limiti, traduzioni nelle 6 lingue, crittografia, cron, provider AI simulati.

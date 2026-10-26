@@ -40,7 +40,7 @@ export default async function FeedbackAdminPage({ searchParams }: { searchParams
         title={t('adminTitle')}
         lead={t('adminLead')}
         back={
-          <Link href="/moderation" className="text-basil underline underline-offset-4">
+          <Link href="/moderation" className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
             {t('backToModeration')}
           </Link>
         }

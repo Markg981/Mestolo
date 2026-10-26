@@ -526,6 +526,7 @@
     "personalNote": "Note personali",
     "personalNoteHint": "Restano private anche se condividi la ricetta.",
     "draftRestored": "Abbiamo ripristinato la bozza non salvata.",
+    "draftNotStored": "La bozza non può essere salvata nel browser (spazio esaurito o archiviazione bloccata): non chiudere la pagina prima di salvare.",
     "discardDraft": "Scarta la bozza",
     "reviewIntroTitle": "Controlla i dati prima di salvare",
     "reviewIntro": "Niente è stato inventato: i valori non trovati sono vuoti e segnalati. Correggi quello che serve.",

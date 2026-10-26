@@ -115,7 +115,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
           <ShoppingBasket aria-hidden className="size-5" />
           {t('addToList')}
         </Button>
-        <Link href="/shopping" className="text-basil underline underline-offset-4">
+        <Link href="/shopping" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
           {t('openList')}
         </Link>
         <LiveMessage message={msg?.text ?? null} tone={msg?.tone} />
@@ -151,7 +151,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
                         <GripVertical aria-hidden className="size-4" />
                       </button>
                       {e.recipe_id ? (
-                        <Link href={`/recipes/${e.recipe_id}`} className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold hover:underline">
+                        <Link href={`/recipes/${e.recipe_id}`} className="min-h-11 min-w-0 flex-1 line-clamp-2 py-0.5 text-sm font-semibold hover:underline">
                           {e.title}
                         </Link>
                       ) : (

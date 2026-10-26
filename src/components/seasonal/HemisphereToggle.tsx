@@ -24,7 +24,7 @@ export function HemisphereToggle({ value }: { value: Hemisphere }) {
           type="button"
           aria-pressed={value === h}
           onClick={() => set(h)}
-          className={`min-h-10 rounded-full border px-3 py-1 font-semibold ${value === h ? 'border-transparent bg-basil text-white' : 'border-line bg-surface hover:bg-sunk'}`}
+          className={`min-h-11 rounded-full border px-3 py-1 font-semibold ${value === h ? 'border-transparent bg-basil text-white' : 'border-line bg-surface hover:bg-sunk'}`}
         >
           {t(h)}
         </button>

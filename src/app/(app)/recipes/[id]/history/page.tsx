@@ -25,7 +25,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
         title={t('title')}
         lead={t('lead')}
         back={
-          <Link href={`/recipes/${id}`} className="text-basil underline underline-offset-4">
+          <Link href={`/recipes/${id}`} className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
             {detail.recipe.title}
           </Link>
         }
@@ -46,7 +46,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                 {v.change_source === 'restore' && v.change_note ? `, ${t('restoredFrom', { v: v.change_note })}` : ''}
               </p>
               <details>
-                <summary className="min-h-10 cursor-pointer py-2 text-sm font-semibold text-basil">{t('view')}</summary>
+                <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-basil">{t('view')}</summary>
                 <div className="grid gap-4 pb-2 text-sm sm:grid-cols-2">
                   <div>
                     <p className="font-semibold">{v.snapshot.title}</p>

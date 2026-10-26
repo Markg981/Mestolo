@@ -120,7 +120,7 @@ export function CookAssistant({ recipeId, stepIndex, servings, available, onClos
         {!available ? (
           <div className="flex flex-col gap-3 px-4 py-5">
             <p>{t('assistUnavailable')}</p>
-            <Link href="/settings/ai" className="text-basil underline underline-offset-4">
+            <Link href="/settings/ai" className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
               {t('assistSettings')}
             </Link>
           </div>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { checkDuplicates, saveRecipe } from '@/app/actions/recipes';
-import { ImportReview } from '@/components/import/ImportReview';
+import { ImportReview, useResumeImport } from '@/components/import/ImportReview';
 import { stateFromDraft, toPayload } from '@/components/recipes/editor/convert';
 import type { EditorCategory } from '@/components/recipes/editor/types';
 import { Alert, Button, Card } from '@/components/ui';
@@ -32,6 +32,10 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
   const [drafts, setDrafts] = useState<ImportDraft[] | null>(null);
   const [skipped, setSkipped] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
+  useResumeImport(draftNames.import('file'), (d) => {
+    setDrafts([d]);
+    setPicked(0);
+  });
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; created: number; duplicates: number; failed: number } | null>(null);
   const [running, start] = useTransition();

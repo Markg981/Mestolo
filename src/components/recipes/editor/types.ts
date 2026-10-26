@@ -66,4 +66,6 @@ export interface EditorProps {
   /** per-serving values found by the importer: saved with source 'imported' (editable afterwards) */
   importedNutrition?: import('@/lib/nutrition').NutritionValues | null;
   onBack?: () => void;
+  /** called after a successful save, before navigating to the recipe */
+  onSaved?: () => void;
 }
