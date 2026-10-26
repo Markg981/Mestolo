@@ -45,6 +45,8 @@ describe('env()', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'a');
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 's');
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://app.example.com/');
+    vi.stubEnv('APP_ENCRYPTION_KEY', Buffer.alloc(32, 1).toString('base64'));
+    vi.stubEnv('CRON_SECRET', 'cron-secret-16-chars');
     expect(env().siteUrl).toBe('https://app.example.com');
   });
 });
