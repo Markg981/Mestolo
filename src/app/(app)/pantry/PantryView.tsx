@@ -8,10 +8,12 @@ import { Trash2 } from 'lucide-react';
 import { addPantryItem, deletePantryItem } from '@/app/actions/pantry';
 import { addRecipeToShopping } from '@/app/actions/planning';
 import { LiveMessage } from '@/components/client-ui';
+import { ShoppingTargetSelect } from '@/components/shopping-target';
+import type { ListOption } from '@/lib/shopping/targets';
 import { Badge, Button, EmptyState, Input, Select, buttonClass } from '@/components/ui';
 import { PANTRY_LOCATIONS, daysUntil, expiryStatus, type PantryItem, type PantryLocation, type RecipeSuggestion } from '@/lib/pantry/match';
 
-export function PantryView({ items, suggestions, today }: { items: PantryItem[]; suggestions: RecipeSuggestion[]; today: string }) {
+export function PantryView({ items, suggestions, today, lists = [] }: { items: PantryItem[]; suggestions: RecipeSuggestion[]; today: string; lists?: ListOption[] }) {
   const t = useTranslations('pantry');
   const te = useTranslations('errors');
   const tc = useTranslations('common');
@@ -24,6 +26,7 @@ export function PantryView({ items, suggestions, today }: { items: PantryItem[];
   const [expires, setExpires] = useState('');
   const [location, setLocation] = useState<PantryLocation>('fridge');
   const [note, setNote] = useState('');
+  const [targetList, setTargetList] = useState(lists[0]?.id ?? '');
 
   const add = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +56,14 @@ export function PantryView({ items, suggestions, today }: { items: PantryItem[];
 
   const addMissing = (s: RecipeSuggestion) =>
     start(async () => {
-      const res = await addRecipeToShopping(s.recipeId, null, s.missingIndexes);
+      const res = await addRecipeToShopping(s.recipeId, null, s.missingIndexes, targetList || undefined);
       setMsg(res.ok ? { text: t('missingAdded', { n: res.data.added + res.data.merged }), tone: 'success' } : { text: te(res.error), tone: 'error' });
     });
 
   return (
     <div className="flex flex-col gap-6">
       <LiveMessage message={msg?.text ?? null} tone={msg?.tone} />
+      <ShoppingTargetSelect lists={lists} value={targetList} onChange={setTargetList} />
 
       <section aria-labelledby="tonight" className="rounded-[var(--radius-card)] border border-line bg-surface p-4">
         <h2 id="tonight" className="text-xl font-bold">

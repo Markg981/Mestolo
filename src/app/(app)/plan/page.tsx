@@ -6,6 +6,7 @@ import { PageHeader, buttonClass } from '@/components/ui';
 import { MealReminderSync } from '@/components/pwa/MealReminderSync';
 import { categoryLabel, type CategoryRow } from '@/lib/recipes/categories';
 import { prefsFromRow, type PrefsRow } from '@/lib/plan/preferences';
+import { loadListOptions } from '@/lib/shopping/targets';
 import { PlanBoard, type Entry } from './PlanBoard';
 import { PlanGenerator } from './PlanGenerator';
 
@@ -70,6 +71,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         slots={[...MEAL_SLOTS]}
         entries={(entries as Entry[]) ?? []}
         recipes={options}
+        lists={await loadListOptions(user!.id)}
       />
     </div>
   );

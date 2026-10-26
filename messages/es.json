@@ -810,6 +810,7 @@
     "removeItem": "Quitar {name}",
     "familyTitle": "Familia y compartir",
     "listSwitch": "Lista",
+    "targetList": "Añadir a la lista",
     "sharedBy": "de {name}",
     "membersNone": "Aún no hay miembros: invita a un amigo para compartir la lista.",
     "removeMember": "Quitar a {name} de la lista",

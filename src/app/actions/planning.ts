@@ -98,16 +98,16 @@ function ingredientsToItems(ings: Ingredient[], recipe: { id: string; title: str
 }
 
 /** Adds (a selection of) a recipe's ingredients, scaled to the chosen servings. */
-export async function addRecipeToShopping(recipeId: string, servings: number | null, indexes?: number[]): Promise<ActionResult<{ added: number; merged: number }>> {
+export async function addRecipeToShopping(recipeId: string, servings: number | null, indexes?: number[], listId?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const user = await getUser();
-  if (!user || !uuid.safeParse(recipeId).success || !servingsSchema.safeParse(servings).success) return fail('invalid_input');
+  if (!user || !uuid.safeParse(recipeId).success || !servingsSchema.safeParse(servings).success || (listId !== undefined && !uuid.safeParse(listId).success)) return fail('invalid_input');
   const supabase = await createClient();
   const { data: r } = await supabase.from('recipes').select('id, title, servings, ingredients').eq('id', recipeId).maybeSingle();
   if (!r) return fail('not_found');
   let ings = (r.ingredients as Ingredient[]) ?? [];
   if (indexes?.length) ings = ings.filter((_, i) => indexes.includes(i));
   if (servings && servings > 0 && r.servings) ings = scaleIngredients(ings, Number(r.servings), servings);
-  return addItems(user.id, ingredientsToItems(ings, { id: r.id, title: r.title }));
+  return addItems(user.id, ingredientsToItems(ings, { id: r.id, title: r.title }), listId);
 }
 
 export async function toggleShoppingItem(id: string, checked: boolean): Promise<ActionResult> {
@@ -177,9 +177,9 @@ export async function deletePlanEntry(id: string): Promise<ActionResult> {
 }
 
 /** Adds the ingredients of every planned recipe in the week to the shopping list. */
-export async function addWeekToShopping(weekStart: string): Promise<ActionResult<{ added: number; merged: number; recipes: number }>> {
+export async function addWeekToShopping(weekStart: string, listId?: string): Promise<ActionResult<{ added: number; merged: number; recipes: number }>> {
   const user = await getUser();
-  if (!user || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return fail('invalid_input');
+  if (!user || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || (listId !== undefined && !uuid.safeParse(listId).success)) return fail('invalid_input');
   const days = weekDays(weekStart);
   const supabase = await createClient();
   const { data: entries } = await supabase
@@ -200,7 +200,7 @@ export async function addWeekToShopping(weekStart: string): Promise<ActionResult
     const ings = e.servings && r.servings ? scaleIngredients(r.ingredients ?? [], Number(r.servings), Number(e.servings)) : r.ingredients ?? [];
     items.push(...ingredientsToItems(ings, r));
   }
-  const res = await addItems(user.id, items);
+  const res = await addItems(user.id, items, listId);
   if (!res.ok) return res;
   return ok({ ...res.data, recipes: list.length });
 }

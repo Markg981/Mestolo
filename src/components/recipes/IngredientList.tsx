@@ -10,6 +10,8 @@ import { UNIT_KEYS } from '@/lib/recipes/units';
 import type { Ingredient } from '@/lib/recipes/types';
 import { addRecipeToShopping } from '@/app/actions/planning';
 import { LiveMessage } from '../client-ui';
+import { ShoppingTargetSelect } from '../shopping-target';
+import type { ListOption } from '@/lib/shopping/targets';
 import { Badge, Button } from '../ui';
 
 const UNIT_SYSTEM_KEY = 'mestolo:unit-system';
@@ -47,13 +49,14 @@ function subscribeSystem(cb: () => void) {
 }
 
 /** Ingredient list with a servings stepper, opt-in display-only unit conversion (never saved) and "add to shopping list". */
-export function IngredientList({ recipeId, ingredients, baseServings, showFlags }: { recipeId: string; ingredients: Ingredient[]; baseServings: number | null; showFlags: boolean }) {
+export function IngredientList({ recipeId, ingredients, baseServings, showFlags, lists = [] }: { lists?: ListOption[]; recipeId: string; ingredients: Ingredient[]; baseServings: number | null; showFlags: boolean }) {
   const t = useTranslations('recipe');
   const tu = useTranslations('units');
   const tf = useTranslations('flags');
   const te = useTranslations('errors');
   const locale = useLocale();
   const [servings, setServings] = useState<number | null>(baseServings);
+  const [targetList, setTargetList] = useState(lists[0]?.id ?? '');
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const [pending, start] = useTransition();
 
@@ -159,11 +162,12 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags 
       </ul>
 
       <div className="flex flex-col gap-1">
+        <ShoppingTargetSelect lists={lists} value={targetList} onChange={setTargetList} />
         <Button
           disabled={pending || !ingredients.length}
           onClick={() =>
             start(async () => {
-              const res = await addRecipeToShopping(recipeId, servings);
+              const res = await addRecipeToShopping(recipeId, servings, undefined, targetList || undefined);
               setMsg(res.ok ? { text: t('addedToShopping', { added: res.data.added, merged: res.data.merged }), tone: 'success' } : { text: te(res.error), tone: 'error' });
             })
           }
