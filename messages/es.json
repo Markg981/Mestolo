@@ -116,6 +116,7 @@
     "ai_bad_output": "La respuesta de la IA no se podía usar. Vuelve a intentarlo o continúa manualmente.",
     "ai_timeout": "El proveedor de IA ha tardado demasiado. Vuelve a intentarlo.",
     "ai_unsupported": "El proveedor configurado no admite esta función.",
+    "ai_keys_unavailable": "No se ha podido comprobar tu clave de IA personal. Inténtalo de nuevo en un momento.",
     "url_invalid": "La dirección no es válida. Pega un enlace completo que empiece por https://",
     "url_blocked": "Esta dirección no se puede abrir por motivos de seguridad.",
     "url_unreachable": "No podemos acceder al sitio. Revisa el enlace o pega el texto de la receta.",

@@ -116,6 +116,7 @@
     "ai_bad_output": "La risposta dell'AI non era utilizzabile. Riprova o continua manualmente.",
     "ai_timeout": "Il provider AI ha impiegato troppo tempo. Riprova.",
     "ai_unsupported": "Il provider configurato non supporta questa funzione.",
+    "ai_keys_unavailable": "Impossibile verificare la tua chiave AI personale. Riprova tra poco.",
     "url_invalid": "L'indirizzo non è valido. Incolla un link completo che inizi con https://",
     "url_blocked": "Questo indirizzo non può essere aperto per motivi di sicurezza.",
     "url_unreachable": "Non riusciamo a raggiungere il sito. Controlla il link o incolla il testo della ricetta.",
