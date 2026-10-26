@@ -134,6 +134,7 @@
     "username_taken": "Questo nome utente è già in uso.",
     "translation_failed": "La traduzione non è riuscita. L'originale resta disponibile.",
     "already_exists": "Esiste già.",
+    "conflict": "La ricetta è stata modificata altrove (un'altra scheda o dispositivo). Ricarica la pagina per vedere l'ultima versione prima di salvare.",
     "pageTitle": "Questa pagina non si è caricata",
     "pageLead": "Può capitare se la connessione è instabile. I dati che stavi inserendo restano salvati come bozza.",
     "retry": "Riprova",
@@ -482,6 +483,7 @@
     "title": "Titolo",
     "titlePlaceholder": "Es. Parmigiana di melanzane",
     "titleRequired": "Il titolo è obbligatorio.",
+    "quantityInvalid": "La quantità \"{value}\" di \"{name}\" non è valida. Usa un numero, una frazione (1 1/2) o lascia il campo vuoto.",
     "description": "Descrizione",
     "category": "Categoria",
     "categorySuggested": "Proposta in automatico: puoi cambiarla.",
@@ -786,6 +788,7 @@
   },
   "shopping": {
     "title": "Lista della spesa",
+    "toTaste": "q.b.",
     "lead": "Aggiungi prodotti a mano o dagli ingredienti delle ricette.",
     "addLabel": "Aggiungi un prodotto",
     "addPlaceholder": "Es. 500 g pomodori",
@@ -1016,7 +1019,7 @@
     "title": "Informativa sulla privacy",
     "lead": "Informativa ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR). In breve: le tue ricette sono private finché non decidi altrimenti e usiamo i tuoi dati solo per far funzionare il servizio.",
     "dataTitle": "Categorie di dati trattati",
-    "data": "Dati dell'account: email e password (conservata solo come hash dal servizio di autenticazione), nome utente, nome visualizzato, bio. Contenuti che crei: ricette con cronologia, immagini, note, raccolte, lista della spesa, piano pasti, amicizie, preferenze alimentari dichiarate (possono rivelare convinzioni religiose o stili di vita: sono facoltative), segnalazioni e feedback. Dati d'uso: conteggio delle funzioni AI, chiavi API personali (cifrate). Dati tecnici: indirizzo IP e log dei server, e diagnostica degli errori (tipo di errore, pagina senza parametri, identificativo utente interno, browser e sistema operativo). Non raccogliamo posizione, contatti, identificativi pubblicitari né cronologia di navigazione; i metadati GPS delle foto vengono rimossi.",
+    "data": "Dati dell'account: email e password (conservata solo come hash dal servizio di autenticazione), nome utente, nome visualizzato, bio. Contenuti che crei: ricette con cronologia, immagini, note, raccolte, lista della spesa, piano pasti, amicizie, preferenze alimentari dichiarate (possono rivelare convinzioni religiose o stili di vita: sono facoltative), segnalazioni e feedback. Dati d'uso: conteggio delle funzioni AI, chiavi API personali (cifrate). Dati tecnici: indirizzo IP e log dei server, e diagnostica degli errori (tipo di errore, pagina senza parametri, browser e sistema operativo). Non raccogliamo posizione, contatti, identificativi pubblicitari né cronologia di navigazione; i metadati GPS delle foto vengono rimossi.",
     "purposesTitle": "Finalità del trattamento",
     "purposes": "a) Creare e gestire l'account e fornire le funzioni dell'app (ricette, raccolte, condivisione con amici, import da foto, link e video, funzioni AI richieste da te); b) inviare email di servizio (conferma, recupero password); c) sicurezza, prevenzione di abusi e moderazione dei contenuti segnalati; d) monitoraggio e correzione degli errori tecnici; e) adempiere obblighi di legge. Non facciamo profilazione, pubblicità né tracciamento tra app e siti.",
     "basisTitle": "Basi giuridiche",
@@ -1024,7 +1027,9 @@
     "visibilityTitle": "Chi vede cosa",
     "visibility": "Ogni nuova ricetta è privata. Puoi renderla visibile agli amici confermati o a tutti gli utenti registrati. I permessi sono verificati dal database a ogni richiesta, anche per le immagini. Note personali, raccolte, liste e piano pasti sono sempre privati. Le ricette importate da siti esterni restano private per impostazione predefinita.",
     "recipientsTitle": "Destinatari e sub-responsabili",
-    "recipients": "Trattiamo i dati tramite fornitori nominati responsabili del trattamento: Supabase (database, autenticazione e archiviazione file); il fornitore di hosting dell'app (per esempio Vercel); Sentry (diagnostica degli errori e prestazioni, solo dati scrubbati: nessuna email, cookie, testo delle ricette; nessuna registrazione delle sessioni; solo un campione delle prestazioni); il servizio SMTP per le email di servizio. Se usi funzioni AI i dati necessari sono inviati al provider da te scelto (per esempio Anthropic o OpenAI), vedi sezione seguente. Le notifiche dei promemoria pasti sono locali sul dispositivo e non passano da server. Non vendiamo dati e non li cediamo a terzi per pubblicità.",
+    "recipients": "Trattiamo i dati tramite fornitori nominati responsabili del trattamento: Supabase (database, autenticazione e archiviazione file); il fornitore di hosting dell'app (per esempio Vercel); Sentry (diagnostica degli errori e prestazioni, solo dati scrubbati: nessuna email, cookie, testo delle ricette; nessuna registrazione delle sessioni; solo un campione delle prestazioni); il servizio SMTP per le email di servizio. Se usi funzioni AI i dati necessari sono inviati al provider da te scelto (per esempio Anthropic o OpenAI), vedi sezione seguente. Le notifiche dei promemoria pasti dell'app nativa sono locali sul dispositivo e non passano da server; per le notifiche push web vedi la sezione dedicata. Non vendiamo dati e non li cediamo a terzi per pubblicità.",
+    "pushTitle": "Notifiche push web",
+    "push": "Se attivi le notifiche push nel browser, salviamo l'endpoint della sottoscrizione e le relative chiavi di cifratura, collegati al tuo account. Li usiamo solo per recapitarti le notifiche che hai richiesto (per esempio i promemoria dei pasti). La base giuridica è il tuo consenso (art. 6.1.a GDPR), che puoi revocare in ogni momento disattivando le notifiche dalle impostazioni dell'app o dai permessi del sito nel browser; la sottoscrizione viene eliminata anche con l'eliminazione dell'account. Per l'invio il messaggio transita dal servizio push del tuo browser (Google FCM, Mozilla o Apple, in base al browser e al dispositivo), che riceve l'endpoint e il contenuto cifrato della notifica ed è titolare autonomo del proprio trattamento. Nell'app nativa i promemoria restano locali sul dispositivo.",
     "aiTitle": "Servizi AI esterni, foto e link",
     "ai": "Analisi, lettura delle foto, traduzioni, trascrizione dei video e immagini usano provider esterni solo quando avvii la funzione: ricevono il solo contenuto necessario (testo della ricetta o foto della pagina) e lo trattano secondo i propri termini. Le foto usate per importare una ricetta sono elaborate in memoria e non conservate da Mestolo. Se usi una tua chiave API, è cifrata, non compare mai nel browser, nei log o nelle esportazioni. Quando importi da un link, il nostro server scarica la pagina indicata da te. La fotocamera è usata solo quando scatti una foto per l'import o per una ricetta.",
     "transfersTitle": "Trasferimenti extra-UE",
@@ -1140,7 +1145,8 @@
     "permissionDenied": "Notifiche non consentite: abilitale nelle impostazioni del dispositivo o del browser.",
     "subscribeFailed": "Impossibile attivare le notifiche su questo dispositivo.",
     "unsupported": "Questo browser non supporta le notifiche push. Prova con l’app o con un browser aggiornato.",
-    "iosHint": "Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Mestolo alla schermata Home (Condividi > Aggiungi alla schermata Home, iOS 16.4 o successivo)."
+    "iosHint": "Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Mestolo alla schermata Home (Condividi > Aggiungi alla schermata Home, iOS 16.4 o successivo).",
+    "limitedSchedule": "Su questa installazione i promemoria vengono controllati solo una volta al giorno (circa le 08:00 UTC): quelli con un altro orario potrebbero non arrivare. Per promemoria puntuali l'amministratore deve pianificare la route ogni 15 minuti."
   },
   "cook": {
     "start": "Cucina",

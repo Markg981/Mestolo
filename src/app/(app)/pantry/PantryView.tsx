@@ -161,7 +161,7 @@ export function PantryView({ items, suggestions, today }: { items: PantryItem[];
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="size-10 shrink-0 px-0"
+                  className="size-11 shrink-0 px-0"
                   aria-label={t('remove', { name: i.name })}
                   disabled={pending}
                   onClick={() =>

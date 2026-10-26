@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scrubBreadcrumb, scrubEvent, sentryOptions } from '@/lib/monitoring/scrub';
+import { scrubSpan, scrubBreadcrumb, scrubEvent, sentryOptions } from '@/lib/monitoring/scrub';
 
 describe('scrubEvent', () => {
   const event = {
@@ -44,6 +44,48 @@ describe('scrubEvent', () => {
   it("non modifica l'evento originale", () => {
     scrubEvent(event);
     expect(event.user.email).toBe('mario@example.com');
+  });
+});
+
+describe('scrubSpan / spans di una transazione', () => {
+  const url = 'https://x.supabase.co/rest/v1/profiles?select=id&username=eq.mario_rossi';
+  const span = {
+    op: 'http.client',
+    description: `GET ${url}`,
+    data: {
+      url,
+      'url.full': url,
+      'http.query': '?username=eq.mario_rossi',
+      'http.method': 'GET',
+      'http.response.status_code': 200,
+    },
+  };
+
+  it('toglie la query string da description e data', () => {
+    const out = scrubSpan(span);
+    expect(JSON.stringify(out)).not.toContain('mario_rossi');
+    expect(out.description).toBe('GET https://x.supabase.co/rest/v1/profiles');
+    expect(out.data.url).toBe('https://x.supabase.co/rest/v1/profiles');
+    expect(out.data['http.method']).toBe('GET');
+    expect(out.data['http.response.status_code']).toBe(200);
+  });
+
+  it('scrubEvent applica lo scrubbing a event.spans', () => {
+    const out = scrubEvent({ type: 'transaction', spans: [span] });
+    expect(JSON.stringify(out)).not.toContain('mario_rossi');
+    expect(out.spans[0].description).toBe('GET https://x.supabase.co/rest/v1/profiles');
+  });
+
+  it('copre anche gli span streamed (name/attributes) tramite beforeSendSpan', () => {
+    const streamed = { name: `GET ${url}`, attributes: { 'url.full': url, 'http.query': 'username=eq.mario_rossi' } };
+    const out = sentryOptions('https://k@o1.ingest.sentry.io/1').beforeSendSpan(streamed);
+    expect(JSON.stringify(out)).not.toContain('mario_rossi');
+    expect(out.name).toBe('GET https://x.supabase.co/rest/v1/profiles');
+  });
+
+  it("non modifica lo span originale", () => {
+    scrubSpan(span);
+    expect(span.data.url).toBe(url);
   });
 });
 

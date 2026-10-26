@@ -59,6 +59,12 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
     });
   };
 
+  // L'aggiornamento ottimistico rientra da solo a fine transizione: se l'azione fallisce basta non rinfrescare e avvisare.
+  const run = (res: { ok: boolean; error?: Parameters<typeof te>[0] }) => {
+    if (res.ok) router.refresh();
+    else setMsg({ text: te(res.error ?? 'generic'), tone: 'error' });
+  };
+
   const row = (i: Item) => (
     <li key={i.id} className="flex items-center gap-3 py-2">
       <input
@@ -70,8 +76,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
           const checked = e.target.checked;
           start(async () => {
             setOptimistic({ id: i.id, checked });
-            await toggleShoppingItem(i.id, checked);
-            router.refresh();
+            run(await toggleShoppingItem(i.id, checked));
           });
         }}
       />
@@ -80,7 +85,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
           {i.quantity !== null && <span className="tabular font-semibold">{formatQuantity(i.quantity, locale)} {unit(i.unit)} </span>}
           {i.quantity === null && i.unit && <span className="font-semibold">{unit(i.unit)} </span>}
           {i.name}
-          {i.note && <span className="text-muted">, {i.note}</span>}
+          {i.note && <span className="text-muted">, {i.note === 'q.b.' ? t('toTaste') : i.note}</span>}
         </span>
         {i.recipe_title && <span className="text-xs text-muted no-underline">{t('fromRecipe', { title: i.recipe_title })}</span>}
         {showPeople && (i.checked ? i.checked_by ?? '' : i.added_by ?? '') && (
@@ -111,13 +116,12 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
       <Button
         size="sm"
         variant="ghost"
-        className="no-print size-10 shrink-0 px-0"
+        className="no-print size-11 shrink-0 px-0"
         aria-label={t('removeItem', { name: i.name })}
         onClick={() =>
           start(async () => {
             setOptimistic({ id: i.id, removed: true });
-            await deleteShoppingItem(i.id);
-            router.refresh();
+            run(await deleteShoppingItem(i.id));
           })
         }
       >
@@ -165,7 +169,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
                 <h2 id="bought" className="text-xl font-bold">
                   {t('bought', { n: bought.length })}
                 </h2>
-                <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(async () => { await clearCheckedItems(listId); router.refresh(); })}>
+                <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(async () => run(await clearCheckedItems(listId)))}>
                   {t('clearBought')}
                 </Button>
               </div>

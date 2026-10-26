@@ -158,10 +158,10 @@ export function PlanGenerator({
                   </span>
                   <span className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold">{x.title}</span>
                   {x.servings && <span className="text-xs text-muted">×{Number(x.servings)}</span>}
-                  <button type="button" disabled={pending} className="inline-flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('regenerateSlot', { slot: t(`slots.${x.slot}`), day: dayLabel(x.date) })} onClick={() => regenerateOne(x)}>
+                  <button type="button" disabled={pending} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('regenerateSlot', { slot: t(`slots.${x.slot}`), day: dayLabel(x.date) })} onClick={() => regenerateOne(x)}>
                     <RefreshCw aria-hidden className="size-4" />
                   </button>
-                  <button type="button" className="inline-flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('discardSlot', { title: x.title })} onClick={() => setPreview(preview.filter((o) => o !== x))}>
+                  <button type="button" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-saffron/40" aria-label={t('discardSlot', { title: x.title })} onClick={() => setPreview(preview.filter((o) => o !== x))}>
                     <X aria-hidden className="size-4" />
                   </button>
                 </li>

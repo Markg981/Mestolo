@@ -12,6 +12,7 @@ import { createCategory, deleteCategory } from '@/app/actions/organize';
 import { LiveMessage, Modal } from '@/components/client-ui';
 import { Alert, Button, Card, Field, Input, Select, Textarea, buttonClass } from '@/components/ui';
 import type { Profile } from '@/lib/supabase/server';
+import { MAX_UPLOAD_BYTES } from '@/lib/images/limits';
 import { DIETS } from '@/lib/recipes/diets';
 
 function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string; hasImage: boolean }) {
@@ -43,6 +44,10 @@ function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string
               const file = e.target.files?.[0];
               e.target.value = '';
               if (!file) return;
+              if (file.size > MAX_UPLOAD_BYTES) {
+                setMsg({ text: te('image_too_large'), tone: 'error' });
+                return;
+              }
               const fd = new FormData();
               fd.set('file', file);
               run(() => uploadAvatar(fd));
@@ -201,7 +206,7 @@ export function CustomCategories({ categories }: { categories: { id: string; nam
           {categories.map((c) => (
             <li key={c.id} className="flex items-center gap-1 rounded-full border border-line bg-surface pl-4">
               {c.name}
-              <Button size="sm" variant="ghost" className="size-10 px-0" aria-label={t('deleteCategory', { name: c.name })} disabled={pending} onClick={() => start(async () => { const r = await deleteCategory(c.id); if (r.ok) router.refresh(); else setError(te(r.error)); })}>
+              <Button size="sm" variant="ghost" className="size-11 px-0" aria-label={t('deleteCategory', { name: c.name })} disabled={pending} onClick={() => start(async () => { const r = await deleteCategory(c.id); if (r.ok) router.refresh(); else setError(te(r.error)); })}>
                 <Trash2 aria-hidden className="size-4" />
               </Button>
             </li>

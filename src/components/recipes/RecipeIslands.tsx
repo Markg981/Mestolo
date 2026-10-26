@@ -230,7 +230,7 @@ export function ImageManagerClient({ recipeId, title, images }: { recipeId: stri
               <Button
                 size="sm"
                 variant="ghost"
-                className="ml-auto size-9 px-0 text-tomato"
+                className="ml-auto size-11 px-0 text-tomato"
                 aria-label={t('delete')}
                 disabled={pending}
                 onClick={() =>

@@ -134,6 +134,7 @@
     "username_taken": "Ce nom d'utilisateur est déjà pris.",
     "translation_failed": "La traduction a échoué. L'original reste disponible.",
     "already_exists": "Existe déjà.",
+    "conflict": "Cette recette a été modifiée ailleurs (autre onglet ou autre appareil). Recharge la page pour voir la dernière version avant d'enregistrer.",
     "pageTitle": "Cette page ne s'est pas chargée",
     "pageLead": "Cela peut arriver si la connexion est instable. Les données que vous saisissiez sont conservées en brouillon.",
     "retry": "Réessayer",
@@ -482,6 +483,7 @@
     "title": "Titre",
     "titlePlaceholder": "Ex. : Gratin d'aubergines au parmesan",
     "titleRequired": "Le titre est obligatoire.",
+    "quantityInvalid": "La quantité \"{value}\" de \"{name}\" n'est pas valide. Utilisez un nombre, une fraction (1 1/2) ou laissez le champ vide.",
     "description": "Description",
     "category": "Catégorie",
     "categorySuggested": "Proposée automatiquement : vous pouvez la modifier.",
@@ -786,6 +788,7 @@
   },
   "shopping": {
     "title": "Liste de courses",
+    "toTaste": "à volonté",
     "lead": "Ajoutez des produits à la main ou à partir des ingrédients de vos recettes.",
     "addLabel": "Ajouter un produit",
     "addPlaceholder": "Ex. : 500 g de tomates",
@@ -1016,7 +1019,7 @@
     "title": "Politique de confidentialité",
     "lead": "Information au titre des art. 13 et 14 du Règlement (UE) 2016/679 (RGPD). En bref : tes recettes sont privées tant que tu n'en décides pas autrement, et nous n'utilisons tes données que pour faire fonctionner le service.",
     "dataTitle": "Catégories de données traitées",
-    "data": "Données du compte : e-mail et mot de passe (conservé uniquement sous forme de hash par le service d'authentification), nom d'utilisateur, nom affiché, bio. Contenus que tu crées : recettes avec historique, images, notes, collections, liste de courses, planning de repas, amitiés, préférences alimentaires déclarées (elles peuvent révéler des convictions religieuses ou un mode de vie : elles sont facultatives), signalements et retours. Données d'usage : nombre d'utilisations des fonctions IA, clés API personnelles (chiffrées). Données techniques : adresse IP et journaux serveur, et diagnostic d'erreurs (type d'erreur, page sans paramètres, identifiant utilisateur interne, navigateur et système). Nous ne collectons ni position, ni contacts, ni identifiants publicitaires, ni historique de navigation ; les métadonnées GPS des photos sont supprimées.",
+    "data": "Données du compte : e-mail et mot de passe (conservé uniquement sous forme de hash par le service d'authentification), nom d'utilisateur, nom affiché, bio. Contenus que tu crées : recettes avec historique, images, notes, collections, liste de courses, planning de repas, amitiés, préférences alimentaires déclarées (elles peuvent révéler des convictions religieuses ou un mode de vie : elles sont facultatives), signalements et retours. Données d'usage : nombre d'utilisations des fonctions IA, clés API personnelles (chiffrées). Données techniques : adresse IP et journaux serveur, et diagnostic d'erreurs (type d'erreur, page sans paramètres, navigateur et système). Nous ne collectons ni position, ni contacts, ni identifiants publicitaires, ni historique de navigation ; les métadonnées GPS des photos sont supprimées.",
     "purposesTitle": "Finalités",
     "purposes": "a) Créer et gérer le compte et fournir les fonctions de l'app (recettes, collections, partage avec des amis, import depuis photos, liens et vidéos, fonctions IA que tu demandes) ; b) envoyer des e-mails de service (confirmation, récupération du mot de passe) ; c) sécurité, prévention des abus et modération des contenus signalés ; d) suivi et correction des erreurs techniques ; e) respecter les obligations légales. Nous ne faisons ni profilage, ni publicité, ni suivi entre applications et sites.",
     "basisTitle": "Bases juridiques",
@@ -1024,7 +1027,9 @@
     "visibilityTitle": "Qui voit quoi",
     "visibility": "Chaque nouvelle recette est privée. Tu peux la rendre visible aux amis confirmés ou à tous les utilisateurs inscrits. Les autorisations sont vérifiées par la base de données à chaque requête, y compris pour les images. Les notes personnelles, collections, listes et plannings de repas sont toujours privés. Les recettes importées de sites externes restent privées par défaut.",
     "recipientsTitle": "Destinataires et sous-traitants",
-    "recipients": "Nous traitons les données via des prestataires désignés sous-traitants : Supabase (base de données, authentification et fichiers) ; l'hébergeur de l'app (par exemple Vercel) ; Sentry (diagnostic d'erreurs et de performance, données épurées uniquement : ni e-mails, ni cookies, ni texte de recettes ; pas d'enregistrement de sessions ; seulement un échantillon de performance) ; le service SMTP pour les e-mails de service. Si tu utilises les fonctions IA, les données nécessaires sont envoyées au fournisseur que tu choisis (par exemple Anthropic ou OpenAI), voir la section suivante. Les rappels de repas sont locaux à l'appareil et ne passent pas par un serveur. Nous ne vendons pas les données et ne les cédons pas à des tiers à des fins publicitaires.",
+    "recipients": "Nous traitons les données via des prestataires désignés sous-traitants : Supabase (base de données, authentification et fichiers) ; l'hébergeur de l'app (par exemple Vercel) ; Sentry (diagnostic d'erreurs et de performance, données épurées uniquement : ni e-mails, ni cookies, ni texte de recettes ; pas d'enregistrement de sessions ; seulement un échantillon de performance) ; le service SMTP pour les e-mails de service. Si tu utilises les fonctions IA, les données nécessaires sont envoyées au fournisseur que tu choisis (par exemple Anthropic ou OpenAI), voir la section suivante. Les rappels de repas de l'app native sont locaux à l'appareil et ne passent pas par un serveur ; pour les notifications push web, voir la section dédiée. Nous ne vendons pas les données et ne les cédons pas à des tiers à des fins publicitaires.",
+    "pushTitle": "Notifications push web",
+    "push": "Si tu actives les notifications push dans le navigateur, nous conservons l'endpoint de l'abonnement et ses clés de chiffrement, liés à ton compte. Nous les utilisons uniquement pour t'envoyer les notifications que tu as demandées (par exemple les rappels de repas). La base juridique est ton consentement (art. 6.1.a RGPD), que tu peux retirer à tout moment en désactivant les notifications dans les réglages de l'app ou dans les autorisations du site du navigateur ; l'abonnement est aussi supprimé lors de la suppression du compte. Pour l'envoi, le message transite par le service push de ton navigateur (Google FCM, Mozilla ou Apple, selon le navigateur et l'appareil), qui reçoit l'endpoint et le contenu chiffré de la notification et est responsable de traitement distinct pour son propre traitement. Dans l'app native, les rappels restent locaux sur l'appareil.",
     "aiTitle": "Services IA externes, photos et liens",
     "ai": "L'analyse, la lecture des photos, les traductions, la transcription de vidéos et les images font appel à des fournisseurs externes uniquement quand tu lances la fonction : ils ne reçoivent que le contenu nécessaire (texte de la recette ou photo de la page) et le traitent selon leurs propres conditions. Les photos servant à importer une recette sont traitées en mémoire et non conservées par Mestolo. Si tu utilises ta propre clé API, elle est chiffrée et n'apparaît jamais dans le navigateur, les journaux ou les exports. Lors d'un import par lien, notre serveur télécharge la page que tu indiques. L'appareil photo n'est utilisé que lorsque tu prends une photo pour l'import ou pour une recette.",
     "transfersTitle": "Transferts hors UE",
@@ -1140,7 +1145,8 @@
     "permissionDenied": "Notifications non autorisées : activez-les dans les réglages de l’appareil ou du navigateur.",
     "subscribeFailed": "Impossible d’activer les notifications sur cet appareil.",
     "unsupported": "Ce navigateur ne prend pas en charge les notifications push. Essayez l’appli ou un navigateur à jour.",
-    "iosHint": "Sur iPhone et iPad, les notifications ne fonctionnent qu’après avoir ajouté Mestolo à l’écran d’accueil (Partager > Sur l’écran d’accueil, iOS 16.4 ou version ultérieure)."
+    "iosHint": "Sur iPhone et iPad, les notifications ne fonctionnent qu’après avoir ajouté Mestolo à l’écran d’accueil (Partager > Sur l’écran d’accueil, iOS 16.4 ou version ultérieure).",
+    "limitedSchedule": "Sur cette installation, les rappels ne sont vérifiés qu’une fois par jour (vers 08:00 UTC) : ceux d’autres horaires peuvent ne pas arriver. Pour des rappels ponctuels, l’administrateur doit planifier la route toutes les 15 minutes."
   },
   "cook": {
     "start": "Cuisiner",

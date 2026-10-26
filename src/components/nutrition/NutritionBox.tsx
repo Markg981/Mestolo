@@ -40,13 +40,13 @@ export function NutritionBox({ values, source, updatedAt, baseServings, editHref
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted">{portions === 1 ? t('perServing') : t('forPortions', { count: portions })}</span>
         <span role="group" aria-label={t('portions')} className="inline-flex items-center gap-1">
-          <button type="button" onClick={() => step(-1)} disabled={portions <= 1} aria-label={t('fewer')} className="inline-flex size-9 items-center justify-center rounded-full border border-line disabled:opacity-40">
+          <button type="button" onClick={() => step(-1)} disabled={portions <= 1} aria-label={t('fewer')} className="inline-flex size-11 items-center justify-center rounded-full border border-line disabled:opacity-40">
             −
           </button>
           <output className="min-w-6 text-center font-semibold" aria-live="polite">
             {portions}
           </output>
-          <button type="button" onClick={() => step(1)} disabled={portions >= 100} aria-label={t('more')} className="inline-flex size-9 items-center justify-center rounded-full border border-line disabled:opacity-40">
+          <button type="button" onClick={() => step(1)} disabled={portions >= 100} aria-label={t('more')} className="inline-flex size-11 items-center justify-center rounded-full border border-line disabled:opacity-40">
             +
           </button>
         </span>

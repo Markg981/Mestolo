@@ -1,7 +1,6 @@
 import 'server-only';
 import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
 import { decryptSecret, keyAad, loadEncryptionKey } from '@/lib/crypto/secrets';
 import { AiError, anthropicProvider, openAiProvider, type AiProvider, type Capability } from './providers';
 
@@ -116,8 +115,9 @@ export async function resolveProvider(userId: string, capability: Capability, gr
   const g = quotaGroupFor(capability, group);
   // Conteggio e registrazione sono atomici (funzione SQL con lock per utente):
   // la quota viene consumata prima della chiamata AI, non dopo.
-  const supabase = await createClient();
-  const { data: allowed, error } = await supabase.rpc('consume_ai_quota', {
+  // Solo service role: l'RPC non e' eseguibile dai client (il limite non e' falsificabile).
+  const { data: allowed, error } = await createAdminClient().rpc('consume_ai_quota', {
+    p_user_id: userId,
     p_group: g,
     p_limit: env().ai.limits[g],
     p_action: action,

@@ -1,5 +1,6 @@
 'use client';
 
+import { draftNames } from '@/lib/drafts';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link2 } from 'lucide-react';
@@ -71,7 +72,7 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl]);
 
-  if (draft) return <ImportReview draft={draft} categories={categories} draftKey="mestolo:draft:import-link" onBack={() => setDraft(null)} />;
+  if (draft) return <ImportReview draft={draft} categories={categories} draftKey={draftNames.import('link')} onBack={() => setDraft(null)} />;
 
   return (
     <div className="flex flex-col gap-6">

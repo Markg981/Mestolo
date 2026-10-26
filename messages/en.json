@@ -134,6 +134,7 @@
     "username_taken": "This username is already taken.",
     "translation_failed": "Translation failed. The original is still available.",
     "already_exists": "Already exists.",
+    "conflict": "This recipe was changed elsewhere (another tab or device). Reload the page to see the latest version before saving.",
     "pageTitle": "This page didn't load",
     "pageLead": "This can happen on an unstable connection. Anything you were entering is saved as a draft.",
     "retry": "Try again",
@@ -482,6 +483,7 @@
     "title": "Title",
     "titlePlaceholder": "E.g. Eggplant Parmesan",
     "titleRequired": "Title is required.",
+    "quantityInvalid": "The quantity \"{value}\" for \"{name}\" is not valid. Use a number, a fraction (1 1/2) or leave the field empty.",
     "description": "Description",
     "category": "Category",
     "categorySuggested": "Suggested automatically: you can change it.",
@@ -786,6 +788,7 @@
   },
   "shopping": {
     "title": "Shopping list",
+    "toTaste": "to taste",
     "lead": "Add items manually or from recipe ingredients.",
     "addLabel": "Add an item",
     "addPlaceholder": "E.g. 500 g tomatoes",
@@ -1016,7 +1019,7 @@
     "title": "Privacy notice",
     "lead": "Notice under Articles 13 and 14 of Regulation (EU) 2016/679 (GDPR). In short: your recipes are private until you decide otherwise, and we use your data only to run the service.",
     "dataTitle": "Categories of data processed",
-    "data": "Account data: email and password (stored only as a hash by the authentication service), username, display name, bio. Content you create: recipes with history, images, notes, collections, shopping list, meal plan, friendships, declared dietary preferences (they may reveal religious beliefs or lifestyle: they are optional), reports and feedback. Usage data: count of AI feature uses, personal API keys (encrypted). Technical data: IP address and server logs, and error diagnostics (error type, page without parameters, internal user identifier, browser and operating system). We do not collect location, contacts, advertising identifiers or browsing history; GPS metadata is removed from photos.",
+    "data": "Account data: email and password (stored only as a hash by the authentication service), username, display name, bio. Content you create: recipes with history, images, notes, collections, shopping list, meal plan, friendships, declared dietary preferences (they may reveal religious beliefs or lifestyle: they are optional), reports and feedback. Usage data: count of AI feature uses, personal API keys (encrypted). Technical data: IP address and server logs, and error diagnostics (error type, page without parameters, browser and operating system). We do not collect location, contacts, advertising identifiers or browsing history; GPS metadata is removed from photos.",
     "purposesTitle": "Purposes",
     "purposes": "a) Creating and managing your account and providing app features (recipes, collections, sharing with friends, import from photos, links and videos, AI features you request); b) sending service emails (confirmation, password recovery); c) security, abuse prevention and moderation of reported content; d) monitoring and fixing technical errors; e) complying with legal obligations. We do not profile users, show advertising or track you across apps and sites.",
     "basisTitle": "Legal bases",
@@ -1024,7 +1027,9 @@
     "visibilityTitle": "Who sees what",
     "visibility": "Every new recipe is private. You can make it visible to confirmed friends or to all registered users. Permissions are checked by the database on every request, including for images. Personal notes, collections, lists and meal plans are always private. Recipes imported from external sites stay private by default.",
     "recipientsTitle": "Recipients and sub-processors",
-    "recipients": "We process data through providers appointed as processors: Supabase (database, authentication and file storage); the app hosting provider (for example Vercel); Sentry (error and performance diagnostics, scrubbed data only: no emails, cookies or recipe text; no session recording; only a sample of performance data); the SMTP service for service emails. If you use AI features, the necessary data is sent to the provider you choose (for example Anthropic or OpenAI), see the next section. Meal reminder notifications are local to the device and do not go through a server. We do not sell data or share it with third parties for advertising.",
+    "recipients": "We process data through providers appointed as processors: Supabase (database, authentication and file storage); the app hosting provider (for example Vercel); Sentry (error and performance diagnostics, scrubbed data only: no emails, cookies or recipe text; no session recording; only a sample of performance data); the SMTP service for service emails. If you use AI features, the necessary data is sent to the provider you choose (for example Anthropic or OpenAI), see the next section. Meal reminder notifications in the native app are local to the device and do not go through a server; for web push notifications see the dedicated section. We do not sell data or share it with third parties for advertising.",
+    "pushTitle": "Web push notifications",
+    "push": "If you enable push notifications in your browser, we store the subscription endpoint and its encryption keys, linked to your account. We use them only to deliver the notifications you asked for (for example meal reminders). The legal basis is your consent (Art. 6.1.a GDPR), which you can withdraw at any time by turning notifications off in the app settings or in the site permissions of your browser; the subscription is also deleted when you delete your account. To deliver them, the message goes through the push service of your browser (Google FCM, Mozilla or Apple, depending on browser and device), which receives the endpoint and the encrypted content of the notification and is an independent controller of its own processing. In the native app, reminders stay local on the device.",
     "aiTitle": "External AI services, photos and links",
     "ai": "Analysis, photo reading, translations, video transcription and images use external providers only when you start the feature: they receive only the necessary content (recipe text or a page photo) and process it under their own terms. Photos used to import a recipe are processed in memory and not stored by Mestolo. If you use your own API key, it is encrypted and never appears in the browser, logs or exports. When you import from a link, our server downloads the page you indicate. The camera is used only when you take a photo for import or for a recipe.",
     "transfersTitle": "Transfers outside the EU",
@@ -1140,7 +1145,8 @@
     "permissionDenied": "Notifications are not allowed: enable them in your device or browser settings.",
     "subscribeFailed": "Could not turn on notifications on this device.",
     "unsupported": "This browser does not support push notifications. Try the app or an up-to-date browser.",
-    "iosHint": "On iPhone and iPad notifications only work after adding Mestolo to the Home Screen (Share > Add to Home Screen, iOS 16.4 or later)."
+    "iosHint": "On iPhone and iPad notifications only work after adding Mestolo to the Home Screen (Share > Add to Home Screen, iOS 16.4 or later).",
+    "limitedSchedule": "On this installation reminders are only checked once a day (around 08:00 UTC): reminders at other times may not arrive. For on-time reminders the administrator must schedule the route every 15 minutes."
   },
   "cook": {
     "start": "Cook",

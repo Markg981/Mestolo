@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ConfigError, env } from '@/lib/env';
+import { createTimeoutFetch } from '@/lib/supabase/fetch';
 
 let cached: SupabaseClient | null = null;
 
@@ -16,6 +17,7 @@ export function createAdminClient(): SupabaseClient {
   if (!cached) {
     cached = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: createTimeoutFetch() },
     });
   }
   return cached;

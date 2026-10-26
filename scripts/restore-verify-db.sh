@@ -39,6 +39,13 @@ set +e
 auth_dump=("$work"/auth-*.dump)
 pg_restore --no-owner --no-privileges --dbname "$target" "${auth_dump[@]}" 2>"$work/auth-restore.log" || true
 pg_restore --no-owner --no-privileges --dbname "$target" "$work"/public-*.dump || echo "::warning::pg_restore public con errori"
+# --no-privileges: i grant di private non vengono ripristinati e le policy RLS li richiedono
+psql "$target" -q -c "do \$\$ begin if exists (select 1 from pg_namespace where nspname = 'private') then
+  revoke all on schema private from public, anon;
+  grant usage on schema private to authenticated;
+  revoke execute on function private.is_blocked_between(uuid, uuid) from public, anon;
+  grant execute on function private.is_blocked_between(uuid, uuid) to authenticated;
+end if; end \$\$" || echo "::warning::grant schema private non applicati"
 pg_restore -l "${auth_dump[@]}" | awk '$4 == "TRIGGER"' > "$work/auth-triggers.list"
 if [ -s "$work/auth-triggers.list" ]; then
   pg_restore --no-owner --no-privileges -L "$work/auth-triggers.list" --dbname "$target" "${auth_dump[@]}" || echo "::warning::pg_restore trigger auth con errori"

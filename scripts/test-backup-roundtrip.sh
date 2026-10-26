@@ -46,9 +46,9 @@ RESTORE_EXACT=1 "$here/restore-verify-db.sh" "$tmp/out/backup-$stamp.tar.gpg" "$
 # Contenuto e schema: identici tra sorgente e ripristino
 probe="select
   (select md5(string_agg(id::text || owner_id::text || title || ingredients::text || array_to_string(tags, ','), '|' order by id)) from public.recipes),
-  (select count(*) from pg_policies where schemaname = 'public'),
+  (select count(*) from pg_policies where schemaname in ('public', 'private')),
   (select count(*) from pg_trigger t join pg_class c on c.oid = t.tgrelid join pg_namespace s on s.oid = c.relnamespace where s.nspname = 'public' and not t.tgisinternal),
-  (select count(*) from pg_proc p join pg_namespace s on s.oid = p.pronamespace where s.nspname = 'public'
+  (select count(*) from pg_proc p join pg_namespace s on s.oid = p.pronamespace where s.nspname in ('public', 'private')
      and not exists (select 1 from pg_depend d where d.classid = 'pg_proc'::regclass and d.objid = p.oid and d.deptype = 'e')),
   (select count(*) from pg_trigger t join pg_class c on c.oid = t.tgrelid join pg_namespace s on s.oid = c.relnamespace where s.nspname = 'auth' and not t.tgisinternal),
   (select count(*) from pg_indexes where schemaname = 'public'),
@@ -58,4 +58,6 @@ b="$(psql "$restore" -At -c "$probe")"
 echo "sorgente:   $a"
 echo "ripristino: $b"
 if [ "$a" != "$b" ]; then echo "::error::il ripristino differisce dalla sorgente (ricette|policy|trigger|funzioni|trigger auth|indici|vincoli)"; exit 1; fi
+g="$(psql "$restore" -At -c "select has_schema_privilege('authenticated', 'private', 'usage') and has_function_privilege('authenticated', 'private.is_blocked_between(uuid, uuid)', 'execute')")"
+if [ "$g" != t ]; then echo "::error::authenticated senza grant su private.is_blocked_between dopo il restore"; exit 1; fi
 echo "Round trip del backup OK ($stamp)"

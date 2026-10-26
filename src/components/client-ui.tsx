@@ -38,7 +38,7 @@ export function Modal({ open, onClose, title, children, closeLabel }: { open: bo
           <h2 id={titleId} className="text-xl font-bold">
             {title}
           </h2>
-          <button type="button" onClick={onClose} className={cx(buttonClass('ghost', 'sm'), 'size-10 px-0')} aria-label={closeLabel}>
+          <button type="button" onClick={onClose} className={cx(buttonClass('ghost', 'sm'), 'size-11 px-0')} aria-label={closeLabel}>
             <X aria-hidden className="size-5" />
           </button>
         </div>
