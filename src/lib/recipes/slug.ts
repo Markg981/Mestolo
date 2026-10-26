@@ -1,6 +1,6 @@
 /**
  * Slug of a public recipe page: normalized title + first 8 hex chars of the id.
- * Mirror of public.make_recipe_slug (migration 20261025000001): the database is the
+ * Mirror of public.make_recipe_slug (migration 20261025000001; dal 20261104000001 il database usa un suffisso casuale, non l'id): the database is the
  * source of truth and assigns the slug once; this copy validates and is tested against
  * the same vectors.
  */

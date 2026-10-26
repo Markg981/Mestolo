@@ -58,7 +58,9 @@ d('public recipe pages', () => {
 
   it('assigns a stable slug from the title and the id, only when the page is enabled', async () => {
     const r = await create('Tiramisù della Nonna');
-    expect(r.public_slug).toBe(`tiramisu-della-nonna-${r.id.replaceAll('-', '').slice(0, 8)}`);
+    expect(r.public_slug).toMatch(/^tiramisu-della-nonna-[a-f0-9]{8}$/);
+    // il suffisso non deriva piu' dall'id scelto dal client (anti-squatting)
+    expect(r.public_slug).not.toContain(r.id.replaceAll('-', '').slice(0, 8));
     const off = await create('Spenta', 'public', false);
     expect(off.public_slug).toBeNull();
   });
@@ -67,7 +69,7 @@ d('public recipe pages', () => {
     const r = await create('Zuppa antica');
     await as(owner, 'update public.recipes set title = $2 where id = $1', [r.id, 'Zuppa rinnovata']);
     const [after] = await admin<{ public_slug: string }>('select public_slug from public.recipes where id = $1', [r.id]);
-    expect(after.public_slug).toBe(`zuppa-rinnovata-${r.id.replaceAll('-', '').slice(0, 8)}`);
+    expect(after.public_slug).toBe(`zuppa-rinnovata-${r.public_slug!.slice(-8)}`);
     const [res] = await as<{ s: string }>(null, 'select public.resolve_public_recipe_slug($1) as s', [r.public_slug]);
     expect(res.s).toBe(after.public_slug);
     expect(await get(after.public_slug)).toHaveLength(1);
@@ -101,6 +103,14 @@ d('public recipe pages', () => {
       const [r] = await admin<{ s: string }>('select public.make_recipe_slug($1, $2) as s', [title, id]);
       expect(r.s).toBe(expected);
     }
+  });
+
+  it('un id scelto dal client non permette di prenotare lo slug di un altro', async () => {
+    const id = '3f2a9c1e-7b44-4d0a-9d55-0a1b2c3d4e5f';
+    const [a] = await as<{ public_slug: string }>(owner, "insert into public.recipes (id, owner_id, title, visibility, public_page_enabled) values ($1, $2, 'Squat', 'public', true) returning public_slug", [id, owner]);
+    expect(a.public_slug).not.toBe('squat-3f2a9c1e');
+    const b = await create('Squat');
+    expect(b.public_slug).not.toBe(a.public_slug);
   });
 
   it('the slug cannot be chosen or rewritten by the client', async () => {
