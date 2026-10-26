@@ -5,10 +5,17 @@ vi.mock('server-only', () => ({}));
 const state = vi.hoisted(() => ({
   result: { data: null as unknown, error: null as unknown },
   encryptionKey: undefined as string | undefined,
+  rpcCalls: [] as { name: string; args: Record<string, unknown> }[],
 }));
 
 vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: () => ({ from: () => ({ select: () => ({ eq: async () => state.result }) }) }),
+  createAdminClient: () => ({
+    from: () => ({ select: () => ({ eq: async () => state.result }) }),
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      state.rpcCalls.push({ name, args });
+      return { data: true, error: null };
+    },
+  }),
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc: async () => ({ data: true, error: null }) }) }));
 vi.mock('@/lib/env', () => ({
@@ -30,6 +37,7 @@ describe('no silent fallback to the base service', () => {
   beforeEach(() => {
     state.result = { data: [], error: null };
     state.encryptionKey = undefined;
+    state.rpcCalls = [];
   });
 
   it('fails explicitly when reading the user keys errors out', async () => {
@@ -52,5 +60,7 @@ describe('no silent fallback to the base service', () => {
   it('still uses the base service when the user has no key', async () => {
     const r = await resolveProvider('u1', 'text', 'text', 'a');
     expect(r.keySource).toBe('app');
+    expect(state.rpcCalls).toHaveLength(1);
+    expect(state.rpcCalls[0]).toMatchObject({ name: 'consume_ai_quota', args: { p_user_id: 'u1' } });
   });
 });
