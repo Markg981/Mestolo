@@ -1,4 +1,4 @@
-/** shopping_items_update deve validare recipe_id come l'insert (migration 20261103000002). */
+/** shopping_items_update deve validare recipe_id come l'insert (migration 20261104000002). */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 
@@ -56,11 +56,18 @@ d('shopping_items_update: validazione recipe_id', () => {
   });
 
   it('rifiuta di puntare un articolo a una ricetta non visibile', async () => {
-    await expect(as(user, 'update public.shopping_items set recipe_id = $2 where id = $1', [item, privateRecipe])).rejects.toThrow(/row-level security/);
+    await expect(as(user, 'update public.shopping_items set recipe_id = $2 where id = $1', [item, privateRecipe])).rejects.toThrow(/recipe not visible/);
   });
 
   it('consente una ricetta visibile e il reset a null', async () => {
     expect(await as(user, 'update public.shopping_items set recipe_id = $2 where id = $1 returning id', [item, publicRecipe])).toHaveLength(1);
     expect(await as(user, 'update public.shopping_items set recipe_id = null where id = $1 returning id', [item])).toHaveLength(1);
+  });
+
+  it('spuntare un articolo con ricetta diventata invisibile funziona ancora', async () => {
+    await as(user, 'update public.shopping_items set recipe_id = $2 where id = $1', [item, publicRecipe]);
+    await as(other, "update public.recipes set visibility = 'private' where id = $1", [publicRecipe]);
+    const r = await as<{ checked: boolean }>(user, 'update public.shopping_items set checked = true where id = $1 returning checked', [item]);
+    expect(r[0].checked).toBe(true);
   });
 });
