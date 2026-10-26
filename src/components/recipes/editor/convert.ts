@@ -213,3 +213,22 @@ export function toPayload(s: EditorState, labelToUnit: Map<string, string>, opts
     verification_status: opts.review && anyFlags ? ('needs_review' as const) : anyFlags ? ('needs_review' as const) : ('verified' as const),
   };
 }
+
+/**
+ * Payload for one recipe of a bulk import (account export), saved as private exactly as the review
+ * editor would (the server validates it again). Bulk import skips the review screen, so every recipe
+ * is saved as "needs review": the recipe page and the home list ask the user to check it, and saving
+ * it from the editor marks it verified.
+ */
+export function bulkImportPayload(d: ImportDraft, categories: EditorCategory[]) {
+  // Units in a Mestolo export are already canonical keys: no label mapping needed.
+  const state = stateFromDraft(d, categories, (k) => k);
+  return {
+    ...toPayload(state, new Map(), { verified: false, review: true }),
+    verification_status: 'needs_review' as const,
+    source_type: d.source.type,
+    source_url: d.source.url ?? null,
+    source_name: d.source.name ?? null,
+    source_attribution: d.source.attribution ?? null,
+  };
+}

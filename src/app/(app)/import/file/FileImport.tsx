@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { checkDuplicates, saveRecipe } from '@/app/actions/recipes';
 import { ImportReview, useResumeImport } from '@/components/import/ImportReview';
-import { stateFromDraft, toPayload } from '@/components/recipes/editor/convert';
+import { bulkImportPayload } from '@/components/recipes/editor/convert';
 import type { EditorCategory } from '@/components/recipes/editor/types';
 import { Alert, Button, Card } from '@/components/ui';
 import { MAX_IMPORT_FILE_BYTES, parseMestoloExport } from '@/lib/recipes/import-json';
@@ -14,19 +14,6 @@ import { runBulkImport, type BulkProgress } from '@/lib/recipes/bulk-import';
 import type { ImportDraft } from '@/lib/recipes/types';
 
 const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
-
-/** Saves a draft as a private recipe, exactly as the review editor would (the server validates it again). */
-function bulkPayload(d: ImportDraft, categories: EditorCategory[]) {
-  // Units in a Mestolo export are already canonical keys: no label mapping needed.
-  const state = stateFromDraft(d, categories, (k) => k);
-  return {
-    ...toPayload(state, new Map(), { verified: false, review: true }),
-    source_type: d.source.type,
-    source_url: d.source.url ?? null,
-    source_name: d.source.name ?? null,
-    source_attribution: d.source.attribution ?? null,
-  };
-}
 
 export function FileImport({ categories }: { categories: EditorCategory[] }) {
   const t = useTranslations('fileImport');
@@ -63,7 +50,7 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
     start(async () => {
       await runBulkImport(chosen, {
         isDuplicate: async (d) => (await checkDuplicates({ title: d.content.title, source_url: d.source.url ?? null })).some((m) => sameTitle(m.title, d.content.title)),
-        save: async (d) => (await saveRecipe(bulkPayload(d, categories), null)).ok,
+        save: async (d) => (await saveRecipe(bulkImportPayload(d, categories), null)).ok,
         onProgress: setProgress,
         shouldStop: () => stopRef.current,
       });
