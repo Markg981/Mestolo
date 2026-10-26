@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
 import { uploadAvatar, removeAvatar } from '@/app/actions/profile';
 import { Avatar } from '@/components/Avatar';
-import { clearAllDrafts } from '@/lib/drafts';
+import { clearLocalUserData } from '@/components/pwa/PwaClient';
 import { updateProfile, deleteApiKey, saveApiKey, deleteAccount } from '@/app/actions/settings';
 import { changePassword } from '@/app/actions/auth';
 import { createCategory, deleteCategory } from '@/app/actions/organize';
@@ -352,6 +352,7 @@ export function ChangePasswordForm() {
 }
 
 export function DeleteAccountForm({ username }: { username: string }) {
+  const router = useRouter();
   const t = useTranslations('account');
   const te = useTranslations('errors');
   const [value, setValue] = useState('');
@@ -365,8 +366,13 @@ export function DeleteAccountForm({ username }: { username: string }) {
         e.preventDefault();
         start(async () => {
           const res = await deleteAccount(value, password);
-          if (res && !res.ok) setError(te(res.error));
-          else clearAllDrafts();
+          if (res && !res.ok) {
+            setError(te(res.error));
+            return;
+          }
+          // Account eliminato: stessa pulizia locale del logout, poi si esce dall'area privata
+          await clearLocalUserData();
+          router.push('/welcome?deleted=1');
         });
       }}
     >
