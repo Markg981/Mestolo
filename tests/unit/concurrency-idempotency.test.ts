@@ -60,6 +60,42 @@ describe('saveRecipe: creazione idempotente', () => {
   });
 });
 
+describe('saveRecipe: errori su note e nutrizione', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.getUser.mockResolvedValue({ id: 'u1' });
+  });
+  const base = { title: 'Pasta', servings: 1, prep_minutes: null, cook_minutes: null, total_minutes: null, category_id: null, tags: [], ingredients: [], steps: [], personal_note: 'ciao' };
+
+  it('fails and removes the new recipe when the note write fails', async () => {
+    const deleted = vi.fn();
+    let call = 0;
+    mocks.createClient.mockResolvedValue({
+      from: (t: string) => {
+        if (t === 'recipe_notes') return builder({ data: null, error: { code: 'XX', message: 'boom' } });
+        call++;
+        if (call === 1) return builder({ data: null, error: null }); // lookup idempotenza
+        if (call === 2) return builder({ data: { id: RID }, error: null }); // insert
+        return builder({ data: null, error: null }, (m) => m === 'delete' && deleted()); // compensazione
+      },
+    });
+    const res = await saveRecipe(base, null, null, KEY);
+    expect(res.ok).toBe(false);
+    expect(deleted).toHaveBeenCalled();
+  });
+
+  it('fails on update when the note write fails', async () => {
+    mocks.createClient.mockResolvedValue({
+      from: (t: string) =>
+        t === 'recipe_notes'
+          ? builder({ data: null, error: { code: 'XX', message: 'boom' } })
+          : builder({ data: { id: RID, public_slug: null }, error: null }),
+    });
+    const res = await saveRecipe(base, RID, null, null);
+    expect(res.ok).toBe(false);
+  });
+});
+
 describe('applyAnalysis: concorrenza ottimistica', () => {
   beforeEach(() => {
     vi.resetAllMocks();

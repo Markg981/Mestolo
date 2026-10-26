@@ -37,12 +37,18 @@ export interface StoredDraft<T> {
   base: string | null;
 }
 
-export type DraftParseResult<T> = { status: 'ok'; state: T } | { status: 'stale' } | { status: 'invalid' };
+export type DraftParseResult<T> =
+  | { status: 'ok'; state: T }
+  /** la bozza parte da un'altra versione del server: va proposta all'utente, mai cancellata in silenzio */
+  | { status: 'conflict'; state: T }
+  | { status: 'stale' }
+  | { status: 'invalid' };
 
 /**
  * Valuta una bozza serializzata.
- * Se `serverVersion` e' valorizzato (modifica di una ricetta esistente) la bozza e' valida solo se
- * parte esattamente da quella versione; bozze senza versione sono considerate stantie.
+ * Se `serverVersion` e' valorizzato (modifica di una ricetta esistente) la bozza si ripristina direttamente solo se
+ * parte esattamente da quella versione; altrimenti (ricetta salvata altrove, o bozza senza versione) e' un conflitto.
+ * Solo le bozze piu' vecchie di DRAFT_MAX_AGE_MS sono stantie.
  */
 export function parseDraft<T>(raw: string, opts: { serverVersion?: string | null; now?: number }): DraftParseResult<T> {
   let parsed: Partial<StoredDraft<T>> | null;
@@ -53,7 +59,7 @@ export function parseDraft<T>(raw: string, opts: { serverVersion?: string | null
   }
   if (!parsed || typeof parsed !== 'object' || !parsed.state || typeof parsed.at !== 'number') return { status: 'invalid' };
   if ((opts.now ?? Date.now()) - parsed.at >= DRAFT_MAX_AGE_MS) return { status: 'stale' };
-  if (opts.serverVersion != null && parsed.base !== opts.serverVersion) return { status: 'stale' };
+  if (opts.serverVersion != null && parsed.base !== opts.serverVersion) return { status: 'conflict', state: parsed.state };
   return { status: 'ok', state: parsed.state };
 }
 

@@ -1,9 +1,9 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { planShoppingMerge } from '@/lib/shopping/merge';
 import { scaleIngredients } from '@/lib/recipes/scale';
 import { weekDays, type MealSlot } from '@/lib/plan/week';
 import { generatePlan, planCells, type Candidate, type Proposal } from '@/lib/plan/generator';
@@ -32,7 +32,7 @@ const itemSchema = z.object({
 
 type NewItem = z.infer<typeof itemSchema> & { recipe_id?: string | null; recipe_title?: string | null };
 
-async function addItems(userId: string, items: NewItem[], targetListId?: string): Promise<ActionResult<{ added: number; merged: number }>> {
+async function addItems(userId: string, items: NewItem[], targetListId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const supabase = await createClient();
   let listId: string | null;
   if (targetListId) {
@@ -42,48 +42,24 @@ async function addItems(userId: string, items: NewItem[], targetListId?: string)
     if (!listId) return fail('forbidden');
   } else listId = await defaultListId(userId);
   if (!listId) return fail('generic');
-  const { data: existing, error: readError } = await supabase.from('shopping_items').select('id, name, quantity, unit, checked').eq('list_id', listId);
-  if (readError) return dbFailure(readError, 'addItems.read');
-  const plan = planShoppingMerge(
-    ((existing as { id: string; name: string; quantity: number | null; unit: string | null; checked: boolean }[]) ?? []).map((e) => ({
-      ...e,
-      quantity: e.quantity === null ? null : Number(e.quantity),
-    })),
-    items,
-  );
-  if (plan.updates.length) {
-    // Incremento atomico lato DB (quantity = quantity + delta): due aggiunte concorrenti non si perdono.
-    const { data: bumped, error } = await supabase.rpc('add_shopping_quantities', { p_items: plan.updates.map((u) => ({ id: u.id, delta: u.delta })) } as never);
-    if (error) return dbFailure(error, 'addItems.merge');
-    // Meno righe del previsto: una voce e' stata spuntata o cancellata nel frattempo.
-    if ((bumped as unknown as number) < plan.updates.length) return fail('not_found');
-  }
-  if (plan.inserts.length) {
-    const { error } = await supabase.from('shopping_items').insert(
-      plan.inserts.map((i, idx) => ({
-        list_id: listId,
-        owner_id: userId,
-        name: i.name,
-        quantity: i.quantity,
-        unit: i.unit,
-        note: i.note ?? null,
-        recipe_id: i.recipe_id ?? null,
-        recipe_title: i.recipe_title ?? null,
-        position: idx,
-      })),
-    );
-    if (error) return dbFailure(error, 'addItems');
-  }
+  // Merge + insert in un'unica transazione lato DB; la chiave rende il retry/doppio clic innocuo.
+  const { data, error } = await supabase.rpc('add_shopping_items', {
+    p_list_id: listId,
+    p_items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, note: i.note ?? null, recipe_id: i.recipe_id ?? null, recipe_title: i.recipe_title ?? null })),
+    p_idempotency_key: idempotencyKey ?? randomUUID(),
+  } as never);
+  if (error) return dbFailure(error, 'addItems');
+  const res = data as unknown as { added: number; merged: number };
   revalidatePath('/shopping');
-  return ok({ added: plan.inserts.length, merged: plan.updates.length });
+  return ok({ added: res.added, merged: res.merged });
 }
 
 export async function addShoppingItem(input: unknown): Promise<ActionResult<{ added: number; merged: number }>> {
   const user = await getUser();
-  const p = itemSchema.extend({ list_id: z.uuid().optional() }).safeParse(input);
+  const p = itemSchema.extend({ list_id: z.uuid().optional(), idempotency_key: z.uuid().optional() }).safeParse(input);
   if (!user || !p.success) return fail('invalid_input');
-  const { list_id, ...item } = p.data;
-  return addItems(user.id, [item], list_id);
+  const { list_id, idempotency_key, ...item } = p.data;
+  return addItems(user.id, [item], list_id, idempotency_key);
 }
 
 function ingredientsToItems(ings: Ingredient[], recipe: { id: string; title: string }): NewItem[] {
@@ -98,16 +74,16 @@ function ingredientsToItems(ings: Ingredient[], recipe: { id: string; title: str
 }
 
 /** Adds (a selection of) a recipe's ingredients, scaled to the chosen servings. */
-export async function addRecipeToShopping(recipeId: string, servings: number | null, indexes?: number[], listId?: string): Promise<ActionResult<{ added: number; merged: number }>> {
+export async function addRecipeToShopping(recipeId: string, servings: number | null, indexes?: number[], listId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const user = await getUser();
-  if (!user || !uuid.safeParse(recipeId).success || !servingsSchema.safeParse(servings).success || (listId !== undefined && !uuid.safeParse(listId).success)) return fail('invalid_input');
+  if (!user || !uuid.safeParse(recipeId).success || !servingsSchema.safeParse(servings).success || (listId !== undefined && !uuid.safeParse(listId).success) || (idempotencyKey !== undefined && !uuid.safeParse(idempotencyKey).success)) return fail('invalid_input');
   const supabase = await createClient();
   const { data: r } = await supabase.from('recipes').select('id, title, servings, ingredients').eq('id', recipeId).maybeSingle();
   if (!r) return fail('not_found');
   let ings = (r.ingredients as Ingredient[]) ?? [];
   if (indexes?.length) ings = ings.filter((_, i) => indexes.includes(i));
   if (servings && servings > 0 && r.servings) ings = scaleIngredients(ings, Number(r.servings), servings);
-  return addItems(user.id, ingredientsToItems(ings, { id: r.id, title: r.title }), listId);
+  return addItems(user.id, ingredientsToItems(ings, { id: r.id, title: r.title }), listId, idempotencyKey);
 }
 
 export async function toggleShoppingItem(id: string, checked: boolean): Promise<ActionResult> {
@@ -177,9 +153,9 @@ export async function deletePlanEntry(id: string): Promise<ActionResult> {
 }
 
 /** Adds the ingredients of every planned recipe in the week to the shopping list. */
-export async function addWeekToShopping(weekStart: string, listId?: string): Promise<ActionResult<{ added: number; merged: number; recipes: number }>> {
+export async function addWeekToShopping(weekStart: string, listId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number; recipes: number }>> {
   const user = await getUser();
-  if (!user || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || (listId !== undefined && !uuid.safeParse(listId).success)) return fail('invalid_input');
+  if (!user || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || (listId !== undefined && !uuid.safeParse(listId).success) || (idempotencyKey !== undefined && !uuid.safeParse(idempotencyKey).success)) return fail('invalid_input');
   const days = weekDays(weekStart);
   const supabase = await createClient();
   const { data: entries } = await supabase
@@ -200,7 +176,7 @@ export async function addWeekToShopping(weekStart: string, listId?: string): Pro
     const ings = e.servings && r.servings ? scaleIngredients(r.ingredients ?? [], Number(r.servings), Number(e.servings)) : r.ingredients ?? [];
     items.push(...ingredientsToItems(ings, r));
   }
-  const res = await addItems(user.id, items, listId);
+  const res = await addItems(user.id, items, listId, idempotencyKey);
   if (!res.ok) return res;
   return ok({ ...res.data, recipes: list.length });
 }

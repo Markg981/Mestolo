@@ -135,7 +135,7 @@
     "username_taken": "Dieser Benutzername ist schon vergeben.",
     "translation_failed": "Die Übersetzung hat nicht geklappt. Das Original bleibt verfügbar.",
     "already_exists": "Existiert bereits.",
-    "conflict": "Dieses Rezept wurde anderswo geändert (anderer Tab oder anderes Gerät). Lade die Seite neu, um die letzte Version zu sehen, bevor du speicherst.",
+    "conflict": "Dieses Rezept wurde anderswo geändert (anderer Tab oder anderes Gerät). Lade die Seite neu: Deine Änderungen bleiben im Entwurf und du kannst sie über der neuesten Version wiederherstellen.",
     "pageTitle": "Diese Seite wurde nicht geladen",
     "pageLead": "Das kann bei instabiler Verbindung passieren. Deine Eingaben bleiben als Entwurf gespeichert.",
     "retry": "Erneut versuchen",
@@ -391,7 +391,11 @@
     "saveNote": "Notiz speichern",
     "noteSaved": "Notiz gespeichert.",
     "hiddenTitle": "Rezept von der Moderation ausgeblendet",
-    "hiddenLead": "Nach mehreren Meldungen ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch. Wenn du glaubst, dass es ein Fehler ist, wende dich an den Support.",
+    "hiddenLead": "Nach der Prüfung durch einen Moderator ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch; wenn du glaubst, dass es ein Fehler ist, kannst du eine erneute Prüfung beantragen.",
+    "inReviewTitle": "In Prüfung",
+    "inReviewLead": "Nach mehreren Meldungen wurde dieses Rezept zur Prüfung durch die Moderation vorgemerkt. Es bleibt sichtbar, bis es geprüft wurde.",
+    "appeal": "Erneute Prüfung beantragen",
+    "appealPending": "Du hast eine erneute Prüfung beantragt: Das Rezept liegt wieder in der Warteschlange der Moderation.",
     "dietHints": "Laut Autor (nicht geprüft): {diets}"
   },
   "nutrition": {
@@ -528,6 +532,8 @@
     "personalNoteHint": "Bleiben privat, auch wenn du das Rezept teilst.",
     "draftRestored": "Wir haben deinen ungespeicherten Entwurf wiederhergestellt.",
     "draftNotStored": "Der Entwurf kann in diesem Browser nicht gespeichert werden (Speicher voll oder blockiert): Schließe die Seite nicht vor dem Speichern.",
+    "draftConflict": "Dieser Entwurf basiert auf einer früheren Version: Das Rezept wurde inzwischen anderswo gespeichert. Wenn du ihn wiederherstellst, ersetzen deine Änderungen beim Speichern die aktuelle Version.",
+    "restoreConflictDraft": "Meine Änderungen wiederherstellen",
     "discardDraft": "Entwurf verwerfen",
     "reviewIntroTitle": "Prüfe die Daten vor dem Speichern",
     "reviewIntro": "Nichts wurde erfunden: Nicht gefundene Werte sind leer und markiert. Korrigiere, was nötig ist.",
@@ -596,6 +602,7 @@
     "useAi": "KI nutzen"
   },
   "link": {
+    "sharedConfirm": "Link aus einer anderen App empfangen: Prüfe ihn und tippe auf die Schaltfläche, um das Rezept zu importieren.",
     "title": "Aus Link importieren",
     "lead": "Füge die Adresse eines Rezepts ein. Wir lesen die strukturierten Daten der Seite und zeigen sie dir zur Prüfung.",
     "urlLabel": "Adresse des Rezepts",
@@ -1078,6 +1085,8 @@
     "reportedBy": "Gemeldet von {name}",
     "recipeGone": "Rezept gelöscht",
     "hiddenBadge": "Ausgeblendet",
+    "inReviewBadge": "In Prüfung",
+    "appealBadge": "Einspruch des Autors",
     "hide": "Rezept ausblenden",
     "restore": "Wieder sichtbar machen",
     "dismiss": "Meldung archivieren",
@@ -1437,6 +1446,16 @@
     "stop": "Stoppen",
     "selectAll": "Alle auswählen",
     "selectNone": "Alle abwählen",
-    "stopped": "Nach {done} Rezepten gestoppt: {created} importiert, {duplicates} bereits vorhanden, {failed} fehlgeschlagen. Starte erneut, um fortzufahren: bereits importierte Rezepte werden übersprungen."
+    "stopped": "Nach {done} Rezepten gestoppt: {created} importiert, {duplicates} bereits vorhanden, {failed} fehlgeschlagen. Starte erneut, um fortzufahren: bereits importierte Rezepte werden übersprungen.",
+    "failuresTitle": "{count, plural, one {# Rezept nicht importiert} other {# Rezepte nicht importiert}}",
+    "retryFailed": "Fehlgeschlagene wiederholen ({count})",
+    "failReasons": {
+      "rate_limited": "Zu viele Anfragen: Versuche es in einigen Minuten erneut.",
+      "invalid_input": "Ungültige Rezeptdaten.",
+      "forbidden": "Keine Berechtigung zum Speichern: Melde dich erneut an.",
+      "config": "Dienst nicht korrekt konfiguriert.",
+      "generic": "Fehler beim Speichern.",
+      "unexpected": "Unerwarteter Fehler oder Netzwerkfehler."
+    }
   }
 }

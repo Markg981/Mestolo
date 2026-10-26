@@ -10,6 +10,7 @@ import { safeNextPath } from '@/lib/safe-redirect';
 import { clientIpHash, enforceAuthRateLimit, hashKey } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
 import { passwordSchema } from '@/lib/password';
+import { isRecoverySession } from '@/lib/recovery-session';
 import { fail, type ErrorCode } from './_utils';
 
 export type AuthState = { error?: ErrorCode; sent?: boolean; email?: string } | undefined;
@@ -130,6 +131,16 @@ export async function updatePassword(_: AuthState, formData: FormData): Promise<
   if (!pw.success) return { error: 'auth_weak_password' };
   if (formData.get('password') !== formData.get('confirm')) return { error: 'invalid_input' };
   const supabase = await createClient();
+  // Solo da una sessione di recovery appena aperta dal link email: con una sessione normale
+  // (dispositivo condiviso, cookie rubato) serve changePassword, che chiede la password attuale.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims?.sub || !isRecoverySession(claims)) return { error: 'forbidden' };
+  try {
+    await authRateLimit('password_update', hashKey(claims.sub));
+  } catch {
+    return { error: 'rate_limited' };
+  }
   const { error } = await supabase.auth.updateUser({ password: pw.data });
   if (error) return { error: 'generic' };
   redirect('/?password=updated');

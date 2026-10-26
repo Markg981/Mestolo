@@ -56,7 +56,7 @@ export function PantryView({ items, suggestions, today, lists = [] }: { items: P
 
   const addMissing = (s: RecipeSuggestion) =>
     start(async () => {
-      const res = await addRecipeToShopping(s.recipeId, null, s.missingIndexes, targetList || undefined);
+      const res = await addRecipeToShopping(s.recipeId, null, s.missingIndexes, targetList || undefined, crypto.randomUUID());
       setMsg(res.ok ? { text: t('missingAdded', { n: res.data.added + res.data.merged }), tone: 'success' } : { text: te(res.error), tone: 'error' });
     });
 

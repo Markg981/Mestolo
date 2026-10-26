@@ -13,6 +13,11 @@ describe('buildCsp', () => {
     expect(csp).toContain("form-action 'self'");
   });
 
+  it('limita img-src a self, data e blob senza https generico', () => {
+    const img = buildCsp({ nonce: 'a' }).split('; ').find((d) => d.startsWith('img-src'));
+    expect(img).toBe("img-src 'self' data: blob:");
+  });
+
   it('consente unsafe-eval solo in sviluppo', () => {
     expect(buildCsp({ nonce: 'a', isDev: true })).toContain("'unsafe-eval'");
     expect(buildCsp({ nonce: 'a' })).not.toContain("'unsafe-eval'");

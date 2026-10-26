@@ -35,7 +35,15 @@ function builder(table: string) {
 }
 
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: async () => ({ from: builder, rpc: async () => ({ data: 0, error: null }) }),
+  createClient: async () => ({
+    from: builder,
+    // add_shopping_items fa merge + insert in un'unica transazione: la lista di destinazione e' p_list_id.
+    rpc: async (fn: string, args: { p_list_id?: string }) => {
+      if (fn !== 'add_shopping_items') return { data: 0, error: null };
+      inserts.push({ list_id: args.p_list_id as string });
+      return { data: { added: 1, merged: 0 }, error: null };
+    },
+  }),
   getUser: async () => ({ id: 'me' }),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));

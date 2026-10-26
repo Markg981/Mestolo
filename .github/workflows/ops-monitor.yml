@@ -1,0 +1,85 @@
+name: Ops monitor
+
+# Controlli periodici che falliscono (e quindi notificano via email di GitHub) quando un job schedulato
+# smette di funzionare in silenzio:
+# - backup-age: l'ultimo artifact db-backup-* deve avere meno di 36 ore (backup.yml gira ogni notte)
+# - missed-reminders: nessun promemoria dei pasti scaduto nelle ultime 24 ore deve essere rimasto senza claim
+#   (vuol dire che /api/cron/meal-reminders non e' stata chiamata nella sua finestra)
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+
+jobs:
+  backup-age:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAX_AGE_HOURS: 36
+    steps:
+      - name: Check age of the latest backup
+        run: |
+          set -euo pipefail
+          latest="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | .created_at' | sort -r | head -n1)"
+          if [ -z "$latest" ]; then
+            echo "::error::Nessun artifact db-backup-* disponibile: non esiste alcun backup del database."
+            exit 1
+          fi
+          age_h=$(( ( $(date -u +%s) - $(date -u -d "$latest" +%s) ) / 3600 ))
+          echo "Ultimo backup: $latest (${age_h}h fa)"
+          if [ "$age_h" -ge "$MAX_AGE_HOURS" ]; then
+            echo "::error::L'ultimo backup riuscito ha ${age_h} ore (soglia ${MAX_AGE_HOURS}): controllare il workflow Backup."
+            exit 1
+          fi
+
+  missed-reminders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check reminders that were never claimed
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "::error::Secret SUPABASE_DB_URL non impostato: impossibile controllare i promemoria."
+            exit 1
+          fi
+          # Stessa selezione di claim_due_meal_reminders(), ma su 24 ore (con un'ora di margine) e contando solo i pasti
+          # pianificati, attivati e con sottoscrizione PRIMA dell'orario del promemoria: se uno non ha nemmeno una riga
+          # in meal_reminders_sent, lo scheduler non ha chiamato la route in tempo.
+          out="$(psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -At -F ' ' <<'SQL'
+          with due as (
+            select e.id, ((e.plan_date + st.t) at time zone np.timezone) as due_at, e.created_at, np.updated_at, np.user_id
+            from public.notification_preferences np
+            join public.meal_plan_entries e on e.owner_id = np.user_id
+            cross join lateral (
+              select case e.slot
+                when 'breakfast' then np.breakfast_time
+                when 'lunch' then np.lunch_time
+                when 'dinner' then np.dinner_time
+                when 'snack' then np.snack_time
+              end as t
+            ) st
+            where np.enabled and st.t is not null
+          )
+          select
+            (select count(*) from due d
+              where d.due_at between now() - interval '24 hours' and now() - interval '1 hour'
+                and d.created_at < d.due_at and d.updated_at < d.due_at
+                and exists (select 1 from public.push_subscriptions s where s.user_id = d.user_id and s.created_at < d.due_at)
+                and not exists (select 1 from public.meal_reminders_sent x where x.entry_id = d.id)),
+            coalesce((select max(sent_at)::text from public.meal_reminders_sent), 'mai');
+          SQL
+          )"
+          read -r missed last_sent <<<"$out"
+          echo "Promemoria mancati nelle ultime 24h: $missed (ultimo invio: $last_sent)"
+          if [ "$missed" -gt 0 ]; then
+            echo "::error::$missed promemoria dei pasti non sono mai stati elaborati: lo scheduler di /api/cron/meal-reminders non sta girando abbastanza spesso (vedi workflow Meal reminders / vercel.pro.json)."
+            exit 1
+          fi

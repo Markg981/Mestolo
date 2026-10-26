@@ -21,6 +21,7 @@ import { CookLogsSection } from '@/components/cooking/CookLogs';
 import { NutritionBox } from '@/components/nutrition/NutritionBox';
 import { getRecipeNutrition } from '@/lib/data/nutrition';
 import { Alert, Badge, LinkButton } from '@/components/ui';
+import { AppealButton } from './AppealButton';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,6 +39,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
   const [t, locale, user, collections] = await Promise.all([getTranslations(), getLocale(), getUser(), listEditableCollections()]);
   const { recipe, images, category, owner, isOwner } = detail;
   const supabase = await createClient();
+  const { data: modCase } = isOwner ? await supabase.from('moderation_cases').select('status, appealed_at').eq('recipe_id', id).maybeSingle() : { data: null };
   const { data: myRating } = isOwner ? { data: null } : await supabase.from('recipe_ratings').select('stars').eq('recipe_id', id).eq('user_id', user!.id).maybeSingle();
 
   // Translation (cached, tied to the content hash; the original is never modified)
@@ -89,9 +91,16 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       {sp.image === 'failed' && <Alert tone="warn">{t('recipe.imageFailed')}</Alert>}
       {recipe.is_hidden && isOwner && (
         <Alert tone="error" title={t('recipe.hiddenTitle')}>
-          {t('recipe.hiddenLead')}
+          {modCase?.appealed_at ? t('recipe.appealPending') : t('recipe.hiddenLead')}
+          {modCase?.status === 'hidden' && !modCase.appealed_at && <AppealButton recipeId={id} />}
         </Alert>
       )}
+      {!recipe.is_hidden && isOwner && modCase?.status === 'in_review' && (
+        <Alert tone="warn" title={t('recipe.inReviewTitle')}>
+          {t('recipe.inReviewLead')}
+        </Alert>
+      )}
+
 
       <header className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div className="flex flex-col gap-3">

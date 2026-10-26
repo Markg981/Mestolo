@@ -26,6 +26,8 @@ export default async function ModerationPage() {
     recipeIds.length ? supabase.from('recipes').select('id, title, owner_id, is_hidden, visibility').in('id', recipeIds) : Promise.resolve({ data: [] }),
     userIds.length ? supabase.from('profiles').select('id, username').in('id', userIds) : Promise.resolve({ data: [] }),
   ]);
+  const { data: cases } = recipeIds.length ? await supabase.from('moderation_cases').select('recipe_id, status, appealed_at').in('recipe_id', recipeIds) : { data: [] };
+  const caseById = new Map(((cases as { recipe_id: string; status: string; appealed_at: string | null }[]) ?? []).map((c) => [c.recipe_id, c]));
   const recipeById = new Map(((recipes as { id: string; title: string; owner_id: string; is_hidden: boolean; visibility: string }[]) ?? []).map((r) => [r.id, r]));
   const userById = new Map(((users as { id: string; username: string }[]) ?? []).map((u) => [u.id, u.username]));
   const open = reports.filter((r) => r.status === 'open');
@@ -54,6 +56,7 @@ export default async function ModerationPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone="tomato">{tr(`reasons.${r.reason}` as 'reasons.spam')}</Badge>
                     {recipe?.is_hidden && <Badge tone="ink">{t('hiddenBadge')}</Badge>}
+                    {caseById.get(r.recipe_id)?.status === 'in_review' && <Badge tone="tomato">{t(caseById.get(r.recipe_id)?.appealed_at ? 'appealBadge' : 'inReviewBadge')}</Badge>}
                     <Badge>{t('reportsCount', { n: openCount(r.recipe_id) })}</Badge>
                   </div>
                   {recipe ? (

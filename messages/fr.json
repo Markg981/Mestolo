@@ -135,7 +135,7 @@
     "username_taken": "Ce nom d'utilisateur est déjà pris.",
     "translation_failed": "La traduction a échoué. L'original reste disponible.",
     "already_exists": "Existe déjà.",
-    "conflict": "Cette recette a été modifiée ailleurs (autre onglet ou autre appareil). Recharge la page pour voir la dernière version avant d'enregistrer.",
+    "conflict": "Cette recette a été modifiée ailleurs (autre onglet ou autre appareil). Recharge la page : tes modifications restent dans le brouillon et tu pourras les restaurer sur la dernière version.",
     "pageTitle": "Cette page ne s'est pas chargée",
     "pageLead": "Cela peut arriver si la connexion est instable. Les données que vous saisissiez sont conservées en brouillon.",
     "retry": "Réessayer",
@@ -391,7 +391,11 @@
     "saveNote": "Enregistrer la note",
     "noteSaved": "Note enregistrée.",
     "hiddenTitle": "Recette masquée par la modération",
-    "hiddenLead": "Suite à plusieurs signalements, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, contactez l'assistance.",
+    "hiddenLead": "Après examen par un modérateur, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, vous pouvez demander un nouvel examen.",
+    "inReviewTitle": "En révision",
+    "inReviewLead": "Suite à plusieurs signalements, cette recette a été placée en file d'attente pour révision par les modérateurs. Elle reste visible jusqu'à son examen.",
+    "appeal": "Demander un nouvel examen",
+    "appealPending": "Vous avez demandé un nouvel examen : la recette est de nouveau dans la file des modérateurs.",
     "dietHints": "Selon l'auteur (non vérifié) : {diets}"
   },
   "nutrition": {
@@ -528,6 +532,8 @@
     "personalNoteHint": "Elles restent privées même si vous partagez la recette.",
     "draftRestored": "Nous avons restauré votre brouillon non enregistré.",
     "draftNotStored": "Le brouillon ne peut pas être enregistré dans ce navigateur (stockage plein ou bloqué) : ne fermez pas la page avant d'enregistrer.",
+    "draftConflict": "Ce brouillon part d’une version précédente : la recette a entre-temps été enregistrée ailleurs. Si vous le restaurez, vos modifications remplaceront la version actuelle à l’enregistrement.",
+    "restoreConflictDraft": "Restaurer mes modifications",
     "discardDraft": "Supprimer le brouillon",
     "reviewIntroTitle": "Vérifiez les données avant d'enregistrer",
     "reviewIntro": "Rien n'a été inventé : les valeurs introuvables sont laissées vides et signalées. Corrigez ce qui doit l'être.",
@@ -596,6 +602,7 @@
     "useAi": "Utiliser l'IA"
   },
   "link": {
+    "sharedConfirm": "Lien reçu d'une autre appli : vérifie-le et appuie sur le bouton pour importer la recette.",
     "title": "Importer depuis un lien",
     "lead": "Collez l'adresse d'une recette. Nous lisons les données structurées de la page et vous les montrons pour vérification.",
     "urlLabel": "Adresse de la recette",
@@ -1078,6 +1085,8 @@
     "reportedBy": "Signalée par {name}",
     "recipeGone": "Recette supprimée",
     "hiddenBadge": "Masquée",
+    "inReviewBadge": "En révision",
+    "appealBadge": "Recours de l'auteur",
     "hide": "Masquer la recette",
     "restore": "Rendre de nouveau visible",
     "dismiss": "Archiver le signalement",
@@ -1437,6 +1446,16 @@
     "stop": "Arrêter",
     "selectAll": "Tout sélectionner",
     "selectNone": "Tout désélectionner",
-    "stopped": "Arrêté après {done} recettes : {created} importées, {duplicates} déjà présentes, {failed} en échec. Relancez pour reprendre : les recettes déjà importées sont ignorées."
+    "stopped": "Arrêté après {done} recettes : {created} importées, {duplicates} déjà présentes, {failed} en échec. Relancez pour reprendre : les recettes déjà importées sont ignorées.",
+    "failuresTitle": "{count, plural, one {# recette non importée} other {# recettes non importées}}",
+    "retryFailed": "Réessayer les échecs ({count})",
+    "failReasons": {
+      "rate_limited": "Trop de requêtes : réessayez dans quelques minutes.",
+      "invalid_input": "Données de la recette invalides.",
+      "forbidden": "Vous n’avez pas l’autorisation d’enregistrer : reconnectez-vous.",
+      "config": "Service mal configuré.",
+      "generic": "Erreur lors de l’enregistrement.",
+      "unexpected": "Erreur inattendue ou réseau."
+    }
   }
 }

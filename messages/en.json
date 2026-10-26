@@ -135,7 +135,7 @@
     "username_taken": "This username is already taken.",
     "translation_failed": "Translation failed. The original is still available.",
     "already_exists": "Already exists.",
-    "conflict": "This recipe was changed elsewhere (another tab or device). Reload the page to see the latest version before saving.",
+    "conflict": "This recipe was changed elsewhere (another tab or device). Reload the page: your changes are kept in the draft and you can restore them over the latest version.",
     "pageTitle": "This page didn't load",
     "pageLead": "This can happen on an unstable connection. Anything you were entering is saved as a draft.",
     "retry": "Try again",
@@ -391,7 +391,11 @@
     "saveNote": "Save note",
     "noteSaved": "Note saved.",
     "hiddenTitle": "Recipe hidden by moderation",
-    "hiddenLead": "After several reports, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake, contact support.",
+    "hiddenLead": "After a moderator review, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake you can ask for another review.",
+    "inReviewTitle": "In review",
+    "inReviewLead": "After several reports, this recipe was queued for moderator review. It stays visible until it is reviewed.",
+    "appeal": "Request a new review",
+    "appealPending": "You requested a new review: the recipe is back in the moderators' queue.",
     "dietHints": "According to the author (not verified): {diets}"
   },
   "nutrition": {
@@ -528,6 +532,8 @@
     "personalNoteHint": "They stay private even if you share the recipe.",
     "draftRestored": "We restored your unsaved draft.",
     "draftNotStored": "The draft can't be stored in this browser (storage full or blocked): don't close the page before saving.",
+    "draftConflict": "This draft started from an earlier version: the recipe has since been saved elsewhere. If you restore it, your changes replace the current version when you save.",
+    "restoreConflictDraft": "Restore my changes",
     "discardDraft": "Discard draft",
     "reviewIntroTitle": "Review the details before saving",
     "reviewIntro": "Nothing was made up: values that weren't found are left blank and flagged. Fix whatever you need.",
@@ -596,6 +602,7 @@
     "useAi": "Use AI"
   },
   "link": {
+    "sharedConfirm": "Link received from another app: check it and press the button to import the recipe.",
     "title": "Import from link",
     "lead": "Paste a recipe URL. We read the page's structured data and show it to you for review.",
     "urlLabel": "Recipe URL",
@@ -1078,6 +1085,8 @@
     "reportedBy": "Reported by {name}",
     "recipeGone": "Recipe deleted",
     "hiddenBadge": "Hidden",
+    "inReviewBadge": "In review",
+    "appealBadge": "Author appeal",
     "hide": "Hide recipe",
     "restore": "Make visible again",
     "dismiss": "Archive report",
@@ -1437,6 +1446,16 @@
     "stop": "Stop",
     "selectAll": "Select all",
     "selectNone": "Deselect all",
-    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped."
+    "stopped": "Stopped after {done} recipes: {created} imported, {duplicates} already present, {failed} failed. Start again to resume: recipes already imported are skipped.",
+    "failuresTitle": "{count, plural, one {# recipe not imported} other {# recipes not imported}}",
+    "retryFailed": "Retry failed ({count})",
+    "failReasons": {
+      "rate_limited": "Too many requests: try again in a few minutes.",
+      "invalid_input": "Invalid recipe data.",
+      "forbidden": "You are not allowed to save: sign in again.",
+      "config": "Service not configured correctly.",
+      "generic": "Error while saving.",
+      "unexpected": "Unexpected or network error."
+    }
   }
 }
