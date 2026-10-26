@@ -50,6 +50,16 @@ d('rich profiles', () => {
 
   const setVisibility = (v: string) => admin('update public.profiles set profile_visibility = $2 where id = $1', [owner, v]);
 
+  it('can_view_profile_details ignores a caller-supplied viewer (A-19)', async () => {
+    await setVisibility('public');
+    const [own] = await as<{ ok: boolean }>(stranger, 'select public.can_view_profile_details($1, $2) as ok', [owner, stranger]);
+    expect(own.ok).toBe(true);
+    const [spoof] = await as<{ ok: boolean }>(stranger, 'select public.can_view_profile_details($1, $2) as ok', [owner, owner]);
+    expect(spoof.ok).toBe(false);
+    const [anon] = await as<{ ok: boolean }>(null, 'select public.can_view_profile_details($1, $2) as ok', [owner, stranger]);
+    expect(anon.ok).toBe(false);
+  });
+
   it('defaults to friends', async () => {
     await setVisibility('friends');
     const [p] = await admin<{ profile_visibility: string }>('select profile_visibility from public.profiles where id = $1', [stranger]);
