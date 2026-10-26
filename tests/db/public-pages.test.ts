@@ -64,15 +64,15 @@ d('public recipe pages', () => {
   });
 
   it('regenerates the slug on rename and keeps the old one resolving (A-28)', async () => {
-    const r = await create('Vecchio titolo');
-    await as(owner, 'update public.recipes set title = $2 where id = $1', [r.id, 'Nuovo titolo']);
+    const r = await create('Zuppa antica');
+    await as(owner, 'update public.recipes set title = $2 where id = $1', [r.id, 'Zuppa rinnovata']);
     const [after] = await admin<{ public_slug: string }>('select public_slug from public.recipes where id = $1', [r.id]);
-    expect(after.public_slug).toBe(`nuovo-titolo-${r.id.replaceAll('-', '').slice(0, 8)}`);
+    expect(after.public_slug).toBe(`zuppa-rinnovata-${r.id.replaceAll('-', '').slice(0, 8)}`);
     const [res] = await as<{ s: string }>(null, 'select public.resolve_public_recipe_slug($1) as s', [r.public_slug]);
     expect(res.s).toBe(after.public_slug);
     expect(await get(after.public_slug)).toHaveLength(1);
     // renaming back reuses the original slug and drops it from the history
-    await as(owner, 'update public.recipes set title = $2 where id = $1', [r.id, 'Vecchio titolo']);
+    await as(owner, 'update public.recipes set title = $2 where id = $1', [r.id, 'Zuppa antica']);
     const [back] = await as<{ s: string | null }>(null, 'select public.resolve_public_recipe_slug($1) as s', [r.public_slug]);
     expect(back.s).toBeNull();
     const [mid] = await as<{ s: string }>(null, 'select public.resolve_public_recipe_slug($1) as s', [after.public_slug]);
