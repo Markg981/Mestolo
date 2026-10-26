@@ -1,10 +1,14 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
+import { runCleanupTasks, type CleanupTask } from '@/lib/cron/cleanup-runner';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
-const BATCH = 200;
+export const maxDuration = 60;
+// Margine ampio rispetto a maxDuration: l'ultimo blocco avviato puo' durare qualche secondo.
+const BUDGET_MS = 40_000;
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -22,21 +26,47 @@ export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: usage, error: usageError } = await admin.rpc('cleanup_old_usage', { p_days: 90 });
-  if (usageError) return NextResponse.json({ error: 'cleanup_failed' }, { status: 500 });
+  let usage: unknown = null;
+  const orphanTask = (bucket: string, rpcName: string): CleanupTask => ({
+    name: `orphans:${bucket}`,
+    runBatch: async (limit) => {
+      const { data: orphans, error: listError } = await admin.rpc(rpcName, { p_limit: limit });
+      if (listError) throw new Error(`list_failed: ${listError.message}`);
+      const paths = ((orphans as { name: string }[] | null) ?? []).map((o) => o.name);
+      if (paths.length === 0) return 0;
+      const { error: removeError } = await admin.storage.from(bucket).remove(paths);
+      if (removeError) throw new Error(`remove_failed: ${removeError.message}`);
+      return paths.length;
+    },
+  });
 
-  let removed = 0;
-  for (const { bucket, rpcName } of [
-    { bucket: 'recipe-images', rpcName: 'list_orphan_images' },
-    { bucket: 'avatars', rpcName: 'list_orphan_avatars' },
-  ]) {
-    const { data: orphans, error: listError } = await admin.rpc(rpcName, { p_limit: BATCH });
-    if (listError) return NextResponse.json({ error: 'list_failed', usage }, { status: 500 });
-    const paths = ((orphans as { name: string }[] | null) ?? []).map((o) => o.name);
-    if (paths.length === 0) continue;
-    const { error: removeError } = await admin.storage.from(bucket).remove(paths);
-    if (removeError) return NextResponse.json({ error: 'remove_failed', usage }, { status: 500 });
-    removed += paths.length;
-  }
-  return NextResponse.json({ ok: true, usage, orphansRemoved: removed });
+  const tasks: CleanupTask[] = [
+    {
+      name: 'old-usage',
+      runBatch: async () => {
+        const { data, error } = await admin.rpc('cleanup_old_usage', { p_days: 90 });
+        if (error) throw new Error(`cleanup_failed: ${error.message}`);
+        usage = data;
+        return 0; // singola chiamata, non a blocchi
+      },
+    },
+    orphanTask('recipe-images', 'list_orphan_images'),
+    orphanTask('avatars', 'list_orphan_avatars'),
+  ];
+
+  const results = await runCleanupTasks(tasks, {
+    budgetMs: BUDGET_MS,
+    onError: (task, error) => {
+      console.error(`[cron/cleanup] task ${task} failed`, error);
+      Sentry.captureException(error, { tags: { cron: 'cleanup', task } });
+    },
+  });
+  const failed = results.filter((r) => r.error);
+  const orphansRemoved = results
+    .filter((r) => r.name.startsWith('orphans:'))
+    .reduce((n, r) => n + r.processed, 0);
+  return NextResponse.json(
+    { ok: failed.length === 0, usage, orphansRemoved, results },
+    { status: failed.length ? 500 : 200 },
+  );
 }

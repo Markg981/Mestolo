@@ -52,6 +52,9 @@ describe('GET /api/cron/cleanup', () => {
     remove.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({ error: { message: 'boom' } });
     const res = await GET(req('Bearer topsecret'));
     expect(res.status).toBe(500);
-    expect(await res.json()).toMatchObject({ error: 'remove_failed' });
+    const body = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.results.find((r: { name: string }) => r.name === 'orphans:avatars').error).toMatch(/remove_failed/);
+    expect(body.results.find((r: { name: string }) => r.name === 'orphans:recipe-images').error).toBeUndefined();
   });
 });
