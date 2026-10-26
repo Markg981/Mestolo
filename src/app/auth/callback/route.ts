@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import type { EmailOtpType } from '@supabase/supabase-js';
+import { parseOtpType } from '@/lib/auth-otp';
 import { createClient } from '@/lib/supabase/server';
 import { safeNextPath } from '@/lib/safe-redirect';
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const code = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
-  const type = searchParams.get('type') as EmailOtpType | null;
+  const type = parseOtpType(searchParams.get('type'));
 
   let ok = false;
   if (code) {

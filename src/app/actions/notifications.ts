@@ -6,7 +6,8 @@ import { createClient, getUser } from '@/lib/supabase/server';
 import { addDays, todayIso } from '@/lib/plan/week';
 import { PREFS_COLUMNS, TIME_RE, isMealSlot, isValidTimeZone, rowToPrefs, type PlannedMeal, type PrefsRow, type ReminderPrefs } from '@/lib/notifications/schedule';
 import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
-import { dbFailure, fail, ok, type ActionResult } from './_utils';
+import { enforceRateLimit } from '@/lib/rate-limit';
+import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const time = z.string().regex(TIME_RE).nullable();
 const prefsSchema = z.object({
@@ -42,6 +43,11 @@ export async function savePushSubscription(input: unknown): Promise<ActionResult
   const user = await getUser();
   const p = subscriptionSchema.safeParse(input);
   if (!user || !p.success) return fail('invalid_input');
+  try {
+    await enforceRateLimit('push_subscribe', user.id);
+  } catch (e) {
+    return toFailure(e, 'savePushSubscription');
+  }
   const supabase = await createClient();
   const userAgent = (await headers()).get('user-agent')?.slice(0, 300) ?? null;
   const { error } = await supabase.rpc('save_push_subscription', {
