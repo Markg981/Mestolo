@@ -135,19 +135,19 @@ describe.each(cases)('$name: quota refund', (c) => {
     expect(rpc).toHaveBeenCalledWith(...c.refund);
   });
 
-  it('refunds when the output is invalid', async () => {
+  it('does NOT refund when the output is invalid (provider already paid)', async () => {
     completeJson.mockResolvedValue(c.bad);
     const res = await c.run();
     expect(res).toMatchObject({ ok: false, error: c.badError });
-    expect(rpc).toHaveBeenCalledTimes(1);
-    expect(rpc).toHaveBeenCalledWith(...c.refund);
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it('keeps the original error when the refund itself fails', async () => {
     refundFails = true;
-    completeJson.mockResolvedValue(c.bad);
+    completeJson.mockRejectedValue(new Error('upstream 503'));
     const res = await c.run();
-    expect(res).toMatchObject({ ok: false, error: c.badError });
+    expect(res.ok).toBe(false);
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it('does not refund on success', async () => {
@@ -167,13 +167,13 @@ describe('image generation: quota refund', () => {
     expect(rpc).toHaveBeenCalledWith(...refund('image', 'generate'));
   });
 
-  it('refunds when the generated image is unusable', async () => {
+  it('does NOT refund when the generated image is unusable (provider already paid)', async () => {
     const { ImageValidationError } = await import('@/lib/images/process');
     generateImage.mockResolvedValue({ base64: 'AAAA' });
     processImage.mockRejectedValue(new ImageValidationError('invalid_input' as never));
     const res = await generateRecipeImage(RECIPE_ID, true);
     expect(res).toMatchObject({ ok: false, error: 'ai_bad_output' });
-    expect(rpc).toHaveBeenCalledWith(...refund('image', 'generate'));
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it('does not refund on success', async () => {

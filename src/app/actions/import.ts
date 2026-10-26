@@ -60,13 +60,16 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
       await enforceRateLimit('ai_text', user.id);
       const resolved = await resolveProvider(user.id, 'text', 'text', 'extract_text');
       let draft: ImportDraft;
+      let extracted: unknown;
       try {
         const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
-        draft = draftFromExtraction(raw, { type: src ? 'url' : 'text', url: src, method: 'ai' });
+        extracted = raw;
       } catch (e) {
         await refundQuota(user.id, resolved, 'text', 'extract_text');
         throw e;
       }
+      // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
+      draft = draftFromExtraction(extracted, { type: src ? 'url' : 'text', url: src, method: 'ai' });
       await recordUsage(user.id, 'text', 'extract_text', resolved);
       return ok(draft);
     }
@@ -124,6 +127,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
 
     const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
     let draft: ImportDraft;
+    let extracted: unknown;
     try {
       const raw = await resolved.provider.completeJson({
         system: EXTRACT_SYSTEM,
@@ -131,11 +135,13 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
         images,
         maxTokens: 6000,
       });
-      draft = draftFromExtraction(raw, { type: 'photo', method: 'ai' });
+      extracted = raw;
     } catch (e) {
       await refundQuota(user.id, resolved, 'vision', 'extract_photo');
       throw e;
     }
+    // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
+    draft = draftFromExtraction(extracted, { type: 'photo', method: 'ai' });
     await recordUsage(user.id, 'vision', 'extract_photo', resolved);
     return ok(draft);
   } catch (e) {
@@ -197,7 +203,8 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
       throw e;
     }
     if (!text) {
-      await refundQuota(user.id, resolved, 'text', 'transcribe');
+      // Provider gia' chiamato (a pagamento): nessun rimborso.
+      await recordUsage(user.id, 'text', 'transcribe', resolved);
       return fail('ai_bad_output');
     }
     await recordUsage(user.id, 'text', 'transcribe', resolved);

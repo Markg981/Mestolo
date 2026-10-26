@@ -155,10 +155,13 @@ export async function generateRecipeImage(recipeId: string, confirmed: boolean):
     const { data: r } = await supabase.from('recipes').select('title, description, ingredients').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     if (!r) return fail('not_found');
     await enforceRateLimit('ai_image', user.id);
+    // Storage pieno: blocca PRIMA di consumare quota AI e di chiamare il provider (a pagamento).
+    if (await userOverImageQuota(supabase, user.id)) return fail('storage_quota_exceeded');
     const resolved = await resolveProvider(user.id, 'image', 'image', 'generate');
-    return await withRefund(user.id, resolved, 'image', 'generate', async () => {
+    return await withRefund(user.id, resolved, 'image', 'generate', async (paid) => {
       if (!resolved.provider.generateImage) throw new AiError('unsupported');
       const img = await resolved.provider.generateImage(imagePrompt(r.title, r.description, ((r.ingredients as Ingredient[]) ?? []).map((i) => i.name)));
+      paid();
       await recordUsage(user.id, 'image', 'generate', resolved);
       return await storeImage({
         userId: user.id,
