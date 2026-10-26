@@ -1,7 +1,7 @@
 import 'server-only';
 import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { decryptSecret, keyAad, loadEncryptionKey } from '@/lib/crypto/secrets';
+import { decryptWithKeys, encryptSecret, keyAad, loadEncryptionKey, loadPreviousEncryptionKey, SecretDecryptionError } from '@/lib/crypto/secrets';
 import { AiError, anthropicProvider, openAiProvider, type AiProvider, type Capability } from './providers';
 
 /**
@@ -39,11 +39,31 @@ async function loadUserKeys(userId: string): Promise<UserKeyRow[]> {
   return (data as UserKeyRow[]) ?? [];
 }
 
+/** Best-effort lazy re-encryption under the current key after a fallback decrypt. */
+async function reencryptUserKey(userId: string, provider: string, apiKey: string, key: Buffer): Promise<void> {
+  try {
+    const enc = encryptSecret(apiKey, key, keyAad(userId, provider));
+    await createAdminClient()
+      .from('user_api_keys')
+      .update({ ciphertext: enc.ciphertext, iv: enc.iv, auth_tag: enc.authTag })
+      .eq('user_id', userId)
+      .eq('provider', provider);
+  } catch {
+    // Not critical: the previous key keeps working until it is removed.
+  }
+}
+
 function userProviderFor(row: UserKeyRow, userId: string, capability: Capability): AiProvider | null {
   const cfg = env();
   // Chiave utente presente ma server senza APP_ENCRYPTION_KEY: errore esplicito (EncryptionConfigError), niente ripiego.
   const key = loadEncryptionKey(cfg.encryptionKey);
-  const apiKey = decryptSecret({ ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag }, key, keyAad(userId, row.provider));
+  const { plaintext: apiKey, usedPrevious } = decryptWithKeys(
+    { ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag },
+    key,
+    loadPreviousEncryptionKey(cfg.encryptionKeyPrevious),
+    keyAad(userId, row.provider),
+  );
+  if (usedPrevious) void reencryptUserKey(userId, row.provider, apiKey, key);
   if (row.provider === 'anthropic') {
     if (capability === 'image' || capability === 'audio') return null;
     return anthropicProvider({ apiKey, model: cfg.ai.userAnthropicModel });
@@ -93,6 +113,19 @@ export async function capabilityStatus(userId: string, capability: Capability, g
     if ((capability === 'image' || capability === 'audio') && row.provider !== 'openai') continue;
     // Senza APP_ENCRYPTION_KEY la chiave non e' usabile e non si ripiega sul servizio base: stato coerente = non disponibile.
     if (!env().encryptionKey) return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };
+    // Disponibile solo se la chiave si decifra davvero (chiave corrente o precedente).
+    try {
+      decryptWithKeys(
+        { ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag },
+        loadEncryptionKey(env().encryptionKey),
+        loadPreviousEncryptionKey(env().encryptionKeyPrevious),
+        keyAad(userId, row.provider),
+      );
+    } catch (e) {
+      if (!(e instanceof SecretDecryptionError)) throw e;
+      console.error(`[ai] stored ${row.provider} key for user ${userId} cannot be decrypted: re-entry needed`);
+      return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };
+    }
     return { available: true, keySource: 'user', providerName: row.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', remainingToday: null, dailyLimit: null };
   }
   const app = appProvider(capability);

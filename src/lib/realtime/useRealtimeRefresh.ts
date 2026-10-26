@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { connectRealtime } from './connect';
 import { REALTIME_TABLES, canRefreshNow, debounce, userFilter } from './helpers';
 
 const DEBOUNCE_MS = 800;
@@ -30,11 +31,18 @@ export function useRealtimeRefresh(userId: string, supabaseUrl: string, supabase
       router.refresh();
     }, DEBOUNCE_MS);
 
-    const channel = supabase.channel(`sync:${userId}`);
-    for (const { table, column } of REALTIME_TABLES) {
-      channel.on('postgres_changes', { event: '*', schema: 'public', table, filter: userFilter(column, userId) }, refresh);
-    }
-    channel.subscribe();
+    // Single shared channel. Shopping tables are unfiltered: shared-list members'
+    // rows have a different owner and RLS already limits what is delivered.
+    const tables = [
+      ...REALTIME_TABLES.map(({ table, column }) =>
+        table === 'shopping_items' ? { table } : { table, filter: userFilter(column, userId) },
+      ),
+      { table: 'shopping_aisle_overrides' },
+    ];
+    const disconnect = connectRealtime(supabase, `sync:${userId}`, tables, refresh, () => {
+      missed = true;
+      refresh();
+    });
 
     const resume = () => {
       if (missed && ready()) refresh();
@@ -46,7 +54,7 @@ export function useRealtimeRefresh(userId: string, supabaseUrl: string, supabase
       document.removeEventListener('visibilitychange', resume);
       window.removeEventListener('online', resume);
       refresh.cancel();
-      void supabase.removeChannel(channel);
+      disconnect();
     };
   }, [userId, supabaseUrl, supabaseAnonKey, router]);
 }
