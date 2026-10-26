@@ -112,12 +112,16 @@ export async function applyAnalysis(
       field_flags: result.fieldFlags,
     };
     if (mode === 'apply') {
-      const { error } = await supabase
+      // concorrenza ottimistica: aggiorna solo se il contenuto e' ancora quello analizzato
+      const { data: updated, error } = await supabase
         .from('recipes')
         .update({ ...fields, last_change_source: 'ai_suggestions', last_change_note: `${result.applied.length}` })
         .eq('id', recipeId)
-        .eq('owner_id', user.id);
+        .eq('owner_id', user.id)
+        .eq('content_hash', r.content_hash)
+        .select('id');
       if (error) return dbFailure(error, 'applyAnalysis.update');
+      if (!updated?.length) return fail('conflict');
       revalidatePath(`/recipes/${recipeId}`);
       return ok({ id: recipeId, applied: result.applied.length, skipped: result.skipped.length });
     }
