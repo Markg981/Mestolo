@@ -22,7 +22,9 @@ $$;
 
 -- Slug con suffisso casuale; in caso di collisione (con slug attivi o storici) ritenta.
 -- p_suffix: se valorizzato lo si prova per primo (stabilita' al cambio titolo).
-create or replace function public.make_recipe_slug_random(p_title text, p_suffix text default null)
+-- p_recipe_id: gli slug (attivi o storici) della ricetta stessa non contano come collisione,
+-- cosi' tornando a un titolo precedente si riprende il suo slug.
+create or replace function public.make_recipe_slug_random(p_title text, p_suffix text default null, p_recipe_id uuid default null)
 returns text language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
   base text := public.make_recipe_slug_base(p_title);
@@ -34,15 +36,15 @@ begin
       suf := left(replace(gen_random_uuid()::text, '-', ''), 8);
     end if;
     cand := base || '-' || suf;
-    if not exists (select 1 from public.recipes where public_slug = cand)
-       and not exists (select 1 from public.recipe_slug_history where slug = cand) then
+    if not exists (select 1 from public.recipes where public_slug = cand and id is distinct from p_recipe_id)
+       and not exists (select 1 from public.recipe_slug_history where slug = cand and recipe_id is distinct from p_recipe_id) then
       return cand;
     end if;
     suf := null;
   end loop;
 end;
 $$;
-revoke all on function public.make_recipe_slug_random(text, text) from public, anon, authenticated;
+revoke all on function public.make_recipe_slug_random(text, text, uuid) from public, anon, authenticated;
 
 create or replace function public.recipes_public_page_guard()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
@@ -58,10 +60,10 @@ begin
     new.public_page_enabled := false;
   end if;
   if new.public_page_enabled and new.public_slug is null then
-    new.public_slug := public.make_recipe_slug_random(new.title);
+    new.public_slug := public.make_recipe_slug_random(new.title, null, new.id);
   elsif tg_op = 'UPDATE' and new.public_slug is not null and new.title is distinct from old.title then
     -- Il suffisso resta quello gia' assegnato; cambia solo la parte derivata dal titolo.
-    v_new := public.make_recipe_slug_random(new.title, substring(new.public_slug from '([a-f0-9]{8})$'));
+    v_new := public.make_recipe_slug_random(new.title, substring(new.public_slug from '([a-f0-9]{8})$'), new.id);
     if v_new <> new.public_slug then
       insert into public.recipe_slug_history (slug, recipe_id) values (new.public_slug, new.id) on conflict do nothing;
       delete from public.recipe_slug_history where slug = v_new and recipe_id = new.id;
