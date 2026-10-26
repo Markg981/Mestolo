@@ -9,17 +9,45 @@ export interface DeletionAdmin {
     select(cols: string): { eq(col: string, val: string): PromiseLike<{ data: unknown; error: { message: string } | null }> };
   };
   storage: {
-    from(bucket: string): { remove(paths: string[]): PromiseLike<{ error: { message: string } | null }> };
+    from(bucket: string): {
+      remove(paths: string[]): PromiseLike<{ error: { message: string } | null }>;
+      list(prefix: string, opts: { limit: number }): PromiseLike<{ data: { name: string; id: string | null }[] | null; error: { message: string } | null }>;
+    };
   };
   auth: {
     admin: { deleteUser(id: string): PromiseLike<{ error: { message?: string; status?: number; code?: string } | null }> };
   };
 }
 
+const LIST_PAGE = 100;
+const MAX_PASSES = 1000;
+
+/**
+ * Removes every file under `<prefix>` in the bucket, including subfolders, regardless of the DB rows
+ * (rows can be missing or capped). Lists a page, removes it and lists again until nothing is left.
+ */
+async function purgePrefix(admin: DeletionAdmin, prefix: string): Promise<void> {
+  const bucket = admin.storage.from(BUCKET);
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    const { data, error } = await bucket.list(prefix, { limit: LIST_PAGE });
+    if (error) throw new Error(`storage list failed: ${error.message}`);
+    const entries = data ?? [];
+    if (entries.length === 0) return;
+    const files = entries.filter((e) => e.id !== null).map((e) => `${prefix}/${e.name}`);
+    const folders = entries.filter((e) => e.id === null).map((e) => `${prefix}/${e.name}`);
+    for (const f of folders) await purgePrefix(admin, f);
+    if (files.length > 0) {
+      const { error: rmError } = await bucket.remove(files);
+      if (rmError) throw new Error(`storage remove failed: ${rmError.message}`);
+    } else if (folders.length === 0) return;
+  }
+  throw new Error('storage purge did not converge');
+}
+
 /**
  * Deletes an account in a retry-safe order:
  *  1. collect the user's file paths (rows still exist, so a retry sees them again);
- *  2. remove the files (removing a missing file is a no-op, so retries are idempotent);
+ *  2. remove the files, then sweep the whole `<uid>/` prefix page by page (retries are idempotent);
  *  3. delete the auth user last (all rows cascade). "User not found" counts as success.
  * Any failure before step 3 aborts without touching the auth user, so nothing is orphaned
  * or left unreachable; the caller can simply retry. Signing out is the caller's job.
@@ -36,6 +64,8 @@ export async function deleteAccountData(admin: DeletionAdmin, userId: string): P
     const { error } = await admin.storage.from(BUCKET).remove(paths.slice(i, i + CHUNK));
     if (error) throw new Error(`storage remove failed: ${error.message}`);
   }
+  // Rete di sicurezza: tutto cio' che resta sotto <uid>/ (oltre le 1000 righe, orfani) viene eliminato a pagine.
+  await purgePrefix(admin, userId);
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error && error.status !== 404 && error.code !== 'user_not_found') throw new Error(`deleteUser failed: ${error.message ?? 'unknown'}`);
 }

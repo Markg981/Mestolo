@@ -993,6 +993,7 @@
     "deleteTitle": "Eliminar a conta",
     "deleteLead": "Elimina definitivamente a conta, as receitas, as imagens e todos os dados associados. Esta operação não pode ser anulada.",
     "deleteConfirmLabel": "Para confirmar, escreve o teu nome de utilizador ({username})",
+    "deletePasswordLabel": "Introduz a tua palavra-passe atual para confirmar",
     "deleteButton": "Eliminar definitivamente",
     "deleting": "A eliminar…",
     "passwordTitle": "Alterar palavra-passe",

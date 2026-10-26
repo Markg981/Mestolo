@@ -993,6 +993,7 @@
     "deleteTitle": "Supprimer le compte",
     "deleteLead": "Supprime définitivement votre compte, vos recettes, vos images et toutes les données associées. Cette action est irréversible.",
     "deleteConfirmLabel": "Pour confirmer, saisissez votre nom d'utilisateur ({username})",
+    "deletePasswordLabel": "Saisissez votre mot de passe actuel pour confirmer",
     "deleteButton": "Supprimer définitivement",
     "deleting": "Suppression…",
     "passwordTitle": "Changer le mot de passe",

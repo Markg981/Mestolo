@@ -15,6 +15,7 @@ test.describe('eliminazione dell\'account', () => {
       await u.page.getByLabel(/Per confermare scrivi il tuo nome utente/).fill('sbagliato');
       await expect(button).toBeDisabled();
       await u.page.getByLabel(/Per confermare scrivi il tuo nome utente/).fill(u.user.username);
+      await u.page.getByLabel(/Inserisci la password attuale per confermare/).fill(u.user.password);
       await button.click();
 
       await expect(u.page).toHaveURL(/\/welcome\?deleted=1/);
