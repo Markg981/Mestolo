@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DRAFT_MAX_AGE_MS,
   clearAllDrafts,
+  clearDraftsOfOtherUsers,
   clearLegacyDrafts,
   draftNames,
   draftSet,
@@ -82,9 +83,18 @@ describe('pulizia', () => {
     expect(store.getItem('mestolo:unit-system')).toBe('metric');
   });
 
-  it('clearUserCache (logout) cancella tutte le bozze', async () => {
+  it('clearUserCache (aperta anche da /login a sessione scaduta) lascia intatte le bozze', async () => {
     await clearUserCache();
-    expect(store.length).toBe(1);
+    expect(store.getItem(draftStorageKey(A, 'new'))).toBe('x');
+    expect(store.getItem(draftStorageKey(B, 'import-text:h'))).toBe('x');
+    expect(store.length).toBe(5);
+  });
+
+  it("clearDraftsOfOtherUsers tiene solo le bozze dell'utente che entra", () => {
+    clearDraftsOfOtherUsers(A);
+    expect(store.getItem(draftStorageKey(A, 'new'))).toBe('x');
+    expect(store.getItem(draftStorageKey(B, 'import-text:h'))).toBeNull();
+    expect(store.getItem('mestolo:draft:new')).toBeNull();
     expect(store.getItem('mestolo:unit-system')).toBe('metric');
   });
 });

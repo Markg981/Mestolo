@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
 import { uploadAvatar, removeAvatar } from '@/app/actions/profile';
 import { Avatar } from '@/components/Avatar';
+import { clearAllDrafts } from '@/lib/drafts';
 import { updateProfile, deleteApiKey, saveApiKey, deleteAccount } from '@/app/actions/settings';
 import { changePassword } from '@/app/actions/auth';
 import { createCategory, deleteCategory } from '@/app/actions/organize';
@@ -364,6 +365,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
         start(async () => {
           const res = await deleteAccount(value);
           if (res && !res.ok) setError(te(res.error));
+          else clearAllDrafts();
         });
       }}
     >

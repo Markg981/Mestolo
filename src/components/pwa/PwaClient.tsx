@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
-import { clearAllDrafts } from '@/lib/drafts';
+import { clearAllDrafts, clearDraftsOfOtherUsers } from '@/lib/drafts';
 
 /** Registers the service worker (production only, secure contexts only). */
 export function ServiceWorkerRegister() {
@@ -14,9 +14,11 @@ export function ServiceWorkerRegister() {
   return null;
 }
 
-/** Deletes cached private pages/images (called on logout and before login). */
+/**
+ * Deletes cached private pages/images (called on logout and before login).
+ * Does not touch the editor drafts: /login also opens when the session expires, and the drafts are unsaved work.
+ */
 export async function clearUserCache() {
-  clearAllDrafts();
   try {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear-user-data' });
     if ('caches' in window) {
@@ -37,6 +39,8 @@ async function hashUserId(userId: string) {
 /** Tells the service worker who is logged in; it drops the caches of any other user. */
 export function UserCacheSync({ userId }: { userId: string }) {
   useEffect(() => {
+    // shared device: drafts left by a previous account are dropped once we know who is logged in
+    clearDraftsOfOtherUsers(userId);
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
     let cancelled = false;
     (async () => {
@@ -86,6 +90,7 @@ export function SignOutButton({ action, label, className }: { action: () => Prom
     <form
       action={action}
       onSubmit={() => {
+        clearAllDrafts();
         clearUserCache();
       }}
     >
