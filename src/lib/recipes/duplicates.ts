@@ -11,13 +11,15 @@ const STOPWORDS = new Set([
 ]);
 
 export function normalizeText(s: string): string {
-  return s
-    .toLowerCase()
+  const lower = s.toLowerCase().trim();
+  const out = lower
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  // Un nome non vuoto non deve mai collassare a stringa vuota.
+  return out || lower;
 }
 
 export function titleTokens(title: string): string[] {

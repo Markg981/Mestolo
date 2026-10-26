@@ -23,8 +23,8 @@ function normalize(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9'\s-]/g, ' ')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}'\s-]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
