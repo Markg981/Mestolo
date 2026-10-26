@@ -1420,7 +1420,7 @@
     "found": "{count, plural, one {# receita no arquivo} other {# receitas no arquivo}}",
     "skipped": "{count, plural, one {# receita ignorada por não ter título.} other {# receitas ignoradas por não terem título.}}",
     "importAll": "Importar todas como privadas",
-    "importAllHint": "Receitas com o mesmo título de uma que você já tem são ignoradas.",
+    "importAllHint": "Receitas com o mesmo título de uma que já tens são ignoradas: desmarca as que não queres, e pára ou retoma a qualquer momento.",
     "progress": "{done} de {total}: {created} importadas, {duplicates} já existentes, {failed} com erro.",
     "goToRecipes": "Ir para as receitas",
     "review": "Revisar e salvar",
@@ -1429,6 +1429,11 @@
       "unsupported_format": "Este arquivo não é uma exportação do Mestolo.",
       "no_recipes": "O arquivo não contém receitas importáveis.",
       "too_large": "O arquivo é grande demais (máximo 10 MB)."
-    }
+    },
+    "importSelected": "Importar selecionadas ({count})",
+    "stop": "Parar",
+    "selectAll": "Selecionar todas",
+    "selectNone": "Desmarcar todas",
+    "stopped": "Interrompida após {done} receitas: {created} importadas, {duplicates} já presentes, {failed} com falha. Inicie de novo para retomar: as receitas já importadas são ignoradas."
   }
 }
