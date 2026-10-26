@@ -391,7 +391,11 @@
     "saveNote": "Enregistrer la note",
     "noteSaved": "Note enregistrée.",
     "hiddenTitle": "Recette masquée par la modération",
-    "hiddenLead": "Suite à plusieurs signalements, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, contactez l'assistance.",
+    "hiddenLead": "Après examen par un modérateur, cette recette n'est plus visible par les autres utilisateurs. Elle reste dans vos recettes ; si vous pensez qu'il s'agit d'une erreur, vous pouvez demander un nouvel examen.",
+    "inReviewTitle": "En révision",
+    "inReviewLead": "Suite à plusieurs signalements, cette recette a été placée en file d'attente pour révision par les modérateurs. Elle reste visible jusqu'à son examen.",
+    "appeal": "Demander un nouvel examen",
+    "appealPending": "Vous avez demandé un nouvel examen : la recette est de nouveau dans la file des modérateurs.",
     "dietHints": "Selon l'auteur (non vérifié) : {diets}"
   },
   "nutrition": {
@@ -1080,6 +1084,8 @@
     "reportedBy": "Signalée par {name}",
     "recipeGone": "Recette supprimée",
     "hiddenBadge": "Masquée",
+    "inReviewBadge": "En révision",
+    "appealBadge": "Recours de l'auteur",
     "hide": "Masquer la recette",
     "restore": "Rendre de nouveau visible",
     "dismiss": "Archiver le signalement",

@@ -391,7 +391,11 @@
     "saveNote": "Notiz speichern",
     "noteSaved": "Notiz gespeichert.",
     "hiddenTitle": "Rezept von der Moderation ausgeblendet",
-    "hiddenLead": "Nach mehreren Meldungen ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch. Wenn du glaubst, dass es ein Fehler ist, wende dich an den Support.",
+    "hiddenLead": "Nach der Prüfung durch einen Moderator ist dieses Rezept für andere nicht mehr sichtbar. Es bleibt in deinem Rezeptbuch; wenn du glaubst, dass es ein Fehler ist, kannst du eine erneute Prüfung beantragen.",
+    "inReviewTitle": "In Prüfung",
+    "inReviewLead": "Nach mehreren Meldungen wurde dieses Rezept zur Prüfung durch die Moderation vorgemerkt. Es bleibt sichtbar, bis es geprüft wurde.",
+    "appeal": "Erneute Prüfung beantragen",
+    "appealPending": "Du hast eine erneute Prüfung beantragt: Das Rezept liegt wieder in der Warteschlange der Moderation.",
     "dietHints": "Laut Autor (nicht geprüft): {diets}"
   },
   "nutrition": {
@@ -1080,6 +1084,8 @@
     "reportedBy": "Gemeldet von {name}",
     "recipeGone": "Rezept gelöscht",
     "hiddenBadge": "Ausgeblendet",
+    "inReviewBadge": "In Prüfung",
+    "appealBadge": "Einspruch des Autors",
     "hide": "Rezept ausblenden",
     "restore": "Wieder sichtbar machen",
     "dismiss": "Meldung archivieren",

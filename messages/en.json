@@ -391,7 +391,11 @@
     "saveNote": "Save note",
     "noteSaved": "Note saved.",
     "hiddenTitle": "Recipe hidden by moderation",
-    "hiddenLead": "After several reports, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake, contact support.",
+    "hiddenLead": "After a moderator review, this recipe is no longer visible to other users. It stays in your recipe book; if you think this is a mistake you can ask for another review.",
+    "inReviewTitle": "In review",
+    "inReviewLead": "After several reports, this recipe was queued for moderator review. It stays visible until it is reviewed.",
+    "appeal": "Request a new review",
+    "appealPending": "You requested a new review: the recipe is back in the moderators' queue.",
     "dietHints": "According to the author (not verified): {diets}"
   },
   "nutrition": {
@@ -1080,6 +1084,8 @@
     "reportedBy": "Reported by {name}",
     "recipeGone": "Recipe deleted",
     "hiddenBadge": "Hidden",
+    "inReviewBadge": "In review",
+    "appealBadge": "Author appeal",
     "hide": "Hide recipe",
     "restore": "Make visible again",
     "dismiss": "Archive report",
