@@ -25,8 +25,8 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW1teQ==
     steps:
-      - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -64,8 +64,8 @@ jobs:
       PGDATABASE: mestolo_test
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mestolo_test
     steps:
-      - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -104,7 +104,7 @@ jobs:
       PGPASSWORD: postgres
       PGDATABASE: mestolo_test
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Applica stub Supabase e migrazioni
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/tests/supabase-stub.sql

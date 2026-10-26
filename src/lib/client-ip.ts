@@ -9,9 +9,10 @@ export function extractClientIp(
   h: { get(name: string): string | null },
   env: Record<string, string | undefined> = process.env,
 ): string {
-  const vercel = h.get('x-vercel-forwarded-for')?.split(',')[0].trim();
-  if (vercel) return vercel;
+  // Gli header Vercel sono affidabili solo se siamo davvero su Vercel: altrove li imposta il client.
   if (env.VERCEL) {
+    const vercel = h.get('x-vercel-forwarded-for')?.split(',')[0].trim();
+    if (vercel) return vercel;
     const real = h.get('x-real-ip')?.trim();
     if (real) return real;
   }

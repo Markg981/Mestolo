@@ -1,4 +1,4 @@
-/** Recipe nutrition (migration 20261026000004): RLS follows recipe visibility, only the owner writes. */
+/** Recipe nutrition (migration 20261025013000): RLS follows recipe visibility, only the owner writes. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

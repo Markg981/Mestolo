@@ -12,6 +12,8 @@ import type { Ingredient } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
+// Stessi limiti di recipeSchema.servings: positivo, finito, max 1000.
+const servingsSchema = z.number().positive().max(1000).nullable();
 
 async function defaultListId(userId: string): Promise<string | null> {
   const supabase = await createClient();
@@ -98,7 +100,7 @@ function ingredientsToItems(ings: Ingredient[], recipe: { id: string; title: str
 /** Adds (a selection of) a recipe's ingredients, scaled to the chosen servings. */
 export async function addRecipeToShopping(recipeId: string, servings: number | null, indexes?: number[]): Promise<ActionResult<{ added: number; merged: number }>> {
   const user = await getUser();
-  if (!user || !uuid.safeParse(recipeId).success) return fail('invalid_input');
+  if (!user || !uuid.safeParse(recipeId).success || !servingsSchema.safeParse(servings).success) return fail('invalid_input');
   const supabase = await createClient();
   const { data: r } = await supabase.from('recipes').select('id, title, servings, ingredients').eq('id', recipeId).maybeSingle();
   if (!r) return fail('not_found');
