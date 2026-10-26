@@ -598,6 +598,7 @@
     "useAi": "Use AI"
   },
   "link": {
+    "sharedConfirm": "Link received from another app: check it and press the button to import the recipe.",
     "title": "Import from link",
     "lead": "Paste a recipe URL. We read the page's structured data and show it to you for review.",
     "urlLabel": "Recipe URL",

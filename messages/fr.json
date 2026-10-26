@@ -598,6 +598,7 @@
     "useAi": "Utiliser l'IA"
   },
   "link": {
+    "sharedConfirm": "Lien reçu d'une autre appli : vérifie-le et appuie sur le bouton pour importer la recette.",
     "title": "Importer depuis un lien",
     "lead": "Collez l'adresse d'une recette. Nous lisons les données structurées de la page et vous les montrons pour vérification.",
     "urlLabel": "Adresse de la recette",

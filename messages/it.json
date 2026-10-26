@@ -598,6 +598,7 @@
     "useAi": "Usa l'AI"
   },
   "link": {
+    "sharedConfirm": "Link ricevuto da un'altra app: controllalo e premi il pulsante per importare la ricetta.",
     "title": "Importa da link",
     "lead": "Incolla l'indirizzo di una ricetta. Leggiamo i dati strutturati della pagina e li mostriamo per la revisione.",
     "urlLabel": "Indirizzo della ricetta",

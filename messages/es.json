@@ -598,6 +598,7 @@
     "useAi": "Usar la IA"
   },
   "link": {
+    "sharedConfirm": "Enlace recibido de otra app: revísalo y pulsa el botón para importar la receta.",
     "title": "Importar desde enlace",
     "lead": "Pega la dirección de una receta. Leemos los datos estructurados de la página y te los mostramos para que los revises.",
     "urlLabel": "Dirección de la receta",
