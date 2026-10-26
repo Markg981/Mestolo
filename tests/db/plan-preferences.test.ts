@@ -1,4 +1,4 @@
-/** plan_preferences (RLS solo proprietario) e move_plan_entry (migration 20261026000003), su PostgreSQL reale. */
+/** plan_preferences (RLS solo proprietario) e move_plan_entry (migration 20261025012000), su PostgreSQL reale. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

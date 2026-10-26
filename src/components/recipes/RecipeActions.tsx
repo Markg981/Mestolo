@@ -11,6 +11,7 @@ import { addPlanEntry } from '@/app/actions/planning';
 import { blockUser, reportRecipe } from '@/app/actions/social';
 import { LiveMessage, Modal } from '../client-ui';
 import { Button, Field, Input, Select, Textarea, buttonClass } from '../ui';
+import { todayIso } from '@/lib/plan/week';
 import type { Visibility } from '@/lib/recipes/types';
 
 interface Props {
@@ -48,7 +49,7 @@ export function RecipeActions(p: Props) {
   const [cols, setCols] = useState(p.collections);
   const [newCol, setNewCol] = useState('');
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [planDate, setPlanDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [planDate, setPlanDate] = useState(() => todayIso(new Date(), null));
   const [planSlot, setPlanSlot] = useState('dinner');
   const [planServings, setPlanServings] = useState(p.servings ? String(p.servings) : '');
   const [reason, setReason] = useState('spam');

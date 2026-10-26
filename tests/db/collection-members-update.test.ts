@@ -1,4 +1,4 @@
-/** UPDATE dei membri di una raccolta (migration 20261029000005): solo il ruolo e' modificabile. */
+/** UPDATE dei membri di una raccolta (migration 20261025024000): solo il ruolo e' modificabile. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 

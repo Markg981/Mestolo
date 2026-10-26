@@ -13,6 +13,9 @@ describe('extractClientIp', () => {
   it("fuori da Vercel ignora x-real-ip e usa l'ultimo hop di x-forwarded-for", () => {
     expect(extractClientIp(hdr({ 'x-real-ip': '8.8.8.8', 'x-forwarded-for': '6.6.6.6, 3.3.3.3' }), {})).toBe('3.3.3.3');
   });
+  it('fuori da Vercel ignora x-vercel-forwarded-for spoofato dal client', () => {
+    expect(extractClientIp(hdr({ 'x-vercel-forwarded-for': '1.2.3.4', 'x-forwarded-for': '6.6.6.6, 3.3.3.3' }), {})).toBe('3.3.3.3');
+  });
   it('un IP falsificato in testa non cambia il risultato', () => {
     const a = extractClientIp(hdr({ 'x-forwarded-for': 'fake1, 3.3.3.3' }), {});
     const b = extractClientIp(hdr({ 'x-forwarded-for': 'fake2, 3.3.3.3' }), {});

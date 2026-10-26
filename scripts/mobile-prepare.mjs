@@ -1,6 +1,7 @@
 // Prepares the native projects for the configured server URL before `cap sync`:
 //  - mobile/www/config.js (used by the local offline/launch pages)
 //  - iOS Info.plist WKAppBoundDomains (required for service workers in WKWebView); skipped for development hosts
+// CAP_SERVER_URL is required (no default): unset or *.example.com is refused; set CAP_DEV=1 to default to http://localhost:3000.
 // With MOBILE_STORE_BUILD=1 (release/store builds) a placeholder or non-HTTPS CAP_SERVER_URL is refused.
 // Usage: CAP_SERVER_URL=https://your-domain npm run mobile:sync
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -42,7 +43,16 @@ function main() {
     }
   }
 
-  const server = (process.env.CAP_SERVER_URL ?? 'https://mestolo.example.com').replace(/\/+$/, '');
+  const raw = process.env.CAP_SERVER_URL || (process.env.CAP_DEV === '1' ? 'http://localhost:3000' : '');
+  if (!raw) {
+    console.error('CAP_SERVER_URL is required: set the published site URL (e.g. https://mestolo.vercel.app), or CAP_DEV=1 for http://localhost:3000.');
+    process.exit(1);
+  }
+  if (/example\.(com|org|net)/i.test(raw)) {
+    console.error(`CAP_SERVER_URL (${raw}) is a placeholder: set the real published site URL.`);
+    process.exit(1);
+  }
+  const server = raw.replace(/\/+$/, '');
   let url;
   try {
     url = new URL(server);

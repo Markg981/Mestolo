@@ -28,6 +28,7 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 2. In `.env.local` (o come variabili della shell):
    ```env
    CAP_SERVER_URL=https://tuo-dominio.example     # il sito pubblicato
+   # obbligatorio, senza default: se manca (o contiene example.com) mobile:sync e cap falliscono. Solo sviluppo: CAP_DEV=1 usa http://localhost:3000
    CAP_APP_ID=com.tuonome.mestolo                  # identificativo univoco, NON cambiarlo dopo la pubblicazione
    ```
    L'`appId` predefinito è `com.markg981.mestolo`: se lo cambi, rinomina anche il package Java in `android/app/src/main/java/...` e il valore in `android/app/build.gradle` (`namespace` e `applicationId`), oppure rigenera le piattaforme (`rm -rf android ios && npx cap add android && npx cap add ios`, poi riapplica le modifiche descritte in fondo).
