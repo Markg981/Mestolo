@@ -60,12 +60,40 @@ d('scheduled cleanup', () => {
     expect(names).not.toContain(p('fresh.webp'));
   });
 
+  it('deletes invites past the grace period and old meal reminders, keeps the rest (A-28)', async () => {
+    const u = await mkUser(`cl_i_${s}`);
+    const h = (n: string) => n.repeat(64);
+    await admin(
+      `insert into public.invites (inviter_id, token_hash, expires_at, revoked_at) values
+        ($1, $2, now() - interval '60 days', null),
+        ($1, $3, now() - interval '5 days', null),
+        ($1, $4, now() + interval '5 days', null),
+        ($1, $5, now() + interval '5 days', now() - interval '60 days')`,
+      [u, h('a'), h('b'), h('c'), h('d')],
+    );
+    const entries = await admin(
+      "insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2031-05-01', 'dinner', 'A'), ($1, '2031-05-02', 'dinner', 'B') returning id, title",
+      [u],
+    );
+    const old = entries.find((e) => e.title === 'A').id;
+    const fresh = entries.find((e) => e.title === 'B').id;
+    await admin("insert into public.meal_reminders_sent (entry_id, sent_at) values ($1, now() - interval '90 days'), ($2, now())", [old, fresh]);
+
+    await admin('select public.cleanup_stale_rows(30, 30)');
+    expect((await admin('select token_hash from public.invites where inviter_id = $1 order by token_hash', [u])).map((r) => r.token_hash)).toEqual([h('b'), h('c')]);
+    expect((await admin('select entry_id from public.meal_reminders_sent where entry_id in ($1, $2)', [old, fresh])).map((r) => r.entry_id)).toEqual([fresh]);
+  });
+
   it('is not executable by clients', async () => {
     const c = await pool.connect();
     try {
       await c.query('begin');
       await c.query('set local role authenticated');
       await expect(c.query('select public.cleanup_old_usage(90)')).rejects.toThrow();
+      await c.query('rollback');
+      await c.query('begin');
+      await c.query('set local role authenticated');
+      await expect(c.query('select public.cleanup_stale_rows(30, 30)')).rejects.toThrow();
       await c.query('rollback');
       await c.query('begin');
       await c.query('set local role authenticated');

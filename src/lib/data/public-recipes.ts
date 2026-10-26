@@ -37,6 +37,14 @@ export function getPublicRecipe(slug: string): Promise<PublicRecipe | null> {
   })();
 }
 
+/** Current slug for an old one (after a title rename), so shared links keep working. */
+export async function resolveOldPublicSlug(slug: string): Promise<string | null> {
+  if (!isValidSlug(slug)) return null;
+  const { data, error } = await anonClient().rpc('resolve_public_recipe_slug', { p_slug: slug });
+  if (error) throw error;
+  return typeof data === 'string' && data ? data : null;
+}
+
 export const countPublicRecipes = unstable_cache(
   async (): Promise<number> => {
     const { data, error } = await anonClient().rpc('count_public_recipes');

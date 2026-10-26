@@ -5,6 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export const dynamic = 'force-dynamic';
 
 const BATCH = 200;
+/** Retention: expired/revoked invites and sent meal reminders are deleted after this many days. */
+const INVITE_GRACE_DAYS = 30;
+const REMINDER_RETENTION_DAYS = 30;
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -25,6 +28,12 @@ export async function GET(request: Request) {
   const { data: usage, error: usageError } = await admin.rpc('cleanup_old_usage', { p_days: 90 });
   if (usageError) return NextResponse.json({ error: 'cleanup_failed' }, { status: 500 });
 
+  const { data: stale, error: staleError } = await admin.rpc('cleanup_stale_rows', {
+    p_invite_grace_days: INVITE_GRACE_DAYS,
+    p_reminder_days: REMINDER_RETENTION_DAYS,
+  });
+  if (staleError) return NextResponse.json({ error: 'cleanup_failed', usage }, { status: 500 });
+
   let removed = 0;
   for (const { bucket, rpcName } of [
     { bucket: 'recipe-images', rpcName: 'list_orphan_images' },
@@ -38,5 +47,5 @@ export async function GET(request: Request) {
     if (removeError) return NextResponse.json({ error: 'remove_failed', usage }, { status: 500 });
     removed += paths.length;
   }
-  return NextResponse.json({ ok: true, usage, orphansRemoved: removed });
+  return NextResponse.json({ ok: true, usage, stale, orphansRemoved: removed });
 }
