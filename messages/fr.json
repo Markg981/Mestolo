@@ -796,6 +796,7 @@
     "addPlaceholder": "Ex. : 500 g de tomates",
     "added": "Ajouté.",
     "merged": "Regroupé avec l'article déjà présent.",
+    "offline": "Vous êtes hors ligne : la modification n'a pas été enregistrée. Réessayez au retour de la connexion.",
     "mergeNote": "Les articles ne sont regroupés que si le nom et l'unité sont identiques : 200 g et 1 tasse restent séparés.",
     "emptyTitle": "La liste est vide",
     "empty": "Ajoutez des produits ci-dessus, depuis la page d'une recette ou depuis le menu de la semaine.",

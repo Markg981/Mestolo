@@ -796,6 +796,7 @@
     "addPlaceholder": "E.g. 500 g tomatoes",
     "added": "Added.",
     "merged": "Combined with an existing item.",
+    "offline": "You're offline: the change wasn't saved. Try again when you're back online.",
     "mergeNote": "Items are combined only if the name and unit match: 200 g and 1 cup stay separate.",
     "emptyTitle": "Your list is empty",
     "empty": "Add items above, from a recipe page, or from the meal plan.",

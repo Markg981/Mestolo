@@ -796,6 +796,7 @@
     "addPlaceholder": "Ex.: 500 g de tomate",
     "added": "Adicionado.",
     "merged": "Somado ao item já existente.",
+    "offline": "Você está offline: a alteração não foi salva. Tente novamente quando a conexão voltar.",
     "mergeNote": "Os itens só são somados se o nome e a unidade coincidirem: 200 g e 1 chávena ficam separados.",
     "emptyTitle": "A lista está vazia",
     "empty": "Adiciona produtos aqui em cima, a partir da página de uma receita ou do plano de refeições.",

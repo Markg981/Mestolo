@@ -796,6 +796,7 @@
     "addPlaceholder": "Es. 500 g pomodori",
     "added": "Aggiunto.",
     "merged": "Sommato alla voce già presente.",
+    "offline": "Sei offline: la modifica non è stata salvata. Riprova quando torna la connessione.",
     "mergeNote": "Le voci vengono sommate solo se nome e unità coincidono: 200 g e 1 tazza restano separate.",
     "emptyTitle": "La lista è vuota",
     "empty": "Aggiungi prodotti qui sopra, dalla pagina di una ricetta o dal piano pasti.",
