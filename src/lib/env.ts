@@ -9,6 +9,7 @@ export function env() {
     serviceRoleKey: e.SUPABASE_SERVICE_ROLE_KEY ?? '',
     siteUrl: (e.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/+$/, ''),
     encryptionKey: e.APP_ENCRYPTION_KEY,
+    encryptionKeyPrevious: e.APP_ENCRYPTION_KEY_PREVIOUS,
     ai: {
       appProvider: (e.AI_APP_PROVIDER ?? '').trim() as '' | 'anthropic' | 'openai' | 'openai-compatible',
       appApiKey: e.AI_APP_API_KEY ?? '',
