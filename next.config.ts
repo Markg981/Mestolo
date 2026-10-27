@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: {
-      // Keep below Vercel's 4.5 MB limit and above MAX_UPLOAD_BYTES (src/lib/images/limits.ts).
+      // Keep below Vercel's 4.5 MB limit and above MAX_TOTAL_BYTES + MULTIPART_MARGIN_BYTES (src/lib/import/limits.ts, BODY_SIZE_LIMIT_BYTES: keep in sync).
       bodySizeLimit: '4mb',
     },
   },
