@@ -249,7 +249,7 @@ export function parseRecipeText(input: string): ParsedText {
   return {
     title,
     description: descriptionLines.join('\n').slice(0, 4000),
-    servings: servings && servings > 0 ? servings : null,
+    servings: servings && servings >= 1 ? servings : null,
     prep_minutes: prep,
     cook_minutes: cook,
     total_minutes: total ?? (prep !== null && cook !== null ? null : null),

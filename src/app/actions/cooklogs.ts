@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
+import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_STORAGE_BYTES_PER_USER, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
 import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -39,30 +39,42 @@ export async function createCookLog(formData: FormData): Promise<ActionResult<{ 
     if (!recipe) return fail('not_found');
 
     let photoPath: string | null = null;
+    let photoSize = 0;
     if (hasFile) {
       await enforceRateLimit('upload_image', user.id);
       await enforceRateLimit('upload_image_day', user.id);
       if (await userOverImageQuota(supabase, user.id)) return fail('storage_quota_exceeded');
       const processed = await processRecipeImage(Buffer.from(await file.arrayBuffer()));
       if (processed.full.length > MAX_PROCESSED_BYTES) return fail('image_too_large');
+      photoSize = processed.full.length;
       photoPath = cookPhotoPath(user.id, randomUUID());
       const up = await createAdminClient().storage.from(BUCKET).upload(photoPath, processed.full, { contentType: 'image/webp', upsert: false });
       if (up.error) return fail('generic');
       uploaded = photoPath;
     }
 
-    const { data, error } = await supabase
-      .from('cook_logs')
-      .insert({ recipe_id: input.recipeId, user_id: user.id, cooked_at: input.cookedAt, note: input.note, visibility: input.visibility, photo_path: photoPath })
-      .select('id')
-      .single();
+    // controllo quota + inserimento atomici (advisory lock per utente nella RPC); null = tetto superato
+    const { data: newId, error } = await supabase.rpc('insert_cook_log', {
+      p_recipe_id: input.recipeId,
+      p_cooked_at: input.cookedAt,
+      p_note: input.note,
+      p_visibility: input.visibility,
+      p_photo_path: photoPath,
+      p_size_bytes: photoSize,
+      p_max_images: MAX_IMAGES_PER_USER,
+      p_max_bytes: MAX_STORAGE_BYTES_PER_USER,
+    });
     if (error) {
       if (uploaded) await createAdminClient().storage.from(BUCKET).remove([uploaded]);
       return dbFailure(error, 'createCookLog');
     }
+    if (!newId) {
+      if (uploaded) await createAdminClient().storage.from(BUCKET).remove([uploaded]);
+      return fail('storage_quota_exceeded');
+    }
     revalidatePath(`/recipes/${input.recipeId}`);
     revalidatePath('/recipes/cooked');
-    return ok({ id: data.id as string });
+    return ok({ id: newId as string });
   } catch (e) {
     if (uploaded) await createAdminClient().storage.from(BUCKET).remove([uploaded]).catch(() => {});
     if (e instanceof ImageValidationError) return fail(e.code);

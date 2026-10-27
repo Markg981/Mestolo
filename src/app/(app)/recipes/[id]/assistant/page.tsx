@@ -7,6 +7,9 @@ import { capabilityStatus } from '@/lib/ai/service';
 import { PageHeader } from '@/components/ui';
 import { Assistant } from './Assistant';
 
+// Server action AI nella pagina: timeout provider fino a 120 s, quindi 150 s (piano Vercel da verificare).
+export const maxDuration = 150;
+
 const NONE = { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null } as const;
 
 export default async function AssistantPage({ params }: { params: Promise<{ id: string }> }) {

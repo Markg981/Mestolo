@@ -59,12 +59,15 @@ export function mergeTranslation<T extends Pick<RecipeContent, 'title' | 'descri
   };
 }
 
-const VULGAR: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3, '⅛': 0.125 };
+const VULGAR: Record<string, number> = {
+  '½': 1 / 2, '⅓': 1 / 3, '⅔': 2 / 3, '¼': 1 / 4, '¾': 3 / 4, '⅕': 1 / 5, '⅖': 2 / 5, '⅗': 3 / 5, '⅘': 4 / 5,
+  '⅙': 1 / 6, '⅚': 5 / 6, '⅐': 1 / 7, '⅛': 1 / 8, '⅜': 3 / 8, '⅝': 5 / 8, '⅞': 7 / 8, '⅑': 1 / 9, '⅒': 1 / 10,
+};
 
 /** Numbers found in free text, normalised (1,5 = 1.5, ½ = 1/2 = 0.5) and sorted; ranges like 10-12 yield both ends. */
 export function extractNumbers(text: string): string[] {
   const out: string[] = [];
-  for (const m of text.matchAll(/(\d+)\s*\/\s*(\d+)|(\d+(?:[.,]\d+)?)|([½¼¾⅓⅔⅛])/g)) {
+  for (const m of text.matchAll(/(\d+)\s*\/\s*(\d+)|(\d+(?:[.,]\d+)?)|([½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅐⅛⅜⅝⅞⅑⅒])/g)) {
     const v = m[4] ? VULGAR[m[4]] : m[1] ? Number(m[1]) / Number(m[2]) : Number(m[3].replace(',', '.'));
     if (Number.isFinite(v)) out.push(String(Math.round(v * 1000) / 1000));
   }

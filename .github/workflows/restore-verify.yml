@@ -114,3 +114,10 @@ jobs:
           backup_decrypt "$f" storage-restore.tar
           tar -xf storage-restore.tar -C storage-restore
           node scripts/verify-storage-backup.mjs storage-restore
+
+  alert:
+    needs: [verify]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml

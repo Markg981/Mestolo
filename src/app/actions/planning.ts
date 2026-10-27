@@ -32,8 +32,12 @@ const itemSchema = z.object({
 
 type NewItem = z.infer<typeof itemSchema> & { recipe_id?: string | null; recipe_title?: string | null };
 
+const MAX_SHOPPING_ITEMS = 200;
+
 async function addItems(userId: string, items: NewItem[], targetListId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const supabase = await createClient();
+  // Stesso tetto della funzione SQL add_shopping_items (DB-04).
+  if (items.length > MAX_SHOPPING_ITEMS) return fail('invalid_input');
   let listId: string | null;
   if (targetListId) {
     // RLS: la lista e visibile solo al proprietario e ai membri

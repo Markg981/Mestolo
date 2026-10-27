@@ -88,6 +88,23 @@ describe('recognizeWithTesseract', () => {
     expect(t.terminate).toHaveBeenCalledTimes(2);
   });
 
+  it('terminates a worker whose creation finishes after the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveWorker!: (w: unknown) => void;
+      t.createWorker.mockImplementation(() => new Promise((r) => { resolveWorker = r; }));
+      const res = expect(recognizeWithTesseract(new Blob(['x']), 'it')).rejects.toBeInstanceOf(OcrTimeoutError);
+      await vi.advanceTimersByTimeAsync(OCR_PAGE_TIMEOUT_MS);
+      await res;
+      expect(t.terminate).not.toHaveBeenCalled();
+      resolveWorker({ recognize: t.recognize, terminate: t.terminate });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(t.terminate).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('times out a stuck page and terminates the worker', async () => {
     vi.useFakeTimers();
     try {
