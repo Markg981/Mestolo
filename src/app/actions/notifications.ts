@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { addDays, todayIso } from '@/lib/plan/week';
+import { addDays, resolveTimeZone, todayIso } from '@/lib/plan/week';
 import { PREFS_COLUMNS, TIME_RE, isMealSlot, isValidTimeZone, rowToPrefs, type PlannedMeal, type PrefsRow, type ReminderPrefs } from '@/lib/notifications/schedule';
 import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -74,11 +74,9 @@ export async function getReminderPlan(): Promise<ActionResult<{ prefs: ReminderP
   const user = await getUser();
   if (!user) return fail('forbidden');
   const supabase = await createClient();
-  const today = todayIso();
-  const [{ data: prefs }, { data: entries, error }] = await Promise.all([
-    supabase.from('notification_preferences').select(PREFS_COLUMNS).eq('user_id', user.id).maybeSingle(),
-    supabase.from('meal_plan_entries').select('id, plan_date, slot, title').eq('owner_id', user.id).gte('plan_date', addDays(today, -1)).lte('plan_date', addDays(today, 8)).order('plan_date'),
-  ]);
+  const { data: prefs } = await supabase.from('notification_preferences').select(PREFS_COLUMNS).eq('user_id', user.id).maybeSingle();
+  const today = todayIso(new Date(), resolveTimeZone(rowToPrefs(prefs as PrefsRow | null).timezone));
+  const { data: entries, error } = await supabase.from('meal_plan_entries').select('id, plan_date, slot, title').eq('owner_id', user.id).gte('plan_date', addDays(today, -1)).lte('plan_date', addDays(today, 8)).order('plan_date');
   if (error) return dbFailure(error, 'getReminderPlan');
   const meals = ((entries as PlannedMeal[] | null) ?? []).filter((e) => isMealSlot(e.slot));
   return ok({ prefs: rowToPrefs(prefs as PrefsRow | null), entries: meals });

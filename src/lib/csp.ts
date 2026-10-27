@@ -43,9 +43,11 @@ export function buildCsp({ nonce, isDev = false, sentryDsn, supabaseUrl }: CspOp
     "worker-src 'self'",
     // Inline styles are still needed for style attributes set by React/Next.
     "style-src 'self' 'unsafe-inline'",
-    // https: is needed only to preview the source image of an imported recipe
-    // in the review screen (it is never copied without the user's choice).
-    "img-src 'self' data: blob: https:",
+    // Tutte le immagini passano da route same-origin (/api/images, /api/avatars,
+    // /api/public-images...) o da data:/blob: (anteprime locali). Nessun https:
+    // generico: l'immagine sorgente di una ricetta importata non viene mostrata
+    // da URL remoto (la sua copia avviene lato server con safeFetch).
+    "img-src 'self' data: blob:",
     "font-src 'self' data:",
     `connect-src ${connect}`,
     "media-src 'self' blob:",

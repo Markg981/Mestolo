@@ -42,12 +42,12 @@ describe('GET /api/images/[id]', () => {
     expect((await GET(req(), ctx())).status).toBe(404);
   });
 
-  it('serves the thumb with a long immutable private cache', async () => {
+  it('serves the thumb with a short private cache (no immutable)', async () => {
     maybeSingle.mockResolvedValue({ data: { owner_id: 'o', storage_path: 'o/r/a.webp', thumb_path: 'o/r/a_t.webp' } });
     download.mockResolvedValue({ data: new Blob(['x']), error: null });
     const res = await GET(req('?size=thumb'), ctx());
     expect(res.status).toBe(200);
     expect(download).toHaveBeenCalledWith('o/r/a_t.webp');
-    expect(res.headers.get('cache-control')).toBe('private, max-age=31536000, immutable');
+    expect(res.headers.get('cache-control')).toBe('private, max-age=3600, must-revalidate');
   });
 });

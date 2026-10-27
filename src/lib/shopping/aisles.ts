@@ -10,14 +10,15 @@ export function isAisle(v: unknown): v is Aisle {
 
 /** Minuscolo, senza accenti, spazi compattati: chiave stabile per nome prodotto. */
 export function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
+  const lower = name.toLowerCase().trim();
+  const out = lower
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .slice(0, 200);
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+  // Un nome non vuoto non deve mai collassare a stringa vuota.
+  return (out || lower).slice(0, 200);
 }
 
 // Radici gia normalizzate (senza accenti). "=" iniziale: parola esatta.

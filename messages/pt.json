@@ -135,7 +135,7 @@
     "username_taken": "Este nome de utilizador já está a ser usado.",
     "translation_failed": "A tradução falhou. O original continua disponível.",
     "already_exists": "Já existe.",
-    "conflict": "Esta receita foi alterada noutro local (outro separador ou dispositivo). Recarrega a página para ver a última versão antes de guardar.",
+    "conflict": "Esta receita foi alterada noutro local (outro separador ou dispositivo). Recarrega a página: as tuas alterações ficam no rascunho e poderás recuperá-las sobre a versão mais recente.",
     "pageTitle": "Esta página não carregou",
     "pageLead": "Pode acontecer se a ligação estiver instável. Os dados que estavas a introduzir ficam guardados como rascunho.",
     "retry": "Tentar novamente",
@@ -391,7 +391,11 @@
     "saveNote": "Guardar nota",
     "noteSaved": "Nota guardada.",
     "hiddenTitle": "Receita ocultada pela moderação",
-    "hiddenLead": "Após várias denúncias, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, contacta o suporte.",
+    "hiddenLead": "Após a revisão de um moderador, esta receita deixou de estar visível para os outros utilizadores. Continua no teu livro de receitas; se achas que é um erro, podes pedir uma nova revisão.",
+    "inReviewTitle": "Em revisão",
+    "inReviewLead": "Após várias denúncias, esta receita foi colocada na fila de revisão dos moderadores. Continua visível até ser analisada.",
+    "appeal": "Pedir nova revisão",
+    "appealPending": "Pediste uma nova revisão: a receita voltou à fila dos moderadores.",
     "dietHints": "Segundo o autor (não verificado): {diets}"
   },
   "nutrition": {
@@ -528,6 +532,8 @@
     "personalNoteHint": "Continuam privadas mesmo que partilhes a receita.",
     "draftRestored": "Recuperámos o rascunho não guardado.",
     "draftNotStored": "Não é possível guardar o rascunho neste navegador (armazenamento cheio ou bloqueado): não feche a página antes de guardar.",
+    "draftConflict": "Este rascunho parte de uma versão anterior: entretanto a receita foi guardada noutro local. Se o recuperar, as suas alterações substituem a versão atual ao guardar.",
+    "restoreConflictDraft": "Recuperar as minhas alterações",
     "discardDraft": "Descartar rascunho",
     "reviewIntroTitle": "Verifica os dados antes de guardar",
     "reviewIntro": "Nada foi inventado: os valores não encontrados estão vazios e assinalados. Corrige o que for preciso.",
@@ -596,6 +602,7 @@
     "useAi": "Usar a IA"
   },
   "link": {
+    "sharedConfirm": "Link recebido de outra app: confira-o e carregue no botão para importar a receita.",
     "title": "Importar de link",
     "lead": "Cola o endereço de uma receita. Lemos os dados estruturados da página e mostramos-tos para revisão.",
     "urlLabel": "Endereço da receita",
@@ -1077,6 +1084,8 @@
     "reportedBy": "Denunciada por {name}",
     "recipeGone": "Receita eliminada",
     "hiddenBadge": "Oculta",
+    "inReviewBadge": "Em revisão",
+    "appealBadge": "Recurso do autor",
     "hide": "Ocultar a receita",
     "restore": "Tornar novamente visível",
     "dismiss": "Arquivar a denúncia",
@@ -1436,6 +1445,16 @@
     "stop": "Parar",
     "selectAll": "Selecionar todas",
     "selectNone": "Desmarcar todas",
-    "stopped": "Interrompida após {done} receitas: {created} importadas, {duplicates} já presentes, {failed} com falha. Inicie de novo para retomar: as receitas já importadas são ignoradas."
+    "stopped": "Interrompida após {done} receitas: {created} importadas, {duplicates} já presentes, {failed} com falha. Inicie de novo para retomar: as receitas já importadas são ignoradas.",
+    "failuresTitle": "{count, plural, one {# receita não importada} other {# receitas não importadas}}",
+    "retryFailed": "Tentar novamente as falhadas ({count})",
+    "failReasons": {
+      "rate_limited": "Demasiados pedidos: tenta novamente dentro de alguns minutos.",
+      "invalid_input": "Dados da receita inválidos.",
+      "forbidden": "Sem permissão para guardar: inicia sessão novamente.",
+      "config": "Serviço mal configurado.",
+      "generic": "Erro ao guardar.",
+      "unexpected": "Erro inesperado ou de rede."
+    }
   }
 }
