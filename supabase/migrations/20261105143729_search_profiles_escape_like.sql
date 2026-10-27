@@ -11,7 +11,7 @@ language sql stable security definer set search_path = public as $$
     and char_length(trim(q)) >= 2
     and p.discoverable
     and p.id <> auth.uid()
-    and not public.is_blocked_between(p.id, auth.uid())
+    and not private.is_blocked_between(p.id, auth.uid())
     and (p.username ilike regexp_replace(lower(trim(q)), '([\\%_])', '\\\1', 'g') || '%'
          or p.display_name ilike '%' || regexp_replace(trim(q), '([\\%_])', '\\\1', 'g') || '%')
   order by p.username
