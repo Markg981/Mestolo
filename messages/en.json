@@ -127,6 +127,7 @@
     "image_invalid": "The file isn't a readable image. Use JPG, PNG, or WebP.",
     "image_too_large": "The images are too large. Use fewer pages or compress them.",
     "too_many_files": "Too many photos for one recipe.",
+    "audio_too_long": "The audio is too long. Use a shorter video.",
     "storage_quota_exceeded": "You've reached the maximum number or storage size of stored photos. Delete some to upload more.",
     "auth_invalid": "Incorrect email or password.",
     "auth_email_taken": "An account with this email already exists.",
@@ -1187,6 +1188,7 @@
     "listening": "Listening: say “next” or “back”",
     "voiceDenied": "Microphone not allowed: voice commands turned off.",
     "wakeUnsupported": "The screen may turn off: keeping it awake is not supported here.",
+    "wakeFailed": "The screen may turn off: keeping it awake failed.",
     "noSteps": "This recipe has no steps yet.",
     "assistOpen": "Ask the assistant",
     "assistTitle": "Ask the assistant",
@@ -1202,6 +1204,7 @@
     "assistUnavailable": "The AI assistant is not available. Set up an AI key in settings to use it while you cook.",
     "assistSettings": "Go to AI settings",
     "assistOffline": "You are offline: the assistant needs a connection. You can keep cooking as usual.",
+    "dictationFailed": "Dictation unavailable: microphone not allowed or not reachable.",
     "assistDisclaimer": "AI-generated answers may contain mistakes. No medical or allergy advice; when in doubt, choose the safer option."
   },
   "collectionSharing": {

@@ -127,6 +127,7 @@
     "image_invalid": "O ficheiro não é uma imagem legível. Usa JPG, PNG ou WebP.",
     "image_too_large": "As imagens são demasiado pesadas. Reduz o número de páginas ou comprime-as.",
     "too_many_files": "Demasiadas fotos para uma só receita.",
+    "audio_too_long": "O áudio é demasiado longo. Usa um vídeo mais curto.",
     "storage_quota_exceeded": "Atingiste o número ou o espaço máximo de fotos guardadas. Elimina algumas para carregar mais.",
     "auth_invalid": "Email ou palavra-passe incorretos.",
     "auth_email_taken": "Já existe uma conta com este email.",
@@ -1187,6 +1188,7 @@
     "listening": "A ouvir: diga «próximo» ou «voltar»",
     "voiceDenied": "Microfone não permitido: comandos de voz desativados.",
     "wakeUnsupported": "O ecrã pode apagar-se: manter o ecrã ligado não é suportado aqui.",
+    "wakeFailed": "O ecrã pode apagar-se: não foi possível mantê-lo ligado.",
     "noSteps": "Esta receita ainda não tem passos.",
     "assistOpen": "Perguntar ao assistente",
     "assistTitle": "Perguntar ao assistente",
@@ -1202,6 +1204,7 @@
     "assistUnavailable": "O assistente de IA não está disponível. Configura uma chave de IA nas definições para o usar enquanto cozinhas.",
     "assistSettings": "Ir para as definições de IA",
     "assistOffline": "Estás offline: o assistente precisa de ligação. Podes continuar a cozinhar normalmente.",
+    "dictationFailed": "Ditado indisponível: microfone não permitido ou inacessível.",
     "assistDisclaimer": "As respostas geradas por IA podem conter erros. Sem conselhos médicos ou sobre alergias; em caso de dúvida, escolhe a opção mais prudente."
   },
   "collectionSharing": {

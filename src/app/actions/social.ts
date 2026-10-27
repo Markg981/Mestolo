@@ -58,8 +58,9 @@ export async function removeFriendship(friendshipId: string): Promise<ActionResu
   const user = await getUser();
   if (!user || !uuid.safeParse(friendshipId).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('friendships').delete().eq('id', friendshipId);
+  const { data, error } = await supabase.from('friendships').delete().eq('id', friendshipId).select('id');
   if (error) return dbFailure(error, 'removeFriendship');
+  if (!data?.length) return fail('not_found');
   revalidatePath('/friends');
   return ok();
 }
@@ -68,7 +69,7 @@ export async function blockUser(userId: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(userId).success || userId === user.id) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('blocks').upsert({ blocker_id: user.id, blocked_id: userId });
+  const { error } = await supabase.from('blocks').upsert({ blocker_id: user.id, blocked_id: userId }, { onConflict: 'blocker_id,blocked_id', ignoreDuplicates: true });
   if (error) return dbFailure(error, 'blockUser');
   revalidatePath('/friends');
   return ok();

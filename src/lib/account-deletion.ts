@@ -1,4 +1,5 @@
 const BUCKET = 'recipe-images';
+const AVATAR_BUCKET = 'avatars';
 const CHUNK = 100;
 
 type ImgRow = { storage_path: string; thumb_path: string | null };
@@ -26,8 +27,8 @@ const MAX_PASSES = 1000;
  * Removes every file under `<prefix>` in the bucket, including subfolders, regardless of the DB rows
  * (rows can be missing or capped). Lists a page, removes it and lists again until nothing is left.
  */
-async function purgePrefix(admin: DeletionAdmin, prefix: string): Promise<void> {
-  const bucket = admin.storage.from(BUCKET);
+async function purgePrefix(admin: DeletionAdmin, prefix: string, bucketName: string = BUCKET): Promise<void> {
+  const bucket = admin.storage.from(bucketName);
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     const { data, error } = await bucket.list(prefix, { limit: LIST_PAGE });
     if (error) throw new Error(`storage list failed: ${error.message}`);
@@ -35,7 +36,7 @@ async function purgePrefix(admin: DeletionAdmin, prefix: string): Promise<void> 
     if (entries.length === 0) return;
     const files = entries.filter((e) => e.id !== null).map((e) => `${prefix}/${e.name}`);
     const folders = entries.filter((e) => e.id === null).map((e) => `${prefix}/${e.name}`);
-    for (const f of folders) await purgePrefix(admin, f);
+    for (const f of folders) await purgePrefix(admin, f, bucketName);
     if (files.length > 0) {
       const { error: rmError } = await bucket.remove(files);
       if (rmError) throw new Error(`storage remove failed: ${rmError.message}`);
@@ -66,6 +67,8 @@ export async function deleteAccountData(admin: DeletionAdmin, userId: string): P
   }
   // Rete di sicurezza: tutto cio' che resta sotto <uid>/ (oltre le 1000 righe, orfani) viene eliminato a pagine.
   await purgePrefix(admin, userId);
+  // Avatar: anche le versioni vecchie/orfane sotto avatars/<uid>/ (stessa gestione errori: abort prima di deleteUser).
+  await purgePrefix(admin, userId, AVATAR_BUCKET);
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error && error.status !== 404 && error.code !== 'user_not_found') throw new Error(`deleteUser failed: ${error.message ?? 'unknown'}`);
 }

@@ -61,12 +61,25 @@ describe('scheduler dei promemoria dei pasti', () => {
 describe('backup', () => {
   const wf = read('.github/workflows/backup.yml');
 
-  it('su main la copia S3 e\' obbligatoria', () => {
-    expect(wf).toMatch(/REQUIRE_S3: \$\{\{ github\.ref == 'refs\/heads\/main' \}\}/);
-    expect(wf).toMatch(/if \[ "\$\{REQUIRE_S3\}" = "true" \]; then[\s\S]*?BACKUP_S3_BUCKET[\s\S]*?missing=1/);
+  it('i secret S3 e la chiave pubblica sono obbligatori su ogni run', () => {
+    expect(wf).toMatch(/for v in SUPABASE_DB_URL BACKUP_GPG_PUBLIC_KEY BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do/);
   });
 
-  it('rifiuta una BACKUP_PASSPHRASE corta (artifact pubblici)', () => {
-    expect(wf).toMatch(/\$\{#BACKUP_PASSPHRASE\}" -lt 32/);
+  it('non carica mai il dump come artifact (repository pubblico)', () => {
+    for (const f of ['backup.yml', 'restore-verify.yml', 'ops-monitor.yml']) {
+      const text = read(`.github/workflows/${f}`);
+      // la guardia in backup.yml usa un pattern con classe di caratteri, quindi non si auto-segnala
+      expect(text).not.toMatch(/uses:\s*actions\/upload-artifact/);
+      expect(text).not.toMatch(/db-backup-|storage-backup-/);
+      expect(text).not.toMatch(/gh run download/);
+    }
+    expect(wf).toContain("grep -nE 'upload-artifac[t]'");
+  });
+
+  it('cifra in modo asimmetrico, senza passphrase', () => {
+    expect(wf).not.toMatch(/PASSPHRASE|--symmetric/);
+    expect(read('scripts/backup-db.sh')).toContain('backup_encrypt');
+    expect(read('scripts/lib/backup-gpg.sh')).toMatch(/--encrypt/);
+    expect(read('scripts/lib/backup-gpg.sh')).not.toMatch(/--symmetric/);
   });
 });

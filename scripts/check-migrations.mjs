@@ -34,6 +34,29 @@ try {
   console.warn(`[migrations] Ref di base "${base}" non disponibile: controllo dell'ordine saltato.`);
 }
 
+// Immutabilita': file esistenti nel merge-base modificati/cancellati (rinomine = D + A).
+// Le migrazioni gia' pubblicate non si modificano: serve una nuova migrazione.
+try {
+  const mb = execFileSync('git', ['merge-base', base, 'HEAD'], { encoding: 'utf8' }).trim();
+  const changed = execFileSync(
+    'git',
+    ['diff', '--no-renames', '--diff-filter=MD', '--name-status', mb, '--', DIR],
+    { encoding: 'utf8' },
+  )
+    .split('\n')
+    .filter(Boolean);
+  for (const line of changed) {
+    const [st, file] = line.split('\t');
+    errors.push(
+      `${file}: migrazione gia' pubblicata ${st === 'D' ? 'cancellata/rinominata' : 'modificata'}. Aggiungi una nuova migrazione invece di cambiare quella esistente.`,
+    );
+  }
+} catch {
+  console.warn(
+    `[migrations] Merge-base con "${base}" non disponibile (clone shallow? usa fetch-depth: 0 o fetch --unshallow): controllo di immutabilita' saltato.`,
+  );
+}
+
 if (baseFiles) {
   const baseSet = new Set(baseFiles);
   const max = baseFiles.map((f) => f.slice(0, 14)).sort().at(-1) ?? '';
