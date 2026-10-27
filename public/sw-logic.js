@@ -65,7 +65,19 @@
     };
   }
 
-  var api = { userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
+  /** TTL delle copie private in cache: oltre questa soglia non si servono piu offline (sessione scaduta / dispositivo condiviso). */
+  var PRIVATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+  var CACHED_AT_HEADER = 'x-sw-cached-at';
+
+  /** Una copia privata e fresca solo se ha un timestamp valido, non nel futuro e non piu vecchio del TTL. */
+  function isFresh(cachedAt, now, ttlMs) {
+    var t = Number(cachedAt);
+    if (!cachedAt || !isFinite(t)) return false;
+    var age = now - t;
+    return age >= 0 && age <= (ttlMs == null ? PRIVATE_TTL_MS : ttlMs);
+  }
+
+  var api = { PRIVATE_TTL_MS, CACHED_AT_HEADER, isFresh, userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.MestoloSw = api;
 })(typeof self !== 'undefined' ? self : globalThis);

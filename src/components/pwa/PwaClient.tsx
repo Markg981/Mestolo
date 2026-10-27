@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
+import { createBrowserClient } from '@supabase/ssr';
 import { clearAllDrafts, clearDraftsOfOtherUsers } from '@/lib/drafts';
 
 /** Registers the service worker (production only, secure contexts only). */
@@ -43,7 +44,17 @@ async function hashUserId(userId: string) {
 }
 
 /** Tells the service worker who is logged in; it drops the caches of any other user. */
-export function UserCacheSync({ userId }: { userId: string }) {
+export function UserCacheSync({ userId, supabaseUrl, supabaseAnonKey }: { userId: string; supabaseUrl?: string; supabaseAnonKey?: string }) {
+  // session lost (logout in another tab, expiry, revoked token): drop the private caches
+  useEffect(() => {
+    if (!supabaseUrl || !supabaseAnonKey) return;
+    const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) void clearUserCache();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [supabaseUrl, supabaseAnonKey]);
+
   useEffect(() => {
     // shared device: drafts left by a previous account are dropped once we know who is logged in
     clearDraftsOfOtherUsers(userId);
