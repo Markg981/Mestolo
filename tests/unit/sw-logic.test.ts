@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 require('../../public/sw-logic.js');
 const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
+  canIgnoreSearch: (p: string) => boolean;
   userCacheName: (h: string) => string;
   cachesToDelete: (names: string[], keep: string | null) => string[];
   isSessionLost: (status: number, redirected: boolean, url: string) => boolean;
@@ -57,5 +58,17 @@ describe('service worker: cache per utente', () => {
   it('toglie le immagini non piu accessibili', () => {
     for (const s of [401, 403, 404, 410]) expect(L.shouldEvictImage(s)).toBe(true);
     for (const s of [200, 304, 500]) expect(L.shouldEvictImage(s)).toBe(false);
+  });
+});
+
+describe('service worker: ignoreSearch', () => {
+  it('ignora la query solo per pagine indipendenti da essa', () => {
+    const id = '123e4567-e89b-12d3-a456-426614174000';
+    expect(L.canIgnoreSearch('/')).toBe(true);
+    expect(L.canIgnoreSearch('/recipes/' + id)).toBe(true);
+    expect(L.canIgnoreSearch('/recipes')).toBe(false);
+    expect(L.canIgnoreSearch('/shopping')).toBe(false);
+    expect(L.canIgnoreSearch('/plan')).toBe(false);
+    expect(L.canIgnoreSearch('/collections')).toBe(false);
   });
 });
