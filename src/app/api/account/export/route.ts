@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { buildAccountExport } from '@/lib/recipes/account-export';
+import { buildAccountExport, friendshipsOrFilter } from '@/lib/recipes/account-export';
 import { fetchAllChunked, fetchAllPages } from '@/lib/supabase/paginate';
 import { enforceRateLimit, RateLimitedError } from '@/lib/rate-limit';
+
+// Export di molte tabelle paginate: serve piu' dei default della piattaforma.
+export const maxDuration = 60;
 
 /**
  * Personal data export (GDPR-style portability). Separate from publishing:
@@ -38,7 +41,7 @@ export async function GET() {
     own('shopping_lists'),
     own('shopping_items'),
     own('meal_plan_entries'),
-    paged('friendships', (q) => q, ['id']),
+    paged('friendships', (q) => q.or(friendshipsOrFilter(user.id)), ['id']),
     own('blocks', 'blocker_id', ['blocked_id']),
     own('reports', 'reporter_id'),
     supabase.rpc('my_api_keys'),

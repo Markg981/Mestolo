@@ -86,7 +86,16 @@
     });
   }
 
-  var api = { PRIVATE_TTL_MS, CACHED_AT_HEADER, isFresh, canIgnoreSearch, userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
+  /** Asset statici (JS/CSS/font) citati da una pagina HTML, anche nel payload RSC inline: la pagina
+   *  offline di riserva funziona senza rete solo se anche questi sono in cache. Percorsi unici, stesso origin. */
+  function staticAssetPaths(html) {
+    var found = String(html || '').match(/\/_next\/static\/[A-Za-z0-9._~\-\/%]+/g) || [];
+    return found.filter(function (p, i) {
+      return found.indexOf(p) === i;
+    });
+  }
+
+  var api = { PRIVATE_TTL_MS, CACHED_AT_HEADER, isFresh, canIgnoreSearch, staticAssetPaths, userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.MestoloSw = api;
 })(typeof self !== 'undefined' ? self : globalThis);

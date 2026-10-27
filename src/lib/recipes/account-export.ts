@@ -75,3 +75,8 @@ export function buildAccountExport(d: AccountExportInput) {
     note: 'Image files can be downloaded from each recipe page. Avatar and cook-log photos are referenced by storage path (profile.avatar_path, cook_logs[].photo_path), not embedded. API key values are never exported.',
   };
 }
+
+/** Filtro PostgREST esplicito per le amicizie dell'utente (non ci si affida solo alla RLS). */
+export function friendshipsOrFilter(userId: string): string {
+  return `requester_id.eq.${userId},addressee_id.eq.${userId}`;
+}

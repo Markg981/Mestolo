@@ -10,7 +10,7 @@
  */
 importScripts('/sw-logic.js');
 const L = self.MestoloSw;
-const VERSION = 'v5';
+const VERSION = 'v6';
 const STATIC_CACHE = `mestolo-static-${VERSION}`;
 const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
@@ -22,7 +22,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((c) => c.addAll([OFFLINE_URL, '/icons/icon-192.png', '/icon.svg']))
+      .then(async (c) => {
+        await c.addAll([OFFLINE_URL, '/icons/icon-192.png', '/icon.svg']);
+        // The fallback page is a Next page: without its own chunks in cache it fails to hydrate offline
+        // and the global error page is shown instead. A single missing asset must not block the install.
+        const html = await (await c.match(OFFLINE_URL)).text();
+        await Promise.all(L.staticAssetPaths(html).map((p) => c.add(p).catch(() => undefined)));
+      })
       .then(() => self.skipWaiting()),
   );
 });

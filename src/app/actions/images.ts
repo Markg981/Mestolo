@@ -139,8 +139,12 @@ export async function deleteRecipeImage(imageId: string): Promise<ActionResult> 
   const supabase = await createClient();
   const { data: img } = await supabase.from('recipe_images').select('recipe_id, storage_path, thumb_path').eq('id', imageId).eq('owner_id', user.id).maybeSingle();
   if (!img) return fail('not_found');
-  await supabase.from('recipe_images').delete().eq('id', imageId).eq('owner_id', user.id);
-  await supabase.storage.from('recipe-images').remove([img.storage_path, img.thumb_path].filter(Boolean) as string[]);
+  const { data: deleted, error } = await supabase.from('recipe_images').delete().eq('id', imageId).eq('owner_id', user.id).select('id');
+  if (error) return dbFailure(error, 'deleteRecipeImage');
+  if (!deleted || deleted.length === 0) return fail('not_found');
+  // Solo dopo l'esito positivo sul DB: un errore dello storage è solo loggato (file orfano, non riga orfana).
+  const { error: storageError } = await supabase.storage.from('recipe-images').remove([img.storage_path, img.thumb_path].filter(Boolean) as string[]);
+  if (storageError) console.error(`[mestolo] deleteRecipeImage: storage remove failed: ${storageError.message}`);
   revalidatePath(`/recipes/${img.recipe_id}`);
   return ok();
 }

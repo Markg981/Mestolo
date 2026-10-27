@@ -124,4 +124,22 @@ describe('GET /api/cron/meal-reminders', () => {
     await GET(req('Bearer topsecret'));
     expect(rpc).toHaveBeenCalledWith('claim_due_meal_reminders', { p_window_minutes: 45 });
   });
+
+  it('stops starting new sends once the time budget is exhausted and reports deferred meals', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const many = Array.from({ length: 30 }, (_, i) => ({ entry_id: `e${i}`, user_id: 'u1', slot: 'dinner', title: 'Pasta', locale: 'it' }));
+      rpc.mockResolvedValueOnce({ data: many, error: null });
+      // Ogni invio "costa" 10 s: con 10 worker e budget 40 s partono solo 2 giri (20 pasti).
+      sendNotification.mockImplementation(async () => (vi.setSystemTime(Date.now() + 10_000), { statusCode: 201 }));
+      const body = await (await GET(req('Bearer topsecret'))).json();
+      expect(body.meals).toBe(30);
+      expect(body.processed + body.deferred).toBe(30);
+      expect(body.deferred).toBeGreaterThan(0);
+      expect(body.confirmed).toBe(body.processed);
+      expect(sendNotification.mock.calls.length).toBeLessThan(60);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

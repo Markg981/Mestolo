@@ -13,6 +13,9 @@ export const maxDuration = 60;
 const USER_CHUNK = 100;
 const PAGE_SIZE = 1000;
 const SEND_CONCURRENCY = 10;
+// Come il cron di cleanup: margine ampio rispetto a maxDuration. Un pasto avviato sotto budget puo' durare fino al timeout
+// del push (10 s), poi restano i secondi per confirm_meal_reminders: nessun nuovo invio oltre il budget.
+const BUDGET_MS = 40_000;
 
 function authorized(request: Request): boolean {
   const secret = cronSecret();
@@ -109,16 +112,19 @@ export async function GET(request: Request) {
     if (delivered || !transient) confirm.push(meal.entry_id);
   };
   // Invii con concorrenza limitata (la route ha un tetto di durata, maxDuration).
+  const deadline = Date.now() + BUDGET_MS;
   const queue = [...meals];
   await Promise.all(
     Array.from({ length: Math.min(SEND_CONCURRENCY, queue.length) }, async () => {
-      for (let meal = queue.shift(); meal; meal = queue.shift()) await processMeal(meal);
+      for (let meal = queue.shift(); meal; meal = Date.now() < deadline ? queue.shift() : undefined) await processMeal(meal);
     }),
   );
   if (confirm.length > 0) {
     const { error: confirmError } = await admin.rpc('confirm_meal_reminders', { p_entry_ids: confirm });
     if (confirmError) console.error('[mestolo] meal-reminders: confirm failed');
   }
+  // I pasti rinviati restano senza conferma: dopo il lease (5 min) il claim li riseleziona nell'esecuzione successiva.
+  const deferred = queue.length;
   if (gone.size > 0) await admin.from('push_subscriptions').delete().in('id', [...gone]);
-  return NextResponse.json({ ok: true, meals: meals.length, sent, confirmed: confirm.length, removed: gone.size });
+  return NextResponse.json({ ok: true, meals: meals.length, sent, confirmed: confirm.length, processed: meals.length - deferred, deferred, removed: gone.size });
 }
