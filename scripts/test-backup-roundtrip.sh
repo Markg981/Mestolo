@@ -12,7 +12,13 @@ restore_db="restore_check_$$"
 base="${src%%\?*}"
 restore="${base%/*}/$restore_db"
 case "$src" in *\?*) restore="${restore}?${src#*\?}" ;; esac
-export BACKUP_PASSPHRASE="roundtrip-$$"
+# Coppia di chiavi gpg effimera: il backup usa la sola pubblica, il restore la privata
+gpg_home="$tmp/gnupg"; mkdir -m 700 "$gpg_home"
+GNUPGHOME="$gpg_home" gpg --batch --quiet --pinentry-mode loopback --passphrase '' \
+  --quick-generate-key "roundtrip@mestolo.invalid" default default never
+BACKUP_GPG_PUBLIC_KEY="$(GNUPGHOME="$gpg_home" gpg --armor --export)"
+BACKUP_GPG_PRIVATE_KEY="$(GNUPGHOME="$gpg_home" gpg --batch --pinentry-mode loopback --passphrase '' --armor --export-secret-keys)"
+export BACKUP_GPG_PUBLIC_KEY BACKUP_GPG_PRIVATE_KEY
 
 cleanup() {
   psql "$src" -q -c "drop database if exists $restore_db" >/dev/null 2>&1 || true

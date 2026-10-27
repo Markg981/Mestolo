@@ -12,6 +12,8 @@ export function isPublicIp(ip: string): boolean {
   if (addr.kind() === 'ipv6') {
     const v6 = addr as ipaddr.IPv6;
     if (v6.isIPv4MappedAddress()) addr = v6.toIPv4Address();
+    // ::/96 (IPv4-compatible, deprecato): ipaddr.js lo classifica "unicast", ma ::7f00:1 equivale a 127.0.0.1
+    else if (v6.parts.slice(0, 6).every((p) => p === 0)) return false;
   }
   const range = addr.range();
   return range === 'unicast';
@@ -37,7 +39,8 @@ export function validateExternalUrl(raw: string): URL {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new UnsafeUrlError('protocol');
   if (url.username || url.password) throw new UnsafeUrlError('credentials');
   if (url.port && url.port !== '80' && url.port !== '443') throw new UnsafeUrlError('port');
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  // Normalizza: minuscole, senza parentesi IPv6 e senza punto finale ("localhost." == "localhost")
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.+$/, '');
   if (!host || host === 'localhost' || !host.includes('.') && !ipaddr.isValid(host)) throw new UnsafeUrlError('host');
   if (BLOCKED_HOST_SUFFIXES.some((s) => host.endsWith(s))) throw new UnsafeUrlError('host');
   if (ipaddr.isValid(host) && !isPublicIp(host)) throw new UnsafeUrlError('private_address');

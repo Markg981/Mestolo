@@ -4,6 +4,7 @@ const auth = {
   getUser: vi.fn(),
   signInWithPassword: vi.fn(),
   updateUser: vi.fn(),
+  signOut: vi.fn(),
 };
 const enforceRateLimit = vi.fn();
 
@@ -41,9 +42,10 @@ describe('passwordSchema', () => {
 describe('changePassword', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    auth.getUser.mockResolvedValue({ data: { user: { email: 'Ada@Example.com' } } });
+    auth.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'Ada@Example.com' } } });
     auth.signInWithPassword.mockResolvedValue({ error: null });
     auth.updateUser.mockResolvedValue({ error: null });
+    auth.signOut.mockResolvedValue({ error: null });
     enforceRateLimit.mockResolvedValue(undefined);
   });
 
@@ -51,6 +53,22 @@ describe('changePassword', () => {
     expect(await changePassword(undefined, form(valid))).toEqual({ sent: true });
     expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'Ada@Example.com', password: 'oldpassword' });
     expect(auth.updateUser).toHaveBeenCalledWith({ password: 'newpassword1' });
+  });
+  it('signs out other sessions after the update', async () => {
+    await changePassword(undefined, form(valid));
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' });
+  });
+  it('does not fail when signOut others errors', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    auth.signOut.mockResolvedValue({ error: { message: 'x' } });
+    expect(await changePassword(undefined, form(valid))).toEqual({ sent: true });
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+  it('does not sign out others when the update fails', async () => {
+    auth.updateUser.mockResolvedValue({ error: { message: 'boom' } });
+    await changePassword(undefined, form(valid));
+    expect(auth.signOut).not.toHaveBeenCalled();
   });
   it('rejects a weak new password without touching auth', async () => {
     const res = await changePassword(undefined, form({ ...valid, password: 'short', confirm: 'short' }));
@@ -67,10 +85,11 @@ describe('changePassword', () => {
     expect(await changePassword(undefined, form(valid))).toEqual({ error: 'auth_wrong_password' });
     expect(auth.updateUser).not.toHaveBeenCalled();
   });
-  it('applies the login rate limit before verifying', async () => {
-    enforceRateLimit.mockRejectedValue(new RateLimitedError("login_email"));
+  it('uses a user-id bucket distinct from the signIn login_email bucket', async () => {
+    enforceRateLimit.mockRejectedValue(new RateLimitedError('password_verify'));
     expect(await changePassword(undefined, form(valid))).toEqual({ error: 'rate_limited' });
-    expect(enforceRateLimit).toHaveBeenCalledWith('login_email', 'h:ada@example.com');
+    expect(enforceRateLimit).toHaveBeenCalledWith('password_verify', 'u1');
+    expect(enforceRateLimit).not.toHaveBeenCalledWith('login_email', expect.anything());
     expect(auth.signInWithPassword).not.toHaveBeenCalled();
   });
   it('requires a signed-in user', async () => {

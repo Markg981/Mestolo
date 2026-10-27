@@ -142,3 +142,20 @@ describe('sentryOptions', () => {
     expect(sentryOptions('https://k@o1.ingest.sentry.io/1').enabled).toBe(true);
   });
 });
+
+describe('scrubEvent: IP e identificativi personali', () => {
+  it('rimuove IP, username e display_name da user, request, extra e contexts', () => {
+    const out = scrubEvent({
+      user: { id: 'u1', ip_address: '1.2.3.4', username: 'mario_rossi', display_name: 'Mario Rossi' },
+      request: { url: 'https://x.it/a', env: { REMOTE_ADDR: '1.2.3.4' }, headers: { 'x-forwarded-for': '1.2.3.4', accept: 'x' } },
+      extra: { ip_address: '1.2.3.4', username: 'mario_rossi', display_name: 'Mario Rossi' },
+      contexts: { profile: { username: 'mario_rossi', ip: '1.2.3.4' } },
+    }) as { user: unknown; request: { headers: { accept: string } } };
+    expect(out.user).toEqual({ id: 'u1' });
+    expect(JSON.stringify(out)).not.toMatch(/1\.2\.3\.4|mario_rossi|Mario Rossi/);
+    expect(out.request.headers.accept).toBe('x');
+  });
+  it('senza id elimina l\'intero user', () => {
+    expect((scrubEvent({ user: { ip_address: '{{auto}}', username: 'a' } }) as { user?: unknown }).user).toBeUndefined();
+  });
+});

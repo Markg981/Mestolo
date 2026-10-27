@@ -9,7 +9,7 @@
  */
 importScripts('/sw-logic.js');
 const L = self.MestoloSw;
-const VERSION = 'v3';
+const VERSION = 'v4';
 const STATIC_CACHE = `mestolo-static-${VERSION}`;
 const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
@@ -133,7 +133,9 @@ async function networkFirstPage(request, cacheable) {
     return response;
   } catch {
     if (L.canUseUserCache(user)) {
-      const cached = await (await caches.open(L.userCacheName(user))).match(request, { ignoreSearch: true });
+      const userCache = await caches.open(L.userCacheName(user));
+      // exact match first; ignore the query only for pages whose content does not depend on it
+      const cached = (await userCache.match(request)) || (L.canIgnoreSearch(new URL(request.url).pathname) ? await userCache.match(request, { ignoreSearch: true }) : undefined);
       if (cached) return cached;
     }
     return (await caches.match(OFFLINE_URL)) || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
