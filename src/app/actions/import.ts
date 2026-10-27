@@ -20,6 +20,7 @@ import { MAX_PAGE_BYTES, MAX_PHOTO_PAGES, MAX_TOTAL_BYTES } from '@/lib/import/l
 import { fetchVideoText, type VideoTextResult } from '@/lib/import/video-import';
 import { detectVideoUrl } from '@/lib/import/video';
 import { MAX_AUDIO_BYTES } from '@/lib/import/limits';
+import { sniffAudio, audioWithinDuration } from '@/lib/import/audio-sniff';
 import { fail, ok, toFailure, type ActionResult } from './_utils';
 
 
@@ -184,6 +185,10 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
     if (file.size > MAX_AUDIO_BYTES || !AUDIO_MIME.test(file.type.split(';')[0])) return fail('invalid_input');
     await enforceRateLimit('import_video_ai', user.id);
     const data = new Uint8Array(await file.arrayBuffer());
+    // Il MIME del client non e' affidabile: formato, MIME ed estensione derivano dai magic byte.
+    const sniffed = sniffAudio(data);
+    if (!sniffed) return fail('invalid_input');
+    if (!audioWithinDuration(data, sniffed.kind)) return fail('audio_too_long');
     const resolved = await resolveProvider(user.id, 'audio', 'text', 'transcribe');
     if (!resolved.provider.transcribe) {
       await refundQuota(user.id, resolved, 'text', 'transcribe');
@@ -193,8 +198,8 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
     try {
       text = await resolved.provider.transcribe({
         data,
-        mime: file.type.split(';')[0],
-        filename: /wav|wave/i.test(file.type) ? 'audio.wav' : 'audio.m4a',
+        mime: sniffed.mime,
+        filename: `audio.${sniffed.ext}`,
       });
     } catch (e) {
       await refundQuota(user.id, resolved, 'text', 'transcribe');

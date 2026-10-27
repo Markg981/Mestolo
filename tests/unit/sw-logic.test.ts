@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 require('../../public/sw-logic.js');
 const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
+  canIgnoreSearch: (p: string) => boolean;
   userCacheName: (h: string) => string;
   cachesToDelete: (names: string[], keep: string | null) => string[];
   isSessionLost: (status: number, redirected: boolean, url: string) => boolean;
@@ -74,5 +75,17 @@ describe('service worker: TTL cache privata', () => {
     expect(L.isFresh(null, now)).toBe(false);
     expect(L.isFresh('abc', now)).toBe(false);
     expect(L.isFresh(String(now + 5000), now)).toBe(false);
+  });
+});
+
+describe('service worker: ignoreSearch', () => {
+  it('ignora la query solo per pagine indipendenti da essa', () => {
+    const id = '123e4567-e89b-12d3-a456-426614174000';
+    expect(L.canIgnoreSearch('/')).toBe(true);
+    expect(L.canIgnoreSearch('/recipes/' + id)).toBe(true);
+    expect(L.canIgnoreSearch('/recipes')).toBe(false);
+    expect(L.canIgnoreSearch('/shopping')).toBe(false);
+    expect(L.canIgnoreSearch('/plan')).toBe(false);
+    expect(L.canIgnoreSearch('/collections')).toBe(false);
   });
 });
