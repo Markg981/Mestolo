@@ -120,3 +120,42 @@ d('search_recipes', () => {
     expect((await search(a, "vecchio")).length).toBe(0);
   });
 });
+
+d('search_profiles', () => {
+  let viewer: string;
+  const s = Math.random().toString(36).slice(2, 7);
+
+  const find = (q: string) =>
+    as<{ display_name: string }>(viewer, 'select display_name from public.search_profiles($1)', [q]);
+
+  const mk = async (username: string, displayName: string) => {
+    const id = await createUser(username);
+    await admin('update public.profiles set discoverable = true, display_name = $2 where id = $1', [id, displayName]);
+    return id;
+  };
+
+  beforeAll(async () => {
+    pool = new pg.Pool({ connectionString: url });
+    viewer = await mk(`spv_${s}`, `Viewer ${s}`);
+    await mk(`sp1_${s}`, `a_b${s}`);
+    await mk(`sp2_${s}`, `axb${s}`);
+    await mk(`sp3_${s}`, `a%b${s}`);
+    await mk(`sp4_${s}`, `a\\b${s}`);
+  });
+
+  afterAll(async () => {
+    await pool?.end();
+  });
+
+  it('treats _ as a literal: "a_b" does not match "axb"', async () => {
+    expect((await find(`a_b${s}`)).map((r) => r.display_name)).toEqual([`a_b${s}`]);
+  });
+
+  it('treats % as a literal', async () => {
+    expect((await find(`a%b${s}`)).map((r) => r.display_name)).toEqual([`a%b${s}`]);
+  });
+
+  it('treats \\ as a literal', async () => {
+    expect((await find(`a\\b${s}`)).map((r) => r.display_name)).toEqual([`a\\b${s}`]);
+  });
+});
