@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
+import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_STORAGE_BYTES_PER_USER, MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
 import { ImageValidationError, processRecipeImage } from '@/lib/images/process';
 import { userOverImageQuota } from '@/lib/images/quota';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -66,6 +66,9 @@ async function storeImage(opts: {
     p_width: processed.width,
     p_height: processed.height,
     p_max_images: MAX_IMAGES_PER_USER,
+    // byte reali dei buffer elaborati dal server (file + miniatura), non valori dichiarati dal client
+    p_size_bytes: processed.full.length + processed.thumb.length,
+    p_max_bytes: MAX_STORAGE_BYTES_PER_USER,
   });
   if (error) {
     await bucket.remove([path, thumbPath]);

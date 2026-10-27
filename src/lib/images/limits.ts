@@ -15,6 +15,13 @@ export function isOverImageQuota(storedCount: number): boolean {
   return storedCount >= MAX_IMAGES_PER_USER;
 }
 
+/** Per-user cap on stored bytes of recipe images (full + thumbnail); the count cap alone allows many GB. Must stay <= the DB hard cap (1 GiB) in insert_recipe_image. */
+export const MAX_STORAGE_BYTES_PER_USER = 500 * 1024 * 1024;
+
+export function isOverStorageBytes(storedBytes: number, incomingBytes = 0): boolean {
+  return storedBytes + incomingBytes > MAX_STORAGE_BYTES_PER_USER;
+}
+
 const ALLOWED_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/heic', 'image/heif']);
 
 export function isAllowedUploadType(type: string): boolean {

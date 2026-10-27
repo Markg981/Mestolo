@@ -127,7 +127,7 @@
     "image_invalid": "Il file non è un'immagine leggibile. Usa JPG, PNG o WebP.",
     "image_too_large": "Le immagini sono troppo pesanti. Riduci il numero di pagine o comprimile.",
     "too_many_files": "Troppe foto per una sola ricetta.",
-    "storage_quota_exceeded": "Hai raggiunto il numero massimo di foto salvate. Eliminane qualcuna per caricarne altre.",
+    "storage_quota_exceeded": "Hai raggiunto il numero o lo spazio massimo di foto salvate. Eliminane qualcuna per caricarne altre.",
     "auth_invalid": "Email o password non corrette.",
     "auth_email_taken": "Esiste già un account con questa email.",
     "auth_weak_password": "La password deve avere almeno 8 caratteri.",
