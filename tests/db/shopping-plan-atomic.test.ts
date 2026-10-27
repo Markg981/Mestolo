@@ -63,6 +63,17 @@ d('lista della spesa e piano: operazioni atomiche', () => {
     expect(await qty(checked)).toBe(1);
   });
 
+  it('rifiuta delta negativi, zero, nulli o enormi (A-13)', async () => {
+    const a = await mkUser(`sp_e_${s}`);
+    const id = await mkItem(a, 'zucchero', 10);
+    for (const item of [{ id, delta: -5 }, { id, delta: 0 }, { id, delta: 1e12 }, { id }]) {
+      await expect(as(a, 'select public.add_shopping_quantities($1::jsonb) as n', [JSON.stringify([item])])).rejects.toMatchObject({ code: '22023' });
+    }
+    expect(await qty(id)).toBe(10);
+    const ok = await as<{ n: number }>(a, 'select public.add_shopping_quantities($1::jsonb) as n', [JSON.stringify([{ id, delta: 2 }])]);
+    expect(ok[0].n).toBe(1);
+  });
+
   it('replace_plan_entries sostituisce le celle indicate', async () => {
     const a = await mkUser(`sp_d_${s}`);
     await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, '2026-11-02', 'lunch', 'Vecchio'), ($1, '2026-11-02', 'dinner', 'Resta')", [a]);
