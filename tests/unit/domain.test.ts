@@ -65,6 +65,22 @@ describe('scaling', () => {
     expect(r.map((i) => [i.quantity, i.unit])).toEqual([[450, 'g'], [4.5, null], [null, null], [1.5, 'clove']]);
     expect(r[3].quantityMax).toBe(3);
   });
+  it('never rounds a positive quantity to zero', () => {
+    expect(scaleIngredients([{ name: 'sale', quantity: 0.5, unit: 'g' }], 100, 1)[0].quantity).toBe(0.01);
+  });
+  it('rounds countable items to halves with a minimum of 1', () => {
+    const r = scaleIngredients(
+      [
+        { name: 'uova', quantity: 1, unit: null },
+        { name: 'aglio', quantity: 2, unit: 'clove' },
+        { name: 'uova', quantity: 3, unit: null },
+      ],
+      4,
+      1,
+    );
+    expect(r.map((i) => i.quantity)).toEqual([1, 1, 1]);
+    expect(scaleIngredients([{ name: 'uova', quantity: 3, unit: 'piece' }], 4, 5)[0].quantity).toBe(4);
+  });
   it('is a no-op when servings are unknown', () => {
     expect(scaleIngredients([{ name: 'x', quantity: 1, unit: 'g' }], null, 4)[0].quantity).toBe(1);
   });
