@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { serviceWorkerReady, userCacheNames } from './helpers-extra';
+import { requireServiceWorker, userCacheNames } from './helpers-extra';
 
 // Errore raro solo in CI (pagina d'errore globale al posto di "Nessuna connessione"), non riprodotto in locale:
 // la traccia del primo tentativo fallito e gli errori della pagina servono a trovarne la causa.
@@ -25,8 +25,7 @@ test.describe('offline e service worker', () => {
   /** Apre la pagina e attende che il worker controlli la pagina e conosca l'utente (cache privata creata). */
   async function warmUp(page: Page) {
     await page.goto('/shopping');
-    const ready = await serviceWorkerReady(page);
-    test.skip(!ready, 'service worker non registrato: serve una build di produzione (npm run build && npm start) o E2E_BASE_URL');
+    await requireServiceWorker(page);
     // clients.claim() nell'activate: dopo un reload la pagina e' controllata
     await page.reload();
     await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
@@ -48,8 +47,7 @@ test.describe('offline e service worker', () => {
 
   test('il worker e attivo e la pagina offline di riserva e precaricata', async ({ page }) => {
     await page.goto('/');
-    const ready = await serviceWorkerReady(page);
-    test.skip(!ready, 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+    await requireServiceWorker(page);
     // Il nome della cache cambia a ogni VERSION di public/sw.js: si cerca in tutte le cache statiche.
     const cached = await page.evaluate(async () => {
       const names = (await caches.keys()).filter((k) => k.startsWith('mestolo-static-'));
@@ -96,12 +94,8 @@ test.describe('offline e service worker', () => {
     } finally {
       await context.setOffline(false);
     }
-    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile. Subito dopo il ripristino della rete
-    // il primo tentativo puo ancora fallire (anche il service worker deve rivedere la rete): si ripete il clic.
-    await expect(async () => {
-      const retry = page.getByRole('button', { name: 'Riprova' });
-      if (await retry.isVisible()) await retry.click();
-      await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible({ timeout: 3_000 });
-    }).toPass({ timeout: 30_000 });
+    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile: un solo clic, nessun ritentativo.
+    await page.getByRole('button', { name: 'Riprova' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible({ timeout: 15_000 });
   });
 });
