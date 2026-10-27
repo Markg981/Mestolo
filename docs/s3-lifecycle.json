@@ -1,0 +1,18 @@
+{
+  "Rules": [
+    {
+      "ID": "mestolo-backup-db-retention",
+      "Filter": { "Prefix": "mestolo/db/" },
+      "Status": "Enabled",
+      "Expiration": { "Days": 90 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+    },
+    {
+      "ID": "mestolo-backup-storage-retention",
+      "Filter": { "Prefix": "mestolo/storage/" },
+      "Status": "Enabled",
+      "Expiration": { "Days": 90 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+    }
+  ]
+}

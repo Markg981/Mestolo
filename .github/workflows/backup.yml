@@ -78,7 +78,7 @@ jobs:
         with:
           name: db-backup-${{ env.STAMP }}
           path: out/backup-*.gpg
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: error
 
       # Obbligatorio su main (controllato in "Check secrets"); facoltativo nei run manuali da altri branch
@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "::warning::Secret BACKUP_S3_* non impostati: upload S3 saltato (copia solo negli artifact, retention 30 giorni)."
+            echo "::warning::Secret BACKUP_S3_* non impostati: upload S3 saltato (copia solo negli artifact, retention 7 giorni)."
             exit 0
           fi
           endpoint=()
@@ -129,5 +129,5 @@ jobs:
         with:
           name: storage-backup-${{ env.STAMP }}
           path: out/storage-*.gpg
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: ${{ vars.BACKUP_SKIP_STORAGE == 'true' && 'ignore' || 'error' }}
