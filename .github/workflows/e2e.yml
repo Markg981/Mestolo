@@ -121,6 +121,13 @@ jobs:
           name: playwright-report-local
           path: playwright-report/
           retention-days: 14
+      - name: Log di Supabase locale (solo se i test falliscono)
+        if: failure()
+        run: |
+          docker ps -a --format '{{.Names}}	{{.Status}}'
+          for c in $(docker ps -a --format '{{.Names}}' | grep -E 'realtime|gotrue|auth'); do
+            echo "::group::$c"; docker logs --tail 80 "$c" 2>&1 || true; echo "::endgroup::"
+          done
       - name: Ferma Supabase locale
         if: always()
         run: supabase stop --no-backup
