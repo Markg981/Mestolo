@@ -58,8 +58,9 @@ export async function removeFriendship(friendshipId: string): Promise<ActionResu
   const user = await getUser();
   if (!user || !uuid.safeParse(friendshipId).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('friendships').delete().eq('id', friendshipId);
+  const { data, error } = await supabase.from('friendships').delete().eq('id', friendshipId).select('id');
   if (error) return dbFailure(error, 'removeFriendship');
+  if (!data?.length) return fail('not_found');
   revalidatePath('/friends');
   return ok();
 }

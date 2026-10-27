@@ -91,8 +91,9 @@ export async function removeCollectionMember(collectionId: string, userId: strin
   const user = await getUser();
   if (!user || !uuid.safeParse(collectionId).success || !uuid.safeParse(userId).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('collection_members').delete().eq('collection_id', collectionId).eq('user_id', userId);
+  const { data, error } = await supabase.from('collection_members').delete().eq('collection_id', collectionId).eq('user_id', userId).select('user_id');
   if (error) return dbFailure(error, 'removeCollectionMember');
+  if (!data?.length) return fail('not_found');
   revalidatePath(`/collections/${collectionId}`);
   revalidatePath('/collections');
   return ok();
