@@ -58,7 +58,7 @@ d('db add_shopping_items', () => {
   });
 
   it('stessa key con payload diverso: conflitto esplicito, nessuna scrittura', async () => {
-    const { u, list } = await setup('c');
+    const { u, list } = await setup('f');
     const key = randomUUID();
     await add(u, list, [{ name: 'Farina', quantity: 100, unit: 'g' }], key);
     await expect(add(u, list, [{ name: 'Farina', quantity: 500, unit: 'g' }], key)).rejects.toMatchObject({ code: 'IK409' });
@@ -68,7 +68,7 @@ d('db add_shopping_items', () => {
   });
 
   it('stessa key, stesso payload con chiavi in ordine diverso: replay idempotente', async () => {
-    const { u, list } = await setup('d');
+    const { u, list } = await setup('g');
     const key = randomUUID();
     await add(u, list, [{ name: 'sale', quantity: 1, unit: 'g' }], key);
     expect(await add(u, list, [{ unit: 'g', quantity: 1, name: 'sale' }], key)).toMatchObject({ duplicate: true });
