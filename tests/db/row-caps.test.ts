@@ -16,7 +16,7 @@ d('db row caps', () => {
   });
   afterAll(async () => pool?.end());
 
-  it('meal_plan_entries: cap 20000 per utente', async () => {
+  it('meal_plan_entries: cap 20000 per utente', { timeout: 60000 }, async () => {
     const u = await mkUser(`rc_m_${s}`);
     await admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) select $1, current_date + (g % 300), 'dinner', 'x' from generate_series(1, 20000) g", [u]);
     await expect(admin("insert into public.meal_plan_entries (owner_id, plan_date, slot, title) values ($1, current_date, 'lunch', 'x')", [u])).rejects.toMatchObject({ code: '54000' });
@@ -45,5 +45,23 @@ d('db row caps', () => {
     const users = await Promise.all(Array.from({ length: 51 }, (_, i) => mkUser(`rc_s${i}_${s}`)));
     for (const u of users.slice(0, 50)) await admin('insert into public.shopping_list_members (list_id, user_id) values ($1, $2)', [list, u]);
     await expect(admin('insert into public.shopping_list_members (list_id, user_id) values ($1, $2)', [list, users[50]])).rejects.toMatchObject({ code: '54000' });
+  });
+
+  it('push_subscriptions: cap 50 per utente (riga N+1 rifiutata)', async () => {
+    const u = await mkUser(`rc_p_${s}`);
+    await admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) select $1, 'https://fcm.googleapis.com/' || g, 'k', 'a' from generate_series(1, 50) g", [u]);
+    await expect(admin("insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://fcm.googleapis.com/extra', 'k', 'a')", [u])).rejects.toMatchObject({ code: '54000' });
+  });
+
+  it('cook_logs: cap 20000 per utente (riga N+1 rifiutata)', { timeout: 60000 }, async () => {
+    const u = await mkUser(`rc_c_${s}`);
+    const r = (await admin("insert into public.recipes (owner_id, title) values ($1, 'r') returning id", [u]))[0].id as string;
+    await admin('alter table public.cook_logs disable trigger cook_logs_daily_limit');
+    try {
+      await admin('insert into public.cook_logs (recipe_id, user_id) select $1, $2 from generate_series(1, 20000)', [r, u]);
+    } finally {
+      await admin('alter table public.cook_logs enable trigger cook_logs_daily_limit');
+    }
+    await expect(admin('insert into public.cook_logs (recipe_id, user_id) values ($1, $2)', [r, u])).rejects.toMatchObject({ code: '54000' });
   });
 });

@@ -4,6 +4,7 @@ import { validateNutrition } from '@/lib/nutrition';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
@@ -80,6 +81,8 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       };
       const already = await existingByKey();
       if (already) return ok({ id: already });
+      await enforceRateLimit('recipe_create', user.id);
+      await enforceRateLimit('recipe_create_day', user.id);
       const { data, error } = await supabase
         .from('recipes')
         .insert({
@@ -224,6 +227,8 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
   try {
     const user = await getUser();
     if (!user || !uuid.safeParse(sourceId).success) return fail('forbidden');
+    await enforceRateLimit('recipe_create', user.id);
+    await enforceRateLimit('recipe_create_day', user.id);
     const supabase = await createClient();
     const { data: src } = await supabase.from('recipes').select('*').eq('id', sourceId).maybeSingle();
     if (!src) return fail('not_found');
