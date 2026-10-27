@@ -49,10 +49,14 @@ function readStorage(key: string): string | null {
 function writeStorage(key: string, value: string) {
   try {
     window.sessionStorage.setItem(key, value);
-  } catch {}
+  } catch {
+    // storage blocked (private mode/quota): persistence is best effort
+  }
   try {
     window.localStorage.setItem(key, value);
-  } catch {}
+  } catch {
+    // storage blocked (private mode/quota): persistence is best effort
+  }
 }
 
 function getRecognitionCtor(): RecognitionCtor | null {
@@ -112,7 +116,7 @@ export function CookMode({
   const [timers, setTimers] = useState<CookTimer[]>([]);
   const [now, setNow] = useState(0);
   const [announce, setAnnounce] = useState('');
-  const [wakeState, setWakeState] = useState<'on' | 'unsupported' | 'off'>('off');
+  const [wakeState, setWakeState] = useState<'on' | 'unsupported' | 'failed' | 'off'>('off');
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState(false);
@@ -189,13 +193,14 @@ export function CookMode({
       try {
         const s = await nav.wakeLock!.request('screen');
         if (cancelled) {
+          // unmounted meanwhile: a failed release of a lock we no longer need is harmless
           void s.release().catch(() => {});
           return;
         }
         sentinel = s;
         setWakeState('on');
       } catch {
-        setWakeState('off');
+        setWakeState('failed');
       }
     };
     const onVisible = () => {
@@ -206,6 +211,7 @@ export function CookMode({
     return () => {
       cancelled = true;
       document.removeEventListener('visibilitychange', onVisible);
+      // release on a lock the browser already dropped rejects: harmless
       void sentinel?.release().catch(() => {});
     };
   }, []);
@@ -230,10 +236,14 @@ export function CookMode({
         beep();
         try {
           navigator.vibrate?.([300, 150, 300, 150, 300]);
-        } catch {}
+        } catch {
+          // vibration is optional: beep and announcement already fired
+        }
         try {
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification(title, { body: msg, tag: `mestolo-timer-${f.id}` });
-        } catch {}
+        } catch {
+          // notifications are optional (constructor unsupported on some mobiles)
+        }
       }
     }, 500);
     return () => window.clearInterval(id);
@@ -243,7 +253,9 @@ export function CookMode({
     if (timers.some((x) => x.id === id && !x.done)) return;
     try {
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') void Notification.requestPermission();
-    } catch {}
+    } catch {
+      // notifications are optional: the in-page timer still works
+    }
     const startedAt = nowMs();
     setNow(startedAt);
     setTimers((all) => [...all.filter((x) => x.id !== id), { id, label, endAt: startedAt + seconds * 1000, done: false }]);
@@ -258,7 +270,9 @@ export function CookMode({
     wantVoice.current = false;
     try {
       recRef.current?.stop();
-    } catch {}
+    } catch {
+      // stop() can throw when not running: already stopped
+    }
     recRef.current = null;
     setListening(false);
   }, []);
@@ -387,7 +401,7 @@ export function CookMode({
         <div className="h-full bg-saffron motion-safe:transition-[width] motion-safe:duration-300" style={{ width: `${Math.max(4, progress * 100)}%` }} />
       </div>
 
-      {(listening || voiceError || wakeState === 'unsupported') && (
+      {(listening || voiceError || wakeState === 'unsupported' || wakeState === 'failed') && (
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-1.5 text-sm text-muted">
           {listening && (
             <span className="inline-flex items-center gap-2 font-semibold text-basil">
@@ -397,6 +411,7 @@ export function CookMode({
           )}
           {voiceError && <span role="alert">{t('voiceDenied')}</span>}
           {wakeState === 'unsupported' && <span>{t('wakeUnsupported')}</span>}
+          {wakeState === 'failed' && <span>{t('wakeFailed')}</span>}
         </div>
       )}
 

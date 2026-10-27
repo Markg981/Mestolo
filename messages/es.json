@@ -1187,6 +1187,7 @@
     "listening": "Escuchando: di «siguiente» o «atrás»",
     "voiceDenied": "Micrófono no permitido: comandos de voz desactivados.",
     "wakeUnsupported": "La pantalla podría apagarse: mantenerla encendida no es compatible aquí.",
+    "wakeFailed": "La pantalla podría apagarse: no se pudo mantenerla encendida.",
     "noSteps": "Esta receta aún no tiene pasos.",
     "assistOpen": "Pregunta al asistente",
     "assistTitle": "Pregunta al asistente",
@@ -1202,6 +1203,7 @@
     "assistUnavailable": "El asistente de IA no está disponible. Configura una clave de IA en los ajustes para usarlo mientras cocinas.",
     "assistSettings": "Ir a los ajustes de IA",
     "assistOffline": "Estás sin conexión: el asistente necesita conexión. Puedes seguir cocinando con normalidad.",
+    "dictationFailed": "Dictado no disponible: micrófono no permitido o inaccesible.",
     "assistDisclaimer": "Las respuestas generadas por IA pueden contener errores. Sin consejos médicos ni sobre alergias; en caso de duda, elige la opción más prudente."
   },
   "collectionSharing": {
