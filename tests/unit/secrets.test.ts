@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { randomBytes } from 'node:crypto';
-import { decryptSecret, encryptSecret, keyAad, keyHint, loadEncryptionKey, redactSecrets, EncryptionConfigError } from '@/lib/crypto/secrets';
+import { decryptSecret, decryptWithKeys, loadPreviousEncryptionKey, SecretDecryptionError, encryptSecret, keyAad, keyHint, loadEncryptionKey, redactSecrets, EncryptionConfigError } from '@/lib/crypto/secrets';
 
 describe('API key encryption', () => {
   const key = randomBytes(32);
@@ -37,5 +37,30 @@ describe('API key encryption', () => {
     expect(keyHint(secret)).toBe('…XYZ9');
     expect(redactSecrets(`Bearer error for key ${secret}`)).not.toContain(secret);
     expect(redactSecrets('{"x-api-key": "sk-ant-api03-abcdefghijklmnop"}')).not.toContain('abcdefghijklmnop');
+  });
+});
+
+describe('hardening GCM e chiave previous', () => {
+  const key = randomBytes(32);
+  it('rifiuta IV e tag di lunghezza errata', () => {
+    const enc = encryptSecret('sk-abc', key, 'x');
+    expect(() => decryptSecret({ ...enc, iv: randomBytes(16).toString('base64') }, key, 'x')).toThrow(SecretDecryptionError);
+    expect(() => decryptSecret({ ...enc, authTag: randomBytes(4).toString('base64') }, key, 'x')).toThrow(SecretDecryptionError);
+    expect(decryptSecret(enc, key, 'x')).toBe('sk-abc');
+  });
+  it('una chiave previous malformata viene ignorata e la corrente decifra', () => {
+    const prev = loadPreviousEncryptionKey('troppo-corta');
+    expect(prev).toBeNull();
+    const enc = encryptSecret('sk-abc', key, 'x');
+    expect(decryptWithKeys(enc, key, prev, 'x').plaintext).toBe('sk-abc');
+  });
+  it('assertProductionEnv valida APP_ENCRYPTION_KEY_PREVIOUS', async () => {
+    const { assertProductionEnv } = await import('@/lib/env');
+    const base = {
+      NODE_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'u', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'a',
+      SUPABASE_SERVICE_ROLE_KEY: 's', NEXT_PUBLIC_SITE_URL: 'h', APP_ENCRYPTION_KEY: key.toString('base64'),
+    } as unknown as NodeJS.ProcessEnv;
+    expect(() => assertProductionEnv(base)).not.toThrow();
+    expect(() => assertProductionEnv({ ...base, APP_ENCRYPTION_KEY_PREVIOUS: 'corta' })).toThrow(/PREVIOUS/);
   });
 });
