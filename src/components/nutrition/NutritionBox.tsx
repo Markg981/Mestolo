@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { NUTRIENT_KEYS, scaleNutrition, type NutrientKey, type NutritionSource, type NutritionValues } from '@/lib/nutrition';
+import { formatDateUtc } from '@/lib/format-date';
 import { Badge } from '../ui';
 
 export const NUTRIENT_LABEL: Record<NutrientKey, string> = {
@@ -25,7 +26,7 @@ export function NutritionBox({ values, source, updatedAt, baseServings, editHref
   const [portions, setPortions] = useState(1);
   const shown = scaleNutrition(values, portions);
   const fmt = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(updatedAt));
+  const date = formatDateUtc(updatedAt, locale);
   const step = (d: number) => setPortions((p) => Math.min(100, Math.max(1, p + d)));
 
   return (

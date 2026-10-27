@@ -39,9 +39,17 @@ export function useRealtimeRefresh(userId: string, supabaseUrl: string, supabase
       ),
       { table: 'shopping_aisle_overrides' },
     ];
-    const disconnect = connectRealtime(supabase, `sync:${userId}`, tables, refresh, () => {
-      missed = true;
-      refresh();
+    // The user's JWT must be on the socket before the join: otherwise Realtime
+    // validates the postgres_changes filters as anon (no column privileges) and
+    // rejects the whole channel with "invalid column for filter".
+    let disconnect = () => {};
+    let disposed = false;
+    void supabase.realtime.setAuth().finally(() => {
+      if (disposed) return;
+      disconnect = connectRealtime(supabase, `sync:${userId}`, tables, refresh, () => {
+        missed = true;
+        refresh();
+      });
     });
 
     const resume = () => {
@@ -54,6 +62,7 @@ export function useRealtimeRefresh(userId: string, supabaseUrl: string, supabase
       document.removeEventListener('visibilitychange', resume);
       window.removeEventListener('online', resume);
       refresh.cancel();
+      disposed = true;
       disconnect();
     };
   }, [userId, supabaseUrl, supabaseAnonKey, router]);

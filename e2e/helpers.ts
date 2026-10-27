@@ -88,8 +88,17 @@ export async function login(page: Page, user: TestUser) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(user.email);
   await page.getByLabel('Password').fill(user.password);
-  await page.getByRole('button', { name: 'Accedi' }).click();
-  await expect(page).not.toHaveURL(/\/login/);
+  // Il limite login_ip (20 / 15 min) e' per IP: in CI tutti i login partono da 127.0.0.1 e lo esauriscono.
+  // L'header vale solo per questo invio (stessa origine) e viene rimosso subito dopo, per non far partire
+  // preflight CORS verso Supabase.
+  const fakeIp = `10.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${1 + Math.floor(Math.random() * 254)}`;
+  await page.context().setExtraHTTPHeaders({ 'x-forwarded-for': fakeIp });
+  try {
+    await page.getByRole('button', { name: 'Accedi' }).click();
+    await expect(page).not.toHaveURL(/\/login/);
+  } finally {
+    await page.context().setExtraHTTPHeaders({});
+  }
 }
 
 /** Su desktop il pulsante e' nella barra laterale, su mobile nella pagina "Altro". */

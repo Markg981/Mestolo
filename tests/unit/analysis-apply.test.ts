@@ -70,7 +70,7 @@ describe('applyAnalysis', () => {
   it('loads the recipe only for its owner and the analysis only for that recipe', async () => {
     await applyAnalysis(R, A, ['a1'], 'apply');
     expect(ops[0]).toMatchObject({ table: 'recipes', eqs: [['id', R], ['owner_id', 'u1']] });
-    expect(ops[1]).toMatchObject({ table: 'ai_suggestions', eqs: [['id', A], ['recipe_id', R]] });
+    expect(ops[1]).toMatchObject({ table: 'ai_suggestions', eqs: [['id', A], ['recipe_id', R], ['kind', 'analysis']] });
   });
 
   it('returns not_found when the recipe (not owned) or the analysis is missing', async () => {
@@ -135,9 +135,15 @@ describe('applyAnalysis', () => {
     expect(await applyAnalysis(R, A, ['a1'], 'variant')).toMatchObject({ ok: false, error: 'invalid_input' });
   });
 
-  it('maps a corrupt stored payload to a generic failure instead of throwing', async () => {
+  it('maps a corrupt stored payload to a specific error instead of throwing', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     suggestion = { payload: { suggestions: 'bad' }, recipe_hash: 'h1' };
-    expect(await applyAnalysis(R, A, ['a1'], 'apply')).toMatchObject({ ok: false, error: 'generic' });
+    expect(await applyAnalysis(R, A, ['a1'], 'apply')).toMatchObject({ ok: false, error: 'ai_bad_output' });
+  });
+
+  it('filters the suggestion lookup on kind=analysis', async () => {
+    await applyAnalysis(R, A, ['a1'], 'apply');
+    const q = ops.find((o) => o.table === 'ai_suggestions');
+    expect(q?.eqs).toContainEqual(['kind', 'analysis']);
   });
 });
