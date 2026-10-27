@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { GripVertical, MoveRight, Plus, ShoppingBasket, X } from 'lucide-react';
 import { addPlanEntry, addWeekToShopping, deletePlanEntry, movePlanEntry } from '@/app/actions/planning';
 import { LiveMessage, Modal } from '@/components/client-ui';
+import { ShoppingTargetSelect } from '@/components/shopping-target';
+import type { ListOption } from '@/lib/shopping/targets';
 import { Button, Field, Input, Select, cx } from '@/components/ui';
 
 export interface Entry {
@@ -18,12 +20,13 @@ export interface Entry {
   servings: number | null;
 }
 
-export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekStart: string; days: { iso: string; label: string; today: boolean }[]; slots: Entry['slot'][]; entries: Entry[]; recipes: { id: string; title: string }[] }) {
+export function PlanBoard({ weekStart, days, slots, entries, recipes, lists = [] }: { lists?: ListOption[]; weekStart: string; days: { iso: string; label: string; today: boolean }[]; slots: Entry['slot'][]; entries: Entry[]; recipes: { id: string; title: string }[] }) {
   const t = useTranslations('plan');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [targetList, setTargetList] = useState(lists[0]?.id ?? '');
   const [target, setTarget] = useState<{ date: string; slot: Entry['slot'] } | null>(null);
   const [recipeId, setRecipeId] = useState('');
   const [freeText, setFreeText] = useState('');
@@ -107,7 +110,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
           disabled={pending || !entries.some((e) => e.recipe_id)}
           onClick={() =>
             start(async () => {
-              const res = await addWeekToShopping(weekStart, crypto.randomUUID());
+              const res = await addWeekToShopping(weekStart, targetList || undefined, crypto.randomUUID());
               setMsg(res.ok ? { text: t('addedToList', { added: res.data.added, merged: res.data.merged, recipes: res.data.recipes }), tone: 'success' } : { text: te(res.error), tone: 'error' });
             })
           }
@@ -115,6 +118,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
           <ShoppingBasket aria-hidden className="size-5" />
           {t('addToList')}
         </Button>
+        <ShoppingTargetSelect lists={lists} value={targetList} onChange={setTargetList} />
         <Link href="/shopping" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
           {t('openList')}
         </Link>

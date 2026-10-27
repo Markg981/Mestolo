@@ -817,6 +817,7 @@
     "removeItem": "{name} entfernen",
     "familyTitle": "Familie und Teilen",
     "listSwitch": "Liste",
+    "targetList": "Zur Liste hinzufügen",
     "sharedBy": "von {name}",
     "membersNone": "Noch keine Mitglieder: Lade eine Freundin oder einen Freund ein, um die Liste zu teilen.",
     "removeMember": "{name} aus der Liste entfernen",

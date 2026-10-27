@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ChefHat, Clock, ExternalLink, Users } from 'lucide-react';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { loadListOptions } from '@/lib/shopping/targets';
 import { getRecipeDetail, listEditableCollections } from '@/lib/data/recipes';
 import { capabilityStatus } from '@/lib/ai/service';
 import { categoryLabel } from '@/lib/recipes/categories';
@@ -210,7 +211,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             {t('recipe.ingredients')}
           </h2>
           {view.ingredients.length ? (
-            <IngredientList recipeId={id} ingredients={view.ingredients} baseServings={recipe.servings === null ? null : Number(recipe.servings)} showFlags={isOwner && recipe.verification_status === 'needs_review'} />
+            <IngredientList recipeId={id} ingredients={view.ingredients} baseServings={recipe.servings === null ? null : Number(recipe.servings)} showFlags={isOwner && recipe.verification_status === 'needs_review'} lists={user ? await loadListOptions(user.id) : []} />
           ) : (
             <p className="text-muted">{t('recipe.noIngredients')}</p>
           )}

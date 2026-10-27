@@ -3,6 +3,7 @@ import { createClient, getUser, getUserTimeZone } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui';
 import { sortByExpiry, suggestRecipes, type PantryItem } from '@/lib/pantry/match';
 import { todayIso } from '@/lib/plan/week';
+import { loadListOptions } from '@/lib/shopping/targets';
 import { PantryView } from './PantryView';
 
 export async function generateMetadata() {
@@ -19,6 +20,7 @@ export default async function PantryPage() {
     supabase.from('recipes').select('id, title, ingredients').order('created_at', { ascending: false }).limit(500),
   ]);
   const items = sortByExpiry(((rows as PantryItem[]) ?? []).map((i) => ({ ...i, quantity: i.quantity === null ? null : Number(i.quantity) })));
+  const lists = await loadListOptions(user!.id);
   const today = todayIso(new Date(), timeZone);
   const suggestions = suggestRecipes(
     ((recipes as { id: string; title: string; ingredients: { name: string; toTaste?: boolean }[] | null }[]) ?? []).map((r) => ({ ...r, ingredients: r.ingredients ?? [] })),
@@ -28,7 +30,7 @@ export default async function PantryPage() {
   return (
     <div>
       <PageHeader title={t('title')} lead={t('lead')} />
-      <PantryView items={items} suggestions={suggestions} today={today} />
+      <PantryView items={items} suggestions={suggestions} today={today} lists={lists} />
     </div>
   );
 }
