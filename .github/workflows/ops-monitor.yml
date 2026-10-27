@@ -122,3 +122,10 @@ jobs:
             fi
           done
           exit $fail
+
+  alert:
+    needs: [backup-age, missed-reminders, recent-success]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml
