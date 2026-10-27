@@ -128,4 +128,16 @@ d('rich profiles', () => {
     await expect(as(owner, "insert into storage.objects (bucket_id, name) values ('avatars', $1)", [`${owner}/b.webp`])).rejects.toThrow(/row-level security/);
     await expect(as(stranger, "delete from storage.objects where bucket_id = 'avatars' and name = $1 returning 1", [`${owner}/a.webp`])).resolves.toHaveLength(0);
   });
+
+  it('a stranger gets 0 rows for a non-discoverable profile (C-02)', async () => {
+    await setVisibility('friends');
+    await admin('update public.profiles set discoverable = false where id = $1', [owner]);
+    try {
+      expect(await card(stranger, names.owner)).toHaveLength(0);
+      expect(await card(owner, names.owner)).toHaveLength(1);
+      expect(await card(friend, names.owner)).toHaveLength(1);
+    } finally {
+      await admin('update public.profiles set discoverable = true where id = $1', [owner]);
+    }
+  });
 });

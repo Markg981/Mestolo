@@ -72,6 +72,21 @@ d('profiles column privileges', () => {
     expect(await as(stranger, 'select public.can_see_profile($1) as ok', [hidden])).toEqual([{ ok: false }]);
   });
 
+  it('amicizie pending (in uscita) o declined non rendono visibile un profilo privato (C-24)', async () => {
+    const s = Math.random().toString(36).slice(2, 7);
+    const [priv, reqr, decl, inc] = await Promise.all(['cp', 'cr', 'cd', 'ci'].map((n) => user(`${n}_${s}`)));
+    await admin('update public.profiles set discoverable = false where id = any($1)', [[priv, inc]]);
+    const q = 'select public.can_see_profile($1) as ok';
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'pending')", [reqr, priv]);
+    expect(await as(reqr, q, [priv])).toEqual([{ ok: false }]);
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'declined')", [decl, priv]);
+    expect(await as(decl, q, [priv])).toEqual([{ ok: false }]);
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'pending')", [inc, reqr]);
+    expect(await as(reqr, q, [inc])).toEqual([{ ok: true }]);
+    await admin("delete from public.friendships where requester_id = $1 and addressee_id = $2", [reqr, priv]);
+    await admin("insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'accepted')", [reqr, priv]);
+    expect(await as(reqr, q, [priv])).toEqual([{ ok: true }]);
+  });
   it('a block hides even a discoverable profile with public recipes, both ways', async () => {
     const s = Math.random().toString(36).slice(2, 7);
     const [author, reader] = await Promise.all(['ba', 'br'].map((n) => user(`${n}_${s}`)));

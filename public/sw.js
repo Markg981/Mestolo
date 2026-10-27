@@ -4,12 +4,13 @@
  * - private cache is per user ("mestolo-user-<hash>"): the page tells the worker who is logged in
  *   (postMessage 'set-user'); it is wiped on logout, on 401 / redirect to login, and when the user
  *   changes. Without a known current user nothing private is served from cache.
+ * - private entries carry an 'x-sw-cached-at' header and expire after a TTL (see sw-logic.js)
  * - images: network-first, cached copy used only offline and evicted on 401/403/404/410
  * - POST requests (server actions), /api/* (except images) and auth pages are never cached
  */
 importScripts('/sw-logic.js');
 const L = self.MestoloSw;
-const VERSION = 'v4';
+const VERSION = 'v5';
 const STATIC_CACHE = `mestolo-static-${VERSION}`;
 const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
@@ -36,6 +37,22 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim()),
   );
 });
+
+/** Copy of the response with the caching time (private caches expire after L.PRIVATE_TTL_MS). */
+function stamp(response) {
+  const headers = new Headers(response.headers);
+  headers.set(L.CACHED_AT_HEADER, String(Date.now()));
+  return new Response(response.clone().body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/** Cached copy only if still within the TTL; an expired one is deleted. */
+async function freshMatch(cache, request, options) {
+  const cached = await cache.match(request, options);
+  if (!cached) return null;
+  if (L.isFresh(cached.headers.get(L.CACHED_AT_HEADER), Date.now())) return cached;
+  await cache.delete(request, options);
+  return null;
+}
 
 async function getCurrentUser() {
   const res = await (await caches.open(META_CACHE)).match(USER_KEY);
@@ -128,14 +145,14 @@ async function networkFirstPage(request, cacheable) {
     }
     const type = response.headers.get('content-type') || '';
     if (L.canUseUserCache(user) && response.ok && !response.redirected && type.includes('text/html')) {
-      (await caches.open(L.userCacheName(user))).put(request, response.clone());
+      (await caches.open(L.userCacheName(user))).put(request, stamp(response));
     }
     return response;
   } catch {
     if (L.canUseUserCache(user)) {
       const userCache = await caches.open(L.userCacheName(user));
       // exact match first; ignore the query only for pages whose content does not depend on it
-      const cached = (await userCache.match(request)) || (L.canIgnoreSearch(new URL(request.url).pathname) ? await userCache.match(request, { ignoreSearch: true }) : undefined);
+      const cached = (await freshMatch(userCache, request)) || (L.canIgnoreSearch(new URL(request.url).pathname) ? await freshMatch(userCache, request, { ignoreSearch: true }) : null);
       if (cached) return cached;
     }
     return (await caches.match(OFFLINE_URL)) || new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } });
@@ -153,11 +170,11 @@ async function imageNetworkFirst(request) {
     } else if (L.shouldEvictImage(response.status)) {
       if (cache) await cache.delete(request);
     } else if (cache && response.ok) {
-      cache.put(request, response.clone());
+      cache.put(request, stamp(response));
     }
     return response;
   } catch {
-    const cached = cache ? await cache.match(request) : null;
+    const cached = cache ? await freshMatch(cache, request) : null;
     return cached || new Response('', { status: 503 });
   }
 }

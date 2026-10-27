@@ -85,11 +85,17 @@ jobs:
       - name: Download and verify storage backup
         env:
           BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
+          BACKUP_SKIP_STORAGE_REASON: ${{ vars.BACKUP_SKIP_STORAGE_REASON }}
         run: |
           set -euo pipefail
           umask 077
           if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
-            echo "::warning::BACKUP_SKIP_STORAGE=true: verifica del backup storage disattivata esplicitamente."
+            if [ -z "${BACKUP_SKIP_STORAGE_REASON}" ]; then
+              echo "::error::BACKUP_SKIP_STORAGE=true richiede la variabile BACKUP_SKIP_STORAGE_REASON con la motivazione."
+              exit 1
+            fi
+            echo "::error title=Verifica storage disattivata::motivo: ${BACKUP_SKIP_STORAGE_REASON}"
+            echo "Verifica del backup storage disattivata: ${BACKUP_SKIP_STORAGE_REASON}" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           mkdir -p dl-storage

@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient, getProfile, getUser, getUserTimeZone } from '@/lib/supabase/server';
-import { conflictsWithPreferences, pickOfTheDay } from '@/lib/discover/preferences';
+import { conflictsWithPreferences, hiddenCategoriesFilter, pickOfTheDay } from '@/lib/discover/preferences';
 import { attachCovers, LIST_COLUMNS, type RecipeListItem } from './recipes';
 import { todayIso } from '@/lib/plan/week';
 import type { Ingredient } from '@/lib/recipes/types';
@@ -34,7 +34,7 @@ export async function discover(categories: CategoryRow[], opts: { category?: str
     .in('visibility', ['public', 'friends'])
     .eq('is_hidden', false);
   if (opts.category) q = q.eq('category_id', opts.category);
-  if (hiddenCats.length && !opts.category) q = q.not('category_id', 'in', `(${hiddenCats.join(',')})`);
+  if (hiddenCats.length && !opts.category) q = q.or(hiddenCategoriesFilter(hiddenCats));
   const pageSize = opts.limit ?? PAGE_SIZE;
   const { data } = await applyKeyset(q, DISCOVER_SORT, decodeCursor(opts.cursor), pageSize);
   // the cursor follows the rows served, before the (indicative) preference filter

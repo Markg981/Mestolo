@@ -49,7 +49,7 @@ d('db idempotency key and atomic image insert', () => {
   it('simultaneous inserts get distinct positions', async () => {
     const call = (i: number) =>
       asUser(uid, (c) =>
-        c.query("select public.insert_recipe_image($1, $2, $3, 'upload', null, null, '', 10, 10, 100) as id", [rid, `${uid}/${rid}/p${s}${i}.webp`, `${uid}/${rid}/p${s}${i}_t.webp`]),
+        c.query("select public.insert_recipe_image($1, $2, $3, 'upload', null, null, '', 10, 10, 100, 1000, 1000000) as id", [rid, `${uid}/${rid}/p${s}${i}.webp`, `${uid}/${rid}/p${s}${i}_t.webp`]),
       );
     await Promise.all(Array.from({ length: 8 }, (_, i) => call(i)));
     const rows = await admin('select position from public.recipe_images where recipe_id = $1 order by position', [rid]);
@@ -59,11 +59,21 @@ d('db idempotency key and atomic image insert', () => {
   it('the quota holds under concurrency (returns null over the limit)', async () => {
     const call = (i: number) =>
       asUser(uid, (c) =>
-        c.query("select public.insert_recipe_image($1, $2, $3, 'upload', null, null, '', 10, 10, 10) as id", [rid, `${uid}/${rid}/q${s}${i}.webp`, `${uid}/${rid}/q${s}${i}_t.webp`]),
+        c.query("select public.insert_recipe_image($1, $2, $3, 'upload', null, null, '', 10, 10, 10, 1000, 1000000) as id", [rid, `${uid}/${rid}/q${s}${i}.webp`, `${uid}/${rid}/q${s}${i}_t.webp`]),
       );
     const res = await Promise.all(Array.from({ length: 6 }, (_, i) => call(i)));
     expect(res.filter((r) => r.rows[0].id === null).length).toBe(4); // 8 already stored, limit 10
     const [{ n }] = await admin('select count(*)::int as n from public.recipe_images where owner_id = $1', [uid]);
     expect(n).toBe(10);
+  });
+
+  it('rejects an image that exceeds the per-user byte cap (returns null)', async () => {
+    const u2 = (await admin('insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id', [`ib_${s}@example.test`, JSON.stringify({ username: `ib_${s}` })]))[0].id;
+    const r2 = (await admin("insert into public.recipes (owner_id, title) values ($1, 'B') returning id", [u2]))[0].id;
+    const ins = (n: string, size: number) =>
+      asUser(u2, (c) => c.query("select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 10, 10, 100, $3, 1000) as id", [r2, `${u2}/${r2}/${n}.webp`, size]));
+    expect((await ins('a', 600)).rows[0].id).not.toBeNull();
+    expect((await ins('b', 600)).rows[0].id).toBeNull(); // 600 + 600 > 1000
+    expect((await ins('c', 400)).rows[0].id).not.toBeNull(); // 1000 esatti
   });
 });

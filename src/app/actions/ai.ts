@@ -94,13 +94,15 @@ export async function applyAnalysis(
     const supabase = await createClient();
     const [{ data: rec }, { data: sug }] = await Promise.all([
       supabase.from('recipes').select('*').eq('id', recipeId).eq('owner_id', user.id).maybeSingle(),
-      supabase.from('ai_suggestions').select('payload, recipe_hash').eq('id', analysisId).eq('recipe_id', recipeId).maybeSingle(),
+      supabase.from('ai_suggestions').select('payload, recipe_hash').eq('id', analysisId).eq('recipe_id', recipeId).eq('kind', 'analysis').maybeSingle(),
     ]);
     if (!rec || !sug) return fail('not_found');
     const r = rec as RecipeRow;
     // analisi superata: la ricetta è cambiata dopo l'analisi
     if (sug.recipe_hash !== r.content_hash) return fail('invalid_input', 'stale');
-    const analysis = analysisSchema.parse(sug.payload);
+    const parsedAnalysis = analysisSchema.safeParse(sug.payload);
+    if (!parsedAnalysis.success) return fail('ai_bad_output');
+    const analysis = parsedAnalysis.data;
     const result = applySuggestions(contentOf(r), r.field_flags ?? {}, analysis.suggestions, selectedIds.map(String));
     if (!result.applied.length) return fail('invalid_input', 'stale');
     const c = result.content;

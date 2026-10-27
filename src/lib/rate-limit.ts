@@ -31,6 +31,9 @@ export const LIMITS = {
   user_search: [60, 15 * 60],
   push_subscribe: [20, 60 * 60],
   feedback_send: [10, 24 * 60 * 60],
+  // Creazione ricette (anche copie). Larghi: un import in blocco reale resta sotto, un ciclo di abuso no.
+  recipe_create: [300, 60 * 60],
+  recipe_create_day: [600, 24 * 60 * 60],
 } as const satisfies Record<string, readonly [number, number]>;
 
 export type LimitName = keyof typeof LIMITS;

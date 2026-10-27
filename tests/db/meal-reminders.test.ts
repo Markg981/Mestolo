@@ -50,15 +50,15 @@ d('meal plan notifications', () => {
     expect(await as(a, 'select id from public.push_subscriptions')).toHaveLength(0);
   });
 
-  it('save_push_subscription reassigns a shared endpoint to the current user and is idempotent', async () => {
+  it('save_push_subscription is idempotent for the owner and never reassigns an endpoint owned by another user', async () => {
     const a = await mkUser(`mr_c_${s}`);
     const b = await mkUser(`mr_d_${s}`);
     const ep = `https://fcm.googleapis.com/fcm/send/shared-${s}`;
     await as(a, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p1', 'k1']);
     await as(a, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p2', 'k2']);
     await as(b, 'select public.save_push_subscription($1, $2, $3, null)', [ep, 'p3', 'k3']);
-    expect(await as(a, 'select id from public.push_subscriptions')).toHaveLength(0);
-    expect((await as<{ p256dh: string }>(b, 'select p256dh from public.push_subscriptions'))[0].p256dh).toBe('p3');
+    expect(await as(b, 'select id from public.push_subscriptions')).toHaveLength(0);
+    expect((await as<{ p256dh: string }>(a, 'select p256dh from public.push_subscriptions'))[0].p256dh).toBe('p2');
   });
 
   it('notification_preferences: own rows only, invalid timezone rejected', async () => {

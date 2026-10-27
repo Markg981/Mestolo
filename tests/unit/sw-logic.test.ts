@@ -10,6 +10,8 @@ const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
   isSessionLost: (status: number, redirected: boolean, url: string) => boolean;
   canUseUserCache: (h: unknown) => boolean;
   shouldEvictImage: (s: number) => boolean;
+  isFresh: (c: unknown, now: number, ttl?: number) => boolean;
+  PRIVATE_TTL_MS: number;
   parsePushPayload: (t: string) => { title: string; body: string; tag: string; url: string };
 };
 
@@ -58,6 +60,21 @@ describe('service worker: cache per utente', () => {
   it('toglie le immagini non piu accessibili', () => {
     for (const s of [401, 403, 404, 410]) expect(L.shouldEvictImage(s)).toBe(true);
     for (const s of [200, 304, 500]) expect(L.shouldEvictImage(s)).toBe(false);
+  });
+});
+
+describe('service worker: TTL cache privata', () => {
+  const now = 1_000_000_000_000;
+  it('accetta una copia recente', () => {
+    expect(L.isFresh(String(now - 1000), now)).toBe(true);
+  });
+  it('scarta una copia oltre il TTL', () => {
+    expect(L.isFresh(String(now - L.PRIVATE_TTL_MS - 1), now)).toBe(false);
+  });
+  it('scarta timestamp assente, non valido o nel futuro', () => {
+    expect(L.isFresh(null, now)).toBe(false);
+    expect(L.isFresh('abc', now)).toBe(false);
+    expect(L.isFresh(String(now + 5000), now)).toBe(false);
   });
 });
 

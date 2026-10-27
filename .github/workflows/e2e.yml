@@ -44,7 +44,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-      APP_ENCRYPTION_KEY: bWVzdG9sby1jaS1kdW1teS1rZXktMzItYnl0ZXMhISE=
+      APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW0=
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Verifica secret di staging
@@ -88,7 +88,7 @@ jobs:
     timeout-minutes: 40
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      APP_ENCRYPTION_KEY: bWVzdG9sby1jaS1kdW1teS1rZXktMzItYnl0ZXMhISE=
+      APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW0=
       CRON_SECRET: ci-dummy-cron-secret
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

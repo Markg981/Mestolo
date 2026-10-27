@@ -4,6 +4,7 @@ import { validateNutrition } from '@/lib/nutrition';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
@@ -80,6 +81,8 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       };
       const already = await existingByKey();
       if (already) return ok({ id: already });
+      await enforceRateLimit('recipe_create', user.id);
+      await enforceRateLimit('recipe_create_day', user.id);
       const { data, error } = await supabase
         .from('recipes')
         .insert({
@@ -157,7 +160,11 @@ export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const { data, error } = await supabase.from('recipes').delete().eq('id', recipeId).eq('owner_id', user.id).select('id');
   if (error) return dbFailure(error, 'deleteRecipe');
   if (!data?.length) return fail('not_found');
-  if (paths.length) await supabase.storage.from('recipe-images').remove(paths);
+  if (paths.length) {
+    const { error: rmErr } = await supabase.storage.from('recipe-images').remove(paths);
+    // Non blocca l'operazione: i file orfani vengono ripuliti dal cron di cleanup.
+    if (rmErr) console.error(`[mestolo] deleteRecipe: storage.remove fallito recipe=${recipeId} paths=${paths.length}`);
+  }
   invalidatePublicPage(pub?.public_slug as string | null | undefined);
   revalidatePath('/recipes');
   return ok();
@@ -224,6 +231,8 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
   try {
     const user = await getUser();
     if (!user || !uuid.safeParse(sourceId).success) return fail('forbidden');
+    await enforceRateLimit('recipe_create', user.id);
+    await enforceRateLimit('recipe_create_day', user.id);
     const supabase = await createClient();
     const { data: src } = await supabase.from('recipes').select('*').eq('id', sourceId).maybeSingle();
     if (!src) return fail('not_found');
