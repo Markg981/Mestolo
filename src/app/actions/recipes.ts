@@ -267,9 +267,13 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
   }
 }
 
-export async function restoreVersion(recipeId: string, version: number): Promise<ActionResult> {
+/**
+ * Ripristina lo snapshot di una versione. `expectedVersion` e' la versione corrente vista dal client:
+ * se la ricetta e' cambiata nel frattempo (altra scheda o dispositivo) non si sovrascrive nulla e il risultato e' 'conflict'.
+ */
+export async function restoreVersion(recipeId: string, version: number, expectedVersion: number): Promise<ActionResult> {
   const user = await getUser();
-  if (!user || !uuid.safeParse(recipeId).success || !Number.isInteger(version)) return fail('invalid_input');
+  if (!user || !uuid.safeParse(recipeId).success || !Number.isInteger(version) || !Number.isInteger(expectedVersion)) return fail('invalid_input');
   const supabase = await createClient();
   const { data: v } = await supabase.from('recipe_versions').select('snapshot').eq('recipe_id', recipeId).eq('version', version).maybeSingle();
   if (!v) return fail('not_found');
@@ -293,9 +297,13 @@ export async function restoreVersion(recipeId: string, version: number): Promise
     })
     .eq('id', recipeId)
     .eq('owner_id', user.id)
+    .eq('version', expectedVersion)
     .select('id');
   if (error) return dbFailure(error, 'restoreVersion');
-  if (!data?.length) return fail('not_found');
+  if (!data?.length) {
+    const { data: cur } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+    return fail(cur ? 'conflict' : 'not_found');
+  }
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath(`/recipes/${recipeId}/history`);
   return ok();
