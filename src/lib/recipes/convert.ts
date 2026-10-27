@@ -173,19 +173,29 @@ export function formatFractionQuantity(q: number): string {
   return whole ? `${whole} ${glyph}` : glyph;
 }
 
-/** Convert temperatures like "180 °C" / "350°F" inside free text. Rounded to 5 degrees (25 °F for ovens). */
+/** Convert temperatures like "180 °C" / "350°F" / "350-375°F" (both range ends) inside free text. Rounded to 5 degrees (25 °F for ovens). */
 export function convertTemperatures(text: string, system: UnitSystem): string {
   if (system === 'original') return text;
-  return text.replace(/(\d+(?:[.,]\d+)?)\s*°\s*([CcFf])(?![A-Za-z])/g, (match, num: string, u: string) => {
-    const v = parseFloat(num.replace(',', '.'));
+  const re = /(\d+(?:[.,]\d+)?)(?:\s*(-|–|—|\bto\b|\ba\b)\s*(\d+(?:[.,]\d+)?))?\s*°\s*([CcFf])(?![A-Za-z])/g;
+  return text.replace(re, (match, n1: string, sep: string | undefined, n2: string | undefined, u: string) => {
     const isC = u.toUpperCase() === 'C';
+    let conv: (v: number) => number;
+    let unit: string;
     if (system === 'us' && isC) {
-      const f = (v * 9) / 5 + 32;
-      return `${f >= 250 ? Math.round(f / 25) * 25 : Math.round(f / 5) * 5} °F`;
+      conv = (v) => {
+        const f = (v * 9) / 5 + 32;
+        return f >= 250 ? Math.round(f / 25) * 25 : Math.round(f / 5) * 5;
+      };
+      unit = '°F';
+    } else if (system === 'metric' && !isC) {
+      conv = (v) => Math.round(((v - 32) * 5) / 9 / 5) * 5;
+      unit = '°C';
+    } else {
+      return match;
     }
-    if (system === 'metric' && !isC) {
-      return `${Math.round(((v - 32) * 5) / 9 / 5) * 5} °C`;
-    }
-    return match;
+    const c1 = conv(parseFloat(n1.replace(',', '.')));
+    if (n2 === undefined || sep === undefined) return `${c1} ${unit}`;
+    const c2 = conv(parseFloat(n2.replace(',', '.')));
+    return `${c1}${/^[a-z]/i.test(sep) ? ` ${sep} ` : sep}${c2} ${unit}`;
   });
 }

@@ -100,6 +100,13 @@ describe('convertTemperatures', () => {
     expect(convertTemperatures('acqua a 60,5°C', 'us')).toBe('acqua a 140 °F');
     expect(convertTemperatures('nessuna temperatura', 'us')).toBe('nessuna temperatura');
   });
+  it('converte entrambi gli estremi di un intervallo', () => {
+    expect(convertTemperatures('Bake at 350-375°F', 'metric')).toBe('Bake at 175-190 °C');
+    expect(convertTemperatures('Cuoci a 180–200 °C', 'us')).toBe('Cuoci a 350–400 °F');
+    expect(convertTemperatures('Bake 350 to 375 °F', 'metric')).toBe('Bake 175 to 190 °C');
+    expect(convertTemperatures('Cuoci a 180 a 200°C', 'us')).toBe('Cuoci a 350 a 400 °F');
+    expect(convertTemperatures('Bake 350-375°F', 'us')).toBe('Bake 350-375°F');
+  });
 });
 
 describe('once fluide (fl oz) vs once massa (oz)', () => {
