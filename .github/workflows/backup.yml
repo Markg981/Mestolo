@@ -104,3 +104,10 @@ jobs:
           backup_encrypt "out/storage-${STAMP}.tar" "out/storage-${STAMP}.tar.gpg"
           rm -f "out/storage-${STAMP}.tar"
           scripts/s3-upload-verify.sh "out/storage-${STAMP}.tar.gpg" "mestolo/storage/storage-${STAMP}.tar.gpg"
+
+  alert:
+    needs: [backup]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml
