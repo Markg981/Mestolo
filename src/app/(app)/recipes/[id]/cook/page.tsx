@@ -4,6 +4,9 @@ import { getUser } from '@/lib/supabase/server';
 import { capabilityStatus } from '@/lib/ai/service';
 import { CookMode } from '@/components/cooking/CookMode';
 
+// Server action AI nella pagina: timeout provider fino a 120 s, quindi 150 s (piano Vercel da verificare).
+export const maxDuration = 150;
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const d = await getRecipeDetail(id);

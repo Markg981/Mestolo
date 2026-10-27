@@ -1,3 +1,4 @@
+import { ActionErrorToast } from '@/components/ActionErrorToast';
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -36,6 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <ServiceWorkerRegister />
           <ShareUrlListener />
+          <ActionErrorToast />
         </NextIntlClientProvider>
       </body>
     </html>

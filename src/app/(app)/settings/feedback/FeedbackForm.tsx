@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useSyncExternalStore, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { sendFeedback } from '@/app/actions/feedback';
 import { getAppPlatform } from '@/lib/native/platform';
@@ -14,7 +15,7 @@ export function FeedbackForm({ appVersion }: { appVersion: string }) {
   const platform = useSyncExternalStore(() => () => {}, getAppPlatform, () => 'web' as const);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   if (sent)
     return (

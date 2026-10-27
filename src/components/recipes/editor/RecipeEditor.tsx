@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp, ExternalLink, ImagePlus, Plus, Trash2 } from 'lucide-react';
 import { saveRecipe, checkDuplicates } from '@/app/actions/recipes';
@@ -64,7 +65,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
   const [notStored, setNotStored] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saving, startSaving] = useTransition();
+  const [saving, startSaving] = useActionTransition();
   // one key per editor mount: a double submit or retry of a creation returns the same recipe
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const saveGuard = useRef(createSaveGuard());
@@ -281,8 +282,13 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
           }
         }
         if (mode === 'review' && keepSourceImage && source?.imageUrl) {
-          const r = await importSourceImage(id, source.imageUrl, source.name ?? source.attribution ?? null);
-          if (!r.ok) extras.push('image');
+          // La ricetta è già salvata: un errore (anche un'eccezione) dell'import immagine è solo un avviso.
+          try {
+            const r = await importSourceImage(id, source.imageUrl, source.name ?? source.attribution ?? null);
+            if (!r.ok) extras.push('image');
+          } catch {
+            extras.push('image');
+          }
         }
         if (storageKey) draftSet(storageKey, null);
         onSaved?.();

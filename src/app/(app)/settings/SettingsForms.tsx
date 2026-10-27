@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useActionState, useState, useTransition } from 'react';
+import { useActionState, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
 import { uploadAvatar, removeAvatar } from '@/app/actions/profile';
@@ -20,7 +21,7 @@ function AvatarEditor({ userId, name, hasImage }: { userId: string; name: string
   const tr = useTranslations('richProfile');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const run = (fn: () => ReturnType<typeof uploadAvatar>) =>
     start(async () => {
@@ -86,7 +87,7 @@ export function ProfileForm({ profile, systemCategories }: { profile: Profile; s
     hidden_categories: profile.hidden_categories,
   });
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
   const submit = (e: React.FormEvent) => {
@@ -197,7 +198,7 @@ export function CustomCategories({ categories }: { categories: { id: string; nam
   const router = useRouter();
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-xl font-bold">{t('categoriesTitle')}</h2>
@@ -249,7 +250,7 @@ export function ApiKeyForm({ configured }: { configured: { provider: string; key
   const [key, setKey] = useState('');
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <div className="flex flex-col gap-4">
       {configured.length > 0 && (
@@ -358,7 +359,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
   const [value, setValue] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <form
       className="flex flex-col gap-3"

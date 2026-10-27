@@ -35,15 +35,21 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
     const ipHash = await clientIpHash();
     const emailHash = hashKey(parsed.data.email.toLowerCase());
     await authRateLimit('login_ip', ipHash);
-    // Tight limit per (email, IP); the email-only ceiling is loose so a third party cannot lock a victim out.
+    // Tight limit per (email, IP). The email-only counter is NOT checked here: it only counts failures
+    // (see below), so a third party cannot lock a victim out by burning it from other IPs.
     await authRateLimit('login_email_ip', `${emailHash}:${ipHash}`);
-    await authRateLimit('login_email', emailHash);
   } catch {
     return { error: 'rate_limited', email: parsed.data.email };
   }
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error || !data.user) {
+    // Count only failed attempts per email; this never blocks an IP that has not failed.
+    try {
+      await authRateLimit('login_email', hashKey(parsed.data.email.toLowerCase()));
+    } catch {
+      return { error: 'rate_limited', email: parsed.data.email };
+    }
     const code: ErrorCode = /confirm/i.test(error?.message ?? '') ? 'auth_not_confirmed' : 'auth_invalid';
     return { error: code, email: parsed.data.email };
   }

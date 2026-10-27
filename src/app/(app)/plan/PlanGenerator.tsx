@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { RefreshCw, Settings2, Sparkles, X } from 'lucide-react';
 import { applyPlan, previewPlan, savePlanPreferences } from '@/app/actions/planning';
@@ -43,7 +44,7 @@ export function PlanGenerator({
   const tc = useTranslations('common');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const [open, setOpen] = useState(false);
   const [p, setP] = useState(prefs);

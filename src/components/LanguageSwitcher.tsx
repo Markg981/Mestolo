@@ -1,8 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
 import { LOCALES, LOCALE_NAMES } from '@/i18n/config';
 import { setLocale } from '@/app/actions/settings';
 import { Select } from './ui';
@@ -11,7 +11,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
   const t = useTranslations('common');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <label className={`flex items-center gap-2 ${className ?? ''}`}>
       <span className="sr-only">{t('language')}</span>

@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Copy } from 'lucide-react';
 import { copyRecipe } from '@/app/actions/recipes';
@@ -13,7 +14,7 @@ export function SavePublicRecipe({ recipeId }: { recipeId: string }) {
   const t = useTranslations('publicPage');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-2">

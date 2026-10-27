@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Trash2 } from 'lucide-react';
 import { addPantryItem, deletePantryItem } from '@/app/actions/pantry';
@@ -18,7 +19,7 @@ export function PantryView({ items, suggestions, today, lists = [] }: { items: P
   const te = useTranslations('errors');
   const tc = useTranslations('common');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');

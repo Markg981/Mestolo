@@ -4,25 +4,23 @@
 // altrimenti vengono ordinate prima di quelle esistenti e `supabase db push`
 // puo' rifiutarle. Le migrazioni gia' pubblicate non si rinominano (romperebbe
 // la cronologia supabase_migrations).
+// Convenzione: le nuove migrazioni hanno timestamp > massimo su base e
+// <= tetto = max(oggi, massimo su base) + 1 giorno (YYYYMMDDHHMMSS, UTC): si
+// possono aggiungere migrazioni senza far correre i timestamp nel futuro.
+// Versioni (prefisso numerico) duplicate tra file sono errore. In CI (CI=true)
+// l'assenza del ref di base e' un errore (usa fetch-depth: 0), in locale un warning.
+// Regole pure in scripts/lib/migrations-rules.mjs.
 // Uso: npm run check:migrations   (ref di base: MIGRATIONS_BASE_REF, default origin/main)
 import { execFileSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
+import { validateMigrations } from './lib/migrations-rules.mjs';
 
 const DIR = 'supabase/migrations';
 const base = process.env.MIGRATIONS_BASE_REF || 'origin/main';
-const NAME = /^(\d{14})_[a-z0-9_]+\.sql$/;
+const IN_CI = Boolean(process.env.CI);
 
 const errors = [];
 const current = readdirSync(DIR).filter((f) => f.endsWith('.sql'));
-
-for (const f of current) if (!NAME.test(f)) errors.push(`Nome non valido: ${f} (atteso <14 cifre>_<descrizione>.sql)`);
-
-const seen = new Map();
-for (const f of current) {
-  const ts = f.slice(0, 14);
-  if (seen.has(ts)) errors.push(`Timestamp duplicato ${ts}: ${seen.get(ts)} e ${f}`);
-  seen.set(ts, f);
-}
 
 let baseFiles = null;
 try {
@@ -31,7 +29,9 @@ try {
     .filter((f) => f.endsWith('.sql'))
     .map((f) => f.split('/').pop());
 } catch {
-  console.warn(`[migrations] Ref di base "${base}" non disponibile: controllo dell'ordine saltato.`);
+  const msg = `Ref di base "${base}" non disponibile (in CI usa fetch-depth: 0): controllo dell'ordine saltato.`;
+  if (IN_CI) errors.push(msg);
+  else console.warn(`[migrations] ${msg}`);
 }
 
 // Immutabilita': file esistenti nel merge-base modificati/cancellati (rinomine = D + A).
@@ -57,15 +57,7 @@ try {
   );
 }
 
-if (baseFiles) {
-  const baseSet = new Set(baseFiles);
-  const max = baseFiles.map((f) => f.slice(0, 14)).sort().at(-1) ?? '';
-  for (const f of current.filter((f) => !baseSet.has(f))) {
-    if (f.slice(0, 14) <= max) {
-      errors.push(`${f}: il timestamp deve essere > ${max} (massimo in ${base}). Rinomina la nuova migrazione.`);
-    }
-  }
-}
+errors.push(...validateMigrations({ current, baseFiles, base }));
 
 if (errors.length) {
   for (const e of errors) console.error(`[migrations] ${e}`);

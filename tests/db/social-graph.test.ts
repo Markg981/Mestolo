@@ -93,13 +93,13 @@ d('Social graph functions', () => {
       `select c.relname || '.' || p.polname as n
          from pg_policy p join pg_class c on c.oid = p.polrelid
         where coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '')
-              ~ '(^|[^.])is_blocked_between\\('`,
+              ~ '(public\\.|(^|[^.[:alnum:]_]))is_blocked_between\\('`,
     );
     expect(pol).toEqual([]);
     const fns = await admin(
       `select p.proname as n from pg_proc p join pg_namespace s on s.oid = p.pronamespace
         where s.nspname = 'public' and p.proname <> 'is_blocked_between'
-          and p.prosrc ~ '(^|[^.])is_blocked_between\\('`,
+          and p.prosrc ~ '(public\\.|(^|[^.[:alnum:]_]))is_blocked_between\\('`,
     );
     expect(fns).toEqual([]);
   });

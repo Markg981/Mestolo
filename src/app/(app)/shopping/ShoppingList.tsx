@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useOptimistic, useState, useTransition } from 'react';
+import { useOptimistic, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Printer, Trash2 } from 'lucide-react';
 import { addShoppingItem, clearCheckedItems, deleteShoppingItem, toggleShoppingItem } from '@/app/actions/planning';
@@ -35,7 +36,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
   const router = useRouter();
   const [text, setText] = useState('');
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [localOverrides, setLocalOverride] = useOptimistic(overrides, (state: Record<string, Aisle>, patch: { key: string; aisle: Aisle }) => ({ ...state, [patch.key]: patch.aisle }));
   const [optimistic, setOptimistic] = useOptimistic(items, (state: Item[], patch: { id: string; checked?: boolean; removed?: boolean }) =>
     patch.removed ? state.filter((i) => i.id !== patch.id) : state.map((i) => (i.id === patch.id ? { ...i, checked: patch.checked ?? i.checked } : i)),

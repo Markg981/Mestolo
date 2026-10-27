@@ -38,3 +38,10 @@ jobs:
           curl --fail-with-body --silent --show-error --max-time 60 --retry 2 --retry-all-errors \
             -H "Authorization: Bearer $CRON_SECRET" \
             "${APP_URL%/}/api/cron/meal-reminders"
+
+  alert:
+    needs: [trigger]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml

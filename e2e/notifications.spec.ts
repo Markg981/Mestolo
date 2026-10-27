@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { serviceWorkerReady } from './helpers-extra';
+import { requireServiceWorker } from './helpers-extra';
 
 // Promemoria pasti (NotificationSettings nella pagina Impostazioni). Nessun push service reale:
 // PushManager viene simulato nel browser e il permesso e concesso con context.grantPermissions.
@@ -47,8 +47,11 @@ test.describe('notifiche promemoria pasti', () => {
     await expect(toggle).toBeVisible();
     // Senza chiave VAPID o senza Push API il commutatore e disabilitato e compare l'avviso
     const unsupported = page.getByText('Questo browser non supporta le notifiche push.', { exact: false });
-    if (await toggle.isDisabled()) await expect(unsupported).toBeVisible();
-    else await expect(unsupported).toHaveCount(0);
+    // Prima dell'idratazione il commutatore e' abilitato e l'avviso assente: si riprova finche' lo stato e' coerente
+    await expect(async () => {
+      if (await toggle.isDisabled()) await expect(unsupported).toBeVisible({ timeout: 1000 });
+      else await expect(unsupported).toHaveCount(0, { timeout: 1000 });
+    }).toPass();
   });
 
   test('gli orari sono modificabili solo con i promemoria attivi', async ({ page }) => {
@@ -68,7 +71,7 @@ test.describe('notifiche promemoria pasti', () => {
     await context.grantPermissions(['notifications']);
     await fakePushManager(page);
     await page.goto('/settings');
-    test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+    await requireServiceWorker(page);
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
     // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
     await page.waitForLoadState('networkidle');
@@ -97,7 +100,7 @@ test.describe('notifiche promemoria pasti', () => {
       Object.defineProperty(Notification, 'permission', { configurable: true, get: () => 'denied' });
     });
     await page.goto('/settings');
-    test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+    await requireServiceWorker(page);
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
     // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
     await page.waitForLoadState('networkidle');

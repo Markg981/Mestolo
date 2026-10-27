@@ -131,3 +131,10 @@ jobs:
       - name: Ferma Supabase locale
         if: always()
         run: supabase stop --no-backup
+
+  alert:
+    needs: [e2e]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml

@@ -37,6 +37,10 @@ export async function proxy(request: NextRequest) {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const { pathname } = request.nextUrl;
 
+  // Immagini pubbliche: nessuna sessione richiesta, evita la chiamata auth getUser().
+  // Le route private (/api/images, /api/avatars, /api/cook-photos) usano la sessione e restano coperte.
+  if (pathname === '/api/public-images' || pathname.startsWith('/api/public-images/')) return next();
+
   if (!url || !anon) {
     if (pathname.startsWith('/setup') || pathname.startsWith('/api')) return next();
     return NextResponse.redirect(new URL('/setup', request.url));
@@ -49,10 +53,12 @@ export async function proxy(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = next();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        // Cache-Control: no-store & co. impediscono a CDN/cache di servire Set-Cookie con token a altri utenti.
+        Object.entries(headers ?? {}).forEach(([key, value]) => response.headers.set(key, value));
       },
     },
   });
