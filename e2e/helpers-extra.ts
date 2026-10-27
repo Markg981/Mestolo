@@ -1,4 +1,4 @@
-import { expect, type Page, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 
 /**
  * Il service worker si registra solo in produzione (`next build` + `next start`, o E2E_BASE_URL
@@ -69,4 +69,15 @@ export function trackRsc(page: Page) {
       await expect.poll(() => inflight === 0 && Date.now() - last >= quietMs, { timeout: 20_000, intervals: [250] }).toBe(true);
     },
   };
+}
+
+/**
+ * Precondizione "service worker attivo". In CI un service worker mancante e' un errore (altrimenti i test
+ * offline/notifiche passerebbero in silenzio senza verificare nulla); in locale, con `next dev`, si salta.
+ */
+export async function requireServiceWorker(page: Page): Promise<void> {
+  const ready = await serviceWorkerReady(page);
+  const reason = 'service worker non registrato: serve una build di produzione (npm run build && npm start) o E2E_BASE_URL';
+  if (process.env.CI) expect(ready, reason).toBe(true);
+  else test.skip(!ready, reason);
 }

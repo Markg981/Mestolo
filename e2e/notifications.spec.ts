@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { serviceWorkerReady } from './helpers-extra';
+import { requireServiceWorker } from './helpers-extra';
 
 // Promemoria pasti (NotificationSettings nella pagina Impostazioni). Nessun push service reale:
 // PushManager viene simulato nel browser e il permesso e concesso con context.grantPermissions.
@@ -68,7 +68,7 @@ test.describe('notifiche promemoria pasti', () => {
     await context.grantPermissions(['notifications']);
     await fakePushManager(page);
     await page.goto('/settings');
-    test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+    await requireServiceWorker(page);
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
     // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
     await page.waitForLoadState('networkidle');
@@ -97,7 +97,7 @@ test.describe('notifiche promemoria pasti', () => {
       Object.defineProperty(Notification, 'permission', { configurable: true, get: () => 'denied' });
     });
     await page.goto('/settings');
-    test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+    await requireServiceWorker(page);
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
     // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
     await page.waitForLoadState('networkidle');
