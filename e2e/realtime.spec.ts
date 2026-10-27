@@ -1,5 +1,6 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser } from '@playwright/test';
 import { createTestRecipe, createTestUser, login, randomUser, type TestUser } from './helpers';
+import { gotoSubscribed } from './helpers-extra';
 
 // Sincronizzazione Realtime tra due dispositivi dello stesso utente (RealtimeSync nel layout + ShoppingRealtime).
 // Richiede che Realtime sia attivo per le tabelle shopping_items, meal_plan_entries e recipes nello staging.
@@ -10,22 +11,6 @@ async function device(browser: Browser, baseURL: string | undefined, user: TestU
   const page = await context.newPage();
   await login(page, user);
   return { context, page };
-}
-
-/**
- * Naviga e attende che il canale Realtime della pagina sia iscritto ai postgres_changes:
- * una modifica fatta prima dell'iscrizione non genera eventi e il test resterebbe in attesa.
- */
-async function gotoSubscribed(page: Page, url: string) {
-  const subscribed = new Promise<void>((resolve) => {
-    page.on('websocket', (ws) => {
-      ws.on('framereceived', ({ payload }) => {
-        if (String(payload).includes('Subscribed to PostgreSQL')) resolve();
-      });
-    });
-  });
-  await page.goto(url);
-  await subscribed;
 }
 
 test.describe('realtime tra dispositivi', () => {
