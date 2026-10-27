@@ -50,7 +50,7 @@ export async function setRecipeInCollection(collectionId: string, recipeId: stri
   if (!user || !uuid.safeParse(collectionId).success || !uuid.safeParse(recipeId).success) return fail('invalid_input');
   const supabase = await createClient();
   const { error } = member
-    ? await supabase.from('collection_recipes').upsert({ collection_id: collectionId, recipe_id: recipeId })
+    ? await supabase.from('collection_recipes').upsert({ collection_id: collectionId, recipe_id: recipeId }, { onConflict: 'collection_id,recipe_id', ignoreDuplicates: true })
     : await supabase.from('collection_recipes').delete().eq('collection_id', collectionId).eq('recipe_id', recipeId);
   if (error) return dbFailure(error, 'setRecipeInCollection');
   await supabase.from('collections').update({ updated_at: new Date().toISOString() }).eq('id', collectionId);

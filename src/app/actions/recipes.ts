@@ -207,7 +207,7 @@ export async function toggleFavorite(recipeId: string, favorite: boolean): Promi
   if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
   const supabase = await createClient();
   const { error } = favorite
-    ? await supabase.from('favorites').upsert({ user_id: user.id, recipe_id: recipeId })
+    ? await supabase.from('favorites').upsert({ user_id: user.id, recipe_id: recipeId }, { onConflict: 'user_id,recipe_id', ignoreDuplicates: true })
     : await supabase.from('favorites').delete().eq('user_id', user.id).eq('recipe_id', recipeId);
   if (error) return dbFailure(error, 'toggleFavorite');
   revalidatePath(`/recipes/${recipeId}`);
