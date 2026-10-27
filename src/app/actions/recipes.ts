@@ -160,7 +160,11 @@ export async function deleteRecipe(recipeId: string): Promise<ActionResult> {
   const { data, error } = await supabase.from('recipes').delete().eq('id', recipeId).eq('owner_id', user.id).select('id');
   if (error) return dbFailure(error, 'deleteRecipe');
   if (!data?.length) return fail('not_found');
-  if (paths.length) await supabase.storage.from('recipe-images').remove(paths);
+  if (paths.length) {
+    const { error: rmErr } = await supabase.storage.from('recipe-images').remove(paths);
+    // Non blocca l'operazione: i file orfani vengono ripuliti dal cron di cleanup.
+    if (rmErr) console.error(`[mestolo] deleteRecipe: storage.remove fallito recipe=${recipeId} paths=${paths.length}`);
+  }
   invalidatePublicPage(pub?.public_slug as string | null | undefined);
   revalidatePath('/recipes');
   return ok();

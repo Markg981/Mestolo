@@ -1,8 +1,27 @@
 import { expect, test, type Page } from '@playwright/test';
 import { serviceWorkerReady, userCacheNames } from './helpers-extra';
 
+// Errore raro solo in CI (pagina d'errore globale al posto di "Nessuna connessione"), non riprodotto in locale:
+// la traccia del primo tentativo fallito e gli errori della pagina servono a trovarne la causa.
+test.use({ trace: 'retain-on-first-failure' });
+
 // Service worker (public/sw.js): il worker si registra solo in produzione, quindi con `next dev` i test si saltano.
 test.describe('offline e service worker', () => {
+  const pageErrors: string[] = [];
+  test.beforeEach(({ page }) => {
+    pageErrors.length = 0;
+    page.on('pageerror', (e) => pageErrors.push(`${page.url()} ${e.stack ?? e.message}`));
+    page.on('console', (m) => {
+      if (m.type() === 'error') pageErrors.push(`${page.url()} console: ${m.text()}`);
+    });
+  });
+  test.afterEach(async ({}, testInfo) => {
+    if (testInfo.status !== testInfo.expectedStatus && pageErrors.length) {
+      await testInfo.attach('errori-pagina', { body: pageErrors.join('\n\n'), contentType: 'text/plain' });
+      console.log(pageErrors.join('\n'));
+    }
+  });
+
   /** Apre la pagina e attende che il worker controlli la pagina e conosca l'utente (cache privata creata). */
   async function warmUp(page: Page) {
     await page.goto('/shopping');
@@ -31,8 +50,25 @@ test.describe('offline e service worker', () => {
     await page.goto('/');
     const ready = await serviceWorkerReady(page);
     test.skip(!ready, 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
-    const cached = await page.evaluate(async () => !!(await (await caches.open('mestolo-static-v3')).match('/offline')));
+    // Il nome della cache cambia a ogni VERSION di public/sw.js: si cerca in tutte le cache statiche.
+    const cached = await page.evaluate(async () => {
+      const names = (await caches.keys()).filter((k) => k.startsWith('mestolo-static-'));
+      for (const n of names) if (await (await caches.open(n)).match('/offline')) return true;
+      return false;
+    });
     expect(cached).toBe(true);
+    // Anche JS/CSS/font della pagina offline vanno precaricati: senza, offline non si idrata e compare l'errore globale.
+    const missing = await page.evaluate(async () => {
+      const name = (await caches.keys()).find((k) => k.startsWith('mestolo-static-'));
+      if (!name) return ['(nessuna cache statica)'];
+      const cache = await caches.open(name);
+      const html = await (await cache.match('/offline'))!.text();
+      const paths = [...new Set(html.match(/\/_next\/static\/[A-Za-z0-9._~\-/%]+/g) ?? [])];
+      const out: string[] = [];
+      for (const p of paths) if (!(await cache.match(p))) out.push(p);
+      return out;
+    });
+    expect(missing).toEqual([]);
   });
 
   test('la lista della spesa gia visitata resta consultabile offline, con il banner', async ({ page, context }) => {
@@ -60,8 +96,12 @@ test.describe('offline e service worker', () => {
     } finally {
       await context.setOffline(false);
     }
-    await page.getByRole('button', { name: 'Riprova' }).click();
-    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile
-    await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible();
+    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile. Subito dopo il ripristino della rete
+    // il primo tentativo puo ancora fallire (anche il service worker deve rivedere la rete): si ripete il clic.
+    await expect(async () => {
+      const retry = page.getByRole('button', { name: 'Riprova' });
+      if (await retry.isVisible()) await retry.click();
+      await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
   });
 });

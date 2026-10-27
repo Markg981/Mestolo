@@ -13,7 +13,29 @@ const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
   isFresh: (c: unknown, now: number, ttl?: number) => boolean;
   PRIVATE_TTL_MS: number;
   parsePushPayload: (t: string) => { title: string; body: string; tag: string; url: string };
+  staticAssetPaths: (html: string) => string[];
 };
+
+describe('service worker: asset della pagina offline', () => {
+  it('estrae JS, CSS e font da tag e payload RSC inline, senza duplicati', () => {
+    const html =
+      '<link rel="stylesheet" href="/_next/static/chunks/3d33lptfoaea3.css"/>' +
+      '<script src="/_next/static/chunks/turbopack-2c3mg3r-05n1w.js" async=""></script>' +
+      '<link rel="preload" href="/_next/static/media/font.1o9o6__l__p-w.woff2" as="font"/>' +
+      '<script>self.__next_f.push([1,"2:I[1,[\\"/_next/static/chunks/3nq-9wek_n2-_.js\\"],\\"RetryButton\\"]"])</script>' +
+      '<script src="/_next/static/chunks/turbopack-2c3mg3r-05n1w.js"></script>';
+    expect(L.staticAssetPaths(html)).toEqual([
+      '/_next/static/chunks/3d33lptfoaea3.css',
+      '/_next/static/chunks/turbopack-2c3mg3r-05n1w.js',
+      '/_next/static/media/font.1o9o6__l__p-w.woff2',
+      '/_next/static/chunks/3nq-9wek_n2-_.js',
+    ]);
+  });
+  it('ignora altri origin e html vuoto', () => {
+    expect(L.staticAssetPaths('')).toEqual([]);
+    expect(L.staticAssetPaths('<script src="https://cdn.example/x.js"></script><img src="/icons/icon-192.png">')).toEqual([]);
+  });
+});
 
 describe('service worker: payload push', () => {
   it('legge titolo, testo e url dal JSON', () => {
