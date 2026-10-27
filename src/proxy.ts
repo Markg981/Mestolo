@@ -53,10 +53,12 @@ export async function proxy(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = next();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        // Cache-Control: no-store & co. impediscono a CDN/cache di servire Set-Cookie con token a altri utenti.
+        Object.entries(headers ?? {}).forEach(([key, value]) => response.headers.set(key, value));
       },
     },
   });

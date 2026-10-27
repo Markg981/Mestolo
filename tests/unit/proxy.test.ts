@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const getUser = vi.fn();
-type CookieAdapter = { getAll(): unknown; setAll(c: { name: string; value: string; options?: object }[]): void };
+type CookieAdapter = { getAll(): unknown; setAll(c: { name: string; value: string; options?: object }[], headers?: Record<string, string>): void };
 let capturedCookies: CookieAdapter | undefined;
 vi.mock('@supabase/ssr', () => ({
   createServerClient: (_u: string, _k: string, opts: { cookies: CookieAdapter }) => {
@@ -148,6 +148,22 @@ describe('proxy', () => {
       });
       const res = await call('/recipes');
       expect(res.cookies.get('sb-token')?.value).toBe('new');
+      expect(res.headers.get('content-security-policy')).toContain("default-src 'self'");
+    });
+
+    it('applies the cache headers passed to setAll so a refreshed session is never cached', async () => {
+      getUser.mockImplementation(async () => {
+        capturedCookies!.setAll([{ name: 'sb-token', value: 'new', options: { path: '/' } }], {
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate, max-age=0',
+          Expires: '0',
+          Pragma: 'no-cache',
+        });
+        return { data: { user: { id: 'u1' } } };
+      });
+      const res = await call('/api/public-images/1');
+      expect(res.cookies.get('sb-token')?.value).toBe('new');
+      expect(res.headers.get('cache-control')).toContain('no-store');
+      expect(res.headers.get('pragma')).toBe('no-cache');
       expect(res.headers.get('content-security-policy')).toContain("default-src 'self'");
     });
 
