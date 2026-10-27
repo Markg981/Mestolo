@@ -41,7 +41,7 @@ describe('passwordSchema', () => {
 describe('changePassword', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    auth.getUser.mockResolvedValue({ data: { user: { email: 'Ada@Example.com' } } });
+    auth.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'Ada@Example.com' } } });
     auth.signInWithPassword.mockResolvedValue({ error: null });
     auth.updateUser.mockResolvedValue({ error: null });
     enforceRateLimit.mockResolvedValue(undefined);
@@ -67,10 +67,11 @@ describe('changePassword', () => {
     expect(await changePassword(undefined, form(valid))).toEqual({ error: 'auth_wrong_password' });
     expect(auth.updateUser).not.toHaveBeenCalled();
   });
-  it('applies the login rate limit before verifying', async () => {
-    enforceRateLimit.mockRejectedValue(new RateLimitedError("login_email"));
+  it('uses a user-id bucket distinct from the signIn login_email bucket', async () => {
+    enforceRateLimit.mockRejectedValue(new RateLimitedError('password_verify'));
     expect(await changePassword(undefined, form(valid))).toEqual({ error: 'rate_limited' });
-    expect(enforceRateLimit).toHaveBeenCalledWith('login_email', 'h:ada@example.com');
+    expect(enforceRateLimit).toHaveBeenCalledWith('password_verify', 'u1');
+    expect(enforceRateLimit).not.toHaveBeenCalledWith('login_email', expect.anything());
     expect(auth.signInWithPassword).not.toHaveBeenCalled();
   });
   it('requires a signed-in user', async () => {
