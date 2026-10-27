@@ -123,3 +123,19 @@ describe('once fluide (fl oz) vs once massa (oz)', () => {
     expect(metric(ing('flour', 4, 'oz')).ingredient).toMatchObject({ quantity: 115, unit: 'g' });
   });
 });
+
+describe('L-13 precisione e densita', () => {
+  it('formatFractionQuantity copre tutte le frazioni unicode', () => {
+    const m: Record<string, number> = { '⅕': 0.2, '⅖': 0.4, '⅗': 0.6, '⅘': 0.8, '⅙': 1 / 6, '⅚': 5 / 6, '⅐': 1 / 7, '⅑': 1 / 9, '⅒': 0.1 };
+    for (const [g, v] of Object.entries(m)) expect(formatFractionQuantity(v)).toBe(g);
+  });
+  it('findDensity riconosce nomi multi-parola', () => {
+    expect(findDensity('olio di oliva')).not.toBeNull();
+    expect(findDensity('olive oil')).not.toBeNull();
+    expect(findDensity('zucchero a velo')).toBeNull();
+    expect(findDensity('zucchero')).not.toBeNull();
+  });
+  it('piccole quantita metriche mantengono precisione', () => {
+    expect(metric(ing('acqua', 1.5, 'tsp')).ingredient.quantity).toBe(7.5);
+  });
+});
