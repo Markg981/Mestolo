@@ -8,6 +8,8 @@ const signOut = vi.fn();
 const deleteUser = vi.fn();
 const removed: { bucket: string; paths: string[] }[] = [];
 let profileRes: { data: unknown };
+let publicRows: unknown[];
+const revalidateTag = vi.fn();
 let myProfile: { data: unknown };
 let avatarRemoveError: { message: string } | null;
 let imageRemoveError: { message: string } | null;
@@ -25,7 +27,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     from: () => ({
       select: () => ({
-        eq: (c: string, v: unknown) => (profileEqs.push([c, v]), { single: async () => profileRes }),
+        eq: (c: string, v: unknown) => (profileEqs.push([c, v]), { single: async () => profileRes, not: async () => ({ data: publicRows }) }),
       }),
     }),
     rpc: (fn: string) => (calls.push(`rpc:${fn}`), { maybeSingle: async () => myProfile }),
@@ -54,7 +56,7 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }));
 vi.mock('next/headers', () => ({ cookies: async () => ({ set: vi.fn() }), headers: async () => new Headers() }));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), unstable_cache: (f: unknown) => f, revalidateTag: (...a: unknown[]) => revalidateTag(...a) }));
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => {
     calls.push(`redirect:${url}`);
@@ -82,6 +84,7 @@ beforeEach(() => {
   getUser.mockResolvedValue({ id: 'u1', email: 'ada@example.com' });
   reauthUserId = 'u1';
   profileRes = { data: { username: 'ada' } };
+  publicRows = [{ public_slug: 'torta-1' }, { public_slug: 'zuppa-2' }];
   myProfile = { data: { avatar_path: 'u1/face.webp' } };
   avatarRemoveError = null;
   imageRemoveError = null;
@@ -90,6 +93,20 @@ beforeEach(() => {
 });
 
 describe('deleteAccount action', () => {
+  it('invalidates the cached public pages of the user after the deletion', async () => {
+    expect(await deleteAccount('ada', 'pw')).toMatchObject({ ok: true });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-1', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:zuppa-2', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', 'max');
+    expect(deleteUser.mock.invocationCallOrder[0]).toBeLessThan(revalidateTag.mock.invocationCallOrder[0]);
+  });
+
+  it('does not invalidate anything when the deletion fails', async () => {
+    deleteUserError = { status: 500, message: 'boom' };
+    await deleteAccount('ada', 'pw');
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
   it('rejects unauthenticated callers before reading or deleting anything', async () => {
     getUser.mockResolvedValue(null);
     expect(await deleteAccount('ada', 'pw')).toMatchObject({ ok: false, error: 'forbidden' });
@@ -116,7 +133,7 @@ describe('deleteAccount action', () => {
 
   it('reads the username of the signed-in user only', async () => {
     await deleteAccount('ada', 'pw').catch(() => {});
-    expect(profileEqs).toEqual([['id', 'u1']]);
+    expect(profileEqs).toEqual([['id', 'u1'], ['owner_id', 'u1']]);
   });
 
   it.each([['wrong'], [''], ['ada2'], [undefined as unknown as string]])('refuses a wrong confirmation (%s) and deletes nothing', async (typed) => {

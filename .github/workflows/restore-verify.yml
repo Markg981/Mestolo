@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   verify:
@@ -26,8 +25,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-      GH_TOKEN: ${{ github.token }}
+      # Chiave PRIVATA (armored, senza passphrase) dedicata alla verifica: i backup stanno solo su S3 privato
+      BACKUP_GPG_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_PRIVATE_KEY }}
       TARGET: postgresql://postgres:pw@localhost:5432/postgres
       BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
       BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
@@ -38,10 +37,14 @@ jobs:
 
       - name: Check secrets
         run: |
-          if [ -z "${BACKUP_PASSPHRASE}" ]; then
-            echo "::error::BACKUP_PASSPHRASE non impostato: impossibile verificare il restore."
-            exit 1
-          fi
+          missing=0
+          for v in BACKUP_GPG_PRIVATE_KEY BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Secret $v non impostato: impossibile verificare il restore."
+              missing=1
+            fi
+          done
+          exit $missing
 
       - name: Install PostgreSQL 17 client
         run: |
@@ -53,48 +56,32 @@ jobs:
           sudo apt-get install -y -qq postgresql-client-17
           echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
 
-      # Fonte primaria: copia S3 piu' recente (e' quella che serve in un vero disaster recovery).
-      # Fallback sull'artifact GitHub se S3 non e' configurato o non restituisce nulla.
+      # Unica fonte: copia S3 piu' recente (i backup non sono piu' negli artifact GitHub, che nel repository
+      # pubblico sarebbero scaricabili da chiunque)
       - name: Download latest backup
         run: |
           set -euo pipefail
           umask 077
           mkdir -p dl
-          if [ -n "${BACKUP_S3_BUCKET}" ] && [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
-            endpoint=()
-            if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
-            export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
-            key="$(aws s3api list-objects-v2 "${endpoint[@]}" --bucket "${BACKUP_S3_BUCKET}" --prefix mestolo/db/               --query 'sort_by(Contents, &LastModified)[-1].Key' --output text 2>/dev/null || true)"
-            if [ -n "$key" ] && [ "$key" != "None" ]; then
-              aws s3 cp "${endpoint[@]}" "s3://${BACKUP_S3_BUCKET}/${key}" "dl/$(basename "$key")"
-              echo "BACKUP_FILE=dl/$(basename "$key")" >> "$GITHUB_ENV"
-              echo "BACKUP_FROM_S3=true" >> "$GITHUB_ENV"
-              echo "Ripristino dalla copia S3: $key"
-              exit 0
-            fi
-            echo "::warning::Nessun backup trovato su S3: fallback sull'artifact GitHub."
-          else
-            echo "::warning::Secret BACKUP_S3_* non impostati: verifica dall'artifact GitHub."
-          fi
-          # Run dell'artifact db-backup-* piu' recente: un run puo' avere il dump ma fallire dopo (es. upload S3)
-          run_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | "\(.created_at) \(.workflow_run.id)"' \
-            | sort -r | head -n1 | cut -d' ' -f2)"
-          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
-            echo "::error::Nessun backup (S3 o artifact db-backup-*) da verificare."
+          endpoint=()
+          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
+          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+          key="$(aws s3api list-objects-v2 "${endpoint[@]}" --bucket "${BACKUP_S3_BUCKET}" --prefix mestolo/db/             --query 'sort_by(Contents, &LastModified)[-1].Key' --output text 2>/dev/null || true)"
+          if [ -z "$key" ] || [ "$key" = "None" ]; then
+            echo "::error::Nessun backup trovato su S3 (mestolo/db/)."
             exit 1
           fi
-          echo "BACKUP_RUN_ID=$run_id" >> "$GITHUB_ENV"
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'db-backup-*' --dir dl
-          echo "BACKUP_FILE=$(ls dl/*/backup-*.tar.gpg | head -n1)" >> "$GITHUB_ENV"
+          aws s3 cp "${endpoint[@]}" "s3://${BACKUP_S3_BUCKET}/${key}" "dl/$(basename "$key")"
+          echo "BACKUP_FILE=dl/$(basename "$key")" >> "$GITHUB_ENV"
+          echo "Ripristino dalla copia S3: $key"
 
-      # Decifra, ripristina (stub Supabase, auth -> public -> trigger auth) e confronta col manifest;
+      # Decifra con la chiave privata, ripristina (stub Supabase, auth -> public -> trigger auth) e confronta col manifest;
       # stesso script provato in CI dal job backup-roundtrip
       - name: Restore and compare with manifest
         run: scripts/restore-verify-db.sh "$BACKUP_FILE" "$TARGET" work
 
       # Decifra, estrae e riverifica ogni file dello storage contro storage-manifest.json (size + sha256).
-      # Backup storage assente = errore, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
+      # Backup storage assente su S3 = errore, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
       - name: Download and verify storage backup
         env:
           BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
@@ -106,26 +93,18 @@ jobs:
             exit 0
           fi
           mkdir -p dl-storage
-          f=""
-          if [ "${BACKUP_FROM_S3:-}" = "true" ]; then
-            endpoint=()
-            if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
-            export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
-            key="$(aws s3api list-objects-v2 "${endpoint[@]}" --bucket "${BACKUP_S3_BUCKET}" --prefix mestolo/storage/               --query 'sort_by(Contents, &LastModified)[-1].Key' --output text 2>/dev/null || true)"
-            if [ -n "$key" ] && [ "$key" != "None" ]; then
-              aws s3 cp "${endpoint[@]}" "s3://${BACKUP_S3_BUCKET}/${key}" "dl-storage/$(basename "$key")"
-              f="dl-storage/$(basename "$key")"
-            fi
-          fi
-          if [ -z "$f" ] && [ -n "${BACKUP_RUN_ID:-}" ]; then
-            gh run download "$BACKUP_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'storage-backup-*' --dir dl-storage || true
-            f="$(ls dl-storage/*/storage-*.tar.gpg 2>/dev/null | head -n1 || true)"
-          fi
-          if [ -z "$f" ]; then
-            echo "::error::Nessun backup storage (S3 o ultimo run di backup.yml). Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
+          endpoint=()
+          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
+          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+          key="$(aws s3api list-objects-v2 "${endpoint[@]}" --bucket "${BACKUP_S3_BUCKET}" --prefix mestolo/storage/             --query 'sort_by(Contents, &LastModified)[-1].Key' --output text 2>/dev/null || true)"
+          if [ -z "$key" ] || [ "$key" = "None" ]; then
+            echo "::error::Nessun backup storage su S3 (mestolo/storage/). Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
             exit 1
           fi
+          aws s3 cp "${endpoint[@]}" "s3://${BACKUP_S3_BUCKET}/${key}" "dl-storage/$(basename "$key")"
+          f="dl-storage/$(basename "$key")"
           mkdir -p storage-restore
-          gpg --batch --pinentry-mode loopback --passphrase-fd 3 --output storage-restore.tar --decrypt "$f" 3<<<"$BACKUP_PASSPHRASE"
+          . scripts/lib/backup-gpg.sh
+          backup_decrypt "$f" storage-restore.tar
           tar -xf storage-restore.tar -C storage-restore
           node scripts/verify-storage-backup.mjs storage-restore
