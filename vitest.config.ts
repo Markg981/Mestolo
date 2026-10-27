@@ -9,12 +9,12 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/unit/**/*.test.ts', 'src/**/*.test.ts'],
+    include: ['tests/unit/**/*.test.ts', 'tests/components/**/*.test.tsx', 'src/**/*.test.ts'],
     environment: 'node',
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts', 'src/types/**'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.d.ts', 'src/types/**'],
       thresholds: { statements: 31, branches: 28, functions: 24, lines: 31 },
       reporter: ['text-summary', 'lcov'],
     },
