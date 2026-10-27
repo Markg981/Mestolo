@@ -132,3 +132,14 @@ describe('units', () => {
     });
   });
 });
+
+describe('parseIngredientLine: moltiplicatore e numeri misti con congiunzione (L-12)', () => {
+  it('"2 x 400 g" diventa la quantità totale 800 g', () => {
+    expect(parseIngredientLine('2 x 400 g pelati')).toMatchObject({ quantity: 800, unit: 'g', name: 'pelati' });
+    expect(parseIngredientLine('3×200 g burro')).toMatchObject({ quantity: 600, unit: 'g', name: 'burro' });
+  });
+  it('"1 e 1/2" vale 1.5', () => {
+    expect(parseIngredientLine('1 e 1/2 cucchiai olio')).toMatchObject({ quantity: 1.5, name: 'olio' });
+    expect(parseIngredientLine('1 and 1/2 cups flour')).toMatchObject({ quantity: 1.5, unit: 'cup' });
+  });
+});

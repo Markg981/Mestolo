@@ -22,6 +22,8 @@ export interface AccountExportInput {
   aisles: Rows;
   suggestions: Rows;
   feedback: Rows;
+  modCases: Rows;
+  modNotices: Rows;
   notes: Rows;
   favorites: Rows;
   categories: Rows;
@@ -60,6 +62,8 @@ export function buildAccountExport(d: AccountExportInput) {
     shopping_aisle_overrides: d.aisles,
     ai_suggestions: d.suggestions,
     app_feedback: d.feedback,
+    moderation_cases: d.modCases,
+    moderation_notices: d.modNotices,
     personal_notes: d.notes,
     favorites: d.favorites,
     custom_categories: d.categories,

@@ -123,3 +123,22 @@ describe('performance on large pages without JSON-LD', () => {
     expect(tLarge).toBeLessThan(10_000);
   });
 });
+
+describe('limiti su pagine abnormi (IMP-01)', () => {
+  it('limita ingredienti, step, titolo e tempo di parsing', () => {
+    const html = jsonLdPage({
+      '@type': 'Recipe',
+      name: 'T'.repeat(5000),
+      recipeIngredient: Array.from({ length: 200_000 }, (_, i) => `${i} g di farina &amp; <b>sale</b>`),
+      recipeInstructions: Array.from({ length: 200_000 }, (_, i) => `Passo ${i} &egrave; lungo`),
+    });
+    const t0 = performance.now();
+    const { draft } = recipeFromHtml(html, 'https://example.com/r');
+    const ms = performance.now() - t0;
+    expect(ms).toBeLessThan(6000);
+    expect(draft!.content.title.length).toBeLessThanOrEqual(200);
+    expect(draft!.content.ingredients.length).toBeLessThanOrEqual(200);
+    expect(draft!.content.steps.length).toBeLessThanOrEqual(100);
+    expect(draft!.content.steps[0].text).toBe('Passo 0 è lungo');
+  });
+});

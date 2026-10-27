@@ -8,6 +8,9 @@ import { capabilityStatus } from '@/lib/ai/service';
 import { NutritionEditor } from '@/components/nutrition/NutritionEditor';
 import { PageHeader } from '@/components/ui';
 
+// Server action AI nella pagina: timeout provider fino a 120 s, quindi 150 s (piano Vercel da verificare).
+export const maxDuration = 150;
+
 export default async function NutritionEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const detail = await getRecipeDetail(id);

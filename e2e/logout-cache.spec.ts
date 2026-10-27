@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { logout, newUserPage } from './helpers';
-import { draftKeys, serviceWorkerReady, userCacheNames } from './helpers-extra';
+import { draftKeys, requireServiceWorker, userCacheNames } from './helpers-extra';
 
 // Il logout e globale (signOut invalida tutte le sessioni dell'utente): si usano sempre utenti dedicati,
 // mai quello condiviso dagli altri spec.
@@ -35,7 +35,7 @@ test.describe('pulizia di cache e bozze', () => {
     const u = await newUserPage(browser, testInfo, 'lc2');
     try {
       await u.page.goto('/shopping');
-      test.skip(!(await serviceWorkerReady(u.page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
+      await requireServiceWorker(u.page);
       await u.page.reload();
       await expect.poll(() => u.page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
       await u.page.goto('/shopping');

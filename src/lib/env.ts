@@ -58,6 +58,10 @@ export function assertProductionEnv(e: NodeJS.ProcessEnv) {
   if (Buffer.from(e.APP_ENCRYPTION_KEY!.trim(), 'base64').length !== 32) {
     throw new ConfigError('APP_ENCRYPTION_KEY must be 32 bytes (base64)');
   }
+  const prev = e.APP_ENCRYPTION_KEY_PREVIOUS?.trim();
+  if (prev && Buffer.from(prev, 'base64').length !== 32) {
+    throw new ConfigError('APP_ENCRYPTION_KEY_PREVIOUS must be 32 bytes (base64)');
+  }
 }
 
 /**
