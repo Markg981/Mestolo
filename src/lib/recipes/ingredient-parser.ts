@@ -106,6 +106,16 @@ export function parseIngredientLine(line: string): Ingredient {
   const { toTaste, cleaned } = detectToTaste(text);
   text = cleaned;
 
+  // "1 e 1/2" / "1 and 1/2" -> "1 1/2" (mixed number written with a conjunction)
+  text = text.replace(/^(\d+)\s+(?:e|and|et|y|und)\s+(?=\d+\s*\/\s*\d+)/i, '$1 ');
+  // "2 x 400 g" / "2 × 400 g": multiplier of N packs; quantity becomes the total (800 g)
+  let multiplier = 1;
+  const mult = text.match(/^(\d{1,3})\s*[x×]\s*(?=\d)/i);
+  if (mult && Number(mult[1]) >= 1) {
+    multiplier = Number(mult[1]);
+    text = text.slice(mult[0].length);
+  }
+
   let quantity: number | null = null;
   let quantityMax: number | null = null;
   let unit: string | null = null;
@@ -164,6 +174,11 @@ export function parseIngredientLine(line: string): Ingredient {
         }
       }
     }
+  }
+
+  if (multiplier !== 1 && quantity !== null) {
+    quantity *= multiplier;
+    if (quantityMax !== null) quantityMax *= multiplier;
   }
 
   const { name, note } = splitNameAndNote(rest);

@@ -107,7 +107,7 @@ export function draftFromExtraction(raw: unknown, source: ImportDraft['source'])
       title,
       description: (x.description ?? '').trim(),
       original_language: lang,
-      servings: x.servings && x.servings > 0 ? x.servings : null,
+      servings: x.servings && x.servings >= 1 ? x.servings : null,
       prep_minutes: x.prep_minutes !== null ? Math.round(x.prep_minutes) : null,
       cook_minutes: x.cook_minutes !== null ? Math.round(x.cook_minutes) : null,
       total_minutes: x.total_minutes !== null ? Math.round(x.total_minutes) : null,

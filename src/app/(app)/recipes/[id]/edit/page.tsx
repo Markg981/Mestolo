@@ -8,6 +8,9 @@ import { ImageManager } from '@/components/recipes/ImageManager';
 import { draftNames } from '@/lib/drafts';
 import { PageHeader } from '@/components/ui';
 
+// Server action AI nella pagina: timeout provider fino a 120 s, quindi 150 s (piano Vercel da verificare).
+export const maxDuration = 150;
+
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const detail = await getRecipeDetail(id);

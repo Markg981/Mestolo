@@ -124,3 +124,27 @@ d('db cook_logs', () => {
     expect(c.n).toBe(30);
   });
 });
+
+d('db cook_logs quota (insert_cook_log)', () => {
+  const s = Math.random().toString(36).slice(2, 7);
+  beforeAll(() => {
+    pool = new pg.Pool({ connectionString: url });
+  });
+  afterAll(async () => pool?.end());
+
+  it('conta i byte delle foto e rifiuta oltre il tetto, in modo atomico', async () => {
+    const u = await mkUser(`cl_q_${s}`);
+    const rid = await mkRecipe(u, 'private');
+    const call = (n: number, bytes: number, max: number) =>
+      as(u, 'select public.insert_cook_log($1, now(), $2, $3, $4, $5, 2000, $6) as id', [rid, 'x', 'private', `${u}/cook/${n}-${s}.webp`, bytes, max]);
+    expect((await call(1, 600, 1000))[0].id).not.toBeNull();
+    expect((await call(2, 600, 1000))[0].id).toBeNull();
+    expect((await call(3, 400, 1000))[0].id).not.toBeNull();
+    // chiamate concorrenti: al massimo una entra
+    const u2 = await mkUser(`cl_q2_${s}`);
+    const rid2 = await mkRecipe(u2, 'private');
+    const res = await Promise.all([1, 2, 3, 4].map((n) =>
+      as(u2, 'select public.insert_cook_log($1, now(), $2, $3, $4, $5, 2000, $6) as id', [rid2, 'x', 'private', `${u2}/cook/${n}-${s}.webp`, 600, 1000])));
+    expect(res.filter((r) => r[0].id !== null)).toHaveLength(1);
+  });
+});

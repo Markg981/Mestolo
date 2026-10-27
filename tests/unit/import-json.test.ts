@@ -95,7 +95,7 @@ describe('import of Mestolo JSON exports', () => {
       planPrefs: empty, notifPrefs: empty, pushSubs: empty, invites: empty, redemptions: empty, collMembers: empty,
       listMembers: empty, aisles: empty, suggestions: empty, feedback: empty, favorites: empty, collections: empty,
       shoppingLists: empty, shoppingItems: empty, plan: empty, friendships: empty, blocks: empty, reports: empty,
-      keys: empty, usage: empty,
+      keys: empty, usage: empty, modCases: empty, modNotices: empty,
       recipes: [{ id: 'r1', title: 'Tiramisù', category_id: 'c1', ingredients: [ing('Mascarpone')], steps: [step('Monta')] }],
       notes: [{ recipe_id: 'r1', body: 'Meno sale' }],
       categories: [{ id: 'c1', slug: 'my-own' }],

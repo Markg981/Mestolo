@@ -100,6 +100,13 @@ describe('convertTemperatures', () => {
     expect(convertTemperatures('acqua a 60,5°C', 'us')).toBe('acqua a 140 °F');
     expect(convertTemperatures('nessuna temperatura', 'us')).toBe('nessuna temperatura');
   });
+  it('converte entrambi gli estremi di un intervallo', () => {
+    expect(convertTemperatures('Bake at 350-375°F', 'metric')).toBe('Bake at 175-190 °C');
+    expect(convertTemperatures('Cuoci a 180–200 °C', 'us')).toBe('Cuoci a 350–400 °F');
+    expect(convertTemperatures('Bake 350 to 375 °F', 'metric')).toBe('Bake 175 to 190 °C');
+    expect(convertTemperatures('Cuoci a 180 a 200°C', 'us')).toBe('Cuoci a 350 a 400 °F');
+    expect(convertTemperatures('Bake 350-375°F', 'us')).toBe('Bake 350-375°F');
+  });
 });
 
 describe('once fluide (fl oz) vs once massa (oz)', () => {
@@ -121,5 +128,21 @@ describe('once fluide (fl oz) vs once massa (oz)', () => {
   it('fl oz converte in ml, oz in g', () => {
     expect(metric(ing('milk', 8, 'fl_oz')).ingredient).toMatchObject({ quantity: 235, unit: 'ml' });
     expect(metric(ing('flour', 4, 'oz')).ingredient).toMatchObject({ quantity: 115, unit: 'g' });
+  });
+});
+
+describe('L-13 precisione e densita', () => {
+  it('formatFractionQuantity copre tutte le frazioni unicode', () => {
+    const m: Record<string, number> = { '⅕': 0.2, '⅖': 0.4, '⅗': 0.6, '⅘': 0.8, '⅙': 1 / 6, '⅚': 5 / 6, '⅐': 1 / 7, '⅑': 1 / 9, '⅒': 0.1 };
+    for (const [g, v] of Object.entries(m)) expect(formatFractionQuantity(v)).toBe(g);
+  });
+  it('findDensity riconosce nomi multi-parola', () => {
+    expect(findDensity('olio di oliva')).not.toBeNull();
+    expect(findDensity('olive oil')).not.toBeNull();
+    expect(findDensity('zucchero a velo')).toBeNull();
+    expect(findDensity('zucchero')).not.toBeNull();
+  });
+  it('piccole quantita metriche mantengono precisione', () => {
+    expect(metric(ing('acqua', 1.5, 'tsp')).ingredient.quantity).toBe(7.5);
   });
 });

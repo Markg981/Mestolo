@@ -5,6 +5,9 @@ import { editorCategories } from '@/lib/data/editor';
 import { PageHeader } from '@/components/ui';
 import { LinkImport } from './LinkImport';
 
+// Server action AI nella pagina: timeout provider fino a 120 s, quindi 150 s (piano Vercel da verificare).
+export const maxDuration = 150;
+
 export async function generateMetadata() {
   const t = await getTranslations('link');
   return { title: t('title') };

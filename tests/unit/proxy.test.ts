@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const getUser = vi.fn();
-type CookieAdapter = { getAll(): unknown; setAll(c: { name: string; value: string; options?: object }[]): void };
+type CookieAdapter = { getAll(): unknown; setAll(c: { name: string; value: string; options?: object }[], headers?: Record<string, string>): void };
 let capturedCookies: CookieAdapter | undefined;
 vi.mock('@supabase/ssr', () => ({
   createServerClient: (_u: string, _k: string, opts: { cookies: CookieAdapter }) => {
@@ -27,6 +27,20 @@ describe('proxy', () => {
     capturedCookies = undefined;
   });
   afterEach(() => vi.unstubAllEnvs());
+
+  describe('public image routes', () => {
+    it('skips getUser() for /api/public-images and keeps the CSP', async () => {
+      const res = await call('/api/public-images/abc');
+      expect(res.status).toBe(200);
+      expect(getUser).not.toHaveBeenCalled();
+      expect(res.headers.get('content-security-policy')).toBeTruthy();
+    });
+
+    it.each(['/api/images/1', '/api/avatars/u1', '/api/cook-photos/1'])('still refreshes the session for %s', async (p) => {
+      await call(p);
+      expect(getUser).toHaveBeenCalledTimes(1);
+    });
+  });
 
   describe('anonymous user', () => {
     it('sends / to /welcome without a next param', async () => {
@@ -134,6 +148,22 @@ describe('proxy', () => {
       });
       const res = await call('/recipes');
       expect(res.cookies.get('sb-token')?.value).toBe('new');
+      expect(res.headers.get('content-security-policy')).toContain("default-src 'self'");
+    });
+
+    it('applies the cache headers passed to setAll so a refreshed session is never cached', async () => {
+      getUser.mockImplementation(async () => {
+        capturedCookies!.setAll([{ name: 'sb-token', value: 'new', options: { path: '/' } }], {
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate, max-age=0',
+          Expires: '0',
+          Pragma: 'no-cache',
+        });
+        return { data: { user: { id: 'u1' } } };
+      });
+      const res = await call('/api/images/1');
+      expect(res.cookies.get('sb-token')?.value).toBe('new');
+      expect(res.headers.get('cache-control')).toContain('no-store');
+      expect(res.headers.get('pragma')).toBe('no-cache');
       expect(res.headers.get('content-security-policy')).toContain("default-src 'self'");
     });
 

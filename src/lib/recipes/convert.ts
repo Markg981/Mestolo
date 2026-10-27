@@ -45,13 +45,23 @@ function normalize(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
+const TRAILING_OK = new Set(['oil', 'sugar', 'flour', 'milk', 'water', 'rice']);
+
 export function findDensity(name: string): Density | null {
   const words = normalize(name).split(/[^a-z0-9]+/).filter(Boolean);
   if (!words.length || EXCLUDED.test(words.join(' '))) return null;
   for (const d of DENSITIES) {
-    if (!d.keywords.includes(words[0])) continue;
-    if (!d.allowOf && words[1] && PREPOSITIONS.has(words[1])) continue;
-    return d;
+    if (d.keywords.includes(words[0])) {
+      if (!d.allowOf && words[1] && PREPOSITIONS.has(words[1])) continue;
+      return d;
+    }
+  }
+  // Ordine inglese "olive oil", "brown sugar": il nome base e l'ultima parola.
+  const last = words[words.length - 1];
+  if (words.length > 1 && !words.some((w) => PREPOSITIONS.has(w))) {
+    for (const d of DENSITIES) {
+      if (d.keywords.includes(last) && TRAILING_OK.has(last)) return d;
+    }
   }
   return null;
 }
@@ -72,8 +82,9 @@ function snap(n: number, denominators: number[]): number {
 }
 
 function roundMetric(n: number): number {
-  if (n >= 5) return Math.round(n / 5) * 5;
-  return Math.round(n);
+  if (n >= 10) return Math.round(n / 5) * 5;
+  if (n >= 1) return Math.round(n * 2) / 2;
+  return Math.round(n * 10) / 10;
 }
 
 type Result = { quantity: number; unit: string };
@@ -160,7 +171,11 @@ export function convertIngredients(ingredients: Ingredient[], system: UnitSystem
   return ingredients.map((i) => convertIngredient(i, system));
 }
 
-const VULGAR: Record<string, string> = { '0.125': '⅛', '0.25': '¼', '0.333': '⅓', '0.375': '⅜', '0.5': '½', '0.625': '⅝', '0.667': '⅔', '0.75': '¾', '0.875': '⅞' };
+const VULGAR: Record<string, string> = {
+  '0.1': '⅒', '0.111': '⅑', '0.125': '⅛', '0.143': '⅐', '0.167': '⅙', '0.2': '⅕', '0.25': '¼', '0.333': '⅓',
+  '0.375': '⅜', '0.4': '⅖', '0.5': '½', '0.6': '⅗', '0.625': '⅝', '0.667': '⅔', '0.75': '¾', '0.8': '⅘',
+  '0.833': '⅚', '0.875': '⅞',
+};
 
 /** Kitchen-friendly rendering for US quantities: 1.5 -> "1 ½", 0.333 -> "⅓". */
 export function formatFractionQuantity(q: number): string {
@@ -173,19 +188,29 @@ export function formatFractionQuantity(q: number): string {
   return whole ? `${whole} ${glyph}` : glyph;
 }
 
-/** Convert temperatures like "180 °C" / "350°F" inside free text. Rounded to 5 degrees (25 °F for ovens). */
+/** Convert temperatures like "180 °C" / "350°F" / "350-375°F" (both range ends) inside free text. Rounded to 5 degrees (25 °F for ovens). */
 export function convertTemperatures(text: string, system: UnitSystem): string {
   if (system === 'original') return text;
-  return text.replace(/(\d+(?:[.,]\d+)?)\s*°\s*([CcFf])(?![A-Za-z])/g, (match, num: string, u: string) => {
-    const v = parseFloat(num.replace(',', '.'));
+  const re = /(\d+(?:[.,]\d+)?)(?:\s*(-|–|—|\bto\b|\ba\b)\s*(\d+(?:[.,]\d+)?))?\s*°\s*([CcFf])(?![A-Za-z])/g;
+  return text.replace(re, (match, n1: string, sep: string | undefined, n2: string | undefined, u: string) => {
     const isC = u.toUpperCase() === 'C';
+    let conv: (v: number) => number;
+    let unit: string;
     if (system === 'us' && isC) {
-      const f = (v * 9) / 5 + 32;
-      return `${f >= 250 ? Math.round(f / 25) * 25 : Math.round(f / 5) * 5} °F`;
+      conv = (v) => {
+        const f = (v * 9) / 5 + 32;
+        return f >= 250 ? Math.round(f / 25) * 25 : Math.round(f / 5) * 5;
+      };
+      unit = '°F';
+    } else if (system === 'metric' && !isC) {
+      conv = (v) => Math.round(((v - 32) * 5) / 9 / 5) * 5;
+      unit = '°C';
+    } else {
+      return match;
     }
-    if (system === 'metric' && !isC) {
-      return `${Math.round(((v - 32) * 5) / 9 / 5) * 5} °C`;
-    }
-    return match;
+    const c1 = conv(parseFloat(n1.replace(',', '.')));
+    if (n2 === undefined || sep === undefined) return `${c1} ${unit}`;
+    const c2 = conv(parseFloat(n2.replace(',', '.')));
+    return `${c1}${/^[a-z]/i.test(sep) ? ` ${sep} ` : sep}${c2} ${unit}`;
   });
 }

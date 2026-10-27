@@ -101,15 +101,24 @@ export function OfflineBanner() {
   );
 }
 
+/**
+ * Pulizia al submit del logout. Offline il logout (server action) non puo riuscire: si annulla l'invio e si
+ * conservano i dati locali, cosi l'utente ancora loggato non perde copia offline e bozze senza essere uscito.
+ * Online si pulisce subito: su dispositivo condiviso e meglio non lasciare dati privati se il logout fallisse
+ * a meta; l'eventuale sessione residua ripopola la cache al prossimo accesso.
+ */
+export function handleSignOutSubmit(e: { preventDefault: () => void }) {
+  if (!navigator.onLine) {
+    e.preventDefault();
+    return;
+  }
+  void clearLocalUserData();
+}
+
 /** Logout button that wipes the offline copy of private pages before signing out. */
 export function SignOutButton({ action, label, className }: { action: () => Promise<void>; label: string; className?: string }) {
   return (
-    <form
-      action={action}
-      onSubmit={() => {
-        void clearLocalUserData();
-      }}
-    >
+    <form action={action} onSubmit={handleSignOutSubmit}>
       <button type="submit" className={className}>
         {label}
       </button>

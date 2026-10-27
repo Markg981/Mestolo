@@ -79,7 +79,7 @@ export default async function PublicRecipePage({ params }: Params) {
     <SavePublicRecipe recipeId={r.id} />
   ) : (
     <div className="flex flex-col items-start gap-2">
-      <LinkButton href="/signup" variant="primary" size="lg">
+      <LinkButton href={`/signup?next=${encodeURIComponent(path)}`} variant="primary" size="lg">
         {t('publicPage.save')}
       </LinkButton>
       <p className="text-sm text-muted">
@@ -185,12 +185,6 @@ export default async function PublicRecipePage({ params }: Params) {
 
           {r.source_name && <p className="text-sm text-muted">{t('publicPage.source', { name: r.source_name })}</p>}
         </article>
-
-        <aside className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-sunk p-6">
-          <h2 className="display-md">{t('publicPage.ctaTitle')}</h2>
-          <p className="max-w-prose text-muted">{t('publicPage.ctaLead')}</p>
-          {cta}
-        </aside>
       </main>
     </div>
   );
