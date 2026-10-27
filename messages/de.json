@@ -136,6 +136,7 @@
     "username_taken": "Dieser Benutzername ist schon vergeben.",
     "translation_failed": "Die Übersetzung hat nicht geklappt. Das Original bleibt verfügbar.",
     "already_exists": "Existiert bereits.",
+    "copy_visibility_limited": "Eine Kopie kann nicht sichtbarer sein als das Originalrezept.",
     "conflict": "Dieses Rezept wurde anderswo geändert (anderer Tab oder anderes Gerät). Lade die Seite neu: Deine Änderungen bleiben im Entwurf und du kannst sie über der neuesten Version wiederherstellen.",
     "pageTitle": "Diese Seite wurde nicht geladen",
     "pageLead": "Das kann bei instabiler Verbindung passieren. Deine Eingaben bleiben als Entwurf gespeichert.",

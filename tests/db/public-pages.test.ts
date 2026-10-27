@@ -174,6 +174,28 @@ d('public recipe pages', () => {
     expect(await get(r.public_slug)).toHaveLength(1);
   });
 
+  it('una copia non puo essere piu visibile della sorgente (M-02)', async () => {
+    const src = await create('Solo amici', 'friends', false);
+    const ing = JSON.stringify([{ name: 'farina', quantity: 1, unit: 'g' }]);
+    const steps = JSON.stringify([{ text: 'Mescola' }]);
+    const [{ owner_id: srcOwner }] = await admin<{ owner_id: string }>('select owner_id from public.recipes where id = $1', [src.id]);
+    // la copia e' di "other", che vede la ricetta solo se amico: la inseriamo come service role
+    const [copy] = await admin<{ id: string }>(
+      "insert into public.recipes (owner_id, title, visibility, ingredients, steps, copied_from_recipe_id, original_author_id) values ($1, 'Copia', 'private', $2, $3, $4, $5) returning id",
+      [other, ing, steps, src.id, srcOwner],
+    );
+    await expect(admin("update public.recipes set visibility = 'public' where id = $1", [copy.id])).rejects.toThrow(/copy_visibility_exceeds_source/);
+    await expect(admin("update public.recipes set visibility = 'public', public_page_enabled = true where id = $1", [copy.id])).rejects.toThrow(/copy_visibility_exceeds_source/);
+    await admin("update public.recipes set visibility = 'friends' where id = $1", [copy.id]);
+    // sorgente pubblica: la copia puo' ampliarsi
+    await admin("update public.recipes set visibility = 'public' where id = $1", [src.id]);
+    await admin("update public.recipes set visibility = 'public', public_page_enabled = true where id = $1", [copy.id]);
+    // sorgente cancellata: la copia diventa autonoma
+    await admin('delete from public.recipes where id = $1', [src.id]);
+    await admin("update public.recipes set visibility = 'private' where id = $1", [copy.id]);
+    await admin("update public.recipes set visibility = 'public' where id = $1", [copy.id]);
+  });
+
   it('only the owner can switch the flag', async () => {
     const r = await create('Mia 2', 'public', false);
     const res = await as(other, 'update public.recipes set public_page_enabled = true where id = $1 returning id', [r.id]);

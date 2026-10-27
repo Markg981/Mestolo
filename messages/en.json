@@ -136,6 +136,7 @@
     "username_taken": "This username is already taken.",
     "translation_failed": "Translation failed. The original is still available.",
     "already_exists": "Already exists.",
+    "copy_visibility_limited": "A copy can't be more visible than the original recipe.",
     "conflict": "This recipe was changed elsewhere (another tab or device). Reload the page: your changes are kept in the draft and you can restore them over the latest version.",
     "pageTitle": "This page didn't load",
     "pageLead": "This can happen on an unstable connection. Anything you were entering is saved as a draft.",

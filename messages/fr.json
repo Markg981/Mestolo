@@ -136,6 +136,7 @@
     "username_taken": "Ce nom d'utilisateur est déjà pris.",
     "translation_failed": "La traduction a échoué. L'original reste disponible.",
     "already_exists": "Existe déjà.",
+    "copy_visibility_limited": "Une copie ne peut pas être plus visible que la recette d'origine.",
     "conflict": "Cette recette a été modifiée ailleurs (autre onglet ou autre appareil). Recharge la page : tes modifications restent dans le brouillon et tu pourras les restaurer sur la dernière version.",
     "pageTitle": "Cette page ne s'est pas chargée",
     "pageLead": "Cela peut arriver si la connexion est instable. Les données que vous saisissiez sont conservées en brouillon.",
