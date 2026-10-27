@@ -2,6 +2,8 @@ import 'server-only';
 import sharp, { type Metadata } from 'sharp';
 
 export const MAX_INPUT_BYTES = 8 * 1024 * 1024;
+const MAX_INPUT_PIXELS = 50_000_000;
+const MAX_OCR_INPUT_PIXELS = 60_000_000;
 const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp', 'avif', 'gif', 'heif']);
 
 export class ImageValidationError extends Error {
@@ -21,13 +23,13 @@ export async function processRecipeImage(input: Buffer) {
   if (input.length > MAX_INPUT_BYTES) throw new ImageValidationError('image_too_large');
   let meta: Metadata;
   try {
-    meta = await sharp(input, { limitInputPixels: 50_000_000 }).metadata();
+    meta = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
   } catch {
     throw new ImageValidationError('image_invalid');
   }
   if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
 
-  const base = sharp(input, { limitInputPixels: 50_000_000, animated: false }).rotate();
+  const base = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, animated: false }).rotate();
   const full = await base.clone().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).webp({ quality: 80 }).toBuffer({ resolveWithObject: true });
   const thumb = await base.clone().resize({ width: 480, height: 480, fit: 'cover', position: 'attention' }).webp({ quality: 72 }).toBuffer();
   return { full: full.data, width: full.info.width, height: full.info.height, thumb };
@@ -37,9 +39,9 @@ export async function processRecipeImage(input: Buffer) {
 export async function processAvatar(input: Buffer): Promise<Buffer> {
   if (input.length > MAX_INPUT_BYTES) throw new ImageValidationError('image_too_large');
   try {
-    const meta = await sharp(input, { limitInputPixels: 50_000_000 }).metadata();
+    const meta = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
     if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
-    return await sharp(input, { limitInputPixels: 50_000_000, animated: false })
+    return await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, animated: false })
       .rotate()
       .resize({ width: 256, height: 256, fit: 'cover', position: 'attention' })
       .webp({ quality: 80 })
@@ -57,9 +59,9 @@ export async function processAvatar(input: Buffer): Promise<Buffer> {
 export async function prepareOcrPage(input: Buffer): Promise<Buffer> {
   if (input.length > MAX_INPUT_BYTES) throw new ImageValidationError('image_too_large');
   try {
-    const meta = await sharp(input).metadata();
+    const meta = await sharp(input, { limitInputPixels: MAX_OCR_INPUT_PIXELS, animated: false }).metadata();
     if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
-    return await sharp(input, { limitInputPixels: 60_000_000 })
+    return await sharp(input, { limitInputPixels: MAX_OCR_INPUT_PIXELS, animated: false })
       .rotate()
       .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 85 })
