@@ -205,14 +205,14 @@ d('RLS & data rules', () => {
       as(alice, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, alice, `${alice}/cook/x.webp`]),
     ).rejects.toThrow(/permission denied|row-level security/);
     await expect(
-      as(alice, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000)", [rid, `${alice}/cook/x.webp`]),
+      as(alice, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000, 0, 1000000)", [rid, `${alice}/cook/x.webp`]),
     ).rejects.toThrow(/invalid storage path/);
     await expect(
-      as(bob, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000)", [rid, `${bob}/${rid}/x.webp`]),
+      as(bob, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000, 0, 1000000)", [rid, `${bob}/${rid}/x.webp`]),
     ).rejects.toThrow(/recipe not found/);
     const [row] = await as<{ id: string }>(
       alice,
-      "select public.insert_recipe_image($1, $2, null, 'imported', null, null, '', 1, 1, 2000) as id",
+      "select public.insert_recipe_image($1, $2, null, 'imported', null, null, '', 1, 1, 2000, 0, 1000000) as id",
       [rid, `${alice}/${rid}/i.webp`],
     );
     await expect(as(alice, "update public.recipe_images set kind = 'upload' where id = $1", [row.id])).rejects.toThrow(/immutable/);

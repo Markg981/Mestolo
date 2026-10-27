@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType, isOverImageQuota } from '@/lib/images/limits';
+import { MAX_IMAGES_PER_USER, MAX_PROCESSED_BYTES, MAX_UPLOAD_BYTES, isAllowedUploadType, isOverImageQuota, isOverStorageBytes, MAX_STORAGE_BYTES_PER_USER } from '@/lib/images/limits';
 import { userOverImageQuota } from '@/lib/images/quota';
 import { readFileSync } from 'node:fs';
 
@@ -38,6 +38,22 @@ describe('image upload limits', () => {
     const client = (a: number, b: number) => ({ from: (t: string) => q(t === 'recipe_images' ? a : b) }) as never;
     expect(await userOverImageQuota(client(10, 5), 'u')).toBe(false);
     expect(await userOverImageQuota(client(MAX_IMAGES_PER_USER - 5, 5), 'u')).toBe(true);
+  });
+
+  it('enforces the per-user byte cap', async () => {
+    expect(isOverStorageBytes(MAX_STORAGE_BYTES_PER_USER)).toBe(false);
+    expect(isOverStorageBytes(MAX_STORAGE_BYTES_PER_USER, 1)).toBe(true);
+    expect(MAX_STORAGE_BYTES_PER_USER).toBeLessThanOrEqual(1024 ** 3);
+    const q = (rows: unknown[]) => {
+      const b: Record<string, unknown> = { then: (res: (v: unknown) => unknown) => res({ count: 1, data: rows }) };
+      b.select = () => b;
+      b.eq = () => b;
+      b.not = () => b;
+      return b;
+    };
+    const client = (rows: unknown[]) => ({ from: () => q(rows) }) as never;
+    expect(await userOverImageQuota(client([{ size_bytes: 1000 }]), 'u')).toBe(false);
+    expect(await userOverImageQuota(client([{ size_bytes: MAX_STORAGE_BYTES_PER_USER }, { size_bytes: 1 }]), 'u')).toBe(true);
   });
 
   it('migration drops client write policies and sets bucket limits matching the code', () => {
