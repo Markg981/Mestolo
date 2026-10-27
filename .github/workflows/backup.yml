@@ -70,21 +70,24 @@ jobs:
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
 
       - name: Upload to S3
-        run: |
-          set -euo pipefail
-          endpoint=()
-          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
-          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
-          aws s3 cp "${endpoint[@]}" "out/backup-${STAMP}.tar.gpg" "s3://${BACKUP_S3_BUCKET}/mestolo/db/backup-${STAMP}.tar.gpg"
+        # Upload + verifica della dimensione con head-object: upload parziale = job rosso
+        run: scripts/s3-upload-verify.sh "out/backup-${STAMP}.tar.gpg" "mestolo/db/backup-${STAMP}.tar.gpg"
 
       # Fallisce se mancano i secret dello storage, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
       - name: Backup storage files
         env:
           BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
+          BACKUP_SKIP_STORAGE_REASON: ${{ vars.BACKUP_SKIP_STORAGE_REASON }}
         run: |
           set -euo pipefail
           if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
-            echo "::warning::BACKUP_SKIP_STORAGE=true: backup delle immagini disattivato esplicitamente."
+            # Opt-in valido solo se motivato: senza BACKUP_SKIP_STORAGE_REASON il job fallisce
+            if [ -z "${BACKUP_SKIP_STORAGE_REASON}" ]; then
+              echo "::error::BACKUP_SKIP_STORAGE=true richiede la variabile BACKUP_SKIP_STORAGE_REASON con la motivazione (es. 'nessuna immagine in produzione'). Backup immagini NON eseguito."
+              exit 1
+            fi
+            echo "::error title=Backup immagini disattivato::BACKUP_SKIP_STORAGE=true, motivo: ${BACKUP_SKIP_STORAGE_REASON}"
+            echo "Backup delle immagini disattivato: ${BACKUP_SKIP_STORAGE_REASON}" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
@@ -100,7 +103,4 @@ jobs:
           . scripts/lib/backup-gpg.sh
           backup_encrypt "out/storage-${STAMP}.tar" "out/storage-${STAMP}.tar.gpg"
           rm -f "out/storage-${STAMP}.tar"
-          endpoint=()
-          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
-          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
-          aws s3 cp "${endpoint[@]}" "out/storage-${STAMP}.tar.gpg" "s3://${BACKUP_S3_BUCKET}/mestolo/storage/storage-${STAMP}.tar.gpg"
+          scripts/s3-upload-verify.sh "out/storage-${STAMP}.tar.gpg" "mestolo/storage/storage-${STAMP}.tar.gpg"
