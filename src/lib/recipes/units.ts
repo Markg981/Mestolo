@@ -14,7 +14,8 @@ export const UNIT_ALIASES: Record<string, string[]> = {
   tsp: ['tsp', 'teaspoon', 'teaspoons', 'cucchiaino', 'cucchiaini', 'cdt', 'cucchiaino da tè', 'cucchiaino da te', 'cucharadita', 'cucharaditas', 'cuillère à café', 'cuillères à café', 'càc', 'c. à c.', 'tl', 'teelöffel', 'colher de chá', 'colheres de chá'],
   tbsp: ['tbsp', 'tbs', 'tablespoon', 'tablespoons', 'cucchiaio', 'cucchiai', 'cucchiaio da tavola', 'cucharada', 'cucharadas', 'cuillère à soupe', 'cuillères à soupe', 'càs', 'c. à s.', 'el', 'esslöffel', 'colher de sopa', 'colheres de sopa'],
   cup: ['cup', 'cups', 'tazza', 'tazze', 'taza', 'tazas', 'tasse', 'tassen', 'xícara', 'xícaras', 'chávena', 'chávenas'],
-  fl_oz: ['fl oz', 'fl. oz.', 'fluid ounce', 'fluid ounces'],
+  // Once fluide (volume, ≈29,57 ml): alias multi-parola, provati dal parser prima di "oz" semplice (massa)
+  fl_oz: ['fl oz', 'fl. oz.', 'fl.oz', 'fl.oz.', 'floz', 'fluid ounce', 'fluid ounces', 'fluid oz', 'fl ounce', 'fl ounces', 'oncia liquida', 'once liquide', 'once fluide', 'onces liquides', 'onza líquida', 'onzas líquidas', 'onça líquida', 'onças líquidas', 'flüssigunze', 'flüssigunzen'],
   oz: ['oz', 'ounce', 'ounces', 'oncia', 'once', 'onza', 'onzas', 'unze', 'unzen', 'onça', 'onças'],
   lb: ['lb', 'lbs', 'pound', 'pounds', 'libbra', 'libbre', 'libra', 'libras', 'livre', 'livres', 'pfund'],
   pinch: ['pinch', 'pinches', 'pizzico', 'pizzichi', 'pizzichino', 'pellizco', 'pizca', 'pincée', 'pincées', 'prise', 'prisen', 'pitada', 'pitadas'],

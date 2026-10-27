@@ -86,13 +86,71 @@ d('moderation', () => {
     expect(await admin('select 1 from public.recipe_versions where recipe_id = $1', [rid])).toHaveLength(1);
   });
 
-  it('three reports from different users hide the recipe automatically', async () => {
+  const hiddenOf = async (rid: string) => (await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden;
+  const caseOf = async (rid: string) => (await admin<{ status: string; appealed_at: string | null }>('select status, appealed_at from public.moderation_cases where recipe_id = $1', [rid]))[0];
+  const noticesOf = async (rid: string) => (await admin<{ kind: string }>('select kind from public.moderation_notices where recipe_id = $1 order by created_at, id', [rid])).map((n) => n.kind);
+  const report = (u: string, rid: string) => as<{ id: string }>(u, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam') returning id", [u, rid]);
+
+  it('three reports from different users queue the recipe for review without hiding it; the owner is notified', async () => {
     const rid = await publicRecipe();
-    for (const u of [r1, r2]) await as(u, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [u, rid]);
-    expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(false);
-    await as(r3, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [r3, rid]);
-    expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(true);
-    expect(await as(r1, 'select id from public.recipes where id = $1', [rid])).toHaveLength(0);
+    for (const u of [r1, r2]) await report(u, rid);
+    expect(await caseOf(rid)).toBeUndefined();
+    await report(r3, rid);
+    expect(await hiddenOf(rid)).toBe(false);
+    expect((await caseOf(rid)).status).toBe('in_review');
+    expect(await noticesOf(rid)).toEqual(['in_review']);
+    expect(await as(r1, 'select id from public.recipes where id = $1', [rid])).toHaveLength(1);
+    // the owner sees notice and case; other users do not
+    expect(await as(author, 'select 1 from public.moderation_notices where recipe_id = $1', [rid])).toHaveLength(1);
+    expect(await as(r1, 'select 1 from public.moderation_notices where recipe_id = $1', [rid])).toHaveLength(0);
+    expect(await as(author, 'select 1 from public.moderation_cases where recipe_id = $1', [rid])).toHaveLength(1);
+    expect(await as(r1, 'select 1 from public.moderation_cases where recipe_id = $1', [rid])).toHaveLength(0);
+    expect(await as(mod, 'select 1 from public.moderation_cases where recipe_id = $1', [rid])).toHaveLength(1);
+  });
+
+  it('moderator hide notifies the owner and the owner can appeal once; restore notifies again', async () => {
+    const rid = await publicRecipe();
+    const reps: string[] = [];
+    for (const u of [r1, r2, r3]) reps.push((await report(u, rid))[0].id);
+    await as(mod, "select public.moderate_report($1, 'hide')", [reps[0]]);
+    expect(await hiddenOf(rid)).toBe(true);
+    expect((await caseOf(rid)).status).toBe('hidden');
+    expect(await noticesOf(rid)).toEqual(['in_review', 'hidden']);
+    // only the owner can appeal
+    await expect(as(r1, 'select public.appeal_moderation($1)', [rid])).rejects.toThrow(/forbidden/);
+    await as(author, 'select public.appeal_moderation($1)', [rid]);
+    const c = await caseOf(rid);
+    expect(c.status).toBe('in_review');
+    expect(c.appealed_at).not.toBeNull();
+    expect(await hiddenOf(rid)).toBe(true); // stays hidden until a moderator decides
+    expect(await admin("select 1 from public.reports where recipe_id = $1 and status = 'open'", [rid])).toHaveLength(3);
+    await expect(as(author, 'select public.appeal_moderation($1)', [rid])).rejects.toThrow(/appeal not allowed/);
+    await as(mod, "select public.moderate_report($1, 'restore')", [reps[0]]);
+    expect(await hiddenOf(rid)).toBe(false);
+    expect((await caseOf(rid)).status).toBe('restored');
+    expect(await noticesOf(rid)).toEqual(['in_review', 'hidden', 'restored']);
+  });
+
+  it('dismissing the last open report closes the review without hiding', async () => {
+    const rid = await publicRecipe();
+    const reps: string[] = [];
+    for (const u of [r1, r2, r3]) reps.push((await report(u, rid))[0].id);
+    for (const id of reps) await as(mod, "select public.moderate_report($1, 'dismiss')", [id]);
+    expect(await hiddenOf(rid)).toBe(false);
+    expect((await caseOf(rid)).status).toBe('restored');
+  });
+
+  it('emergency auto-hide only at a much higher threshold (10 trusted reporters)', async () => {
+    const rid = await publicRecipe();
+    const s = Math.random().toString(36).slice(2, 7);
+    const many = await Promise.all(Array.from({ length: 10 }, (_, k) => user(`em${k}_${s}`)));
+    await admin("update auth.users set email_confirmed_at = now(), created_at = now() - interval '30 days' where id = any($1::uuid[])", [many]);
+    for (const u of many.slice(0, 9)) await report(u, rid);
+    expect(await hiddenOf(rid)).toBe(false);
+    await report(many[9], rid);
+    expect(await hiddenOf(rid)).toBe(true);
+    expect((await caseOf(rid)).status).toBe('hidden');
+    expect(await noticesOf(rid)).toEqual(['in_review', 'hidden']);
   });
 
   it('reports from new/unconfirmed accounts and from the author do not count for the auto-hide', async () => {
@@ -102,7 +160,8 @@ d('moderation', () => {
     for (const u of fresh) await as(u, "insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [u, rid]);
     // la policy RLS impedisce già all'autore di segnalarsi: inserita bypassando RLS per verificare il trigger
     await admin("insert into public.reports (reporter_id, recipe_id, reason) values ($1, $2, 'spam')", [author, rid]);
-    expect((await admin<{ is_hidden: boolean }>('select is_hidden from public.recipes where id = $1', [rid]))[0].is_hidden).toBe(false);
+    expect(await hiddenOf(rid)).toBe(false);
+    expect(await caseOf(rid)).toBeUndefined();
     // le segnalazioni restano registrate per la revisione manuale
     expect(await admin("select 1 from public.reports where recipe_id = $1 and status = 'open'", [rid])).toHaveLength(4);
   });

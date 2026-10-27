@@ -106,16 +106,20 @@ describe('bozze stantie', () => {
     expect(parseDraft(serializeDraft(state, null), {})).toEqual({ status: 'ok', state });
   });
 
-  it('in modifica ripristina solo se la versione del server e\' la stessa', () => {
+  it('in modifica ripristina direttamente solo se la versione del server e\' la stessa', () => {
     const raw = serializeDraft(state, 'hash-1');
     expect(parseDraft(raw, { serverVersion: 'hash-1' })).toEqual({ status: 'ok', state });
-    expect(parseDraft(raw, { serverVersion: 'hash-2' })).toEqual({ status: 'stale' });
   });
 
-  it('in modifica una bozza senza hash e\' stantia', () => {
+  it('bozza base=A con server alla versione B: conflitto che conserva le modifiche', () => {
+    const raw = serializeDraft(state, 'hash-A');
+    expect(parseDraft(raw, { serverVersion: 'hash-B' })).toEqual({ status: 'conflict', state });
+  });
+
+  it('in modifica una bozza senza hash e\' un conflitto, non viene persa', () => {
     const legacy = JSON.stringify({ state, at: Date.now() });
-    expect(parseDraft(legacy, { serverVersion: 'hash-1' })).toEqual({ status: 'stale' });
-    expect(parseDraft(serializeDraft(state, null), { serverVersion: 'hash-1' })).toEqual({ status: 'stale' });
+    expect(parseDraft(legacy, { serverVersion: 'hash-1' })).toEqual({ status: 'conflict', state });
+    expect(parseDraft(serializeDraft(state, null), { serverVersion: 'hash-1' })).toEqual({ status: 'conflict', state });
   });
 
   it('scarta le bozze piu\' vecchie di 7 giorni', () => {

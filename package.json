@@ -5,7 +5,7 @@
   "description": "Mestolo – ricettario intelligente, web app responsive multiutente",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20.9"
+    "node": ">=20.12"
   },
   "scripts": {
     "predev": "node scripts/copy-ocr-assets.mjs",

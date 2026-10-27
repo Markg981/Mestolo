@@ -25,6 +25,9 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Su main (run schedulati) la copia S3 e' obbligatoria: gli artifact durano 30 giorni e, con il repository
+      # pubblico, sono scaricabili da chiunque (protetti solo da BACKUP_PASSPHRASE)
+      REQUIRE_S3: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -38,6 +41,19 @@ jobs:
               missing=1
             fi
           done
+          # Artifact pubblici: la passphrase e' l'unica protezione, deve resistere a un attacco offline
+          if [ -n "${BACKUP_PASSPHRASE}" ] && [ "${#BACKUP_PASSPHRASE}" -lt 32 ]; then
+            echo "::error::BACKUP_PASSPHRASE troppo corta (${#BACKUP_PASSPHRASE} caratteri, minimo 32): generarla con 'openssl rand -base64 32'."
+            missing=1
+          fi
+          if [ "${REQUIRE_S3}" = "true" ]; then
+            for v in BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+              if [ -z "${!v}" ]; then
+                echo "::error::Secret ${v/AWS_/BACKUP_S3_} non impostato: su main la copia S3 e' obbligatoria."
+                missing=1
+              fi
+            done
+          fi
           exit $missing
 
       - name: Install PostgreSQL 17 client
@@ -65,7 +81,8 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Upload to S3 (optional)
+      # Obbligatorio su main (controllato in "Check secrets"); facoltativo nei run manuali da altri branch
+      - name: Upload to S3
         run: |
           set -euo pipefail
           if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
