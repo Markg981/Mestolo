@@ -1,8 +1,27 @@
 import { expect, test, type Page } from '@playwright/test';
 import { serviceWorkerReady, userCacheNames } from './helpers-extra';
 
+// Errore raro solo in CI (pagina d'errore globale al posto di "Nessuna connessione"), non riprodotto in locale:
+// la traccia del primo tentativo fallito e gli errori della pagina servono a trovarne la causa.
+test.use({ trace: 'retain-on-first-failure' });
+
 // Service worker (public/sw.js): il worker si registra solo in produzione, quindi con `next dev` i test si saltano.
 test.describe('offline e service worker', () => {
+  const pageErrors: string[] = [];
+  test.beforeEach(({ page }) => {
+    pageErrors.length = 0;
+    page.on('pageerror', (e) => pageErrors.push(`${page.url()} ${e.stack ?? e.message}`));
+    page.on('console', (m) => {
+      if (m.type() === 'error') pageErrors.push(`${page.url()} console: ${m.text()}`);
+    });
+  });
+  test.afterEach(async ({}, testInfo) => {
+    if (testInfo.status !== testInfo.expectedStatus && pageErrors.length) {
+      await testInfo.attach('errori-pagina', { body: pageErrors.join('\n\n'), contentType: 'text/plain' });
+      console.log(pageErrors.join('\n'));
+    }
+  });
+
   /** Apre la pagina e attende che il worker controlli la pagina e conosca l'utente (cache privata creata). */
   async function warmUp(page: Page) {
     await page.goto('/shopping');
