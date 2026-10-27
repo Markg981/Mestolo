@@ -55,12 +55,21 @@ export function useRealtimeRefresh(userId: string, supabaseUrl: string, supabase
     const resume = () => {
       if (missed && ready()) refresh();
     };
+    // Connection lost while a refresh is still debounced: do not fire it. A RSC
+    // fetch that fails makes Next fall back to a hard navigation, which the
+    // service worker answers with /offline. Defer it until we are back online.
+    const pause = () => {
+      refresh.cancel();
+      missed = true;
+    };
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('online', resume);
+    window.addEventListener('offline', pause);
 
     return () => {
       document.removeEventListener('visibilitychange', resume);
       window.removeEventListener('online', resume);
+      window.removeEventListener('offline', pause);
       refresh.cancel();
       disposed = true;
       disconnect();
