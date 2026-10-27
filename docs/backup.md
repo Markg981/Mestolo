@@ -14,7 +14,7 @@ Il workflow `.github/workflows/backup.yml` gira ogni giorno alle 03:17 UTC (e a 
 
 `scripts/backup-db.sh` apre una sessione `psql` dedicata con una transazione `REPEATABLE READ` e ne esporta lo snapshot (`pg_export_snapshot`); i tre `pg_dump` usano `--snapshot` e il manifest e calcolato nella stessa transazione. Dump e manifest descrivono quindi lo stesso istante, anche con scritture concorrenti. Funziona con la connessione diretta e con il session pooler (porta 5432); NON con il transaction pooler (6543), dove lo script fallisce con un errore esplicito.
 
-Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`) prima di ogni upload. Artifact con retention 30 giorni; copia su bucket S3 compatibile, obbligatoria su `main` (i run manuali da altri branch possono farne a meno). Il repository e pubblico, quindi gli artifact cifrati sono scaricabili da chiunque: la passphrase deve avere almeno 32 caratteri, altrimenti il workflow fallisce.
+Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`) prima di ogni upload. Artifact con retention 7 giorni (la conservazione lunga e su S3; 7 giorni coprono ops-monitor a 36 ore e la verifica settimanale, e riducono l'esposizione dei file cifrati sul repository pubblico); copia su bucket S3 compatibile, obbligatoria su `main` (i run manuali da altri branch possono farne a meno). Il repository e pubblico, quindi gli artifact cifrati sono scaricabili da chiunque: la passphrase deve avere almeno 32 caratteri, altrimenti il workflow fallisce.
 
 ## Monitoraggio
 
@@ -25,7 +25,9 @@ Tutto e cifrato con `gpg --symmetric --cipher-algo AES256` (`BACKUP_PASSPHRASE`)
 - Dell'schema `auth` sono salvate solo `users` e `identities` (bastano per le FK di `public` e per il login con email/OAuth). Sessioni, MFA e refresh token non sono inclusi: gli utenti dovranno riaccedere.
 - Ruoli e configurazione del progetto Supabase (secret, provider auth) non sono inclusi: lo schema e le policy vivono in `supabase/migrations`.
 - Le immagini sono salvate se i secret per lo storage sono presenti; altrimenti il workflow fallisce (opt-out: `BACKUP_SKIP_STORAGE=true`). Il conteggio dei file storage non e confrontato con `storage.objects`: sono due letture in istanti diversi.
-- Gli artifact di GitHub scadono dopo 30 giorni: la conservazione lunga e su S3 (retention da impostare sul bucket).
+- Gli artifact di GitHub scadono dopo 7 giorni: la conservazione lunga e su S3. La lifecycle policy versionata in `docs/s3-lifecycle.json` (90 giorni su `mestolo/db/` e `mestolo/storage/`) va applicata una tantum al bucket:
+  `aws s3api put-bucket-lifecycle-configuration --bucket <BUCKET> --lifecycle-configuration file://docs/s3-lifecycle.json [--endpoint-url <ENDPOINT>]`
+  (R2/B2 supportano la stessa API, verificare la compatibilita del provider). `restore-verify.yml` ripristina dalla copia S3 piu recente, con fallback sull'artifact.
 
 ## Secret
 
