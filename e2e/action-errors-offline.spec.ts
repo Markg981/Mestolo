@@ -14,7 +14,7 @@ test.describe('azioni senza rete', () => {
     await page.getByLabel('Nome', { exact: true }).fill(name);
 
     await context.setOffline(true);
-    await page.getByRole('button', { name: 'Aggiungi', exact: true }).click();
+    await page.getByRole('main').getByRole('button', { name: 'Aggiungi', exact: true }).click();
 
     await expect(page.getByRole('alert').filter({ hasText: avviso })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: 'Dispensa' })).toBeVisible();

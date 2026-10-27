@@ -23,9 +23,10 @@ export function ActionErrorToast() {
     };
   }, []);
 
+  if (!shown) return null;
   return (
-    <div aria-live="assertive" role="alert" className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-      {shown && <p className="pointer-events-auto max-w-md rounded-xl bg-tomato px-4 py-3 text-sm font-semibold text-white shadow-lg">{t('actionFailed')}</p>}
+    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
+      <p role="alert" aria-live="assertive" className="pointer-events-auto max-w-md rounded-xl bg-tomato px-4 py-3 text-sm font-semibold text-white shadow-lg">{t('actionFailed')}</p>
     </div>
   );
 }
