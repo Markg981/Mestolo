@@ -64,7 +64,7 @@ d('lista della spesa e piano: operazioni atomiche', () => {
   });
 
   it('rifiuta delta negativi, zero, nulli o enormi (A-13)', async () => {
-    const a = await mkUser(`sp_e_${s}`);
+    const a = await mkUser(`sp_q_${s}`);
     const id = await mkItem(a, 'zucchero', 10);
     for (const item of [{ id, delta: -5 }, { id, delta: 0 }, { id, delta: 1e12 }, { id }]) {
       await expect(as(a, 'select public.add_shopping_quantities($1::jsonb) as n', [JSON.stringify([item])])).rejects.toMatchObject({ code: '22023' });
