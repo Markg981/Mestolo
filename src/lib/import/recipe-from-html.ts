@@ -61,17 +61,41 @@ export function findRecipeNode(root: Json, depth = 0): Obj | null {
   return null;
 }
 
+// Limiti sui dati importati: una pagina ostile non deve produrre output illimitato.
+export const MAX_IMPORT_TITLE = 200;
+export const MAX_IMPORT_INGREDIENTS = 200;
+export const MAX_IMPORT_STEPS = 100;
+export const MAX_IMPORT_LINE = 2000;
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', deg: '°', frac12: '½', frac14: '¼', frac34: '¾',
+  ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', hellip: '…',
+  egrave: 'è', eacute: 'é', agrave: 'à', ograve: 'ò', igrave: 'ì', ugrave: 'ù',
+};
+
+/** Strip dei tag e decodifica entità senza costruire un DOM (cheerio per stringa era O(n) pesante). */
+function stripHtml(raw: string): string {
+  const s = raw.length > MAX_IMPORT_LINE * 4 ? raw.slice(0, MAX_IMPORT_LINE * 4) : raw;
+  return s
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-zA-Z][a-zA-Z0-9]{1,8}));/g, (m, dec, hex, name) => {
+      if (name) return NAMED_ENTITIES[name] ?? m;
+      const cp = dec ? Number(dec) : parseInt(hex, 16);
+      return cp > 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+    });
+}
+
 function text(v: Json): string {
-  if (typeof v === 'string') return cheerio.load(`<p>${v}</p>`)('p').text().replace(/\s+/g, ' ').trim();
+  if (typeof v === 'string') return stripHtml(v).replace(/\s+/g, ' ').trim().slice(0, MAX_IMPORT_LINE);
   if (typeof v === 'number') return String(v);
-  if (Array.isArray(v)) return v.map(text).filter(Boolean).join(', ');
+  if (Array.isArray(v)) return v.slice(0, MAX_IMPORT_INGREDIENTS).map(text).filter(Boolean).join(', ');
   if (isObj(v)) return text(v.name ?? v.text ?? '');
   return '';
 }
 
 function names(v: Json): string[] {
   if (!v) return [];
-  if (Array.isArray(v)) return v.flatMap(names);
+  if (Array.isArray(v)) return v.slice(0, 20).flatMap(names);
   if (typeof v === 'string') return [text(v)];
   if (isObj(v) && v.name) return [text(v.name)];
   return [];
@@ -85,9 +109,9 @@ function parseInstructions(v: Json, section: string | null = null): Step[] {
       .split(/\n+/)
       .map((s) => s.replace(/^\s*\d{1,2}[.)]\s*/, '').trim())
       .filter((s) => s.length > 1)
-      .map((s) => ({ text: s, section }));
+      .map((s) => ({ text: s.slice(0, MAX_IMPORT_LINE), section }));
   }
-  if (Array.isArray(v)) return v.flatMap((x) => parseInstructions(x, section));
+  if (Array.isArray(v)) return v.slice(0, MAX_IMPORT_STEPS).flatMap((x) => parseInstructions(x, section));
   if (isObj(v)) {
     const types = typesOf(v).map((t) => t.toLowerCase());
     if (types.includes('howtosection')) {
@@ -156,13 +180,14 @@ function siteName($: cheerio.CheerioAPI, finalUrl: string): string {
 }
 
 function fromRecipeNode(node: Obj, $: cheerio.CheerioAPI, finalUrl: string, method: 'jsonld' | 'microdata'): ImportDraft {
-  const title = text(node.name ?? node.headline ?? '');
+  const title = text(node.name ?? node.headline ?? '').slice(0, MAX_IMPORT_TITLE);
   const description = text(node.description ?? '').slice(0, 4000);
   const ingredientsRaw = (Array.isArray(node.recipeIngredient) ? node.recipeIngredient : node.recipeIngredient ? [node.recipeIngredient] : Array.isArray(node.ingredients) ? node.ingredients : [])
+    .slice(0, MAX_IMPORT_INGREDIENTS)
     .map(text)
     .filter(Boolean);
   const ingredients = ingredientsRaw.map(parseIngredientLine);
-  const steps = parseInstructions(node.recipeInstructions);
+  const steps = parseInstructions(node.recipeInstructions).slice(0, MAX_IMPORT_STEPS);
   const servings = parseYield(node.recipeYield ?? node.yield);
   const prep = parseTime(node.prepTime);
   const cook = parseTime(node.cookTime);
