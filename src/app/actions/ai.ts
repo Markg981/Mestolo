@@ -50,8 +50,9 @@ export async function analyzeRecipe(recipeId: string): Promise<ActionResult<Anal
     const r = data as RecipeRow;
     await enforceRateLimit('ai_text', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'text', 'analyze');
-    return await withRefund(user.id, resolved, 'text', 'analyze', async () => {
+    return await withRefund(user.id, resolved, 'text', 'analyze', async (paid) => {
       const raw = await resolved.provider.completeJson({ system: analyzeSystem(await uiLocale()), user: analyzeUserPrompt(contentOf(r)), maxTokens: 4000 });
+      paid();
       await recordUsage(user.id, 'text', 'analyze', resolved);
       const parsed = analysisSchema.safeParse(raw);
       if (!parsed.success) return fail('ai_bad_output');
@@ -179,8 +180,9 @@ export async function suggestSubstitutions(recipeId: string, missing: string[], 
 
     await enforceRateLimit('ai_text', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'text', 'substitute');
-    return await withRefund(user.id, resolved, 'text', 'substitute', async () => {
+    return await withRefund(user.id, resolved, 'text', 'substitute', async (paid) => {
       const raw = await resolved.provider.completeJson({ system: substituteSystem(locale), user: substituteUserPrompt(contentOf(data as RecipeRow), list.data), maxTokens: 3000 });
+      paid();
       await recordUsage(user.id, 'text', 'substitute', resolved);
       const parsed = substitutionResultSchema.safeParse(raw);
       if (!parsed.success) return fail('ai_bad_output');
@@ -214,9 +216,10 @@ export async function translateRecipe(recipeId: string, target: string): Promise
 
     await enforceRateLimit('ai_translate', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'translate', 'recipe');
-    return await withRefund(user.id, resolved, 'translate', 'recipe', async () => {
+    return await withRefund(user.id, resolved, 'translate', 'recipe', async (paid) => {
       const payload = buildTranslatable(r);
       const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: JSON.stringify(payload), maxTokens: 6000 });
+      paid();
       await recordUsage(user.id, 'translate', 'recipe', resolved);
       const parsed = translatedPayloadSchema.safeParse(raw);
       if (!parsed.success) return fail('translation_failed');

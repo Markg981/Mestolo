@@ -74,14 +74,15 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
     expect(mocks.recordUsage).not.toHaveBeenCalled();
   });
 
-  it('foto: output non valido -> rimborso', async () => {
+  // Il provider ha gia' risposto (chiamata pagata): un output non valido non si rimborsa (C-05).
+  it('foto: output non valido -> nessun rimborso', async () => {
     mocks.completeJson.mockResolvedValue({});
     mocks.draftFromExtraction.mockImplementation(() => {
       throw new Error('ai_bad_output');
     });
     const r = await importFromPhotos(photoForm());
     expect(r.ok).toBe(false);
-    expect(mocks.refundQuota).toHaveBeenCalledTimes(1);
+    expect(mocks.refundQuota).not.toHaveBeenCalled();
   });
 
   it('foto: successo -> nessun rimborso', async () => {
@@ -109,10 +110,10 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
     expect(mocks.refundQuota.mock.calls[0].slice(2)).toEqual(['text', 'transcribe']);
   });
 
-  it('audio: trascrizione vuota -> rimborso', async () => {
+  it('audio: trascrizione vuota -> nessun rimborso', async () => {
     mocks.transcribe.mockResolvedValue('');
     const r = await transcribeVideoAudio(audioForm());
     expect(r.ok).toBe(false);
-    expect(mocks.refundQuota).toHaveBeenCalledTimes(1);
+    expect(mocks.refundQuota).not.toHaveBeenCalled();
   });
 });

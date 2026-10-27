@@ -24,7 +24,7 @@ export async function askCookAssistant(recipeId: string, input: CookAskInput): P
     const locale = (await getProfile())?.locale ?? 'it';
     await enforceRateLimit('ai_text', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'text', 'cook_assist');
-    return await withRefund(user.id, resolved, 'text', 'cook_assist', async () => {
+    return await withRefund(user.id, resolved, 'text', 'cook_assist', async (paid) => {
       const raw = await resolved.provider.completeJson({
         system: cookAssistSystem(locale),
         user: cookAssistUserPrompt(
@@ -42,6 +42,7 @@ export async function askCookAssistant(recipeId: string, input: CookAskInput): P
         ),
         maxTokens: 500,
       });
+      paid();
       await recordUsage(user.id, 'text', 'cook_assist', resolved);
       const out = cookAnswerSchema.safeParse(raw);
       if (!out.success) return fail('ai_bad_output');

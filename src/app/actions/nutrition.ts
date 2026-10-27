@@ -72,7 +72,7 @@ export async function estimateNutrition(recipeId: string): Promise<ActionResult<
     if (!(r.ingredients ?? []).length) return fail('invalid_input', 'ingredients');
     await enforceRateLimit('ai_text', o.user.id);
     const resolved = await resolveProvider(o.user.id, 'text', 'text', 'nutrition');
-    return await withRefund(o.user.id, resolved, 'text', 'nutrition', async () => {
+    return await withRefund(o.user.id, resolved, 'text', 'nutrition', async (paid) => {
       const raw = await resolved.provider.completeJson({
         system: NUTRITION_SYSTEM,
         user: nutritionUserPrompt({
@@ -87,6 +87,7 @@ export async function estimateNutrition(recipeId: string): Promise<ActionResult<
         }),
         maxTokens: 600,
       });
+      paid();
       await recordUsage(o.user.id, 'text', 'nutrition', resolved);
       const values = parseAiNutrition(raw);
       if (!values) return fail('ai_bad_output');
