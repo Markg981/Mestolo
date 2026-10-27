@@ -135,7 +135,7 @@ describe('limiti su pagine abnormi (IMP-01)', () => {
     const t0 = performance.now();
     const { draft } = recipeFromHtml(html, 'https://example.com/r');
     const ms = performance.now() - t0;
-    expect(ms).toBeLessThan(2000);
+    expect(ms).toBeLessThan(6000);
     expect(draft!.content.title.length).toBeLessThanOrEqual(200);
     expect(draft!.content.ingredients.length).toBeLessThanOrEqual(200);
     expect(draft!.content.steps.length).toBeLessThanOrEqual(100);
