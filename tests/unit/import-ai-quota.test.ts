@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { encodeWav8 } from '@/lib/import/audio';
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -34,7 +35,7 @@ function photoForm() {
 }
 function audioForm() {
   const fd = new FormData();
-  fd.append('audio', new File([new Uint8Array([1, 2, 3])], 'a.wav', { type: 'audio/wav' }));
+  fd.append('audio', new File([encodeWav8(new Float32Array(80)) as BlobPart],'a.wav', { type: 'audio/wav' }));
   return fd;
 }
 

@@ -127,6 +127,7 @@
     "image_invalid": "Die Datei ist kein lesbares Bild. Verwende JPG, PNG oder WebP.",
     "image_too_large": "Die Bilder sind zu groß. Verwende weniger Seiten oder komprimiere sie.",
     "too_many_files": "Zu viele Fotos für ein Rezept.",
+    "audio_too_long": "Das Audio ist zu lang. Verwende ein kürzeres Video.",
     "storage_quota_exceeded": "Du hast die maximale Anzahl gespeicherter Fotos erreicht. Lösche einige, um weitere hochzuladen.",
     "auth_invalid": "E-Mail oder Passwort ist falsch.",
     "auth_email_taken": "Es gibt bereits ein Konto mit dieser E-Mail-Adresse.",
