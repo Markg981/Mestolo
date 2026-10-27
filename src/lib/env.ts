@@ -38,7 +38,11 @@ const REQUIRED_IN_PRODUCTION = [
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'NEXT_PUBLIC_SITE_URL',
+  'APP_ENCRYPTION_KEY',
+  'CRON_SECRET',
 ] as const;
+
+const CRON_SECRET_MIN_LENGTH = 16;
 
 /**
  * In production (runtime) missing required variables are an error instead of
@@ -50,6 +54,14 @@ function assertProductionEnv(e: NodeJS.ProcessEnv) {
   const missing = REQUIRED_IN_PRODUCTION.filter((k) => !e[k]?.trim());
   if (missing.length) {
     throw new ConfigError(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+  // APP_ENCRYPTION_KEY: base64 di 32 byte (come generato da `npm run gen:key` e decodificato in crypto/secrets).
+  if (Buffer.from(e.APP_ENCRYPTION_KEY!.trim(), 'base64').length !== 32) {
+    throw new ConfigError('APP_ENCRYPTION_KEY must be 32 bytes (base64)');
+  }
+  // CRON_SECRET: lunghezza minima, confrontato in modo esatto dalle route cron.
+  if (e.CRON_SECRET!.length < CRON_SECRET_MIN_LENGTH) {
+    throw new ConfigError(`CRON_SECRET must be at least ${CRON_SECRET_MIN_LENGTH} characters`);
   }
 }
 
