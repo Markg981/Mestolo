@@ -1,7 +1,7 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { setRecipeInCollection } from '@/app/actions/organize';
 import { Button } from '@/components/ui';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui';
 export function RemoveFromCollection({ collectionId, recipeId }: { collectionId: string; recipeId: string }) {
   const t = useTranslations('collectionSharing');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <Button
       size="sm"

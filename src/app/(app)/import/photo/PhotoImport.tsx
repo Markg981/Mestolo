@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { draftNames } from '@/lib/drafts';
 import Link from 'next/link';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp, Camera, ImagePlus, RefreshCw, Trash2 } from 'lucide-react';
 import { importFromPhotos, importFromText } from '@/app/actions/import';
@@ -38,7 +39,7 @@ export function PhotoImport({ categories, status }: { categories: EditorCategory
   useResumeImport(draftNames.import('photo'), setDraft);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [processing, setProcessing] = useState(0);
   const [ocrText, setOcrText] = useState<string | null>(null);
   // Text editor visible; the text (and its source pages) survive going back

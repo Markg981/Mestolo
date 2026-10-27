@@ -3,6 +3,7 @@
     "description": "Your recipe book: save, import, and share recipes on every device."
   },
   "common": {
+    "actionFailed": "The action failed: check your connection and try again.",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",

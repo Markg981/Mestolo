@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ImagePlus, Languages, Sparkles, Trash2 } from 'lucide-react';
 import { saveNote } from '@/app/actions/recipes';
@@ -40,7 +41,7 @@ export function NoteEditor({ recipeId, initial }: { recipeId: string; initial: s
   const te = useTranslations('errors');
   const [value, setValue] = useState(initial);
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor="pnote" className="text-xl font-bold">
@@ -71,7 +72,7 @@ export function TranslateBanner({ recipeId, fromName, toName, target, status, sh
   const t = useTranslations('translate');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
 
   if (showing === 'translation') {
@@ -131,7 +132,7 @@ export function ImagePrompt({ recipeId, title, status }: { recipeId: string; tit
   const te = useTranslations('errors');
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -214,7 +215,7 @@ export function ImageManagerClient({ recipeId, title, images }: { recipeId: stri
   const tc = useTranslations('common');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   return (
     <section className="flex flex-col gap-3">

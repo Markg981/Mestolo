@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { sendFriendRequest } from '@/app/actions/social';
 import { Button, buttonClass } from '@/components/ui';
@@ -11,7 +12,7 @@ export function ProfileFriendButton({ userId, state }: { userId: string; state: 
   const t = useTranslations('profile');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   if (state === 'friends') return null;
   if (state === 'sent' || state === 'declined') return <span className="text-muted">{t('requestPending')}</span>;

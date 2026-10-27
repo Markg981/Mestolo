@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { addCollectionMember, removeCollectionMember, setCollectionVisibility } from '@/app/actions/organize';
 import { Modal } from '@/components/client-ui';
@@ -20,7 +21,7 @@ export function ShareCollection({ id, visibility, members, friends }: { id: stri
   const [role, setRole] = useState<'viewer' | 'editor'>('viewer');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) =>
     start(async () => {
       setError(null);

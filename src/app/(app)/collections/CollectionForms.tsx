@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createCollection, deleteCollection, renameCollection } from '@/app/actions/organize';
 import { Modal } from '@/components/client-ui';
@@ -13,7 +14,7 @@ export function NewCollectionForm({ suggestions, showSuggestions }: { suggestion
   const router = useRouter();
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const create = (n: string) =>
     start(async () => {
       setError(null);
@@ -64,7 +65,7 @@ export function CollectionAdmin({ id, name, description }: { id: string; name: s
   const [n, setN] = useState(name);
   const [d, setD] = useState(description);
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <div className="flex gap-2">
       <Button size="sm" onClick={() => setOpen('edit')}>

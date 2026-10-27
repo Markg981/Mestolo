@@ -3,6 +3,7 @@
     "description": "Dein Rezeptbuch: Rezepte speichern, importieren und teilen – auf jedem Gerät."
   },
   "common": {
+    "actionFailed": "Aktion fehlgeschlagen: Prüfe deine Verbindung und versuche es erneut.",
     "add": "Hinzufügen",
     "back": "Zurück",
     "cancel": "Abbrechen",

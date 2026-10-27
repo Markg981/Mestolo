@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { createInvite, revokeInvite } from '@/app/actions/invites';
 import { LiveMessage } from '@/components/client-ui';
@@ -14,7 +15,7 @@ export function InviteSection({ invites }: { invites: InviteRow[] }) {
   const te = useTranslations('errors');
   const format = useFormatter();
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [url, setUrl] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
 

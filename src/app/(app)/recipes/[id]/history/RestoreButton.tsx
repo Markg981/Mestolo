@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { restoreVersion } from '@/app/actions/recipes';
 import { Modal } from '@/components/client-ui';
@@ -14,7 +15,7 @@ export function RestoreButton({ recipeId, version, currentVersion }: { recipeId:
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
