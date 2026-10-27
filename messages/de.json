@@ -127,6 +127,7 @@
     "image_invalid": "Die Datei ist kein lesbares Bild. Verwende JPG, PNG oder WebP.",
     "image_too_large": "Die Bilder sind zu groß. Verwende weniger Seiten oder komprimiere sie.",
     "too_many_files": "Zu viele Fotos für ein Rezept.",
+    "audio_too_long": "Das Audio ist zu lang. Verwende ein kürzeres Video.",
     "storage_quota_exceeded": "Du hast die maximale Anzahl gespeicherter Fotos erreicht. Lösche einige, um weitere hochzuladen.",
     "auth_invalid": "E-Mail oder Passwort ist falsch.",
     "auth_email_taken": "Es gibt bereits ein Konto mit dieser E-Mail-Adresse.",
@@ -1187,6 +1188,7 @@
     "listening": "Ich höre zu: sagen Sie „weiter“ oder „zurück“",
     "voiceDenied": "Mikrofon nicht erlaubt: Sprachbefehle deaktiviert.",
     "wakeUnsupported": "Der Bildschirm könnte ausgehen: Wachhalten wird hier nicht unterstützt.",
+    "wakeFailed": "Der Bildschirm könnte ausgehen: Wachhalten ist fehlgeschlagen.",
     "noSteps": "Dieses Rezept hat noch keine Schritte.",
     "assistOpen": "Assistent fragen",
     "assistTitle": "Assistent fragen",
@@ -1202,6 +1204,7 @@
     "assistUnavailable": "Der KI-Assistent ist nicht verfügbar. Richte in den Einstellungen einen KI-Schlüssel ein, um ihn beim Kochen zu nutzen.",
     "assistSettings": "Zu den KI-Einstellungen",
     "assistOffline": "Du bist offline: Der Assistent braucht eine Verbindung. Du kannst normal weiterkochen.",
+    "dictationFailed": "Diktat nicht verfügbar: Mikrofon nicht erlaubt oder nicht erreichbar.",
     "assistDisclaimer": "KI-Antworten können Fehler enthalten. Keine medizinischen oder Allergie-Ratschläge; im Zweifel wähle die sicherere Option."
   },
   "collectionSharing": {

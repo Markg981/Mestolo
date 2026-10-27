@@ -1,5 +1,9 @@
 // Verifica che i dati del titolare del trattamento siano configurati.
 // Uso: npm run check:legal  (con LEGAL_STRICT=1 esce con errore se mancano).
+// In produzione Vercel (VERCEL_ENV=production) la modalita' strict e' automatica:
+// la build fallisce invece di pubblicare /privacy e /terms incompleti.
+// LEGAL_STRICT=0 la disattiva esplicitamente.
+const strict = process.env.LEGAL_STRICT === '1' || (process.env.VERCEL_ENV === 'production' && process.env.LEGAL_STRICT !== '0');
 const req = {
   NEXT_PUBLIC_LEGAL_NAME: [process.env.NEXT_PUBLIC_LEGAL_NAME, 'ragione sociale / nome del titolare'],
   NEXT_PUBLIC_LEGAL_ADDRESS: [process.env.NEXT_PUBLIC_LEGAL_ADDRESS, 'indirizzo della sede'],
@@ -17,7 +21,7 @@ if (missing.length) {
     `[legal] Dati del titolare mancanti (${missing.length}):\n${lines.join('\n')}\n` +
     `Impostarli come variabili d'ambiente (Vercel > Settings > Environment Variables; ` +
     `in locale .env.local, vedi .env.example). /privacy e /terms mostreranno un avviso.`;
-  if (process.env.LEGAL_STRICT === '1') {
+  if (strict) {
     console.error(msg);
     process.exit(1);
   }

@@ -117,3 +117,28 @@ describe('deleteAccountData', () => {
     expect(m.deleteUser).not.toHaveBeenCalled();
   });
 });
+
+describe('deleteAccountData avatars', () => {
+  it('purges the avatars/<uid>/ prefix before deleting the auth user', async () => {
+    const files: Record<string, { name: string; id: string | null }[]> = { avatars: [{ name: 'old.webp', id: 'x' }] };
+    const removed: string[] = [];
+    const order: string[] = [];
+    const admin = {
+      from: () => ({ select: () => ({ eq: async () => ({ data: [], error: null }) }) }),
+      storage: {
+        from: (bucket: string) => ({
+          remove: async (p: string[]) => {
+            removed.push(...p.map((f) => bucket + ':' + f));
+            files[bucket] = [];
+            return { error: null };
+          },
+          list: async () => ({ data: files[bucket] ?? [], error: null }),
+        }),
+      },
+      auth: { admin: { deleteUser: async () => { order.push('deleteUser'); return { error: null }; } } },
+    } as unknown as DeletionAdmin;
+    await deleteAccountData(admin, 'u1');
+    expect(removed).toEqual(['avatars:u1/old.webp']);
+    expect(order).toEqual(['deleteUser']);
+  });
+});

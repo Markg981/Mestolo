@@ -8,8 +8,8 @@ import com.getcapacitor.BridgeActivity;
 /**
  * Mestolo Android shell.
  * Handles "Share → Mestolo" from other apps (e.g. a recipe link shared from Chrome):
- * the shared text is passed to the site's /share route, which opens the link import
- * (or the text import when no link is present).
+ * the shared text is passed to the site's /share/native page in the URL fragment (never sent to
+ * the server, so it stays out of logs and Referer), which opens the link import or the text import.
  */
 public class MainActivity extends BridgeActivity {
 
@@ -36,7 +36,7 @@ public class MainActivity extends BridgeActivity {
         String base = getBridge().getServerUrl();
         if (base == null) return;
         if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
-        final String target = base + "/share?text=" + Uri.encode(text) + (subject != null ? "&title=" + Uri.encode(subject) : "");
+        final String target = base + "/share/native#text=" +Uri.encode(text) + (subject != null ? "&title=" + Uri.encode(subject) : "");
         // Consume the intent so a later configuration change does not re-open the import
         intent.setAction(Intent.ACTION_MAIN);
         getBridge().getWebView().post(() -> getBridge().getWebView().loadUrl(target));

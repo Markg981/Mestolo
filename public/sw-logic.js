@@ -65,7 +65,16 @@
     };
   }
 
-  var api = { userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
+  /** Pagine la cui risposta non dipende dalla query (la query e solo rumore: utm, source=pwa...).
+   *  Liste/ricerche/filtri/paginazione restano a corrispondenza esatta. */
+  var QUERY_INDEPENDENT_PAGES = [/^\/$/, /^\/recipes\/[0-9a-f-]{36}\/?$/, /^\/recipes\/[0-9a-f-]{36}\/cook\/?$/];
+  function canIgnoreSearch(pathname) {
+    return QUERY_INDEPENDENT_PAGES.some(function (re) {
+      return re.test(pathname);
+    });
+  }
+
+  var api = { canIgnoreSearch, userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.MestoloSw = api;
 })(typeof self !== 'undefined' ? self : globalThis);

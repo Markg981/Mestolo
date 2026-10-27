@@ -10,7 +10,7 @@ const REDACTED = '[redatto]';
 
 /** Keys whose value is dropped whole, wherever they appear in the event. */
 const SENSITIVE_KEY =
-  /^(cookie|set-cookie|cookies|authorization|proxy-authorization|x-api-key|apikey|api_key|token|access_token|refresh_token|id_token|password|secret|session|email|ingredients|instructions|steps|description|notes|recipe|recipe_text|text|body|content|prompt|data|query_string)$/i;
+  /^(cookie|set-cookie|cookies|authorization|proxy-authorization|x-api-key|apikey|api_key|token|access_token|refresh_token|id_token|password|secret|session|email|username|display_name|ip_address|ip|remote_addr|x-forwarded-for|x-real-ip|forwarded|cf-connecting-ip|true-client-ip|ingredients|instructions|steps|description|notes|recipe|recipe_text|text|body|content|prompt|data|query_string)$/i;
 
 export function redactText(s: string): string {
   return redactSecrets(s)
@@ -76,7 +76,7 @@ export function scrubEvent<T extends object>(event: T): T {
   if (req) {
     const { headers, url, ...other } = req;
     const rest = Object.fromEntries(
-      Object.entries(other).filter(([k]) => !['cookies', 'data', 'query_string'].includes(k)),
+      Object.entries(other).filter(([k]) => !['cookies', 'data', 'query_string', 'env'].includes(k)),
     );
     e.request = {
       ...(scrubValue(rest) as Loose),
@@ -85,6 +85,7 @@ export function scrubEvent<T extends object>(event: T): T {
     };
   }
   const user = e.user as Loose | undefined;
+  // Solo l'id: IP, username, display_name ed email non partono mai.
   if (user) e.user = typeof user.id === 'string' ? { id: user.id } : undefined;
   if (Array.isArray(e.spans)) e.spans = e.spans.map((sp) => scrubSpan(sp as object));
   for (const key of ['message', 'transaction', 'logentry', 'extra', 'contexts', 'tags', 'breadcrumbs', 'exception', 'threads']) {

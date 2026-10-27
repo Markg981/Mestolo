@@ -5,7 +5,7 @@ import { safeFetch } from '@/lib/import/safe-fetch';
 describe('isPublicIp', () => {
   it.each([
     '127.0.0.1', '10.1.2.3', '172.16.0.1', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '224.0.0.1',
-    '255.255.255.255', '::1', '::', 'fe80::1', 'fc00::1', '::ffff:127.0.0.1', '::ffff:10.0.0.1', '64:ff9b::a00:1', '2002:a00:1::',
+    '255.255.255.255', '::1', '::', 'fe80::1', 'fc00::1', '::ffff:127.0.0.1', '::ffff:10.0.0.1', '::7f00:1', '::808:808', '64:ff9b::a00:1', '2002:a00:1::',
   ])('blocks %s', (ip) => expect(isPublicIp(ip)).toBe(false));
   it.each(['8.8.8.8', '151.101.1.69', '2a00:1450:4001:80b::200e'])('allows %s', (ip) => expect(isPublicIp(ip)).toBe(true));
 });
@@ -18,6 +18,11 @@ describe('validateExternalUrl', () => {
     ['http://user:pass@example.com', 'credentials'],
     ['http://example.com:8080/', 'port'],
     ['http://localhost/', 'host'],
+    ['http://localhost./', 'host'],
+    ['http://LOCALHOST/', 'host'],
+    ['http://foo.localhost./', 'host'],
+    ['http://[::7f00:1]/', 'private_address'],
+    ['http://[::ffff:127.0.0.1]/', 'private_address'],
     ['http://printer.local/', 'host'],
     ['http://intranet/', 'host'],
     ['http://127.0.0.1/', 'private_address'],

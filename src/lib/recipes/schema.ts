@@ -108,3 +108,17 @@ export function cleanEditorPayload(raw: unknown): unknown {
       : r.steps,
   };
 }
+
+/**
+ * Stato di verifica deciso dal server: il client puo' chiedere 'needs_review' (es. import in blocco),
+ * ma non puo' dichiarare 'verified' finche' restano flag che richiedono revisione
+ * (flag di campo, di ingredienti o di passaggi).
+ */
+export function effectiveVerificationStatus(d: Pick<RecipeInput, 'verification_status' | 'field_flags' | 'ingredients' | 'steps'>): 'verified' | 'needs_review' {
+  if (d.verification_status === 'needs_review') return 'needs_review';
+  const anyFlags =
+    Object.values(d.field_flags).some((f) => f.length > 0) ||
+    d.ingredients.some((i) => (i.flags?.length ?? 0) > 0) ||
+    d.steps.some((s) => (s.flags?.length ?? 0) > 0);
+  return anyFlags ? 'needs_review' : 'verified';
+}

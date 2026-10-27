@@ -93,8 +93,13 @@ export function guardTranslatedNumbers(
     title: keep(original.title, translated.title),
     description: keep(original.description, translated.description),
     ingredients: translated.ingredients.map((t, i) => {
-      const origNote = original.ingredients[i]?.note;
-      return { ...t, note: t.note !== null && origNote ? keep(origNote, t.note) : t.note };
+      const o = original.ingredients[i];
+      return {
+        ...t,
+        name: o ? keep(o.name, t.name) : t.name,
+        note: t.note !== null && o?.note ? keep(o.note, t.note) : t.note,
+        section: t.section != null && o?.section ? keep(o.section, t.section) : t.section,
+      };
     }),
     steps: translated.steps.map((t, i) => ({ ...t, text: original.steps[i] ? keep(original.steps[i].text, t.text) : t.text })),
   };

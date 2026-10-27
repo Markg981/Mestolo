@@ -34,4 +34,19 @@ describe('applySuggestions (M9)', () => {
     const r = applySuggestions(base, {}, [fix], ['f']);
     expect(r.content.ingredients[0]).toMatchObject({ name: 'Sale fino', quantity: 5, quantityMax: null, toTaste: false });
   });
+
+  it('ingredient_add marca ai_estimate', () => {
+    const r = applySuggestions(base, {}, [add], ['a']);
+    expect(r.content.ingredients[1].flags).toEqual(['ai_estimate']);
+  });
+
+  it('ingredient_fix marca ai_estimate, toglie missing/low_confidence e conserva gli altri flag', () => {
+    const src = {
+      ...base,
+      ingredients: [{ name: 'Sale', quantity: null, unit: null, flags: ['missing', 'low_confidence', 'ambiguous'] }],
+    } as unknown as RecipeContent;
+    const fix: Suggestion = { id: 'f', type: 'ingredient_fix', ingredientIndex: 0, before: 'Sale', after: { name: 'Sale', quantity: 5, unit: 'g' }, reason: '' };
+    const r = applySuggestions(src, {}, [fix], ['f']);
+    expect(r.content.ingredients[0].flags).toEqual(['ambiguous', 'ai_estimate']);
+  });
 });
