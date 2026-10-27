@@ -265,11 +265,11 @@ Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambien
 
 **CI (GitHub Actions)**
 
-Il workflow `.github/workflows/e2e.yml` gira su push a `main`, ogni notte (cron 04:00 UTC) e a mano (*workflow_dispatch*), **non sulle pull request**: lo staging è condiviso e accetta un job alla volta, quindi con più PR aperte insieme GitHub cancellava i job in coda e le PR risultavano rosse senza aver eseguito nulla. Per verificare una PR prima del merge (auth, flussi critici) lancialo a mano sul suo branch: `gh workflow run e2e.yml --ref <branch>`. Aggiungi tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY` (valori del progetto di staging, mai di produzione). **Se mancano il job fallisce** con un `::error::` esplicito. Il report HTML è caricato come artifact `playwright-report`.
+Il workflow `.github/workflows/e2e.yml` ha due job. Sulle **pull request verso `main`** gira `Playwright (Supabase locale)`: il runner avvia un Supabase locale (`supabase start`, migrazioni applicate), builda l'app e lancia Playwright; ambiente isolato per run, nessun secret, quindi funziona anche per PR da fork e Dependabot (un run per PR, i push successivi annullano il precedente). Su push a `main`, ogni notte (cron 04:00 UTC) e a mano (*workflow_dispatch*) gira invece `Playwright (Supabase staging)` contro lo staging condiviso, che accetta un job alla volta. Per quest'ultimo servono tre secret in *Settings → Secrets and variables → Actions*: `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY` (valori dello staging, mai di produzione); **se mancano il job fallisce** con un `::error::` esplicito. Il report HTML è caricato come artifact (`playwright-report`, `playwright-report-local` sulle PR).
 
 Le migrazioni dello staging non sono applicate dalla CI (evita modifiche allo schema non volute): prima di mergere migrazioni nuove esegui `npx supabase link --project-ref <ref-staging> && npx supabase db push`.
 
-**Niente check obbligatorio sulle PR.** Il job `Playwright (Supabase staging)` non gira sulle pull request, quindi non va inserito tra i required status check di `main`: bloccherebbe ogni merge in attesa di un check che non arriva mai. Una regressione E2E si vede sul run di `main` dopo il merge o su quello notturno.
+**Check obbligatorio.** Il check `E2E / Playwright (Supabase locale)` può essere inserito tra i required status check di `main` (Settings → Branches), perché gira su ogni PR verso `main`. Il job contro lo staging non gira sulle PR e non va reso obbligatorio.
 
 ---
 
