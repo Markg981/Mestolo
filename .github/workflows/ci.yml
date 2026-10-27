@@ -5,17 +5,19 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Su main ogni commit ha il proprio gruppo (sha): nessun run di main viene
+  # annullato ne' accodato/scartato; sugli altri ref un nuovo push annulla il precedente.
+  group: ci-${{ github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
   legal:
-    # Non bloccante: rende visibile (warning) che mancano i dati del titolare.
+    # Bloccante: fallisce se mancano i dati del titolare.
     # Valori da definire in GitHub > Settings > Variables > Actions (non sono secret).
-    name: Dati titolare (LEGAL_STRICT, non bloccante)
+    name: Dati titolare (LEGAL_STRICT)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -30,18 +32,16 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - name: Verifica dati titolare (solo avviso, esce sempre 0)
-        # Quando i dati saranno configurati: sostituire questo step con
-        # `run: node scripts/check-legal.mjs` per renderlo bloccante.
+      - name: Verifica dati titolare (bloccante)
         run: |
           if ! node scripts/check-legal.mjs 2> legal.txt; then
             cat legal.txt
             while IFS= read -r line; do
-              case "$line" in "  - "*) echo "::warning title=Dati titolare mancanti::${line#  - }" ;; esac
+              case "$line" in "  - "*) echo "::error title=Dati titolare mancanti::${line#  - }" ;; esac
             done < legal.txt
             { echo "### Dati del titolare mancanti"; echo '```'; cat legal.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
-          exit 0
 
   checks:
     name: Lint, typecheck, test, build
