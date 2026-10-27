@@ -126,6 +126,17 @@ export async function requestPasswordReset(_: AuthState, formData: FormData): Pr
   return { sent: true, email: email.data };
 }
 
+// Dopo un cambio password chiude le altre sessioni (un token rubato non sopravvive).
+// Il cambio e' gia' avvenuto: un errore qui viene solo loggato, non fa fallire l'azione.
+async function revokeOtherSessions(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    const { error } = await supabase.auth.signOut({ scope: 'others' });
+    if (error) console.error(`[mestolo] signOut others: ${error.message}`);
+  } catch (e) {
+    console.error(`[mestolo] signOut others: ${e instanceof Error ? e.message : 'unknown'}`);
+  }
+}
+
 export async function updatePassword(_: AuthState, formData: FormData): Promise<AuthState> {
   const pw = passwordSchema.safeParse(formData.get('password'));
   if (!pw.success) return { error: 'auth_weak_password' };
@@ -143,6 +154,7 @@ export async function updatePassword(_: AuthState, formData: FormData): Promise<
   }
   const { error } = await supabase.auth.updateUser({ password: pw.data });
   if (error) return { error: 'generic' };
+  await revokeOtherSessions(supabase);
   redirect('/?password=updated');
 }
 
@@ -166,6 +178,7 @@ export async function changePassword(_: AuthState, formData: FormData): Promise<
   if (verifyError) return { error: 'auth_wrong_password' };
   const { error } = await supabase.auth.updateUser({ password: pw.data });
   if (error) return { error: /password/i.test(error.message) ? 'auth_weak_password' : 'generic' };
+  await revokeOtherSessions(supabase);
   return { sent: true };
 }
 

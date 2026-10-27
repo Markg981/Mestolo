@@ -4,6 +4,7 @@ const auth = {
   getUser: vi.fn(),
   signInWithPassword: vi.fn(),
   updateUser: vi.fn(),
+  signOut: vi.fn(),
 };
 const enforceRateLimit = vi.fn();
 
@@ -44,6 +45,7 @@ describe('changePassword', () => {
     auth.getUser.mockResolvedValue({ data: { user: { email: 'Ada@Example.com' } } });
     auth.signInWithPassword.mockResolvedValue({ error: null });
     auth.updateUser.mockResolvedValue({ error: null });
+    auth.signOut.mockResolvedValue({ error: null });
     enforceRateLimit.mockResolvedValue(undefined);
   });
 
@@ -51,6 +53,22 @@ describe('changePassword', () => {
     expect(await changePassword(undefined, form(valid))).toEqual({ sent: true });
     expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'Ada@Example.com', password: 'oldpassword' });
     expect(auth.updateUser).toHaveBeenCalledWith({ password: 'newpassword1' });
+  });
+  it('signs out other sessions after the update', async () => {
+    await changePassword(undefined, form(valid));
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' });
+  });
+  it('does not fail when signOut others errors', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    auth.signOut.mockResolvedValue({ error: { message: 'x' } });
+    expect(await changePassword(undefined, form(valid))).toEqual({ sent: true });
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+  it('does not sign out others when the update fails', async () => {
+    auth.updateUser.mockResolvedValue({ error: { message: 'boom' } });
+    await changePassword(undefined, form(valid));
+    expect(auth.signOut).not.toHaveBeenCalled();
   });
   it('rejects a weak new password without touching auth', async () => {
     const res = await changePassword(undefined, form({ ...valid, password: 'short', confirm: 'short' }));
