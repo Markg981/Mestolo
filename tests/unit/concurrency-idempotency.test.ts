@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({ getUser: vi.fn(), createClient: vi.fn() }));
 
 vi.mock('@/lib/supabase/server', () => ({ getUser: mocks.getUser, createClient: mocks.createClient, getProfile: vi.fn() }));
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: vi.fn() }));
+vi.mock('@/lib/rate-limit', () => ({ enforceRateLimit: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn(), unstable_cache: (fn: unknown) => fn }));
 
 import { saveRecipe } from '@/app/actions/recipes';
