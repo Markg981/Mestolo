@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { supabaseUrl, supabaseAnonKey } = env();
   return (
     <AppShell username={profile.username} isModerator={profile.is_moderator} userId={user.id} hasAvatar={!!profile.avatar_path}>
-      <UserCacheSync userId={user.id} />
+      <UserCacheSync userId={user.id} supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} />
       <MealReminderSync />
       <RealtimeSync userId={user.id} supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} />
       <DraftUserProvider userId={user.id}>{children}</DraftUserProvider>
