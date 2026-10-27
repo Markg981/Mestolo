@@ -160,7 +160,7 @@ describe('proxy', () => {
         });
         return { data: { user: { id: 'u1' } } };
       });
-      const res = await call('/api/public-images/1');
+      const res = await call('/api/images/1');
       expect(res.cookies.get('sb-token')?.value).toBe('new');
       expect(res.headers.get('cache-control')).toContain('no-store');
       expect(res.headers.get('pragma')).toBe('no-cache');
