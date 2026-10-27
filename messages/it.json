@@ -1188,6 +1188,7 @@
     "listening": "In ascolto: di' «avanti» o «indietro»",
     "voiceDenied": "Microfono non consentito: comandi vocali disattivati.",
     "wakeUnsupported": "Lo schermo potrebbe spegnersi: il blocco dello standby non è supportato.",
+    "wakeFailed": "Lo schermo potrebbe spegnersi: impossibile bloccare lo standby.",
     "noSteps": "Questa ricetta non ha ancora un procedimento.",
     "assistOpen": "Chiedi all’assistente",
     "assistTitle": "Chiedi all’assistente",
@@ -1203,6 +1204,7 @@
     "assistUnavailable": "L’assistente AI non è disponibile. Configura una chiave AI nelle impostazioni per usarlo mentre cucini.",
     "assistSettings": "Vai alle impostazioni AI",
     "assistOffline": "Sei offline: l’assistente richiede una connessione. Puoi continuare a cucinare normalmente.",
+    "dictationFailed": "Dettatura non disponibile: microfono non consentito o non raggiungibile.",
     "assistDisclaimer": "Risposte generate da AI: possono contenere errori. Nessun consiglio medico o su allergie; in caso di dubbio scegli l’opzione più prudente."
   },
   "collectionSharing": {
