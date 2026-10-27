@@ -12,11 +12,8 @@ declare
   key uuid := (to_jsonb(new) ->> tg_argv[1])::uuid;
   cnt int;
 begin
-  if tg_table_name = 'categories' and new.owner_id is null then
-    return new; -- categorie di sistema
-  end if;
   if key is null then
-    return new;
+    return new; -- es. categorie di sistema (owner_id nullo)
   end if;
   execute format('select count(*) from public.%I where %I = $1', tg_table_name, col) into cnt using key;
   if cnt >= cap then
