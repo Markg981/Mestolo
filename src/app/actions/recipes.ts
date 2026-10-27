@@ -4,7 +4,7 @@ import { validateNutrition } from '@/lib/nutrition';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { cleanEditorPayload, recipeInputSchema } from '@/lib/recipes/schema';
+import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
 import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
@@ -47,7 +47,7 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       tags: d.tags,
       visibility: d.visibility,
       field_flags: d.field_flags,
-      verification_status: d.verification_status,
+      verification_status: effectiveVerificationStatus(d),
       diet_hints: d.diet_hints,
     };
 
