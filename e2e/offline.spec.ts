@@ -31,7 +31,12 @@ test.describe('offline e service worker', () => {
     await page.goto('/');
     const ready = await serviceWorkerReady(page);
     test.skip(!ready, 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
-    const cached = await page.evaluate(async () => !!(await (await caches.open('mestolo-static-v3')).match('/offline')));
+    // Il nome della cache cambia a ogni VERSION di public/sw.js: si cerca in tutte le cache statiche.
+    const cached = await page.evaluate(async () => {
+      const names = (await caches.keys()).filter((k) => k.startsWith('mestolo-static-'));
+      for (const n of names) if (await (await caches.open(n)).match('/offline')) return true;
+      return false;
+    });
     expect(cached).toBe(true);
   });
 
