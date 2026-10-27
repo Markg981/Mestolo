@@ -1,17 +1,22 @@
 // Verifica che i dati del titolare del trattamento siano configurati.
 // Uso: npm run check:legal  (con LEGAL_STRICT=1 esce con errore se mancano).
 const req = {
-  NEXT_PUBLIC_LEGAL_NAME: process.env.NEXT_PUBLIC_LEGAL_NAME,
-  NEXT_PUBLIC_LEGAL_ADDRESS: process.env.NEXT_PUBLIC_LEGAL_ADDRESS,
-  NEXT_PUBLIC_LEGAL_EMAIL: process.env.NEXT_PUBLIC_LEGAL_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
-  NEXT_PUBLIC_LEGAL_DATA_REGION: process.env.NEXT_PUBLIC_LEGAL_DATA_REGION,
-  NEXT_PUBLIC_LEGAL_SENTRY_REGION: process.env.NEXT_PUBLIC_LEGAL_SENTRY_REGION,
+  NEXT_PUBLIC_LEGAL_NAME: [process.env.NEXT_PUBLIC_LEGAL_NAME, 'ragione sociale / nome del titolare'],
+  NEXT_PUBLIC_LEGAL_ADDRESS: [process.env.NEXT_PUBLIC_LEGAL_ADDRESS, 'indirizzo della sede'],
+  NEXT_PUBLIC_LEGAL_EMAIL: [
+    process.env.NEXT_PUBLIC_LEGAL_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+    'email di contatto privacy (in alternativa NEXT_PUBLIC_SUPPORT_EMAIL)',
+  ],
+  NEXT_PUBLIC_LEGAL_DATA_REGION: [process.env.NEXT_PUBLIC_LEGAL_DATA_REGION, 'regione Supabase, es. UE - Francoforte'],
+  NEXT_PUBLIC_LEGAL_SENTRY_REGION: [process.env.NEXT_PUBLIC_LEGAL_SENTRY_REGION, 'regione Sentry, es. UE - Germania'],
 };
-const missing = Object.entries(req)
-  .filter(([, v]) => !(v ?? '').trim())
-  .map(([k]) => k);
+const missing = Object.entries(req).filter(([, [v]]) => !(v ?? '').trim());
 if (missing.length) {
-  const msg = `[legal] Dati del titolare mancanti: ${missing.join(', ')}. /privacy e /terms mostreranno un avviso.`;
+  const lines = missing.map(([k, [, d]]) => `  - ${k}: ${d}`);
+  const msg =
+    `[legal] Dati del titolare mancanti (${missing.length}):\n${lines.join('\n')}\n` +
+    `Impostarli come variabili d'ambiente (Vercel > Settings > Environment Variables; ` +
+    `in locale .env.local, vedi .env.example). /privacy e /terms mostreranno un avviso.`;
   if (process.env.LEGAL_STRICT === '1') {
     console.error(msg);
     process.exit(1);
