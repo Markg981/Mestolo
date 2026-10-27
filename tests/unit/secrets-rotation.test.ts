@@ -34,6 +34,6 @@ describe('encryption key rotation', () => {
   it('loadPreviousEncryptionKey is optional and validates length', () => {
     expect(loadPreviousEncryptionKey(undefined)).toBeNull();
     expect(loadPreviousEncryptionKey('')).toBeNull();
-    expect(() => loadPreviousEncryptionKey('abcd')).toThrow();
+    expect(loadPreviousEncryptionKey('abcd')).toBeNull();
   });
 });

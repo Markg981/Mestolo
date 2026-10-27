@@ -57,6 +57,14 @@ d('db add_shopping_items', () => {
     expect(Number(r.find((x) => x.name === 'Farina')!.quantity)).toBe(100);
   });
 
+  it('limite elementi: 200 ok, 201 errore senza scritture', async () => {
+    const { u, list } = await setup('cap');
+    const mk = (n: number) => Array.from({ length: n }, (_, i) => ({ name: `Voce${i}`, quantity: 1, unit: 'g' }));
+    expect(await add(u, list, mk(200), randomUUID())).toMatchObject({ added: 200, duplicate: false });
+    await expect(add(u, list, mk(201), randomUUID())).rejects.toMatchObject({ code: '22023' });
+    expect(await rows(list)).toHaveLength(200);
+  });
+
   it('stessa key con payload diverso: conflitto esplicito, nessuna scrittura', async () => {
     const { u, list } = await setup('f');
     const key = randomUUID();

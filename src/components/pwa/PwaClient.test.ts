@@ -1,5 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearLocalUserData } from './PwaClient';
+import { clearLocalUserData, handleSignOutSubmit } from './PwaClient';
+
+describe('handleSignOutSubmit', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('offline annulla il logout e non cancella i dati locali', () => {
+    const postMessage = vi.fn();
+    vi.stubGlobal('window', {});
+    vi.stubGlobal('navigator', { onLine: false, serviceWorker: { controller: { postMessage } } });
+    const preventDefault = vi.fn();
+    handleSignOutSubmit({ preventDefault });
+    expect(preventDefault).toHaveBeenCalled();
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it('online lascia proseguire il logout e pulisce i dati locali', () => {
+    const postMessage = vi.fn();
+    vi.stubGlobal('window', {});
+    vi.stubGlobal('navigator', { onLine: true, serviceWorker: { controller: { postMessage } } });
+    const preventDefault = vi.fn();
+    handleSignOutSubmit({ preventDefault });
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledWith({ type: 'clear-user-data' });
+  });
+});
 
 describe('clearLocalUserData', () => {
   afterEach(() => vi.unstubAllGlobals());
