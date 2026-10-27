@@ -40,20 +40,26 @@ async function loadUserKeys(userId: string): Promise<UserKeyRow[]> {
 }
 
 /** Best-effort lazy re-encryption under the current key after a fallback decrypt. */
-async function reencryptUserKey(userId: string, provider: string, apiKey: string, key: Buffer): Promise<void> {
+async function reencryptUserKey(userId: string, provider: string, apiKey: string, key: Buffer, old: UserKeyRow): Promise<void> {
   try {
     const enc = encryptSecret(apiKey, key, keyAad(userId, provider));
-    await createAdminClient()
+    // Compare-and-swap: scrive solo se la riga e' ancora quella letta (stesso ciphertext/iv/auth_tag),
+    // cosi' una chiave salvata nel frattempo dall'utente non viene mai sovrascritta.
+    const { error } = await createAdminClient()
       .from('user_api_keys')
       .update({ ciphertext: enc.ciphertext, iv: enc.iv, auth_tag: enc.authTag })
       .eq('user_id', userId)
-      .eq('provider', provider);
+      .eq('provider', provider)
+      .eq('ciphertext', old.ciphertext)
+      .eq('iv', old.iv)
+      .eq('auth_tag', old.auth_tag);
+    if (error) console.error(`[ai] lazy re-encryption of ${provider} key failed for user ${userId}`);
   } catch {
     // Not critical: the previous key keeps working until it is removed.
   }
 }
 
-function userProviderFor(row: UserKeyRow, userId: string, capability: Capability): AiProvider | null {
+async function userProviderFor(row: UserKeyRow, userId: string, capability: Capability): Promise<AiProvider | null> {
   const cfg = env();
   // Chiave utente presente ma server senza APP_ENCRYPTION_KEY: errore esplicito (EncryptionConfigError), niente ripiego.
   const key = loadEncryptionKey(cfg.encryptionKey);
@@ -63,7 +69,7 @@ function userProviderFor(row: UserKeyRow, userId: string, capability: Capability
     loadPreviousEncryptionKey(cfg.encryptionKeyPrevious),
     keyAad(userId, row.provider),
   );
-  if (usedPrevious) void reencryptUserKey(userId, row.provider, apiKey, key);
+  if (usedPrevious) await reencryptUserKey(userId, row.provider, apiKey, key, row);
   if (row.provider === 'anthropic') {
     if (capability === 'image' || capability === 'audio') return null;
     return anthropicProvider({ apiKey, model: cfg.ai.userAnthropicModel });
@@ -140,7 +146,7 @@ export async function resolveProvider(userId: string, capability: Capability, gr
   const keys = await loadUserKeys(userId);
   const usable = capability === 'image' || capability === 'audio' ? keys.filter((k) => k.provider === 'openai') : keys;
   for (const row of usable) {
-    const p = userProviderFor(row, userId, capability);
+    const p = await userProviderFor(row, userId, capability);
     if (p) return { provider: p, keySource: 'user', providerName: p.label };
   }
   const app = appProvider(capability);

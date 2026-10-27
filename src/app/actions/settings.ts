@@ -2,7 +2,6 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient, getUser } from '@/lib/supabase/server';
@@ -122,5 +121,6 @@ export async function deleteAccount(confirmUsername: string, password: string): 
   } catch (e) {
     return toFailure(e, 'deleteAccount');
   }
-  redirect('/welcome?deleted=1');
+  // Niente redirect lato server: il client deve prima svuotare cache del service worker e bozze locali
+  return ok();
 }

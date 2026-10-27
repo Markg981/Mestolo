@@ -51,7 +51,7 @@ export function ShoppingList({ items, listId, overrides, showPeople }: { items: 
     if (!parsed.name) return;
     start(async () => {
       try {
-        const res = await addShoppingItem({ list_id: listId, name: parsed.name, quantity: parsed.quantity, unit: parsed.unit, note: parsed.note ?? null });
+        const res = await addShoppingItem({ list_id: listId, idempotency_key: crypto.randomUUID(), name: parsed.name, quantity: parsed.quantity, unit: parsed.unit, note: parsed.note ?? null });
         if (res.ok) {
           setText('');
           setMsg({ text: res.data.merged ? t('merged') : t('added'), tone: 'success' });

@@ -232,3 +232,30 @@ export function bulkImportPayload(d: ImportDraft, categories: EditorCategory[]) 
     source_attribution: d.source.attribution ?? null,
   };
 }
+
+/**
+ * Guardia anti doppio salvataggio: esegue `fn` una sola volta alla volta.
+ * Dopo un salvataggio riuscito il lock resta attivo (la navigazione e' in corso e
+ * `expectedVersion` e' ormai obsoleto: un secondo invio darebbe un falso conflict
+ * contro il salvataggio dell'utente stesso); si rilascia solo in caso di errore.
+ */
+export function createSaveGuard() {
+  let locked = false;
+  return {
+    get locked() {
+      return locked;
+    },
+    async run<T extends { ok: boolean }>(fn: () => Promise<T>): Promise<T | null> {
+      if (locked) return null;
+      locked = true;
+      let keep = false;
+      try {
+        const res = await fn();
+        keep = res.ok;
+        return res;
+      } finally {
+        if (!keep) locked = false;
+      }
+    },
+  };
+}
