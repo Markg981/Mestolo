@@ -167,7 +167,7 @@ d('RLS & data rules', () => {
     const rid = await createRecipe(alice, {});
     const path = `${alice}/${rid}/photo.webp`;
     await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
-    await as(alice, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, alice, path]);
+    await admin('insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, alice, path]);
 
     expect(await as(alice, 'select name from storage.objects where name = $1', [path])).toHaveLength(1);
     expect(await as(bob, 'select name from storage.objects where name = $1', [path])).toHaveLength(0);
@@ -184,7 +184,7 @@ d('RLS & data rules', () => {
     const rid = await createRecipe(alice, { visibility: 'public' });
     const path = `${alice}/${rid}/imported.webp`;
     await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [path, alice]);
-    await as(alice, "insert into public.recipe_images (recipe_id, owner_id, storage_path, kind) values ($1, $2, $3, 'imported')", [rid, alice, path]);
+    await admin("insert into public.recipe_images (recipe_id, owner_id, storage_path, kind) values ($1, $2, $3, 'imported')", [rid, alice, path]);
     expect(await as(bob, 'select id from public.recipe_images where recipe_id = $1', [rid])).toHaveLength(0);
     expect(await as(bob, 'select name from storage.objects where name = $1', [path])).toHaveLength(0);
   });
@@ -196,7 +196,26 @@ d('RLS & data rules', () => {
     ).rejects.toThrow(/row-level security/);
     await expect(
       as(bob, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, bob, `${bob}/${rid}/x.webp`]),
-    ).rejects.toThrow(/row-level security/);
+    ).rejects.toThrow(/row-level security|permission denied/);
+  });
+
+  it('A-05: direct INSERT on recipe_images is denied; the RPC enforces path and kind immutability', async () => {
+    const rid = await createRecipe(alice, {});
+    await expect(
+      as(alice, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [rid, alice, `${alice}/cook/x.webp`]),
+    ).rejects.toThrow(/permission denied|row-level security/);
+    await expect(
+      as(alice, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000)", [rid, `${alice}/cook/x.webp`]),
+    ).rejects.toThrow(/invalid storage path/);
+    await expect(
+      as(bob, "select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 1, 1, 2000)", [rid, `${bob}/${rid}/x.webp`]),
+    ).rejects.toThrow(/recipe not found/);
+    const [row] = await as<{ id: string }>(
+      alice,
+      "select public.insert_recipe_image($1, $2, null, 'imported', null, null, '', 1, 1, 2000) as id",
+      [rid, `${alice}/${rid}/i.webp`],
+    );
+    await expect(as(alice, "update public.recipe_images set kind = 'upload' where id = $1", [row.id])).rejects.toThrow(/immutable/);
   });
 
   it('authenticated users cannot write to the image bucket directly (uploads are server-only)', async () => {
@@ -225,12 +244,11 @@ d('RLS & data rules', () => {
     const pathB = `${bob}/${ridB}/u.webp`;
     await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [pathA, alice]);
     await admin("insert into storage.objects (bucket_id, name, owner) values ('recipe-images', $1, $2)", [pathB, bob]);
-    const [img] = await as<{ id: string }>(
-      alice,
+    const [img] = await admin<{ id: string }>(
       'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3) returning id',
       [ridA, alice, pathA],
     );
-    await as(bob, 'insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [ridB, bob, pathB]);
+    await admin('insert into public.recipe_images (recipe_id, owner_id, storage_path) values ($1, $2, $3)', [ridB, bob, pathB]);
 
     // puntare al file di un altro
     await expect(as(alice, 'update public.recipe_images set storage_path = $2 where id = $1', [img.id, pathB])).rejects.toThrow();
