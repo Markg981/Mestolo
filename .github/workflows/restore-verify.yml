@@ -77,7 +77,9 @@ jobs:
             echo "::warning::Secret BACKUP_S3_* non impostati: verifica dall'artifact GitHub."
           fi
           # Run dell'artifact db-backup-* piu' recente: un run puo' avere il dump ma fallire dopo (es. upload S3)
-          run_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \n            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | "\(.created_at) \(.workflow_run.id)"' \n            | sort -r | head -n1 | cut -d' ' -f2)"
+          run_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | "\(.created_at) \(.workflow_run.id)"' \
+            | sort -r | head -n1 | cut -d' ' -f2)"
           if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
             echo "::error::Nessun backup (S3 o artifact db-backup-*) da verificare."
             exit 1
