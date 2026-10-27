@@ -57,6 +57,23 @@ d('db add_shopping_items', () => {
     expect(Number(r.find((x) => x.name === 'Farina')!.quantity)).toBe(100);
   });
 
+  it('stessa key con payload diverso: conflitto esplicito, nessuna scrittura', async () => {
+    const { u, list } = await setup('c');
+    const key = randomUUID();
+    await add(u, list, [{ name: 'Farina', quantity: 100, unit: 'g' }], key);
+    await expect(add(u, list, [{ name: 'Farina', quantity: 500, unit: 'g' }], key)).rejects.toMatchObject({ code: 'IK409' });
+    const r = await rows(list);
+    expect(r).toHaveLength(1);
+    expect(Number(r[0].quantity)).toBe(100);
+  });
+
+  it('stessa key, stesso payload con chiavi in ordine diverso: replay idempotente', async () => {
+    const { u, list } = await setup('d');
+    const key = randomUUID();
+    await add(u, list, [{ name: 'sale', quantity: 1, unit: 'g' }], key);
+    expect(await add(u, list, [{ unit: 'g', quantity: 1, name: 'sale' }], key)).toMatchObject({ duplicate: true });
+  });
+
   it('key diverse: merge delle quantita (nome normalizzato + stessa unita)', async () => {
     const { u, list } = await setup('b');
     await add(u, list, [{ name: 'Farina', quantity: 100, unit: 'g' }], randomUUID());
