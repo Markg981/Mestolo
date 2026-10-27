@@ -30,6 +30,12 @@ export async function clearUserCache() {
   }
 }
 
+/** Pulizia locale completa (bozze + cache privata del service worker): logout ed eliminazione account. */
+export async function clearLocalUserData() {
+  clearAllDrafts();
+  await clearUserCache();
+}
+
 /** Hash opaco dell'id utente, usato per il nome della cache privata (l'id non finisce in chiaro). */
 async function hashUserId(userId: string) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(userId));
@@ -90,8 +96,7 @@ export function SignOutButton({ action, label, className }: { action: () => Prom
     <form
       action={action}
       onSubmit={() => {
-        clearAllDrafts();
-        clearUserCache();
+        void clearLocalUserData();
       }}
     >
       <button type="submit" className={className}>

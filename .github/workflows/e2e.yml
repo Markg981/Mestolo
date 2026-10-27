@@ -1,9 +1,12 @@
 name: E2E
 
+# Niente trigger pull_request: lo staging e' condiviso e accetta un job alla
+# volta, quindi con piu' PR aperte insieme GitHub cancellava i job in coda e le
+# PR risultavano rosse senza aver eseguito i test. Gli E2E girano dopo il merge
+# su main, ogni notte e a mano (workflow_dispatch su un branch prima del merge).
 on:
   push:
     branches: [main]
-  pull_request:
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
@@ -17,17 +20,15 @@ permissions:
 
 jobs:
   e2e:
-    # Il nome del job e' il nome del required status check: NON rinominarlo
-    # senza aggiornare la branch protection (vedi README).
     name: Playwright (Supabase staging)
-    # PR da fork e da Dependabot non ricevono i secret per design: il job viene
-    # SALTATO (stato "skipped", non "success") invece di passare senza test.
-    # Un maintainer deve rilanciare gli E2E (workflow_dispatch su un branch del repo).
-    if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' }}
+    # Dependabot non riceve i secret per design: il job viene SALTATO invece di
+    # fallire per secret mancanti.
+    if: ${{ github.actor != 'dependabot[bot]' }}
     # Tutte le esecuzioni condividono lo stesso Supabase di staging e gli stessi
     # utenti di test: due job in parallelo si disturbano (es. il logout globale
     # di uno invalida la sessione dell'altro). Un solo job alla volta; GitHub
-    # tiene in coda al massimo un job per gruppo e annulla gli altri in attesa.
+    # tiene in coda al massimo un job per gruppo e annulla gli altri in attesa
+    # (per questo il workflow non gira sulle pull request).
     concurrency:
       group: e2e-staging
       cancel-in-progress: false

@@ -107,7 +107,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes }: { weekSt
           disabled={pending || !entries.some((e) => e.recipe_id)}
           onClick={() =>
             start(async () => {
-              const res = await addWeekToShopping(weekStart);
+              const res = await addWeekToShopping(weekStart, crypto.randomUUID());
               setMsg(res.ok ? { text: t('addedToList', { added: res.data.added, merged: res.data.merged, recipes: res.data.recipes }), tone: 'success' } : { text: te(res.error), tone: 'error' });
             })
           }

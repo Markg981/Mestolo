@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { convertIngredient, convertTemperatures, findDensity, formatFractionQuantity } from '@/lib/recipes/convert';
 import { scaleIngredients } from '@/lib/recipes/scale';
 import type { Ingredient } from '@/lib/recipes/types';
+import { parseIngredientLine } from '@/lib/recipes/ingredient-parser';
+import { UNIT_DIMENSION, normalizeUnit } from '@/lib/recipes/units';
 
 const ing = (name: string, quantity: number | null, unit: string | null, extra: Partial<Ingredient> = {}): Ingredient => ({ name, quantity, unit, ...extra });
 const us = (i: Ingredient) => convertIngredient(i, 'us');
@@ -97,5 +99,27 @@ describe('convertTemperatures', () => {
     expect(convertTemperatures('a 180 °C', 'original')).toBe('a 180 °C');
     expect(convertTemperatures('acqua a 60,5°C', 'us')).toBe('acqua a 140 °F');
     expect(convertTemperatures('nessuna temperatura', 'us')).toBe('nessuna temperatura');
+  });
+});
+
+describe('once fluide (fl oz) vs once massa (oz)', () => {
+  it.each(['fl oz', 'fl. oz.', 'FL OZ', 'fl.oz', 'floz', 'fluid ounce', 'fluid ounces', 'fluid oz', 'oncia liquida', 'once liquide', 'onza líquida', 'onça líquida'])(
+    '"%s" è un volume (fl_oz)',
+    (alias) => expect(normalizeUnit(alias)).toBe('fl_oz'),
+  );
+  it.each(['oz', 'ounce', 'ounces', 'oncia', 'onza', 'unze'])('"%s" resta una massa (oz)', (alias) => expect(normalizeUnit(alias)).toBe('oz'));
+  it('il parser sceglie fl oz prima di oz semplice', () => {
+    expect(parseIngredientLine('8 fl oz milk')).toMatchObject({ quantity: 8, unit: 'fl_oz', name: 'milk' });
+    expect(parseIngredientLine('8 fl.oz milk')).toMatchObject({ unit: 'fl_oz', name: 'milk' });
+    expect(parseIngredientLine('8 fluid ounces milk')).toMatchObject({ unit: 'fl_oz', name: 'milk' });
+    expect(parseIngredientLine('8 oz flour')).toMatchObject({ unit: 'oz', name: 'flour' });
+  });
+  it('fl oz è volume, oz è massa', () => {
+    expect(UNIT_DIMENSION.fl_oz).toBe('volume');
+    expect(UNIT_DIMENSION.oz).toBe('mass');
+  });
+  it('fl oz converte in ml, oz in g', () => {
+    expect(metric(ing('milk', 8, 'fl_oz')).ingredient).toMatchObject({ quantity: 235, unit: 'ml' });
+    expect(metric(ing('flour', 4, 'oz')).ingredient).toMatchObject({ quantity: 115, unit: 'g' });
   });
 });

@@ -84,3 +84,36 @@ describe('no silent fallback to the base service', () => {
     expect(state.rpcCalls[0]).toMatchObject({ name: 'consume_ai_quota', args: { p_user_id: 'u1' } });
   });
 });
+
+describe('reencryptUserKey (compare-and-swap)', () => {
+  it('attende la scrittura e la condiziona sul vecchio valore cifrato', async () => {
+    vi.resetModules();
+    const eqs: [string, unknown][] = [];
+    let awaited = false;
+    const chain: Record<string, unknown> = {};
+    chain.eq = (c: string, v: unknown) => {
+      eqs.push([c, v]);
+      return chain;
+    };
+    chain.then = (res: (v: unknown) => void) => {
+      awaited = true;
+      res({ error: null });
+    };
+    vi.doMock('@/lib/supabase/admin', () => ({
+      createAdminClient: () => ({
+        from: () => ({ select: () => ({ eq: async () => state.result }), update: () => chain }),
+        rpc: async () => ({ data: true, error: null }),
+      }),
+    }));
+    const oldKey = randomBytes(32);
+    const newKey = randomBytes(32);
+    const enc = encryptSecret('sk-user-key-1234567890', oldKey, keyAad('u1', 'openai'));
+    state.encryptionKey = newKey.toString('base64');
+    state.previousKey = oldKey.toString('base64');
+    state.result = { data: [{ provider: 'openai', ciphertext: enc.ciphertext, iv: enc.iv, auth_tag: enc.authTag }], error: null };
+    const svc = await import('@/lib/ai/service');
+    await svc.resolveProvider('u1', 'text', 'text', 'a');
+    expect(awaited).toBe(true);
+    expect(eqs).toEqual(expect.arrayContaining([['ciphertext', enc.ciphertext], ['iv', enc.iv], ['auth_tag', enc.authTag]]));
+  });
+});

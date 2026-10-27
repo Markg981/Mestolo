@@ -15,14 +15,58 @@ on:
   push:
     tags:
       - "v*"
+  # Build debug (senza secrets ne' firma) a ogni modifica dei file mobile, cosi' la pipeline e' sempre provata.
+  pull_request:
+    paths:
+      - "android/**"
+      - "mobile/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/mobile-*.mjs"
+      - ".github/workflows/mobile-android.yml"
 
 permissions:
   contents: read
 
+concurrency:
+  group: mobile-android-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  debug-build:
+    name: Build APK debug (senza firma)
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      # Solo compilazione: serve un URL valido per mobile:sync, non viene pubblicato nulla.
+      CAP_SERVER_URL: https://mestolo.vercel.app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - run: npm run mobile:sync
+      - name: Gradle assembleDebug
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mestolo-apk-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
   ci-gate:
     name: Verifica CI del commit (solo tag)
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -49,7 +93,7 @@ jobs:
     name: Build AAB firmato
     needs: ci-gate
     # Gira anche da workflow_dispatch (gate saltato), ma mai se il gate dei tag fallisce.
-    if: ${{ !cancelled() && (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') }}
+    if: ${{ github.event_name != 'pull_request' && !cancelled() && (needs.ci-gate.result == 'success' || needs.ci-gate.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:

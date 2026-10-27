@@ -135,7 +135,7 @@
     "username_taken": "Questo nome utente è già in uso.",
     "translation_failed": "La traduzione non è riuscita. L'originale resta disponibile.",
     "already_exists": "Esiste già.",
-    "conflict": "La ricetta è stata modificata altrove (un'altra scheda o dispositivo). Ricarica la pagina per vedere l'ultima versione prima di salvare.",
+    "conflict": "La ricetta è stata modificata altrove (un’altra scheda o dispositivo). Ricarica la pagina: le tue modifiche restano nella bozza e potrai ripristinarle sopra la versione attuale.",
     "pageTitle": "Questa pagina non si è caricata",
     "pageLead": "Può capitare se la connessione è instabile. I dati che stavi inserendo restano salvati come bozza.",
     "retry": "Riprova",
@@ -391,7 +391,11 @@
     "saveNote": "Salva nota",
     "noteSaved": "Nota salvata.",
     "hiddenTitle": "Ricetta nascosta dalla moderazione",
-    "hiddenLead": "Dopo alcune segnalazioni questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore, contatta il supporto.",
+    "hiddenLead": "Dopo la revisione di un moderatore questa ricetta non è più visibile agli altri utenti. Resta nel tuo ricettario; se pensi sia un errore puoi chiedere un riesame.",
+    "inReviewTitle": "In revisione",
+    "inReviewLead": "Dopo alcune segnalazioni questa ricetta è stata messa in coda per la revisione dei moderatori. Resta visibile finché non viene esaminata.",
+    "appeal": "Chiedi un riesame",
+    "appealPending": "Hai chiesto il riesame: la ricetta è tornata in coda per un moderatore.",
     "dietHints": "Secondo l'autore (non verificato): {diets}"
   },
   "nutrition": {
@@ -528,6 +532,8 @@
     "personalNoteHint": "Restano private anche se condividi la ricetta.",
     "draftRestored": "Abbiamo ripristinato la bozza non salvata.",
     "draftNotStored": "La bozza non può essere salvata nel browser (spazio esaurito o archiviazione bloccata): non chiudere la pagina prima di salvare.",
+    "draftConflict": "Questa bozza parte da una versione precedente: nel frattempo la ricetta è stata salvata altrove. Ripristinando, le tue modifiche sostituiscono la versione attuale al salvataggio.",
+    "restoreConflictDraft": "Ripristina le mie modifiche",
     "discardDraft": "Scarta la bozza",
     "reviewIntroTitle": "Controlla i dati prima di salvare",
     "reviewIntro": "Niente è stato inventato: i valori non trovati sono vuoti e segnalati. Correggi quello che serve.",
@@ -596,6 +602,7 @@
     "useAi": "Usa l'AI"
   },
   "link": {
+    "sharedConfirm": "Link ricevuto da un'altra app: controllalo e premi il pulsante per importare la ricetta.",
     "title": "Importa da link",
     "lead": "Incolla l'indirizzo di una ricetta. Leggiamo i dati strutturati della pagina e li mostriamo per la revisione.",
     "urlLabel": "Indirizzo della ricetta",
@@ -1077,6 +1084,8 @@
     "reportedBy": "Segnalata da {name}",
     "recipeGone": "Ricetta eliminata",
     "hiddenBadge": "Nascosta",
+    "inReviewBadge": "In revisione",
+    "appealBadge": "Ricorso dell'autore",
     "hide": "Nascondi la ricetta",
     "restore": "Rendi di nuovo visibile",
     "dismiss": "Archivia la segnalazione",
@@ -1436,6 +1445,16 @@
     "stop": "Interrompi",
     "selectAll": "Seleziona tutte",
     "selectNone": "Deseleziona tutte",
-    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate."
+    "stopped": "Interrotta dopo {done} ricette: {created} importate, {duplicates} già presenti, {failed} non riuscite. Riavvia l’importazione per riprendere: le ricette già importate vengono saltate.",
+    "failuresTitle": "{count, plural, one {# ricetta non importata} other {# ricette non importate}}",
+    "retryFailed": "Riprova i falliti ({count})",
+    "failReasons": {
+      "rate_limited": "Troppe richieste: riprova tra qualche minuto.",
+      "invalid_input": "Dati della ricetta non validi.",
+      "forbidden": "Non hai i permessi per salvare: effettua di nuovo l’accesso.",
+      "config": "Servizio non configurato correttamente.",
+      "generic": "Errore durante il salvataggio.",
+      "unexpected": "Errore imprevisto o di rete."
+    }
   }
 }

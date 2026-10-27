@@ -1,7 +1,7 @@
 'use client';
 
 import { draftNames } from '@/lib/drafts';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link2 } from 'lucide-react';
 import { useLocale } from 'next-intl';
@@ -63,21 +63,13 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
     run(url);
   };
 
-  // A link shared from another app starts the import right away (once).
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (initialUrl && !autoStarted.current) {
-      autoStarted.current = true;
-      run(initialUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialUrl]);
-
   if (draft) return <ImportReview draft={draft} categories={categories} draftKey={draftNames.import('link')} onBack={() => setDraft(null)} />;
 
   return (
     <div className="flex flex-col gap-6">
       <form onSubmit={submit} className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+        {/* Link condiviso: solo precompilato, l'import parte solo dopo conferma esplicita (anti-CSRF). */}
+        {initialUrl && <p className="text-sm text-muted">{t('sharedConfirm')}</p>}
         <Field label={t('urlLabel')} htmlFor="url" hint={t('compat')}>
           <Input id="url" type="url" inputMode="url" required value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" autoComplete="url" />
         </Field>
