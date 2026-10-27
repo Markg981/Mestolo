@@ -1,6 +1,7 @@
 /** Hardening SECURITY DEFINER (migration 20261025033000): anon non esegue le funzioni interne. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
+import { readFileSync } from 'node:fs';
 
 const url = process.env.TEST_DATABASE_URL;
 const d = url ? describe : describe.skip;
@@ -49,6 +50,33 @@ d('security definer: privilegi EXECUTE', () => {
          and p.proname <> all (array['get_public_recipe','list_public_recipe_slugs','count_public_recipes','public_cover_paths','is_public_cover_object','invite_preview','get_profile_card','get_public_recipe_nutrition','resolve_public_recipe_slug'])`,
     );
     expect(rows).toEqual([]);
+  });
+
+  it('anon non ha alcun privilegio sulle tabelle public (esistenti e future)', async () => {
+    const rows = await admin<{ relname: string }>(
+      `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+       where n.nspname = 'public' and c.relkind in ('r','p','v','m')
+         and (has_table_privilege('anon', c.oid, 'select') or has_table_privilege('anon', c.oid, 'insert')
+           or has_table_privilege('anon', c.oid, 'update') or has_table_privilege('anon', c.oid, 'delete'))`,
+    );
+    expect(rows).toEqual([]);
+    const defs = await admin<{ defaclacl: string[] }>(
+      `select d.defaclacl::text[] as defaclacl from pg_default_acl d join pg_namespace n on n.oid = d.defaclnamespace
+       where n.nspname = 'public' and d.defaclobjtype = 'r'`,
+    );
+    for (const d of defs) expect(d.defaclacl.some((a) => a.startsWith('anon='))).toBe(false);
+  });
+
+  it('funzioni security definer eseguibili da authenticated: lista attesa esplicita', async () => {
+    const rows = await admin<{ proname: string }>(
+      `select distinct p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
+       order by 1`,
+    );
+    const got = rows.map((r) => r.proname);
+    const expected = JSON.parse(readFileSync(new URL('./security-definer-authenticated.expected.json', import.meta.url), 'utf8')) as string[];
+    // Lista esplicita: una nuova funzione security definer esposta ad authenticated va aggiunta qui di proposito.
+    expect(got.filter((n) => !expected.includes(n))).toEqual([]);
   });
 
   it('collection_owner e shopping_list_owner: anon negato', async () => {
