@@ -354,3 +354,80 @@ d('is_blocked_between: policies', () => {
     expect(await as(y, 'select id from public.recipes where id = $1', [id])).toHaveLength(1);
   });
 });
+
+d('is_blocked_between: nessun uso della versione pubblica fuori dalla RPC (DB-01)', () => {
+  beforeAll(() => {
+    pool = new pg.Pool({ connectionString: url });
+  });
+  afterAll(async () => {
+    await pool?.end();
+  });
+
+  const re = '(public\.|(^|[^.[:alnum:]_]))is_blocked_between\(';
+
+  it('nessuna funzione (qualsiasi schema) tranne la RPC stessa la richiama', async () => {
+    const rows = await admin<{ n: string }>(
+      `select s.nspname || '.' || p.proname as n
+         from pg_proc p join pg_namespace s on s.oid = p.pronamespace
+        where p.prosrc ~ $1
+          and not (s.nspname = 'public' and p.proname = 'is_blocked_between')`,
+      [re],
+    );
+    expect(rows).toEqual([]);
+  });
+
+  it('nessuna policy (inclusa storage.objects) la richiama', async () => {
+    const rows = await admin<{ n: string }>(
+      `select c.relnamespace::regnamespace || '.' || c.relname || '.' || p.polname as n
+         from pg_policy p join pg_class c on c.oid = p.polrelid
+        where coalesce(pg_get_expr(p.polqual, p.polrelid), '') || ' ' || coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') ~ $1`,
+      [re],
+    );
+    expect(rows).toEqual([]);
+  });
+});
+
+d('profili e avatar: blocco simmetrico (DB-01)', () => {
+  beforeAll(() => {
+    pool = new pg.Pool({ connectionString: url });
+  });
+  afterAll(async () => {
+    await pool?.end();
+  });
+
+  async function setup() {
+    const { x, y } = await pair();
+    await admin("update public.profiles set profile_visibility = 'public', avatar_path = id::text || '/a.webp' where id in ($1, $2)", [x, y]);
+    await admin(
+      `insert into storage.objects (bucket_id, name, owner) values ('avatars', $1, $2), ('avatars', $3, $4)`,
+      [`${x}/a.webp`, x, `${y}/a.webp`, y],
+    );
+    return { x, y };
+  }
+
+  async function sees(viewer: string, owner: string, username: string) {
+    const det = await as<{ r: boolean }>(viewer, 'select public.can_view_profile_details($1, $2) as r', [owner, viewer]);
+    const card = await as<{ can_view: boolean }>(viewer, 'select can_view from public.get_profile_card($1)', [username]);
+    const av = await as(viewer, 'select * from public.get_avatar_paths($1)', [[owner]]);
+    const obj = await as(viewer, "select 1 from storage.objects where bucket_id = 'avatars' and name = $1", [`${owner}/a.webp`]);
+    return { det: det[0].r, card: card.length > 0 && card[0].can_view, av: av.length, obj: obj.length };
+  }
+
+  const usernameOf = async (id: string) => (await admin<{ username: string }>('select username from public.profiles where id = $1', [id]))[0].username;
+
+  it('senza blocchi entrambi vedono dettagli e avatar', async () => {
+    const { x, y } = await setup();
+    expect(await sees(y, x, await usernameOf(x))).toEqual({ det: true, card: true, av: 1, obj: 1 });
+  });
+
+  for (const dir of ['x blocca y', 'y blocca x'] as const) {
+    it(`${dir}: nessuno vede dettagli o avatar dell'altro`, async () => {
+      const { x, y } = await setup();
+      if (dir === 'x blocca y') await block(x, y);
+      else await block(y, x);
+      const none = { det: false, card: false, av: 0, obj: 0 };
+      expect(await sees(x, y, await usernameOf(y))).toEqual(none);
+      expect(await sees(y, x, await usernameOf(x))).toEqual(none);
+    });
+  }
+});
