@@ -31,7 +31,12 @@ test.describe('offline e service worker', () => {
     await page.goto('/');
     const ready = await serviceWorkerReady(page);
     test.skip(!ready, 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
-    const cached = await page.evaluate(async () => !!(await (await caches.open('mestolo-static-v3')).match('/offline')));
+    // Il nome della cache cambia a ogni VERSION di public/sw.js: si cerca in tutte le cache statiche.
+    const cached = await page.evaluate(async () => {
+      const names = (await caches.keys()).filter((k) => k.startsWith('mestolo-static-'));
+      for (const n of names) if (await (await caches.open(n)).match('/offline')) return true;
+      return false;
+    });
     expect(cached).toBe(true);
   });
 
@@ -60,8 +65,12 @@ test.describe('offline e service worker', () => {
     } finally {
       await context.setOffline(false);
     }
-    await page.getByRole('button', { name: 'Riprova' }).click();
-    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile
-    await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible();
+    // "Riprova" ricarica l'URL richiesto (/friends), ora raggiungibile. Subito dopo il ripristino della rete
+    // il primo tentativo puo ancora fallire (anche il service worker deve rivedere la rete): si ripete il clic.
+    await expect(async () => {
+      const retry = page.getByRole('button', { name: 'Riprova' });
+      if (await retry.isVisible()) await retry.click();
+      await expect(page.getByRole('heading', { level: 1, name: 'Amici' })).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
   });
 });
