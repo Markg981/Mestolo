@@ -278,6 +278,7 @@ export async function restoreVersion(recipeId: string, version: number, expected
   const { data: v } = await supabase.from('recipe_versions').select('snapshot').eq('recipe_id', recipeId).eq('version', version).maybeSingle();
   if (!v) return fail('not_found');
   const s = v.snapshot as Record<string, unknown>;
+  const { data: before } = await supabase.from('recipes').select('public_slug').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
   const { data, error } = await supabase
     .from('recipes')
     .update({
@@ -298,12 +299,16 @@ export async function restoreVersion(recipeId: string, version: number, expected
     .eq('id', recipeId)
     .eq('owner_id', user.id)
     .eq('version', expectedVersion)
-    .select('id');
+    .select('id, public_slug');
   if (error) return dbFailure(error, 'restoreVersion');
   if (!data?.length) {
     const { data: cur } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     return fail(cur ? 'conflict' : 'not_found');
   }
+  // La pagina pubblica e' in cache: vecchio e nuovo slug (se cambia) mostrerebbero il contenuto precedente al ripristino
+  invalidatePublicPage(before?.public_slug as string | null | undefined);
+  const newSlug = (data[0] as { public_slug?: string | null }).public_slug;
+  if (newSlug && newSlug !== before?.public_slug) invalidatePublicPage(newSlug);
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath(`/recipes/${recipeId}/history`);
   return ok();
