@@ -38,6 +38,18 @@ test.describe('offline e service worker', () => {
       return false;
     });
     expect(cached).toBe(true);
+    // Anche JS/CSS/font della pagina offline vanno precaricati: senza, offline non si idrata e compare l'errore globale.
+    const missing = await page.evaluate(async () => {
+      const name = (await caches.keys()).find((k) => k.startsWith('mestolo-static-'));
+      if (!name) return ['(nessuna cache statica)'];
+      const cache = await caches.open(name);
+      const html = await (await cache.match('/offline'))!.text();
+      const paths = [...new Set(html.match(/\/_next\/static\/[A-Za-z0-9._~\-/%]+/g) ?? [])];
+      const out: string[] = [];
+      for (const p of paths) if (!(await cache.match(p))) out.push(p);
+      return out;
+    });
+    expect(missing).toEqual([]);
   });
 
   test('la lista della spesa gia visitata resta consultabile offline, con il banner', async ({ page, context }) => {
