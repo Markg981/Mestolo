@@ -28,26 +28,36 @@ export interface ImageRow {
   position: number;
 }
 
+/**
+ * Un errore del DB non deve diventare uno stato vuoto: lo rilanciamo cosi' che
+ * error.tsx lo mostri e Sentry lo registri.
+ */
+function assertNoError(error: { message: string } | null | undefined, what: string): void {
+  if (error) throw new Error(`${what}: ${error.message}`);
+}
+
 export async function listCategories(): Promise<CategoryRow[]> {
   const supabase = await createClient();
   const user = await getUser();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('categories')
     .select('id, slug, owner_id, name, sort_order')
     .or(`owner_id.is.null${user ? `,owner_id.eq.${user.id}` : ''}`)
     .order('sort_order')
     .order('name');
+  assertNoError(error, 'listCategories');
   return (data as CategoryRow[]) ?? [];
 }
 
 export async function attachCovers<T extends { id: string; owner_id: string }>(rows: T[]): Promise<(T & { coverImageId: string | null; coverKind: string | null })[]> {
   if (!rows.length) return [];
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('recipe_images')
     .select('id, recipe_id, kind, position')
     .in('recipe_id', rows.map((r) => r.id))
     .order('position');
+  assertNoError(error, 'attachCovers');
   const first = new Map<string, { id: string; kind: string }>();
   for (const img of (data as { id: string; recipe_id: string; kind: string }[]) ?? []) {
     if (!first.has(img.recipe_id)) first.set(img.recipe_id, { id: img.id, kind: img.kind });
@@ -128,7 +138,8 @@ export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListIt
   if (!user) return [];
   const { query } = await buildMyRecipesQuery(f, user.id);
   const sort = keysetSortFor(f.sort);
-  const { data } = await query.order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order('id', { ascending: sort.ascending }).limit(f.limit ?? 120);
+  const { data, error } = await query.order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order('id', { ascending: sort.ascending }).limit(f.limit ?? 120);
+  assertNoError(error, 'listMyRecipes');
   return attachCovers(stripFavEmbed(data as RecipeListItem[] | null));
 }
 
@@ -139,7 +150,8 @@ export async function listMyRecipesPage(f: RecipeFilters = {}, cursor?: string |
   const { query } = await buildMyRecipesQuery(f, user.id);
   const sort = keysetSortFor(f.sort);
   const pageSize = f.limit ?? PAGE_SIZE;
-  const { data } = await applyKeyset(query, sort, decodeCursor(cursor), pageSize);
+  const { data, error } = await applyKeyset(query, sort, decodeCursor(cursor), pageSize);
+  assertNoError(error, 'listMyRecipesPage');
   const page = toPage(stripFavEmbed(data as RecipeListItem[] | null), sort, pageSize);
   return { items: await attachCovers(page.items), nextCursor: page.nextCursor };
 }
@@ -160,7 +172,8 @@ export async function getRecipeDetail(id: string): Promise<RecipeDetail | null> 
   const user = await getUser();
   if (!user) return null;
   const supabase = await createClient();
-  const { data: recipe } = await supabase.from('recipes').select('*').eq('id', id).maybeSingle();
+  const { data: recipe, error: recipeError } = await supabase.from('recipes').select('*').eq('id', id).maybeSingle();
+  assertNoError(recipeError, 'getRecipeDetail');
   if (!recipe) return null;
   const r = recipe as RecipeRow;
   const [images, category, owner, fav, note, cols] = await Promise.all([
@@ -171,6 +184,7 @@ export async function getRecipeDetail(id: string): Promise<RecipeDetail | null> 
     supabase.from('recipe_notes').select('body').eq('recipe_id', id).eq('owner_id', user.id).maybeSingle(),
     supabase.from('collection_recipes').select('collection_id').eq('recipe_id', id),
   ]);
+  assertNoError(images.error ?? owner.error ?? fav.error ?? note.error ?? cols.error, 'getRecipeDetail');
   return {
     recipe: r,
     images: (images.data as ImageRow[]) ?? [],
@@ -187,11 +201,12 @@ export async function listCollections() {
   const user = await getUser();
   if (!user) return [];
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('collections')
     .select('id, name, description, updated_at, collection_recipes(count)')
     .eq('owner_id', user.id)
     .order('updated_at', { ascending: false });
+  assertNoError(error, 'listCollections');
   return ((data ?? []) as { id: string; name: string; description: string; updated_at: string; collection_recipes: { count: number }[] }[]).map((c) => ({
     id: c.id,
     name: c.name,
@@ -206,10 +221,12 @@ export async function listEditableCollections() {
   const user = await getUser();
   if (!user) return own;
   const supabase = await createClient();
-  const { data: mem } = await supabase.from('collection_members').select('collection_id').eq('user_id', user.id).eq('role', 'editor');
+  const { data: mem, error: memError } = await supabase.from('collection_members').select('collection_id').eq('user_id', user.id).eq('role', 'editor');
+  assertNoError(memError, 'listEditableCollections');
   const ids = ((mem ?? []) as { collection_id: string }[]).map((m) => m.collection_id);
   if (!ids.length) return own;
-  const { data } = await supabase.from('collections').select('id, name, description').in('id', ids);
+  const { data, error } = await supabase.from('collections').select('id, name, description').in('id', ids);
+  assertNoError(error, 'listEditableCollections');
   const extra = ((data ?? []) as { id: string; name: string; description: string }[]).map((c) => ({ ...c, count: 0 }));
   return [...own, ...extra];
 }
@@ -270,7 +287,8 @@ export async function listDiscoverable(opts: { category?: string; limit?: number
     .limit(opts.limit ?? 60);
   if (opts.category) q = q.eq('category_id', opts.category);
   if (opts.excludeCategoryIds?.length) q = q.not('category_id', 'in', `(${opts.excludeCategoryIds.join(',')})`);
-  const { data } = await q;
+  const { data, error } = await q;
+  assertNoError(error, 'listDiscoverable');
   const rows = (data as RecipeListItem[]) ?? [];
   const ownerIds = [...new Set(rows.map((r) => r.owner_id))];
   const { data: owners } = ownerIds.length
