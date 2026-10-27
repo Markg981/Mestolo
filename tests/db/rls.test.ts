@@ -425,4 +425,14 @@ d('RLS & data rules', () => {
     await expect(createRecipe(bob, { category_id: cat.id })).rejects.toThrow(/invalid category/);
     await createRecipe(alice, { category_id: cat.id });
   });
+
+  it('DB-03: la categoria personale e visibile solo se la ricetta che la usa e visibile', async () => {
+    const [cat] = await as<{ id: string }>(alice, "insert into public.categories (owner_id, slug, name) values ($1, 'segreta', 'Segreta') returning id", [alice]);
+    const rid = await createRecipe(alice, { category_id: cat.id });
+    const q = 'select id from public.categories where id = $1';
+    expect(await as(bob, q, [cat.id])).toHaveLength(0);
+    expect(await as(alice, q, [cat.id])).toHaveLength(1);
+    await as(alice, "update public.recipes set visibility = 'public' where id = $1", [rid]);
+    expect(await as(bob, q, [cat.id])).toHaveLength(1);
+  });
 });
