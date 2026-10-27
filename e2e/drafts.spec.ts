@@ -24,6 +24,7 @@ test.describe('bozze locali', () => {
 
   test('la bozza viene scritta subito quando la scheda si nasconde o si chiude, senza attendere il debounce', async ({ page }) => {
     await page.goto('/recipes/new');
+    await page.waitForLoadState('networkidle'); // evento 'input' sintetico: serve la pagina idratata
     const title = `Flush E2E ${Date.now().toString(36)}`;
     const result = await page.getByLabel('Titolo').evaluate(async (el, value) => {
       const input = el as HTMLInputElement;
@@ -45,6 +46,7 @@ test.describe('bozze locali', () => {
 
   test('visibilitychange a "hidden" scrive la bozza', async ({ page }) => {
     await page.goto('/recipes/new');
+    await page.waitForLoadState('networkidle'); // evento 'input' sintetico: serve la pagina idratata
     const title = `Hidden E2E ${Date.now().toString(36)}`;
     const stored = await page.getByLabel('Titolo').evaluate(async (el, value) => {
       const input = el as HTMLInputElement;

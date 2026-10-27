@@ -54,6 +54,8 @@ test.describe('notifiche promemoria pasti', () => {
   test('gli orari sono modificabili solo con i promemoria attivi', async ({ page }) => {
     await page.goto('/settings');
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
+    // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
+    await page.waitForLoadState('networkidle');
     test.skip(await toggle.isDisabled(), 'push web non supportato in questo ambiente (manca NEXT_PUBLIC_VAPID_PUBLIC_KEY?)');
     const lunch = page.getByLabel('Pranzo', { exact: true });
     if (await toggle.isChecked()) await toggle.uncheck();
@@ -68,6 +70,8 @@ test.describe('notifiche promemoria pasti', () => {
     await page.goto('/settings');
     test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
+    // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
+    await page.waitForLoadState('networkidle');
     test.skip(await toggle.isDisabled(), 'push web non supportato in questo ambiente (manca NEXT_PUBLIC_VAPID_PUBLIC_KEY?)');
 
     if (!(await toggle.isChecked())) await toggle.check();
@@ -95,6 +99,8 @@ test.describe('notifiche promemoria pasti', () => {
     await page.goto('/settings');
     test.skip(!(await serviceWorkerReady(page)), 'service worker non registrato: serve una build di produzione o E2E_BASE_URL');
     const toggle = page.getByRole('checkbox', { name: /Attiva i promemoria/ });
+    // Prima dell'idratazione il commutatore e' abilitato: il rilevamento del supporto push avviene dopo.
+    await page.waitForLoadState('networkidle');
     test.skip(await toggle.isDisabled(), 'push web non supportato in questo ambiente (manca NEXT_PUBLIC_VAPID_PUBLIC_KEY?)');
 
     if (!(await toggle.isChecked())) await toggle.check();

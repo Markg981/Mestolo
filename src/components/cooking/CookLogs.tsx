@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Lock } from 'lucide-react';
 import { listRecipeCookLogs, type CookLogItem } from '@/lib/data/cook-logs';
+import { formatDateUtc } from '@/lib/format-date';
 import { CookedItButton, CookLogControls } from './CookedIt';
 
 export function formatCookDate(iso: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(iso));
+  return formatDateUtc(iso, locale);
 }
 
 /** Detail-page section: "cooked N times" counter, the "I cooked it" button and the gallery of visible logs. */

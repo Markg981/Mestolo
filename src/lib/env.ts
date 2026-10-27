@@ -48,7 +48,7 @@ const CRON_SECRET_MIN_LENGTH = 16;
  * silently falling back to '' / localhost. Skipped during `next build`, which
  * may run without real secrets; dev/test keep the lenient defaults.
  */
-function assertProductionEnv(e: NodeJS.ProcessEnv) {
+export function assertProductionEnv(e: NodeJS.ProcessEnv) {
   if (e.NODE_ENV !== 'production' || e.NEXT_PHASE === 'phase-production-build') return;
   const missing = REQUIRED_IN_PRODUCTION.filter((k) => !e[k]?.trim());
   if (missing.length) {

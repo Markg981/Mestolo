@@ -56,3 +56,11 @@ export function pickOfTheDay<T extends { id: string; created_at?: string }>(all:
   const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
   return sorted[Math.abs(h) % sorted.length];
 }
+
+/**
+ * PostgREST `or` filter that hides the given categories but keeps recipes with
+ * no category (NULL NOT IN (...) would discard them).
+ */
+export function hiddenCategoriesFilter(ids: string[]): string {
+  return `category_id.is.null,category_id.not.in.(${ids.join(',')})`;
+}

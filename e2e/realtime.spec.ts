@@ -1,5 +1,6 @@
 import { expect, test, type Browser } from '@playwright/test';
 import { createTestRecipe, createTestUser, login, randomUser, type TestUser } from './helpers';
+import { gotoSubscribed } from './helpers-extra';
 
 // Sincronizzazione Realtime tra due dispositivi dello stesso utente (RealtimeSync nel layout + ShoppingRealtime).
 // Richiede che Realtime sia attivo per le tabelle shopping_items, meal_plan_entries e recipes nello staging.
@@ -23,8 +24,8 @@ test.describe('realtime tra dispositivi', () => {
     const b = await device(browser, baseURL, user);
     try {
       const name = `basilico${Date.now().toString(36)}`;
-      await a.page.goto('/shopping');
-      await b.page.goto('/shopping');
+      await gotoSubscribed(a.page, '/shopping');
+      await gotoSubscribed(b.page, '/shopping');
       await expect(b.page.getByRole('heading', { level: 1, name: 'Lista della spesa' })).toBeVisible();
 
       const form = a.page.locator('form').filter({ has: a.page.getByLabel('Aggiungi un prodotto') });
@@ -53,13 +54,13 @@ test.describe('realtime tra dispositivi', () => {
     try {
       // Ricettario: la riga e' inserita lato server (service role), come farebbe un altro dispositivo
       const title = `Realtime ricetta ${Date.now().toString(36)}`;
-      await a.page.goto('/recipes');
+      await gotoSubscribed(a.page, '/recipes');
       await createTestRecipe(id, title, 'private');
       await expect(a.page.getByRole('link', { name: title })).toBeVisible({ timeout: SYNC_TIMEOUT });
 
       // Piano: B aggiunge una voce libera a cena, A (gia' sul piano) la vede
       const meal = `Pizza realtime ${Date.now().toString(36)}`;
-      await a.page.goto('/plan');
+      await gotoSubscribed(a.page, '/plan');
       await b.page.goto('/plan');
       await b.page.getByRole('button', { name: /^Aggiungi a Cena, / }).first().click();
       const dialog = b.page.getByRole('dialog');
