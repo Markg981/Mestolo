@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { analyzeRecipe, applyAnalysis, suggestSubstitutions, type AnalysisResponse, type SubstitutionResponse } from '@/app/actions/ai';
@@ -29,7 +30,7 @@ export function Assistant(p: Props) {
   const tr = useTranslations('recipe');
   const locale = useLocale();
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);

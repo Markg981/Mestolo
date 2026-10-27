@@ -3,6 +3,7 @@
     "description": "Il tuo ricettario: salva, importa e condividi ricette su ogni dispositivo."
   },
   "common": {
+    "actionFailed": "Azione non riuscita: controlla la connessione e riprova.",
     "add": "Aggiungi",
     "back": "Indietro",
     "cancel": "Annulla",

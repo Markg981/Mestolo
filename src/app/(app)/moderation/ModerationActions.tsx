@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { moderateReport } from '@/app/actions/moderation';
 import { Button } from '@/components/ui';
@@ -10,7 +11,7 @@ export function ModerationActions({ reportId, hidden, onlyRestore }: { reportId:
   const t = useTranslations('moderation');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   const act = (a: 'hide' | 'restore' | 'dismiss') =>
     start(async () => {

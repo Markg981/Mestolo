@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { GripVertical, MoveRight, Plus, ShoppingBasket, X } from 'lucide-react';
 import { addPlanEntry, addWeekToShopping, deletePlanEntry, movePlanEntry } from '@/app/actions/planning';
@@ -25,7 +26,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes, lists = []
   const tc = useTranslations('common');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [targetList, setTargetList] = useState(lists[0]?.id ?? '');
   const [target, setTarget] = useState<{ date: string; slot: Entry['slot'] } | null>(null);
   const [recipeId, setRecipeId] = useState('');

@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, useSyncExternalStore, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Minus, Plus, ShoppingBasket } from 'lucide-react';
 import { formatQuantity } from '@/lib/recipes/ingredient-parser';
@@ -58,7 +59,7 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags,
   const [servings, setServings] = useState<number | null>(baseServings);
   const [targetList, setTargetList] = useState(lists[0]?.id ?? '');
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const scaled = useMemo(() => (servings && baseServings ? scaleIngredients(ingredients, baseServings, servings) : ingredients), [ingredients, baseServings, servings]);
   const changed = !!(servings && baseServings && servings !== baseServings);

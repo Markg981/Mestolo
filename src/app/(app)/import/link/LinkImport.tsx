@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { draftNames } from '@/lib/drafts';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link2 } from 'lucide-react';
 import { useLocale } from 'next-intl';
@@ -25,7 +26,7 @@ export function LinkImport({ categories, status, initialUrl = '' }: { categories
   useResumeImport(draftNames.import('link'), setDraft);
   const [fallback, setFallback] = useState<{ text: string; reason: 'no_recipe' | 'error' } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const run = (target: string) =>
     start(async () => {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { importFromText } from '@/app/actions/import';
 import { AiSourceNote, type AiStatusProps } from '../recipes/RecipeIslands';
@@ -14,7 +15,7 @@ export function TextParseBox({ initialText = '', sourceUrl, status, onDraft }: {
   const locale = useLocale();
   const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const run = (useAi: boolean) =>
     start(async () => {

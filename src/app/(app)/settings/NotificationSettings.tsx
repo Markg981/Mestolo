@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useSyncExternalStore, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { removePushSubscription, savePushSubscription, saveNotificationPreferences } from '@/app/actions/notifications';
 import { LiveMessage } from '@/components/client-ui';
@@ -29,7 +30,7 @@ export function NotificationSettings({ initial, vapidPublicKey, frequentSchedule
   );
   const iosTab = useSyncExternalStore(noopSubscribe, isIosBrowserTab, () => false);
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();

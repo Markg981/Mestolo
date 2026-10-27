@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { addShoppingMember, removeShoppingMember, renameShoppingList } from '@/app/actions/shopping';
 import { LiveMessage } from '@/components/client-ui';
@@ -34,7 +35,7 @@ export function ShoppingMembers({
   const t = useTranslations('shopping');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [pick, setPick] = useState('');
   const [name, setName] = useState(listName);
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);

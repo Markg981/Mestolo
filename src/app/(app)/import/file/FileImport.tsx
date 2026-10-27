@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { draftNames } from '@/lib/drafts';
 import Link from 'next/link';
-import { useRef, useState, useTransition } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { checkDuplicates, saveRecipe } from '@/app/actions/recipes';
 import { ImportReview, useResumeImport } from '@/components/import/ImportReview';
@@ -29,7 +30,7 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [total, setTotal] = useState(0);
   const stopRef = useRef(false);
-  const [running, start] = useTransition();
+  const [running, start] = useActionTransition();
 
   async function onFile(file: File | undefined) {
     setError(null);

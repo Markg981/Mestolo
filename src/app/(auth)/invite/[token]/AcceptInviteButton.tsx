@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { acceptInvite } from '@/app/actions/invites';
 import { LiveMessage } from '@/components/client-ui';
@@ -11,7 +12,7 @@ export function AcceptInviteButton({ token }: { token: string }) {
   const t = useTranslations('invites');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [msg, setMsg] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-3">

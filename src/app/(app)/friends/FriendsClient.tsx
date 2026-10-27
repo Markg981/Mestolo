@@ -1,9 +1,10 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { Avatar } from '@/components/Avatar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { blockUser, removeFriendship, respondFriendRequest, searchUsers, sendFriendRequest, unblockUser } from '@/app/actions/social';
 import { LiveMessage } from '@/components/client-ui';
@@ -32,7 +33,7 @@ export function FriendSearch({ existing }: { existing: string[] }) {
   const [results, setResults] = useState<{ id: string; username: string; display_name: string }[] | null>(null);
   const [sent, setSent] = useState<string[]>([]);
   const [msg, setMsg] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <section className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <form
@@ -92,7 +93,7 @@ export function FriendRow({ kind, friendshipId, profile }: { kind: 'incoming' | 
   const t = useTranslations('friends');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   const act = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
     start(async () => {
@@ -149,7 +150,7 @@ export function FriendRow({ kind, friendshipId, profile }: { kind: 'incoming' | 
 export function BlockedRow({ userId, profile }: { userId: string; profile: P }) {
   const t = useTranslations('friends');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   return (
     <li className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3">
       <div className="min-w-0 flex-1">

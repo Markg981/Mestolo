@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Film } from 'lucide-react';
 import { transcribeVideoAudio } from '@/app/actions/import';
@@ -43,7 +44,7 @@ export function VideoUpload({ status, onTranscribed, compact = false }: { status
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'extract' | 'transcribe' | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const onFile = (file: File | undefined) => {
     if (!file) return;
