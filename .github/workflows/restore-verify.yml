@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   verify:
@@ -27,7 +26,6 @@ jobs:
           --health-retries 10
     env:
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-      GH_TOKEN: ${{ github.token }}
       TARGET: postgresql://postgres:pw@localhost:5432/postgres
       BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
       BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
@@ -72,21 +70,11 @@ jobs:
               echo "Ripristino dalla copia S3: $key"
               exit 0
             fi
-            echo "::warning::Nessun backup trovato su S3: fallback sull'artifact GitHub."
-          else
-            echo "::warning::Secret BACKUP_S3_* non impostati: verifica dall'artifact GitHub."
-          fi
-          # Run dell'artifact db-backup-* piu' recente: un run puo' avere il dump ma fallire dopo (es. upload S3)
-          run_id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | "\(.created_at) \(.workflow_run.id)"' \
-            | sort -r | head -n1 | cut -d' ' -f2)"
-          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
-            echo "::error::Nessun backup (S3 o artifact db-backup-*) da verificare."
+            echo "::error::Nessun backup trovato su S3 (mestolo/db/): la copia S3 e' obbligatoria, nessun fallback sull'artifact."
             exit 1
           fi
-          echo "BACKUP_RUN_ID=$run_id" >> "$GITHUB_ENV"
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --pattern 'db-backup-*' --dir dl
-          echo "BACKUP_FILE=$(ls dl/*/backup-*.tar.gpg | head -n1)" >> "$GITHUB_ENV"
+          echo "::error::Secret BACKUP_S3_* non impostati: impossibile verificare la copia S3."
+          exit 1
 
       # Decifra, ripristina (stub Supabase, auth -> public -> trigger auth) e confronta col manifest;
       # stesso script provato in CI dal job backup-roundtrip
@@ -98,11 +86,17 @@ jobs:
       - name: Download and verify storage backup
         env:
           BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
+          BACKUP_SKIP_STORAGE_REASON: ${{ vars.BACKUP_SKIP_STORAGE_REASON }}
         run: |
           set -euo pipefail
           umask 077
           if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
-            echo "::warning::BACKUP_SKIP_STORAGE=true: verifica del backup storage disattivata esplicitamente."
+            if [ -z "${BACKUP_SKIP_STORAGE_REASON}" ]; then
+              echo "::error::BACKUP_SKIP_STORAGE=true richiede la variabile BACKUP_SKIP_STORAGE_REASON con la motivazione."
+              exit 1
+            fi
+            echo "::error title=Verifica storage disattivata::motivo: ${BACKUP_SKIP_STORAGE_REASON}"
+            echo "Verifica del backup storage disattivata: ${BACKUP_SKIP_STORAGE_REASON}" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           mkdir -p dl-storage
@@ -117,12 +111,8 @@ jobs:
               f="dl-storage/$(basename "$key")"
             fi
           fi
-          if [ -z "$f" ] && [ -n "${BACKUP_RUN_ID:-}" ]; then
-            gh run download "$BACKUP_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'storage-backup-*' --dir dl-storage || true
-            f="$(ls dl-storage/*/storage-*.tar.gpg 2>/dev/null | head -n1 || true)"
-          fi
           if [ -z "$f" ]; then
-            echo "::error::Nessun backup storage (S3 o ultimo run di backup.yml). Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
+            echo "::error::Nessun backup storage su S3 (mestolo/storage/). Impostare BACKUP_SKIP_STORAGE=true solo se e voluto."
             exit 1
           fi
           mkdir -p storage-restore
