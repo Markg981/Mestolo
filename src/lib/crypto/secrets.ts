@@ -12,6 +12,9 @@ export interface EncryptedSecret {
   authTag: string;
 }
 
+const IV_LENGTH = 12;
+const AUTH_TAG_LENGTH = 16;
+
 export class EncryptionConfigError extends Error {
   override name = 'EncryptionConfigError';
 }
@@ -32,13 +35,17 @@ export function loadEncryptionKey(b64: string | undefined): Buffer {
 export function loadPreviousEncryptionKey(b64: string | undefined): Buffer | null {
   if (!b64 || !b64.trim()) return null;
   const key = Buffer.from(b64.trim(), 'base64');
-  if (key.length !== 32) throw new EncryptionConfigError('APP_ENCRYPTION_KEY_PREVIOUS must be 32 bytes (base64)');
+  if (key.length !== 32) {
+    // Fallback di rotazione: una chiave previous malformata non deve rompere la decifratura con la chiave corrente.
+    console.warn('[crypto] APP_ENCRYPTION_KEY_PREVIOUS is not 32 bytes (base64): ignored');
+    return null;
+  }
   return key;
 }
 
 export function encryptSecret(plaintext: string, key: Buffer, aad: string): EncryptedSecret {
-  const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const iv = randomBytes(IV_LENGTH);
+  const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: AUTH_TAG_LENGTH });
   cipher.setAAD(Buffer.from(aad, 'utf8'));
   const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   return { ciphertext: ct.toString('base64'), iv: iv.toString('base64'), authTag: cipher.getAuthTag().toString('base64') };
@@ -46,11 +53,16 @@ export function encryptSecret(plaintext: string, key: Buffer, aad: string): Encr
 
 export function decryptSecret(secret: EncryptedSecret, key: Buffer, aad: string): string {
   try {
-    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(secret.iv, 'base64'));
+    const iv = Buffer.from(secret.iv, 'base64');
+    const tag = Buffer.from(secret.authTag, 'base64');
+    if (iv.length !== IV_LENGTH) throw new Error(`invalid IV length: expected ${IV_LENGTH} bytes`);
+    if (tag.length !== AUTH_TAG_LENGTH) throw new Error(`invalid auth tag length: expected ${AUTH_TAG_LENGTH} bytes`);
+    const decipher = createDecipheriv('aes-256-gcm', key, iv, { authTagLength: AUTH_TAG_LENGTH });
     decipher.setAAD(Buffer.from(aad, 'utf8'));
-    decipher.setAuthTag(Buffer.from(secret.authTag, 'base64'));
+    decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(Buffer.from(secret.ciphertext, 'base64')), decipher.final()]).toString('utf8');
   } catch {
+    // Lunghezze IV/tag errate finiscono qui come SecretDecryptionError (messaggio generico).
     // Never forward the original message: keep the error free of any key material.
     throw new SecretDecryptionError('Unable to decrypt the stored secret');
   }
