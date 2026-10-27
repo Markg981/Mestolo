@@ -10,6 +10,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # TS 7 (compilatore nativo) non e' ancora supportato da typescript-eslint
+      # (via eslint-config-next): il lint fallisce. Aggiornare a mano quando lo sara'.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
     groups:
       npm-minor-patch:
         update-types:
