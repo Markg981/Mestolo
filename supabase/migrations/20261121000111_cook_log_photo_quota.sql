@@ -3,7 +3,7 @@
 -- insert_cook_log fa controllo quota + inserimento nella stessa transazione, sotto lo stesso advisory lock
 -- per utente di insert_recipe_image: conta immagini (recipe_images + foto dei log) e somma i byte di entrambe.
 -- E' security invoker: la RLS di cook_logs (ricetta leggibile, user_id = auth.uid()) resta valida.
--- Nota: il numero versione 000008 evita il conflitto con 20261121000006_anon_default_privileges gia' presente.
+-- Nota: il numero versione 000111 evita il conflitto con 20261121000006_anon_default_privileges gia' presente.
 
 alter table public.cook_logs add column if not exists size_bytes bigint not null default 0 check (size_bytes >= 0);
 
