@@ -11,12 +11,13 @@ type TesseractWorker = Awaited<ReturnType<typeof import('tesseract.js').createWo
 
 /** Web OCR: tesseract.js is imported only when needed; worker, core and data come from /ocr (same origin). */
 export async function recognizeWithTesseract(blob: Blob, locale: string, onProgress?: (p: number) => void): Promise<string> {
-  let worker: TesseractWorker | undefined;
+  let workerPromise: Promise<TesseractWorker> | undefined;
+  let created = false;
 
   async function run(): Promise<string> {
     const lang = TESSERACT_LANG[locale] ?? 'eng';
     const { createWorker } = await import('tesseract.js');
-    const w = await createWorker(lang, 1, {
+    workerPromise = createWorker(lang, 1, {
       workerPath: '/ocr/worker.min.js',
       corePath: '/ocr/core',
       langPath: '/ocr/lang',
@@ -25,7 +26,8 @@ export async function recognizeWithTesseract(blob: Blob, locale: string, onProgr
         if (m.status === 'recognizing text') onProgress?.(m.progress);
       },
     });
-    worker = w;
+    const w = await workerPromise;
+    created = true;
     const canvas = await decodeToCanvas(blob, 2200);
     const { data } = await w.recognize(canvas, {}, { text: true, blocks: true });
     const lines = (data.blocks ?? []).flatMap((b) => b.paragraphs.flatMap((p) => p.lines));
@@ -45,7 +47,9 @@ export async function recognizeWithTesseract(blob: Blob, locale: string, onProgr
   try {
     return await withTimeout(run(), OCR_PAGE_TIMEOUT_MS);
   } finally {
-    // Also stops a stuck recognition after a timeout
-    await worker?.terminate().catch(() => {});
+    // Also stops a stuck recognition after a timeout. If the timeout fired while createWorker
+    // was still pending, terminate the worker as soon as it exists (no await: it may never settle).
+    const cleanup = workerPromise?.then((w) => w.terminate()).catch(() => {});
+    if (created) await cleanup;
   }
 }
