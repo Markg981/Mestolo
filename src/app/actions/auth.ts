@@ -167,10 +167,12 @@ export async function changePassword(_: AuthState, formData: FormData): Promise<
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const email = userData.user?.email;
-  if (!email) return { error: 'forbidden' };
+  if (!userData.user || !email) return { error: 'forbidden' };
   try {
-    // Re-verifying the current password is a guessing vector: same limit as login
-    await authRateLimit('login_email', hashKey(email.toLowerCase()));
+    // Re-verifying the current password is a guessing vector. Own bucket keyed by the authenticated user id
+    // (not the email), so it cannot be exhausted from outside nor lock the victim out of signIn.
+    // The limiter counts every attempt, not only failures: the cap is therefore tight but per-session-owner.
+    await authRateLimit('password_verify', userData.user.id);
   } catch {
     return { error: 'rate_limited' };
   }
