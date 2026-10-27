@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { setFeedbackStatus } from '@/app/actions/feedback';
 import { Button } from '@/components/ui';
@@ -10,7 +11,7 @@ export function FeedbackStatusActions({ id, status }: { id: string; status: 'new
   const t = useTranslations('feedback');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   const set = (s: 'new' | 'seen' | 'done') =>
     start(async () => {

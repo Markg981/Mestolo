@@ -47,8 +47,11 @@ test.describe('notifiche promemoria pasti', () => {
     await expect(toggle).toBeVisible();
     // Senza chiave VAPID o senza Push API il commutatore e disabilitato e compare l'avviso
     const unsupported = page.getByText('Questo browser non supporta le notifiche push.', { exact: false });
-    if (await toggle.isDisabled()) await expect(unsupported).toBeVisible();
-    else await expect(unsupported).toHaveCount(0);
+    // Prima dell'idratazione il commutatore e' abilitato e l'avviso assente: si riprova finche' lo stato e' coerente
+    await expect(async () => {
+      if (await toggle.isDisabled()) await expect(unsupported).toBeVisible({ timeout: 1000 });
+      else await expect(unsupported).toHaveCount(0, { timeout: 1000 });
+    }).toPass();
   });
 
   test('gli orari sono modificabili solo con i promemoria attivi', async ({ page }) => {

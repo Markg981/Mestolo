@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Star } from 'lucide-react';
 import { rateRecipe } from '@/app/actions/ratings';
@@ -22,7 +23,7 @@ export function RecipeRating({ recipeId, isOwner, avg, count, mine }: Props) {
   const te = useTranslations('errors');
   const [value, setValue] = useState<number | null>(mine);
   const [error, setError] = useState<string | null>(null);
-  const [, start] = useTransition();
+  const [, start] = useActionTransition();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // aggiornamento ottimistico dell'aggregato: toglie il voto salvato e aggiunge quello corrente

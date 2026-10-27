@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { deleteNutrition, estimateNutrition, saveNutrition } from '@/app/actions/nutrition';
@@ -22,7 +23,7 @@ export function NutritionEditor({ recipeId, initial, initialSource, ai }: { reci
   const [source, setSource] = useState<NutritionSource | null>(initialSource);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
 
   const toValues = () => Object.fromEntries(NUTRIENT_KEYS.map((k) => [k, text[k].trim() === '' ? null : Number(text[k].replace(',', '.'))])) as Record<NutrientKey, number | null>;
 

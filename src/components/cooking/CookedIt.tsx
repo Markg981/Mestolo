@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Camera, CheckCircle2, ImagePlus, Trash2 } from 'lucide-react';
@@ -23,7 +24,7 @@ export function CookedItButton({ recipeId, variant = 'secondary', size = 'md', c
   const te = useTranslations('errors');
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -180,7 +181,7 @@ export function CookLogControls({ logId, canToggle, visibility }: { logId: strin
   const t = useTranslations('cookLog');
   const te = useTranslations('errors');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [error, setError] = useState<string | null>(null);
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
     start(async () => {

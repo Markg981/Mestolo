@@ -3,6 +3,7 @@
     "description": "Votre carnet de recettes : enregistrez, importez et partagez vos recettes sur tous vos appareils."
   },
   "common": {
+    "actionFailed": "L'action a échoué : vérifie ta connexion et réessaie.",
     "add": "Ajouter",
     "back": "Retour",
     "cancel": "Annuler",

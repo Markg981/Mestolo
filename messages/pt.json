@@ -3,6 +3,7 @@
     "description": "O teu livro de receitas: guarda, importa e partilha receitas em qualquer dispositivo."
   },
   "common": {
+    "actionFailed": "A ação falhou: verifica a ligação e tenta novamente.",
     "add": "Adicionar",
     "back": "Voltar",
     "cancel": "Cancelar",

@@ -3,6 +3,7 @@
     "description": "Tu recetario: guarda, importa y comparte recetas en todos tus dispositivos."
   },
   "common": {
+    "actionFailed": "La acción falló: revisa tu conexión e inténtalo de nuevo.",
     "add": "Añadir",
     "back": "Atrás",
     "cancel": "Cancelar",

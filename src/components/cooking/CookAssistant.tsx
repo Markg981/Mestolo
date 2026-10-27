@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useActionTransition } from '@/lib/run-action';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { Mic, Send, X } from 'lucide-react';
@@ -34,7 +35,7 @@ export function CookAssistant({ recipeId, stepIndex, servings, available, onClos
   const [turns, setTurns] = useState<CookTurn[]>([]);
   const [question, setQuestion] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [dictating, setDictating] = useState(false);
   const [canDictate, setCanDictate] = useState(false);
   const recRef = useRef<DictationLike | null>(null);

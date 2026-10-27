@@ -1,8 +1,9 @@
 'use client';
 
+import { useActionTransition } from '@/lib/run-action';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CalendarPlus, Copy, Download, Flag, FolderPlus, GitBranch, Heart, History, Pencil, Printer, Sparkles, Trash2, UserX } from 'lucide-react';
 import { copyRecipe, deleteRecipe, setPublicPage, setVisibility, toggleFavorite } from '@/app/actions/recipes';
@@ -39,7 +40,7 @@ export function RecipeActions(p: Props) {
   const tpp = useTranslations('publicPage');
   const tr = useTranslations('report');
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, start] = useActionTransition();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [fav, setFav] = useState(p.isFavorite);
   const [vis, setVis] = useState<Visibility>(p.visibility);
