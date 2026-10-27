@@ -100,17 +100,20 @@ function keysetSortFor(sort: RecipeFilters['sort']): KeysetSort {
   }
 }
 
+// Explicit bound on search matches (matches PostgREST max_rows; avoids unbounded p_limit null).
+export const SEARCH_FETCH_LIMIT = 1000;
+
 async function buildMyRecipesQuery(f: RecipeFilters, userId: string) {
   const supabase = await createClient();
   // With a text query the search goes through the search_recipes RPC (full-text + trigram,
-  // security invoker so RLS still applies). p_limit null returns every match, so sorting and
+  // security invoker so RLS still applies). the SQL cap (1000) bounds the matches, so sorting and
   // keyset pagination are applied by PostgREST on its result like on the plain table.
   // Favourites are filtered DB-side with an inner embed on favorites (RLS limits it to the user's own rows):
   // no id list round-trip, no max_rows truncation, no oversized URL. The embed is stripped by stripFavEmbed.
   const cols = f.favorites ? `${LIST_COLUMNS}, favorites!inner(user_id)` : LIST_COLUMNS;
   const base = (owner: string | null) =>
     f.q
-      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: null }).select(cols)
+      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: SEARCH_FETCH_LIMIT }).select(cols)
       : owner
         ? supabase.from('recipes').select(cols).eq('owner_id', owner)
         : supabase.from('recipes').select(cols);

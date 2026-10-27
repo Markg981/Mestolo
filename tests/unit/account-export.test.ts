@@ -4,6 +4,7 @@ const getUser = vi.fn();
 let failTable: string | null = null;
 
 const inLengths: number[] = [];
+const orFilters: [string, string][] = [];
 const ranges: [string, number][] = [];
 let bigRecipes = 0;
 let failVersionsPage2 = false;
@@ -17,6 +18,10 @@ const result = (table: string, from = 0) => ({
 const builder = (table: string) => {
   const b: Record<string, unknown> = {
     eq: () => b,
+    or: (f: string) => {
+      orFilters.push([table, f]);
+      return b;
+    },
     in: (_c: string, ids: string[]) => {
       inLengths.push(ids.length);
       return b;
@@ -56,6 +61,7 @@ describe('GET /api/account/export', () => {
     failVersionsPage2 = false;
     inLengths.length = 0;
     ranges.length = 0;
+    orFilters.length = 0;
     getUser.mockResolvedValue({ id: 'u1', email: 'a@b.c', created_at: 'x' });
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -64,6 +70,13 @@ describe('GET /api/account/export', () => {
     const res = await GET();
     expect(res.status).toBe(200);
     expect((await res.json()).format).toBe('mestolo.account-export/v1');
+  });
+
+  it('filters friendships explicitly by user and exports maxDuration', async () => {
+    const mod = await import('@/app/api/account/export/route');
+    expect(mod.maxDuration).toBe(60);
+    await GET();
+    expect(orFilters).toEqual([['friendships', 'requester_id.eq.u1,addressee_id.eq.u1']]);
   });
 
   it.each(['recipes', 'cook_logs', 'my_profile'])('returns 500 (no partial export) when %s fails', async (t) => {
