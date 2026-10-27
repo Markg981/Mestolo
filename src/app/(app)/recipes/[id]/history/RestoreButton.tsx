@@ -7,7 +7,7 @@ import { restoreVersion } from '@/app/actions/recipes';
 import { Modal } from '@/components/client-ui';
 import { Button } from '@/components/ui';
 
-export function RestoreButton({ recipeId, version }: { recipeId: string; version: number }) {
+export function RestoreButton({ recipeId, version, currentVersion }: { recipeId: string; version: number; currentVersion: number }) {
   const t = useTranslations('history');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
@@ -29,7 +29,7 @@ export function RestoreButton({ recipeId, version }: { recipeId: string; version
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const res = await restoreVersion(recipeId, version);
+                const res = await restoreVersion(recipeId, version, currentVersion);
                 if (res.ok) {
                   setOpen(false);
                   router.refresh();

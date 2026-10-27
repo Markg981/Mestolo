@@ -64,7 +64,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                 </div>
               </details>
             </div>
-            {v.version !== current && <RestoreButton recipeId={id} version={v.version} />}
+            {v.version !== current && <RestoreButton recipeId={id} version={v.version} currentVersion={current} />}
           </li>
         ))}
       </ol>
