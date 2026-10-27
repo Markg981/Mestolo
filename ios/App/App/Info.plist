@@ -8,6 +8,10 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Mestolo usa la fotocamera per fotografare le pagine del tuo ricettario e le foto delle ricette.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mestolo usa il microfono per i comandi vocali in modalità cucina e per l'assistente.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Mestolo usa il riconoscimento vocale per capire i tuoi comandi mentre cucini.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mestolo ti permette di scegliere dalla libreria le foto delle ricette e delle pagine del ricettario.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
