@@ -215,20 +215,27 @@ export async function listSharedCollections(): Promise<SharedCollection[]> {
   const user = await getUser();
   if (!user) return [];
   const supabase = await createClient();
-  const [cols, mem, fr] = await Promise.all([
-    supabase
-      .from('collections')
-      .select('id, owner_id, name, description, collection_recipes(count)')
-      .neq('owner_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(200),
+  const [mem, fr] = await Promise.all([
     supabase.from('collection_members').select('collection_id, role').eq('user_id', user.id),
     supabase.from('friendships').select('requester_id, addressee_id').eq('status', 'accepted'),
   ]);
   const roles = new Map(((mem.data ?? []) as { collection_id: string; role: 'viewer' | 'editor' }[]).map((m) => [m.collection_id, m.role]));
-  const friendIds = new Set(((fr.data ?? []) as { requester_id: string; addressee_id: string }[]).map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id)));
+  const friendIds = [...new Set(((fr.data ?? []) as { requester_id: string; addressee_id: string }[]).map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id)))];
   type Row = { id: string; owner_id: string; name: string; description: string; collection_recipes: { count: number }[] };
-  const rows = ((cols.data ?? []) as Row[]).filter((c) => roles.has(c.id) || friendIds.has(c.owner_id));
+  // Il filtro "condivisa con me" (membro o proprietario amico) e' applicato nel DB prima del limit:
+  // altrimenti 200+ raccolte pubbliche di terzi spingerebbero fuori quelle realmente condivise.
+  const conds: string[] = [];
+  if (roles.size) conds.push(`id.in.(${[...roles.keys()].join(',')})`);
+  if (friendIds.length) conds.push(`owner_id.in.(${friendIds.join(',')})`);
+  if (!conds.length) return [];
+  const { data: cols } = await supabase
+    .from('collections')
+    .select('id, owner_id, name, description, collection_recipes(count)')
+    .neq('owner_id', user.id)
+    .or(conds.join(','))
+    .order('updated_at', { ascending: false })
+    .limit(200);
+  const rows = (cols ?? []) as Row[];
   const ownerIds = [...new Set(rows.map((c) => c.owner_id))];
   const { data: profs } = ownerIds.length ? await supabase.from('profiles').select('id, username, display_name').in('id', ownerIds) : { data: [] };
   const names = new Map(((profs ?? []) as { id: string; username: string; display_name: string }[]).map((p) => [p.id, p.display_name || p.username]));
