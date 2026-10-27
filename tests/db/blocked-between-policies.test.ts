@@ -363,7 +363,7 @@ d('is_blocked_between: nessun uso della versione pubblica fuori dalla RPC (DB-01
     await pool?.end();
   });
 
-  const re = '(public\.|(^|[^.[:alnum:]_]))is_blocked_between\(';
+  const re = String.raw`(public\.|(^|[^.[:alnum:]_]))is_blocked_between\(`;
 
   it('nessuna funzione (qualsiasi schema) tranne la RPC stessa la richiama', async () => {
     const rows = await admin<{ n: string }>(
