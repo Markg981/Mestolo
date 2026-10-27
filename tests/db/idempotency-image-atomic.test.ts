@@ -76,4 +76,14 @@ d('db idempotency key and atomic image insert', () => {
     expect((await ins('b', 600)).rows[0].id).toBeNull(); // 600 + 600 > 1000
     expect((await ins('c', 400)).rows[0].id).not.toBeNull(); // 1000 esatti
   });
+
+  it('ignores client-supplied limits above the DB caps (M-08)', async () => {
+    const u3 = (await admin('insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id', [`ic_${s}@example.test`, JSON.stringify({ username: `ic_${s}` })]))[0].id;
+    const r3 = (await admin("insert into public.recipes (owner_id, title) values ($1, 'C') returning id", [u3]))[0].id;
+    const ins = (n: string, size: number, maxBytes: number) =>
+      asUser(u3, (c) => c.query("select public.insert_recipe_image($1, $2, null, 'upload', null, null, '', 10, 10, 999999, $3, $4) as id", [r3, `${u3}/${r3}/${n}.webp`, size, maxBytes]));
+    await expect(ins('big', 11 * 1024 * 1024, 9e15)).rejects.toThrow(/invalid size/);
+    await admin("insert into public.recipe_images (recipe_id, owner_id, storage_path, kind, size_bytes) values ($1, $2, $3, 'upload', 524288000)", [r3, u3, `${u3}/${r3}/full.webp`]);
+    expect((await ins('over', 1000, 9e15)).rows[0].id).toBeNull(); // tetto DB 500 MiB, p_max_bytes del client ignorato
+  });
 });
