@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-import { env, ConfigError } from '@/lib/env';
+import { env, cronSecret, ConfigError } from '@/lib/env';
 
 const KEY = Buffer.alloc(32, 1).toString('base64');
 const prod: Record<string, string> = {
@@ -27,17 +27,25 @@ describe('env fail-fast in produzione', () => {
     setEnv(prod);
     expect(() => env()).not.toThrow();
   });
-  it('rifiuta APP_ENCRYPTION_KEY e CRON_SECRET mancanti', () => {
-    setEnv({ ...prod, APP_ENCRYPTION_KEY: undefined, CRON_SECRET: undefined });
-    expect(() => env()).toThrow(/APP_ENCRYPTION_KEY, CRON_SECRET/);
+  it('rifiuta APP_ENCRYPTION_KEY mancante', () => {
+    setEnv({ ...prod, APP_ENCRYPTION_KEY: undefined });
+    expect(() => env()).toThrow(/APP_ENCRYPTION_KEY/);
+  });
+  it('env() non dipende da CRON_SECRET (il login non deve rompersi)', () => {
+    setEnv({ ...prod, CRON_SECRET: undefined });
+    expect(() => env()).not.toThrow();
   });
   it('rifiuta APP_ENCRYPTION_KEY non da 32 byte', () => {
     setEnv({ ...prod, APP_ENCRYPTION_KEY: Buffer.alloc(16).toString('base64') });
     expect(() => env()).toThrow(ConfigError);
   });
-  it('rifiuta CRON_SECRET troppo corto', () => {
+  it('cronSecret: null se mancante o troppo corto in produzione', () => {
+    setEnv({ ...prod, CRON_SECRET: undefined });
+    expect(cronSecret()).toBeNull();
     setEnv({ ...prod, CRON_SECRET: 'corto' });
-    expect(() => env()).toThrow(/CRON_SECRET/);
+    expect(cronSecret()).toBeNull();
+    setEnv(prod);
+    expect(cronSecret()).toBe('x'.repeat(32));
   });
   it('in test/dev non richiede i segreti', () => {
     setEnv({ NODE_ENV: 'test' });

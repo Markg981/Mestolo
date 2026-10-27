@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
+import { cronSecret } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mealReminderText } from '@/lib/notifications/texts';
 import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
@@ -14,7 +15,7 @@ const PAGE_SIZE = 1000;
 const SEND_CONCURRENCY = 10;
 
 function authorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
+  const secret = cronSecret();
   if (!secret) return false;
   const given = Buffer.from(request.headers.get('authorization') ?? '');
   const expected = Buffer.from(`Bearer ${secret}`);
