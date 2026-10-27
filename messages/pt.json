@@ -136,6 +136,7 @@
     "username_taken": "Este nome de utilizador já está a ser usado.",
     "translation_failed": "A tradução falhou. O original continua disponível.",
     "already_exists": "Já existe.",
+    "copy_visibility_limited": "Uma cópia não pode ser mais visível do que a receita original.",
     "conflict": "Esta receita foi alterada noutro local (outro separador ou dispositivo). Recarrega a página: as tuas alterações ficam no rascunho e poderás recuperá-las sobre a versão mais recente.",
     "pageTitle": "Esta página não carregou",
     "pageLead": "Pode acontecer se a ligação estiver instável. Os dados que estavas a introduzir ficam guardados como rascunho.",

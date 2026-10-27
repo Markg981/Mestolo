@@ -136,6 +136,7 @@
     "username_taken": "Este nombre de usuario ya está en uso.",
     "translation_failed": "No se ha podido traducir. El original sigue disponible.",
     "already_exists": "Ya existe.",
+    "copy_visibility_limited": "Una copia no puede ser más visible que la receta original.",
     "conflict": "Esta receta se ha modificado en otro lugar (otra pestaña u otro dispositivo). Recarga la página: tus cambios se conservan en el borrador y podrás recuperarlos sobre la última versión.",
     "pageTitle": "Esta página no se ha cargado",
     "pageLead": "Puede pasar si la conexión es inestable. Los datos que estabas introduciendo se guardan como borrador.",
