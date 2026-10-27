@@ -95,25 +95,31 @@ async function buildMyRecipesQuery(f: RecipeFilters, userId: string) {
   // With a text query the search goes through the search_recipes RPC (full-text + trigram,
   // security invoker so RLS still applies). p_limit null returns every match, so sorting and
   // keyset pagination are applied by PostgREST on its result like on the plain table.
+  // Favourites are filtered DB-side with an inner embed on favorites (RLS limits it to the user's own rows):
+  // no id list round-trip, no max_rows truncation, no oversized URL. The embed is stripped by stripFavEmbed.
+  const cols = f.favorites ? `${LIST_COLUMNS}, favorites!inner(user_id)` : LIST_COLUMNS;
   const base = (owner: string | null) =>
     f.q
-      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: null }).select(LIST_COLUMNS)
+      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: null }).select(cols)
       : owner
-        ? supabase.from('recipes').select(LIST_COLUMNS).eq('owner_id', owner)
-        : supabase.from('recipes').select(LIST_COLUMNS);
-  let query = base(userId);
+        ? supabase.from('recipes').select(cols).eq('owner_id', owner)
+        : supabase.from('recipes').select(cols);
+  // favourites may include recipes of other people: no owner filter in that case
+  let query = f.favorites ? base(null).eq('favorites.user_id', userId) : base(userId);
 
-  if (f.favorites) {
-    const { data: favs } = await supabase.from('favorites').select('recipe_id').eq('user_id', userId);
-    const ids = (favs ?? []).map((x: { recipe_id: string }) => x.recipe_id);
-    // favourites may include recipes of other people: query them without the owner filter
-    query = base(null).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
-  }
   if (f.category) query = query.eq('category_id', f.category);
   if (f.tag) query = query.contains('tags', [f.tag]);
   if (f.review) query = query.eq('verification_status', 'needs_review');
   // wrapped: a bare query builder is thenable and would be executed by the `await` of the async function
   return { query };
+}
+
+function stripFavEmbed<T>(rows: T[] | null): T[] {
+  return (rows ?? []).map((r) => {
+    const rest = { ...(r as T & { favorites?: unknown }) };
+    delete rest.favorites;
+    return rest as T;
+  });
 }
 
 /** First N recipes of the user (home page widgets). */
@@ -123,7 +129,7 @@ export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListIt
   const { query } = await buildMyRecipesQuery(f, user.id);
   const sort = keysetSortFor(f.sort);
   const { data } = await query.order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order('id', { ascending: sort.ascending }).limit(f.limit ?? 120);
-  return attachCovers((data as RecipeListItem[]) ?? []);
+  return attachCovers(stripFavEmbed(data as RecipeListItem[] | null));
 }
 
 /** One page of the user's recipes, keyset-paginated on the chosen sort (+ id as tie-breaker). */
@@ -134,7 +140,7 @@ export async function listMyRecipesPage(f: RecipeFilters = {}, cursor?: string |
   const sort = keysetSortFor(f.sort);
   const pageSize = f.limit ?? PAGE_SIZE;
   const { data } = await applyKeyset(query, sort, decodeCursor(cursor), pageSize);
-  const page = toPage((data as RecipeListItem[]) ?? [], sort, pageSize);
+  const page = toPage(stripFavEmbed(data as RecipeListItem[] | null), sort, pageSize);
   return { items: await attachCovers(page.items), nextCursor: page.nextCursor };
 }
 
