@@ -126,7 +126,7 @@ jobs:
         run: |
           docker ps -a --format '{{.Names}}	{{.Status}}'
           for c in $(docker ps -a --format '{{.Names}}' | grep -E 'realtime|gotrue|auth'); do
-            echo "::group::$c"; docker logs --tail 80 "$c" 2>&1 || true; echo "::endgroup::"
+            echo "::group::$c"; docker logs "$c" 2>&1 | grep -v 'Billing metrics|api/ping' | tail -150 || true; echo "::endgroup::"
           done
       - name: Ferma Supabase locale
         if: always()
