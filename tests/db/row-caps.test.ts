@@ -1,4 +1,4 @@
-/** Tetti di righe (migration 20261105000037) su PostgreSQL reale: la riga cap+1 fallisce con 54000. */
+/** Tetti di righe (migration 20261106000043) su PostgreSQL reale: la riga cap+1 fallisce con 54000. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 
