@@ -48,7 +48,7 @@ export async function GET() {
     own('ai_usage', 'user_id'),
     own('categories'),
   ]);
-  const [cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback] = await Promise.all([
+  const [cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback, modCases, modNotices] = await Promise.all([
     own('cook_logs', 'user_id'),
     own('recipe_ratings', 'user_id', ['recipe_id']),
     own('pantry_items'),
@@ -63,6 +63,11 @@ export async function GET() {
     own('shopping_aisle_overrides', 'set_by', ['list_id', 'name_key']),
     own('ai_suggestions', 'user_id'),
     own('app_feedback', 'user_id'),
+    // Moderazione: solo i casi delle ricette dell'utente, con colonne esplicite (mai
+    // identita' di terzi/segnalatori ne' note interne dei moderatori, se in futuro aggiunte)
+    // e gli avvisi a lui destinati.
+    paged('moderation_cases', (q) => q.eq('owner_id', user.id), ['recipe_id'], 'recipe_id, status, appealed_at, updated_at'),
+    own('moderation_notices', 'user_id'),
   ]);
   // `.in('recipe_id', ...)` con centinaia di id supera il limite di lunghezza dell'URL: a blocchi da 100.
   const chunked = (table: string, ids: string[], order: string[], columns = '*') =>
@@ -85,7 +90,7 @@ export async function GET() {
   // codice errore (mai dati personali).
   const results: Record<string, { data?: unknown; error?: { code?: string } | null }> = {
     profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories,
-    cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback,
+    cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback, modCases, modNotices,
     versions, images, nutrition,
   };
   const failed = Object.entries(results).filter(([, r]) => r.error);
@@ -114,6 +119,8 @@ export async function GET() {
     aisles: aisles.data,
     suggestions: suggestions.data,
     feedback: feedback.data,
+    modCases: modCases.data,
+    modNotices: modNotices.data,
     notes: notes.data,
     favorites: favorites.data,
     categories: categories.data,
