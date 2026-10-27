@@ -40,6 +40,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
       APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW1teQ==
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Verifica secret di staging
         id: secrets

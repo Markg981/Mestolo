@@ -39,7 +39,6 @@ const REQUIRED_IN_PRODUCTION = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'NEXT_PUBLIC_SITE_URL',
   'APP_ENCRYPTION_KEY',
-  'CRON_SECRET',
 ] as const;
 
 const CRON_SECRET_MIN_LENGTH = 16;
@@ -59,10 +58,18 @@ function assertProductionEnv(e: NodeJS.ProcessEnv) {
   if (Buffer.from(e.APP_ENCRYPTION_KEY!.trim(), 'base64').length !== 32) {
     throw new ConfigError('APP_ENCRYPTION_KEY must be 32 bytes (base64)');
   }
-  // CRON_SECRET: lunghezza minima, confrontato in modo esatto dalle route cron.
-  if (e.CRON_SECRET!.length < CRON_SECRET_MIN_LENGTH) {
-    throw new ConfigError(`CRON_SECRET must be at least ${CRON_SECRET_MIN_LENGTH} characters`);
-  }
+}
+
+/**
+ * Secret delle route cron, validato solo dove serve (non in env(): il login e il
+ * resto dell'app non devono dipendere da CRON_SECRET). Restituisce null se manca
+ * o, in produzione, e' piu' corto del minimo: le route cron rispondono 401 (fail-closed).
+ */
+export function cronSecret(): string | null {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return null;
+  if (process.env.NODE_ENV === 'production' && secret.length < CRON_SECRET_MIN_LENGTH) return null;
+  return secret;
 }
 
 function intOr(v: string | undefined, d: number): number {

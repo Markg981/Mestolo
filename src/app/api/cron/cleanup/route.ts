@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { runCleanupTasks, type CleanupTask } from '@/lib/cron/cleanup-runner';
+import { cronSecret } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,7 @@ const INVITE_GRACE_DAYS = 30;
 const REMINDER_RETENTION_DAYS = 30;
 
 function authorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
+  const secret = cronSecret();
   if (!secret) return false;
   const given = Buffer.from(request.headers.get('authorization') ?? '');
   const expected = Buffer.from(`Bearer ${secret}`);
