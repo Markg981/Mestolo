@@ -105,7 +105,7 @@ messages/              traduzioni dell'interfaccia (6 lingue)
 
 ## Avvio in locale
 
-Requisiti: Node.js ≥ 20.9 (consigliato 22), un progetto Supabase (gratuito) oppure la Supabase CLI con Docker.
+Requisiti: Node.js ≥ 20.12 (consigliato 22), un progetto Supabase (gratuito) oppure la Supabase CLI con Docker.
 
 ```bash
 git clone https://github.com/Markg981/Mestolo.git
