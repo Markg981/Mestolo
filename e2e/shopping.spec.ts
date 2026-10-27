@@ -48,7 +48,10 @@ test.describe('lista della spesa', () => {
 
   test('cambia il reparto e la scelta resta dopo il ricaricamento', async ({ page }) => {
     await page.goto('/shopping');
+    // La scelta e' ottimistica: prima del reload si attende la risposta della server action che la salva
+    const saved = page.waitForResponse((r) => r.request().method() === 'POST' && !!r.request().headers()['next-action']);
     await page.getByLabel(`Reparto di ${name}`).selectOption('household');
+    expect((await saved).ok()).toBe(true);
     await expect(page.getByLabel(`Reparto di ${name}`)).toHaveValue('household');
     await page.reload();
     await expect(page.getByLabel(`Reparto di ${name}`)).toHaveValue('household');
