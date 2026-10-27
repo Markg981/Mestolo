@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { resolveTimeZone } from '@/lib/plan/week';
 import { ConfigError, env } from '@/lib/env';
 import { createTimeoutFetch } from '@/lib/supabase/fetch';
 
@@ -38,6 +39,14 @@ export const getUser = cache(async (): Promise<User | null> => {
   } catch {
     return null;
   }
+});
+
+/** Time zone of the current user (same source as the meal reminders), falling back to Europe/Rome. */
+export const getUserTimeZone = cache(async (): Promise<string> => {
+  const user = await getUser();
+  if (!user) return resolveTimeZone(null);
+  const { data } = await (await createClient()).from('notification_preferences').select('timezone').eq('user_id', user.id).maybeSingle();
+  return resolveTimeZone((data as { timezone?: string } | null)?.timezone);
 });
 
 export async function requireUser(): Promise<User> {

@@ -1,5 +1,5 @@
 import 'server-only';
-import { createClient, getProfile, getUser } from '@/lib/supabase/server';
+import { createClient, getProfile, getUser, getUserTimeZone } from '@/lib/supabase/server';
 import { conflictsWithPreferences, pickOfTheDay } from '@/lib/discover/preferences';
 import { attachCovers, LIST_COLUMNS, type RecipeListItem } from './recipes';
 import { todayIso } from '@/lib/plan/week';
@@ -53,6 +53,6 @@ export async function discover(categories: CategoryRow[], opts: { category?: str
       return { ...r, ownerUsername: names.get(r.owner_id) ?? null };
     }),
   );
-  const today = todayIso();
+  const today = todayIso(new Date(), await getUserTimeZone());
   return { items, hiddenByPreferences, recipeOfTheDay: opts.cursor ? null : pickOfTheDay(items, user.id, today), nextCursor: page.nextCursor };
 }

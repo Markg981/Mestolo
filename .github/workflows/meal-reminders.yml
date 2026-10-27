@@ -5,7 +5,9 @@ name: Meal reminders
 # esclusi da meal_reminders_sent. Un errore della route (non 2xx) fa fallire il job: GitHub
 # invia la notifica di workflow fallito. GitHub puo' ritardare o saltare le esecuzioni pianificate (la finestra di
 # recupero e' di 45 minuti) e disattiva gli schedule dopo 60 giorni senza attivita' nel repo: controllare la tab
-# Actions e riabilitare il workflow se serve. Senza i secret APP_URL e CRON_SECRET non fa nulla.
+# Actions e riabilitare il workflow se serve. Senza i secret APP_URL e CRON_SECRET il job fallisce; se la route
+# e' chiamata da un altro scheduler (vercel.pro.json o servizio esterno) impostare la variabile
+# MEAL_REMINDERS_EXTERNAL_SCHEDULER=true per disattivarlo. ops-monitor.yml segnala i promemoria mai elaborati.
 on:
   schedule:
     - cron: '*/15 * * * *'
@@ -19,6 +21,7 @@ concurrency:
 
 jobs:
   trigger:
+    if: vars.MEAL_REMINDERS_EXTERNAL_SCHEDULER != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -29,8 +32,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "::notice::APP_URL o CRON_SECRET non impostati: promemoria non inviati da questo scheduler."
-            exit 0
+            echo "::error::APP_URL o CRON_SECRET non impostati: i promemoria dei pasti NON vengono inviati. Configurare i secret oppure impostare la variabile MEAL_REMINDERS_EXTERNAL_SCHEDULER=true se la route e' chiamata da un altro scheduler."
+            exit 1
           fi
           curl --fail-with-body --silent --show-error --max-time 60 --retry 2 --retry-all-errors \
             -H "Authorization: Bearer $CRON_SECRET" \

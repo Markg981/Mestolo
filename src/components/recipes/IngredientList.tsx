@@ -163,7 +163,7 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags 
           disabled={pending || !ingredients.length}
           onClick={() =>
             start(async () => {
-              const res = await addRecipeToShopping(recipeId, servings);
+              const res = await addRecipeToShopping(recipeId, servings, undefined, crypto.randomUUID());
               setMsg(res.ok ? { text: t('addedToShopping', { added: res.data.added, merged: res.data.merged }), tone: 'success' } : { text: te(res.error), tone: 'error' });
             })
           }

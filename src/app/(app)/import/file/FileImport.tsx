@@ -10,7 +10,7 @@ import { bulkImportPayload } from '@/components/recipes/editor/convert';
 import type { EditorCategory } from '@/components/recipes/editor/types';
 import { Alert, Button, Card } from '@/components/ui';
 import { MAX_IMPORT_FILE_BYTES, parseMestoloExport } from '@/lib/recipes/import-json';
-import { runBulkImport, type BulkProgress } from '@/lib/recipes/bulk-import';
+import { runBulkImport, type BulkFailure, type BulkProgress } from '@/lib/recipes/bulk-import';
 import type { ImportDraft } from '@/lib/recipes/types';
 
 const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -25,8 +25,9 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
     setPicked(0);
   });
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<BulkProgress | null>(null);
+  const [progress, setProgress] = useState<BulkProgress<ImportDraft> | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [total, setTotal] = useState(0);
   const stopRef = useRef(false);
   const [running, start] = useTransition();
 
@@ -43,19 +44,33 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
     setPicked(res.drafts.length === 1 ? 0 : null);
   }
 
-  function importAll() {
-    if (!drafts || selected.size === 0) return;
+  // Avvia l'import su un elenco di bozze (selezione corrente oppure solo i falliti del giro precedente)
+  function runImport(chosen: ImportDraft[]) {
+    if (chosen.length === 0) return;
     stopRef.current = false;
-    const chosen = drafts.filter((_, i) => selected.has(i));
+    setTotal(chosen.length);
     start(async () => {
       await runBulkImport(chosen, {
+        label: (d) => d.content.title,
         isDuplicate: async (d) => (await checkDuplicates({ title: d.content.title, source_url: d.source.url ?? null })).some((m) => sameTitle(m.title, d.content.title)),
-        save: async (d) => (await saveRecipe(bulkImportPayload(d, categories), null)).ok,
+        save: async (d) => {
+          const r = await saveRecipe(bulkImportPayload(d, categories), null);
+          return r.ok ? { ok: true } : { ok: false, reason: r.error };
+        },
         onProgress: setProgress,
         shouldStop: () => stopRef.current,
       });
     });
   }
+
+  function importAll() {
+    if (!drafts || selected.size === 0) return;
+    runImport(drafts.filter((_, i) => selected.has(i)));
+  }
+
+  const failures: BulkFailure<ImportDraft>[] = progress?.failures ?? [];
+  // Motivo leggibile dal codice errore; codici sconosciuti ricadono sul messaggio generico
+  const reasonText = (code: string) => (t.has(`failReasons.${code}`) ? t(`failReasons.${code}`) : t('failReasons.unexpected'));
 
   function toggle(i: number) {
     setSelected((prev) => {
@@ -99,7 +114,7 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
           </div>
           {progress && (
             <Alert tone={running ? 'info' : progress.failed || progress.stopped ? 'warn' : 'success'}>
-              <span role="status">{t(progress.stopped ? 'stopped' : 'progress', { done: progress.done, created: progress.created, duplicates: progress.duplicates, failed: progress.failed, total: selected.size })}</span>
+              <span role="status">{t(progress.stopped ? 'stopped' : 'progress', { done: progress.done, created: progress.created, duplicates: progress.duplicates, failed: progress.failed, total })}</span>
               {!running && (
                 <>
                   {' '}
@@ -109,6 +124,23 @@ export function FileImport({ categories }: { categories: EditorCategory[] }) {
                 </>
               )}
             </Alert>
+          )}
+          {!running && failures.length > 0 && (
+            <section aria-labelledby="file-failures" className="flex flex-col gap-2">
+              <h3 id="file-failures" className="text-lg font-bold">
+                {t('failuresTitle', { count: failures.length })}
+              </h3>
+              <ul className="flex flex-col gap-1 text-sm">
+                {failures.map((f, i) => (
+                  <li key={i}>
+                    <span className="font-semibold">{f.label}</span>: {reasonText(f.reason)}
+                  </li>
+                ))}
+              </ul>
+              <div>
+                <Button onClick={() => runImport(failures.map((f) => f.item))}>{t('retryFailed', { count: failures.length })}</Button>
+              </div>
+            </section>
           )}
           <ul className="flex flex-col gap-2">
             {drafts.map((d, i) => (

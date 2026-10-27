@@ -11,6 +11,17 @@ export function parseIsoDate(s: string): Date {
 /** Default zone for "today"/week on the server (Vercel runs in UTC). */
 export const APP_TIME_ZONE = 'Europe/Rome';
 
+/** Zone to use for "today"/week: the given IANA zone when valid, otherwise APP_TIME_ZONE. */
+export function resolveTimeZone(tz: string | null | undefined): string {
+  if (!tz || tz.length > 64) return APP_TIME_ZONE;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return tz;
+  } catch {
+    return APP_TIME_ZONE;
+  }
+}
+
 /** Calendar day (YYYY-MM-DD) of `now` in `timeZone`; pass null to use the runtime's local zone (client). */
 export function todayIso(now: Date = new Date(), timeZone: string | null = APP_TIME_ZONE): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone ?? undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
