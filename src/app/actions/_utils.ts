@@ -34,6 +34,7 @@ export type ErrorCode =
   | 'image_invalid'
   | 'image_too_large'
   | 'too_many_files'
+  | 'audio_too_long'
   | 'storage_quota_exceeded'
   | 'auth_invalid'
   | 'auth_email_taken'

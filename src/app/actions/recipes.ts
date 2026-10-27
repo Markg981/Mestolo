@@ -5,7 +5,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
-import { cleanEditorPayload, recipeInputSchema } from '@/lib/recipes/schema';
+import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
 import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
@@ -21,7 +21,7 @@ function invalidatePublicPage(slug: string | null | undefined) {
 
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
 /**
- * `expectedVersion` is the recipe version read when the editor was opened: if the row moved on in the
+ * `expectedVersion` (required when updating) is the recipe version read when the editor was opened: if the row moved on in the
  * meantime (another tab or device saved), nothing is overwritten and the result is 'conflict'.
  * `idempotencyKey` (creation only): a client-generated UUID; a repeated submit with the same key returns the recipe already created.
  */
@@ -48,28 +48,27 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       tags: d.tags,
       visibility: d.visibility,
       field_flags: d.field_flags,
-      verification_status: d.verification_status,
+      verification_status: effectiveVerificationStatus(d),
       diet_hints: d.diet_hints,
     };
 
     let id = recipeId ?? null;
     let created = false;
     if (id) {
-      if (!uuid.safeParse(id).success) return fail('invalid_input');
+      // update senza versione attesa = ultima scrittura vince: non ammesso
+      if (!uuid.safeParse(id).success || !Number.isInteger(expectedVersion)) return fail('invalid_input');
       let q = supabase
         .from('recipes')
         .update({ ...content, last_change_source: 'edit' })
         .eq('id', id)
         .eq('owner_id', user.id);
-      if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion);
+      q = q.eq('version', expectedVersion as number);
       const { data, error } = await q.select('id, public_slug').maybeSingle();
       if (error) return dbFailure(error, 'saveRecipe.update');
       if (!data) {
-        if (typeof expectedVersion === 'number') {
-          // 0 righe: la ricetta non esiste piu' oppure la versione e' cambiata
-          const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
-          if (cur) return fail('conflict');
-        }
+        // 0 righe: la ricetta non esiste piu' oppure la versione e' cambiata
+        const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
+        if (cur) return fail('conflict');
         return fail('not_found');
       }
       invalidatePublicPage(data.public_slug as string | null);
@@ -210,7 +209,7 @@ export async function toggleFavorite(recipeId: string, favorite: boolean): Promi
   if (!user || !uuid.safeParse(recipeId).success) return fail('forbidden');
   const supabase = await createClient();
   const { error } = favorite
-    ? await supabase.from('favorites').upsert({ user_id: user.id, recipe_id: recipeId })
+    ? await supabase.from('favorites').upsert({ user_id: user.id, recipe_id: recipeId }, { onConflict: 'user_id,recipe_id', ignoreDuplicates: true })
     : await supabase.from('favorites').delete().eq('user_id', user.id).eq('recipe_id', recipeId);
   if (error) return dbFailure(error, 'toggleFavorite');
   revalidatePath(`/recipes/${recipeId}`);
@@ -283,6 +282,7 @@ export async function restoreVersion(recipeId: string, version: number, expected
   const { data: v } = await supabase.from('recipe_versions').select('snapshot').eq('recipe_id', recipeId).eq('version', version).maybeSingle();
   if (!v) return fail('not_found');
   const s = v.snapshot as Record<string, unknown>;
+  const { data: before } = await supabase.from('recipes').select('public_slug').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
   const { data, error } = await supabase
     .from('recipes')
     .update({
@@ -303,12 +303,16 @@ export async function restoreVersion(recipeId: string, version: number, expected
     .eq('id', recipeId)
     .eq('owner_id', user.id)
     .eq('version', expectedVersion)
-    .select('id');
+    .select('id, public_slug');
   if (error) return dbFailure(error, 'restoreVersion');
   if (!data?.length) {
     const { data: cur } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     return fail(cur ? 'conflict' : 'not_found');
   }
+  // La pagina pubblica e' in cache: vecchio e nuovo slug (se cambia) mostrerebbero il contenuto precedente al ripristino
+  invalidatePublicPage(before?.public_slug as string | null | undefined);
+  const newSlug = (data[0] as { public_slug?: string | null }).public_slug;
+  if (newSlug && newSlug !== before?.public_slug) invalidatePublicPage(newSlug);
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath(`/recipes/${recipeId}/history`);
   return ok();

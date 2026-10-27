@@ -14,7 +14,7 @@ interface DictationLike {
   interimResults: boolean;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
   start(): void;
   stop(): void;
 }
@@ -46,7 +46,9 @@ export function CookAssistant({ recipeId, stepIndex, servings, available, onClos
     return () => {
       try {
         recRef.current?.stop();
-      } catch {}
+      } catch {
+        // stop() can throw when not running: already stopped
+      }
     };
   }, []);
 
@@ -80,7 +82,9 @@ export function CookAssistant({ recipeId, stepIndex, servings, available, onClos
     if (dictating) {
       try {
         recRef.current?.stop();
-      } catch {}
+      } catch {
+        // stop() can throw when not running: already stopped
+      }
       return;
     }
     const Ctor = dictationCtor();
@@ -97,13 +101,18 @@ export function CookAssistant({ recipeId, stepIndex, servings, available, onClos
       if (text) setQuestion((q) => `${q} ${text}`.trim().slice(0, COOK_QUESTION_MAX));
     };
     rec.onend = () => setDictating(false);
-    rec.onerror = () => setDictating(false);
+    rec.onerror = (e) => {
+      setDictating(false);
+      // 'no-speech' and 'aborted' are normal outcomes, not failures
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') setError(t('dictationFailed'));
+    };
     recRef.current = rec;
     try {
       rec.start();
       setDictating(true);
     } catch {
       setDictating(false);
+      setError(t('dictationFailed'));
     }
   };
 

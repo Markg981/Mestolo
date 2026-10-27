@@ -90,8 +90,9 @@ export async function toggleShoppingItem(id: string, checked: boolean): Promise<
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('shopping_items').update({ checked }).eq('id', id);
+  const { data, error } = await supabase.from('shopping_items').update({ checked }).eq('id', id).select('id');
   if (error) return dbFailure(error, 'toggleShoppingItem');
+  if (!data?.length) return fail('not_found');
   revalidatePath('/shopping');
   return ok();
 }
@@ -100,8 +101,9 @@ export async function deleteShoppingItem(id: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('shopping_items').delete().eq('id', id);
+  const { data, error } = await supabase.from('shopping_items').delete().eq('id', id).select('id');
   if (error) return dbFailure(error, 'deleteShoppingItem');
+  if (!data?.length) return fail('not_found');
   revalidatePath('/shopping');
   return ok();
 }
@@ -146,8 +148,9 @@ export async function deletePlanEntry(id: string): Promise<ActionResult> {
   const user = await getUser();
   if (!user || !uuid.safeParse(id).success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('meal_plan_entries').delete().eq('id', id);
+  const { data, error } = await supabase.from('meal_plan_entries').delete().eq('id', id).select('id');
   if (error) return dbFailure(error, 'deletePlanEntry');
+  if (!data?.length) return fail('not_found');
   revalidatePath('/plan');
   return ok();
 }

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const auth = { getClaims: vi.fn(), updateUser: vi.fn() };
+const auth = { getClaims: vi.fn(), updateUser: vi.fn(), signOut: vi.fn() };
 const enforceRateLimit = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth }) }));
@@ -41,6 +41,7 @@ describe('updatePassword', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     auth.updateUser.mockResolvedValue({ error: null });
+    auth.signOut.mockResolvedValue({ error: null });
     enforceRateLimit.mockResolvedValue(undefined);
   });
 
@@ -59,6 +60,7 @@ describe('updatePassword', () => {
     auth.getClaims.mockResolvedValue({ data: { claims: { sub: 'u1', amr: [{ method: 'otp', timestamp: now() }] } } });
     await updatePassword(undefined, form());
     expect(auth.updateUser).toHaveBeenCalledWith({ password: 'newpassword1' });
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' });
   });
 
   it('applica il rate limit', async () => {

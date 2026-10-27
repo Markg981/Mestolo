@@ -127,6 +127,7 @@
     "image_invalid": "Ce fichier n'est pas une image lisible. Utilisez JPG, PNG ou WebP.",
     "image_too_large": "Les images sont trop lourdes. Réduisez le nombre de pages ou compressez-les.",
     "too_many_files": "Trop de photos pour une seule recette.",
+    "audio_too_long": "L'audio est trop long. Utilisez une vidéo plus courte.",
     "storage_quota_exceeded": "Vous avez atteint le nombre maximal de photos enregistrées. Supprimez-en pour en ajouter.",
     "auth_invalid": "E-mail ou mot de passe incorrect.",
     "auth_email_taken": "Un compte existe déjà avec cette adresse e-mail.",
@@ -1187,6 +1188,7 @@
     "listening": "À l’écoute : dites « suivant » ou « retour »",
     "voiceDenied": "Micro non autorisé : commandes vocales désactivées.",
     "wakeUnsupported": "L’écran pourrait s’éteindre : le maintien de l’écran allumé n’est pas pris en charge ici.",
+    "wakeFailed": "L’écran pourrait s’éteindre : impossible de le garder allumé.",
     "noSteps": "Cette recette n’a pas encore d’étapes.",
     "assistOpen": "Demander à l’assistant",
     "assistTitle": "Demander à l’assistant",
@@ -1202,6 +1204,7 @@
     "assistUnavailable": "L’assistant IA n’est pas disponible. Configurez une clé IA dans les réglages pour l’utiliser en cuisinant.",
     "assistSettings": "Aller aux réglages IA",
     "assistOffline": "Vous êtes hors ligne : l’assistant nécessite une connexion. Vous pouvez continuer à cuisiner normalement.",
+    "dictationFailed": "Dictée indisponible : micro non autorisé ou inaccessible.",
     "assistDisclaimer": "Les réponses générées par IA peuvent contenir des erreurs. Aucun conseil médical ni sur les allergies ; en cas de doute, choisissez l’option la plus prudente."
   },
   "collectionSharing": {
