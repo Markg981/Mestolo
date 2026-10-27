@@ -40,3 +40,31 @@ describe('guardTranslatedNumbers', () => {
     expect(out.steps[1].text).toBe('Let cool');
   });
 });
+
+describe('guardTranslatedNumbers su name e section', () => {
+  const original = {
+    title: 'Ricetta',
+    description: '',
+    ingredients: [{ name: 'uova da 60 g', note: null, section: 'Impasto 1', quantity: 2, unit: null }],
+    steps: [],
+  } as never;
+  it('mantiene il testo originale se il modello cambia un numero', () => {
+    const out = guardTranslatedNumbers(original, {
+      title: 'Recipe',
+      description: '',
+      ingredients: [{ name: 'eggs of 600 g', note: null, section: 'Dough 2' }],
+      steps: [],
+    });
+    expect(out.ingredients[0].name).toBe('uova da 60 g');
+    expect(out.ingredients[0].section).toBe('Impasto 1');
+  });
+  it('accetta la traduzione con numeri uguali', () => {
+    const out = guardTranslatedNumbers(original, {
+      title: 'Recipe',
+      description: '',
+      ingredients: [{ name: 'eggs of 60 g', note: null, section: 'Dough 1' }],
+      steps: [],
+    });
+    expect(out.ingredients[0].name).toBe('eggs of 60 g');
+  });
+});
