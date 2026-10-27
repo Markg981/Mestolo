@@ -28,6 +28,20 @@ describe('proxy', () => {
   });
   afterEach(() => vi.unstubAllEnvs());
 
+  describe('public image routes', () => {
+    it('skips getUser() for /api/public-images and keeps the CSP', async () => {
+      const res = await call('/api/public-images/abc');
+      expect(res.status).toBe(200);
+      expect(getUser).not.toHaveBeenCalled();
+      expect(res.headers.get('content-security-policy')).toBeTruthy();
+    });
+
+    it.each(['/api/images/1', '/api/avatars/u1', '/api/cook-photos/1'])('still refreshes the session for %s', async (p) => {
+      await call(p);
+      expect(getUser).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('anonymous user', () => {
     it('sends / to /welcome without a next param', async () => {
       const res = await call('/');

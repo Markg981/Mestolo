@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   verify:
@@ -116,17 +115,9 @@ jobs:
           tar -xf storage-restore.tar -C storage-restore
           node scripts/verify-storage-backup.mjs storage-restore
 
-      # Alert: apre (o aggiorna) una issue se il job fallisce, cosi' il fallimento non resta silenzioso
-      - name: Alert on failure
-        if: failure() && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          title="ALERT: restore-verify fallito"
-          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number' || true)"
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "Nuovo fallimento: $url"
-          else
-            gh issue create --title "$title" --body "Il workflow restore-verify e fallito: $url"
-          fi
+  alert:
+    needs: [verify]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/alert-on-failure.yml
