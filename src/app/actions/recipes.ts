@@ -20,7 +20,7 @@ function invalidatePublicPage(slug: string | null | undefined) {
 
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
 /**
- * `expectedVersion` is the recipe version read when the editor was opened: if the row moved on in the
+ * `expectedVersion` (required when updating) is the recipe version read when the editor was opened: if the row moved on in the
  * meantime (another tab or device saved), nothing is overwritten and the result is 'conflict'.
  * `idempotencyKey` (creation only): a client-generated UUID; a repeated submit with the same key returns the recipe already created.
  */
@@ -54,21 +54,20 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
     let id = recipeId ?? null;
     let created = false;
     if (id) {
-      if (!uuid.safeParse(id).success) return fail('invalid_input');
+      // update senza versione attesa = ultima scrittura vince: non ammesso
+      if (!uuid.safeParse(id).success || !Number.isInteger(expectedVersion)) return fail('invalid_input');
       let q = supabase
         .from('recipes')
         .update({ ...content, last_change_source: 'edit' })
         .eq('id', id)
         .eq('owner_id', user.id);
-      if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion);
+      q = q.eq('version', expectedVersion as number);
       const { data, error } = await q.select('id, public_slug').maybeSingle();
       if (error) return dbFailure(error, 'saveRecipe.update');
       if (!data) {
-        if (typeof expectedVersion === 'number') {
-          // 0 righe: la ricetta non esiste piu' oppure la versione e' cambiata
-          const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
-          if (cur) return fail('conflict');
-        }
+        // 0 righe: la ricetta non esiste piu' oppure la versione e' cambiata
+        const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
+        if (cur) return fail('conflict');
         return fail('not_found');
       }
       invalidatePublicPage(data.public_slug as string | null);

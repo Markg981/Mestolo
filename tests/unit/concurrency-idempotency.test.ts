@@ -84,6 +84,12 @@ describe('saveRecipe: errori su note e nutrizione', () => {
     expect(deleted).toHaveBeenCalled();
   });
 
+  it('rejects an update without expectedVersion', async () => {
+    mocks.createClient.mockResolvedValue({ from: () => builder({ data: { id: RID, public_slug: null }, error: null }) });
+    const res = await saveRecipe(base, RID, null, null);
+    expect(res).toMatchObject({ ok: false, error: 'invalid_input' });
+  });
+
   it('fails on update when the note write fails', async () => {
     mocks.createClient.mockResolvedValue({
       from: (t: string) =>
@@ -91,7 +97,7 @@ describe('saveRecipe: errori su note e nutrizione', () => {
           ? builder({ data: null, error: { code: 'XX', message: 'boom' } })
           : builder({ data: { id: RID, public_slug: null }, error: null }),
     });
-    const res = await saveRecipe(base, RID, null, null);
+    const res = await saveRecipe(base, RID, 3, null);
     expect(res.ok).toBe(false);
   });
 });
