@@ -2,7 +2,7 @@ name: Ops monitor
 
 # Controlli periodici che falliscono (e quindi notificano via email di GitHub) quando un job schedulato
 # smette di funzionare in silenzio:
-# - backup-age: l'ultimo artifact db-backup-* deve avere meno di 36 ore (backup.yml gira ogni notte)
+# - backup-age: l'ultimo backup su S3 (mestolo/db/) deve avere meno di 36 ore (backup.yml gira ogni notte)
 # - missed-reminders: nessun promemoria dei pasti scaduto nelle ultime 24 ore deve essere rimasto senza claim
 #   (vuol dire che /api/cron/meal-reminders non e' stata chiamata nella sua finestra)
 # - recent-success: Backup, Restore verify e Meal reminders devono avere almeno un'esecuzione riuscita nelle ultime 48 ore
@@ -20,16 +20,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      GH_TOKEN: ${{ github.token }}
       MAX_AGE_HOURS: 36
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
     steps:
       - name: Check age of the latest backup
         run: |
           set -euo pipefail
-          latest="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select((.name | startswith("db-backup-")) and (.expired | not)) | .created_at' | sort -r | head -n1)"
-          if [ -z "$latest" ]; then
-            echo "::error::Nessun artifact db-backup-* disponibile: non esiste alcun backup del database."
+          if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+            echo "::error::Secret BACKUP_S3_* non impostati: impossibile controllare l'eta' del backup."
+            exit 1
+          fi
+          endpoint=()
+          if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
+          export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+          latest="$(aws s3api list-objects-v2 "${endpoint[@]}" --bucket "${BACKUP_S3_BUCKET}" --prefix mestolo/db/             --query 'sort_by(Contents, &LastModified)[-1].LastModified' --output text 2>/dev/null || true)"
+          if [ -z "$latest" ] || [ "$latest" = "None" ]; then
+            echo "::error::Nessun backup in S3 (mestolo/db/): non esiste alcun backup del database."
             exit 1
           fi
           age_h=$(( ( $(date -u +%s) - $(date -u -d "$latest" +%s) ) / 3600 ))
