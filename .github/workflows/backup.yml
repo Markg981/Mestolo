@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: backup
@@ -104,3 +105,18 @@ jobs:
           backup_encrypt "out/storage-${STAMP}.tar" "out/storage-${STAMP}.tar.gpg"
           rm -f "out/storage-${STAMP}.tar"
           scripts/s3-upload-verify.sh "out/storage-${STAMP}.tar.gpg" "mestolo/storage/storage-${STAMP}.tar.gpg"
+
+      # Alert: apre (o aggiorna) una issue se il job fallisce, cosi' il fallimento non resta silenzioso
+      - name: Alert on failure
+        if: failure() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="ALERT: backup fallito"
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number' || true)"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Nuovo fallimento: $url"
+          else
+            gh issue create --title "$title" --body "Il workflow backup e fallito: $url"
+          fi
