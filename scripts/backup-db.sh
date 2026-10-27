@@ -9,16 +9,20 @@
 # connessione diretta e con il session pooler (porta 5432), perche' la sessione e' dedicata e persistente.
 # NON funziona col transaction pooler (porta 6543): lo snapshot esportato non sarebbe visibile ai pg_dump.
 #
-# Uso: BACKUP_PASSPHRASE=... [PG_BIN=/usr/lib/postgresql/17/bin] scripts/backup-db.sh <db_url> <out_dir>
+# Cifratura ASIMMETRICA (gpg --encrypt): serve solo la chiave PUBBLICA, la privata sta fuori da GitHub.
+#
+# Uso: BACKUP_GPG_PUBLIC_KEY=... [PG_BIN=/usr/lib/postgresql/17/bin] scripts/backup-db.sh <db_url> <out_dir>
 # Scrive <out_dir>/backup-<stamp>.tar.gpg e stampa lo stamp su stdout (il resto va su stderr).
 set -euo pipefail
 db="$1"
 out="$2"
 bin="${PG_BIN:+$PG_BIN/}"
-: "${BACKUP_PASSPHRASE:?BACKUP_PASSPHRASE richiesto}"
+: "${BACKUP_GPG_PUBLIC_KEY:?BACKUP_GPG_PUBLIC_KEY richiesto}"
 here="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/backup-probes.sh
 . "$here/lib/backup-probes.sh"
+# shellcheck source=lib/backup-gpg.sh
+. "$here/lib/backup-gpg.sh"
 
 umask 077
 mkdir -p "$out"
@@ -70,7 +74,6 @@ grep -qE '^count public.recipes [1-9]' "$out/manifest-$stamp.txt" || { echo "::e
 grep -qE '^count auth.users [1-9]' "$out/manifest-$stamp.txt" || { echo "::error::auth.users vuota: backup sospetto" >&2; exit 1; }
 
 tar -cf "$out/backup-$stamp.tar" -C "$out" "public-$stamp.dump" "auth-$stamp.dump" "storage-meta-$stamp.dump" "manifest-$stamp.txt"
-gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
-  --passphrase-fd 3 --output "$out/backup-$stamp.tar.gpg" "$out/backup-$stamp.tar" 3<<<"$BACKUP_PASSPHRASE"
+backup_encrypt "$out/backup-$stamp.tar" "$out/backup-$stamp.tar.gpg"
 rm -f "$out"/*.dump "$out"/*.tar "$out"/*.txt
 echo "$stamp"

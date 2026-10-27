@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FieldFlags, Ingredient, RecipeContent, Step } from './types';
+import type { FieldFlag, FieldFlags, Ingredient, RecipeContent, Step } from './types';
 
 /** Ingredient as produced by an AI provider (validated). */
 export const aiIngredientSchema = z.object({
@@ -65,6 +65,12 @@ function ingredientLabel(i: Ingredient): string {
   return [i.quantity ?? '', i.unit ?? '', i.name].filter((x) => x !== '').join(' ').trim();
 }
 
+/** Segna come stima AI; missing/low_confidence decadono perche il campo e stato compilato, gli altri flag restano. */
+function withAiEstimate(flags: FieldFlag[] | undefined): FieldFlag[] {
+  const kept = (flags ?? []).filter((f) => f !== 'missing' && f !== 'low_confidence' && f !== 'ai_estimate');
+  return [...kept, 'ai_estimate'];
+}
+
 export interface ApplyResult {
   content: RecipeContent;
   fieldFlags: FieldFlags;
@@ -100,7 +106,7 @@ export function applySuggestions(
         const step: Step | undefined = content.steps[s.stepIndex];
         if (!step) { skipped.push({ id: s.id, reason: 'out_of_range' }); break; }
         if (original.steps[s.stepIndex]?.text.trim() !== s.before.trim()) { skipped.push({ id: s.id, reason: 'stale' }); break; }
-        content.steps[s.stepIndex] = { ...step, text: s.after, flags: undefined };
+        content.steps[s.stepIndex] = { ...step, text: s.after, flags: withAiEstimate(step.flags) };
         applied.push(s.id);
         break;
       }
@@ -121,7 +127,7 @@ export function applySuggestions(
           quantityMax: null,
           toTaste: false,
           note: s.after.note ?? ing.note ?? null,
-          flags: undefined,
+          flags: withAiEstimate(ing.flags),
         };
         applied.push(s.id);
         break;
@@ -133,7 +139,7 @@ export function applySuggestions(
           skipped.push({ id: s.id, reason: 'duplicate' });
           break;
         }
-        adds.push({ name: s.after.name, quantity: s.after.quantity, unit: s.after.unit, note: s.after.note ?? null });
+        adds.push({ name: s.after.name, quantity: s.after.quantity, unit: s.after.unit, note: s.after.note ?? null, flags: ['ai_estimate'] });
         applied.push(s.id);
         break;
       }
