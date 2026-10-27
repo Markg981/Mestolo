@@ -52,6 +52,7 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
     };
 
     let id = recipeId ?? null;
+    let created = false;
     if (id) {
       if (!uuid.safeParse(id).success) return fail('invalid_input');
       let q = supabase
@@ -106,15 +107,24 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       // Valori nutrizionali trovati dall'import (schema.org): rivalidati qui, fonte sempre 'imported'.
       const imported = validateNutrition((payload as { nutrition?: unknown } | null)?.nutrition);
       if (d.source_type === 'url' && imported.ok) {
-        await supabase.from('recipe_nutrition').upsert({ recipe_id: id, ...imported.values, source: 'imported' });
+        const { error: nErr } = await supabase.from('recipe_nutrition').upsert({ recipe_id: id, ...imported.values, source: 'imported' });
+        if (nErr) {
+          // Compensazione: la ricetta appena creata non deve restare a meta (un retry idempotente la restituirebbe senza nutrizione).
+          await supabase.from('recipes').delete().eq('id', id).eq('owner_id', user.id);
+          return dbFailure(nErr, 'saveRecipe.nutrition');
+        }
       }
+      created = true;
     }
 
     if (d.personal_note !== undefined) {
-      if (d.personal_note.trim()) {
-        await supabase.from('recipe_notes').upsert({ recipe_id: id, owner_id: user.id, body: d.personal_note });
-      } else {
-        await supabase.from('recipe_notes').delete().eq('recipe_id', id).eq('owner_id', user.id);
+      const { error: noteErr } = d.personal_note.trim()
+        ? await supabase.from('recipe_notes').upsert({ recipe_id: id, owner_id: user.id, body: d.personal_note })
+        : await supabase.from('recipe_notes').delete().eq('recipe_id', id).eq('owner_id', user.id);
+      if (noteErr) {
+        // In creazione compensa eliminando la ricetta; in modifica il salvataggio non va dichiarato riuscito.
+        if (created) await supabase.from('recipes').delete().eq('id', id).eq('owner_id', user.id);
+        return dbFailure(noteErr, 'saveRecipe.note');
       }
     }
     revalidatePath('/recipes');
