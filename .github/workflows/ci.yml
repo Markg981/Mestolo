@@ -12,6 +12,27 @@ permissions:
   contents: read
 
 jobs:
+  legal:
+    # Non bloccante: rende visibile (warning) che mancano i dati del titolare.
+    # Valori da definire in GitHub > Settings > Variables > Actions (non sono secret).
+    name: Dati titolare (LEGAL_STRICT, non bloccante)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 5
+    env:
+      LEGAL_STRICT: "1"
+      NEXT_PUBLIC_LEGAL_NAME: ${{ vars.NEXT_PUBLIC_LEGAL_NAME }}
+      NEXT_PUBLIC_LEGAL_ADDRESS: ${{ vars.NEXT_PUBLIC_LEGAL_ADDRESS }}
+      NEXT_PUBLIC_LEGAL_EMAIL: ${{ vars.NEXT_PUBLIC_LEGAL_EMAIL }}
+      NEXT_PUBLIC_LEGAL_DATA_REGION: ${{ vars.NEXT_PUBLIC_LEGAL_DATA_REGION }}
+      NEXT_PUBLIC_LEGAL_SENTRY_REGION: ${{ vars.NEXT_PUBLIC_LEGAL_SENTRY_REGION }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node scripts/check-legal.mjs
+
   checks:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
