@@ -216,6 +216,12 @@ export async function translateRecipe(recipeId: string, target: string): Promise
     const { data: cached } = await supabase.from('recipe_translations').select('source_hash').eq('recipe_id', recipeId).eq('locale', target).maybeSingle();
     if (cached && isTranslationFresh(cached.source_hash, r.content_hash)) return ok({ cached: true });
 
+    // L-14: claim atomico per (ricetta, lingua): una sola richiesta chiama il provider.
+    const admin = createAdminClient();
+    const { data: claimed, error: claimError } = await admin.rpc('claim_translation_lock', { p_recipe: recipeId, p_locale: target });
+    if (claimError) return dbFailure(claimError, 'translateRecipe.claim');
+    if (!claimed) return fail('conflict'); // traduzione gia in corso: il client riprova/ricarica
+    try {
     await enforceRateLimit('ai_translate', user.id);
     const resolved = await resolveProvider(user.id, 'text', 'translate', 'recipe');
     return await withRefund(user.id, resolved, 'translate', 'recipe', async (paid) => {
@@ -238,6 +244,10 @@ export async function translateRecipe(recipeId: string, target: string): Promise
       revalidatePath(`/recipes/${recipeId}`);
       return ok({ cached: false });
     });
+    } finally {
+      // pulizia anche su errore; se fallisce, il TTL libera comunque il lock
+      await admin.rpc('release_translation_lock', { p_recipe: recipeId, p_locale: target }).then(undefined, () => undefined);
+    }
   } catch (e) {
     return toFailure(e, 'translateRecipe');
   }

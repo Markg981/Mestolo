@@ -52,6 +52,9 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     rpc: (...a: unknown[]) => {
+      // L-14: le RPC del lock di traduzione non sono rimborsi; il claim va sempre a buon fine.
+      if (a[0] === 'claim_translation_lock') return Promise.resolve({ data: true, error: null });
+      if (a[0] === 'release_translation_lock') return Promise.resolve({ data: null, error: null });
       rpc(...a);
       if (refundFails) throw new Error('rpc down');
       return Promise.resolve({ data: null, error: null });
