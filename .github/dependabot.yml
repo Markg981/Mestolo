@@ -27,6 +27,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # Gradle >= 9.6 ha rimosso l'API interna InternalProblems usata da AGP 8.x:
+      # la build Android fallisce. Aggiornare il wrapper insieme ad AGP 9.
+      - dependency-name: gradle-wrapper
+        versions:
+          - ">=9.6.0"
     groups:
       gradle-minor-patch:
         update-types:
