@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convertIngredient, convertTemperatures, findDensity, formatFractionQuantity } from '@/lib/recipes/convert';
+import { convertIngredient, MAX_CONVERSION_ERROR, convertTemperatures, findDensity, formatFractionQuantity } from '@/lib/recipes/convert';
 import { scaleIngredients } from '@/lib/recipes/scale';
 import type { Ingredient } from '@/lib/recipes/types';
 import { parseIngredientLine } from '@/lib/recipes/ingredient-parser';
@@ -144,5 +144,26 @@ describe('L-13 precisione e densita', () => {
   });
   it('piccole quantita metriche mantengono precisione', () => {
     expect(metric(ing('acqua', 1.5, 'tsp')).ingredient.quantity).toBe(7.5);
+  });
+});
+
+describe('G-07: errore di arrotondamento g -> oz', () => {
+  const cases: Array<[number, string]> = [[4, 'g'], [10, 'g'], [100, 'g'], [1000, 'g'], [200, 'g']];
+  it.each(cases)('%s %s: errore relativo entro il 6% oppure unita originale', (q, u) => {
+    const r = convertIngredient(ing('spezia', q, u), 'us');
+    if (!r.converted) {
+      expect(r.ingredient.unit).toBe(u);
+      return;
+    }
+    const factor = { oz: 28.34952, lb: 453.59237 }[r.ingredient.unit as 'oz' | 'lb'];
+    expect(Math.abs((r.ingredient.quantity as number) * factor - q) / q).toBeLessThanOrEqual(MAX_CONVERSION_ERROR);
+  });
+  it('4 g non diventa 0,25 oz', () => {
+    expect(convertIngredient(ing('zafferano', 4, 'g'), 'us')).toMatchObject({ converted: false });
+  });
+  it('100 g si converte, ml e cup restano invariati', () => {
+    expect(convertIngredient(ing('pollo', 100, 'g'), 'us').ingredient).toMatchObject({ unit: 'oz', quantity: 3.5 });
+    expect(convertIngredient(ing('brodo', 240, 'ml'), 'us').ingredient).toMatchObject({ unit: 'cup' });
+    expect(convertIngredient(ing('brodo', 1, 'cup'), 'us').converted).toBe(false);
   });
 });
