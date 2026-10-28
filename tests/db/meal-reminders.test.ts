@@ -41,10 +41,10 @@ d('meal plan notifications', () => {
     const b = await mkUser(`mr_b_${s}`);
     await as(a, 'select public.save_push_subscription($1, $2, $3, $4)', [`https://fcm.googleapis.com/fcm/send/a-${s}`, 'p', 'k', 'UA']);
     expect(await as(b, 'select id from public.push_subscriptions')).toHaveLength(0);
-    await expect(as(b, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://fcm.googleapis.com/fcm/send/x-' || $2, 'p', 'k')", [a, s])).rejects.toThrow(/row-level security/);
+    await expect(as(b, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, 'https://fcm.googleapis.com/fcm/send/x-' || $2, 'p', 'k')", [a, s])).rejects.toThrow(/permission denied/);
     await as(b, 'delete from public.push_subscriptions');
     expect(await as(a, 'select id from public.push_subscriptions')).toHaveLength(1);
-    await as(b, "update public.push_subscriptions set auth = 'hacked'");
+    await expect(as(b, "update public.push_subscriptions set auth = 'hacked'")).rejects.toThrow(/permission denied/);
     expect((await as<{ auth: string }>(a, 'select auth from public.push_subscriptions'))[0].auth).toBe('k');
     await as(a, 'delete from public.push_subscriptions');
     expect(await as(a, 'select id from public.push_subscriptions')).toHaveLength(0);
