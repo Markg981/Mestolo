@@ -6,6 +6,8 @@ require('../../public/sw-logic.js');
 const L = (globalThis as unknown as { MestoloSw: unknown }).MestoloSw as {
   canIgnoreSearch: (p: string) => boolean;
   userCacheName: (h: string) => string;
+  staticCacheName: (b: unknown) => string;
+  staticCachesToDelete: (n: string[], c: string) => string[];
   cachesToDelete: (names: string[], keep: string | null) => string[];
   isSessionLost: (status: number, redirected: boolean, url: string) => boolean;
   canUseUserCache: (h: unknown) => boolean;
@@ -109,5 +111,17 @@ describe('service worker: ignoreSearch', () => {
     expect(L.canIgnoreSearch('/shopping')).toBe(false);
     expect(L.canIgnoreSearch('/plan')).toBe(false);
     expect(L.canIgnoreSearch('/collections')).toBe(false);
+  });
+});
+
+describe('cache statica legata alla build (E-01)', () => {
+  it('il nome dipende dall id build e viene sanificato', () => {
+    expect(L.staticCacheName('abc123')).toBe('mestolo-static-abc123');
+    expect(L.staticCacheName('a/b c!')).toBe('mestolo-static-abc');
+    expect(L.staticCacheName(undefined)).toBe('mestolo-static-dev');
+  });
+  it('cancella solo le cache statiche di altre build', () => {
+    const names = ['mestolo-static-old', 'mestolo-static-new', 'mestolo-meta', 'mestolo-user-abc', 'altro'];
+    expect(L.staticCachesToDelete(names, 'mestolo-static-new')).toEqual(['mestolo-static-old']);
   });
 });

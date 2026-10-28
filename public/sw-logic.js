@@ -21,6 +21,19 @@
     });
   }
 
+  /** Nome della cache statica legata alla build; senza id valido ripiega su 'dev'. */
+  function staticCacheName(buildId) {
+    var id = String(buildId || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 16);
+    return 'mestolo-static-' + (id || 'dev');
+  }
+
+  /** Cache statiche di build precedenti da cancellare (le altre famiglie di cache non si toccano). */
+  function staticCachesToDelete(names, currentName) {
+    return names.filter(function (n) {
+      return n.indexOf('mestolo-static-') === 0 && n !== currentName;
+    });
+  }
+
   function isAuthPath(pathname) {
     return AUTH_PATHS.some(function (re) {
       return re.test(pathname);
@@ -95,7 +108,7 @@
     });
   }
 
-  var api = { PRIVATE_TTL_MS, CACHED_AT_HEADER, isFresh, canIgnoreSearch, staticAssetPaths, userCacheName, isUserCacheName, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
+  var api = { PRIVATE_TTL_MS, CACHED_AT_HEADER, isFresh, canIgnoreSearch, staticAssetPaths, userCacheName, isUserCacheName, staticCacheName, staticCachesToDelete, cachesToDelete, isAuthPath, isSessionLost, canUseUserCache, shouldEvictImage, parsePushPayload };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.MestoloSw = api;
 })(typeof self !== 'undefined' ? self : globalThis);

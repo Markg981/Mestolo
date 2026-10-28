@@ -1073,7 +1073,9 @@
     "banner": "You're offline: you're seeing the last saved copy. Changes need a connection.",
     "title": "No connection",
     "lead": "This page isn't available offline. Recipes and shopping lists you opened recently are still available.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "updateAvailable": "A new version is available",
+    "updateAction": "Update"
   },
   "support": {
     "title": "Support",

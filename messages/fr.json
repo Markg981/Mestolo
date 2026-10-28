@@ -1073,7 +1073,9 @@
     "banner": "Vous êtes hors ligne : vous voyez la dernière copie enregistrée. Les modifications nécessitent une connexion.",
     "title": "Pas de connexion",
     "lead": "Cette page n'est pas disponible hors ligne. Les recettes et la liste de courses ouvertes récemment restent consultables.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "updateAvailable": "Nouvelle version disponible",
+    "updateAction": "Mettre à jour"
   },
   "support": {
     "title": "Assistance",
