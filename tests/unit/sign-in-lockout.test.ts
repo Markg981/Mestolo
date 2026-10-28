@@ -74,3 +74,20 @@ describe('signIn lockout', () => {
     expect(await signIn(undefined, form('wrongpassword'))).toMatchObject({ error: 'rate_limited' });
   });
 });
+
+describe('signIn: nessuna enumerazione degli account (A-08)', () => {
+  beforeEach(() => {
+    counts.clear();
+    vi.clearAllMocks();
+    currentIp = 'ip-a08';
+  });
+
+  it('credenziali errate e account non confermato restituiscono lo stesso errore', async () => {
+    auth.signInWithPassword.mockResolvedValueOnce({ data: { user: null }, error: { message: 'Invalid login credentials' } });
+    const wrong = await signIn(undefined, form('wrongpassword'));
+    auth.signInWithPassword.mockResolvedValueOnce({ data: { user: null }, error: { message: 'Email not confirmed' } });
+    const unconfirmed = await signIn(undefined, form('wrongpassword'));
+    expect(unconfirmed).toEqual(wrong);
+    expect(unconfirmed).toMatchObject({ error: 'auth_invalid' });
+  });
+});

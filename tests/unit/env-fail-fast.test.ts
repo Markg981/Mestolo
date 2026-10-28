@@ -15,7 +15,7 @@ const prod: Record<string, string> = {
 };
 
 function setEnv(o: Record<string, string | undefined>) {
-  for (const k of Object.keys(prod)) vi.stubEnv(k, '');
+  for (const k of [...Object.keys(prod), 'AI_APP_BASE_URL']) vi.stubEnv(k, '');
   vi.stubEnv('NEXT_PHASE', '');
   for (const [k, v] of Object.entries(o)) if (v !== undefined) vi.stubEnv(k, v);
 }
@@ -54,5 +54,32 @@ describe('env fail-fast in produzione', () => {
   it('durante next build non richiede i segreti', () => {
     setEnv({ NODE_ENV: 'production', NEXT_PHASE: 'phase-production-build' });
     expect(() => env()).not.toThrow();
+  });
+
+  describe('AI_APP_BASE_URL', () => {
+    it('accetta https', () => {
+      setEnv({ ...prod, AI_APP_BASE_URL: 'https://api.example.com/v1' });
+      expect(() => env()).not.toThrow();
+    });
+    it('rifiuta http remoto', () => {
+      setEnv({ ...prod, AI_APP_BASE_URL: 'http://api.example.com/v1' });
+      expect(() => env()).toThrow(/AI_APP_BASE_URL/);
+    });
+    it('rifiuta http localhost in produzione', () => {
+      setEnv({ ...prod, AI_APP_BASE_URL: 'http://localhost:11434/v1' });
+      expect(() => env()).toThrow(ConfigError);
+    });
+    it('accetta http localhost fuori produzione', () => {
+      setEnv({ ...prod, NODE_ENV: 'development', AI_APP_BASE_URL: 'http://127.0.0.1:11434/v1' });
+      expect(() => env()).not.toThrow();
+    });
+    it('rifiuta http remoto anche fuori produzione', () => {
+      setEnv({ ...prod, NODE_ENV: 'development', AI_APP_BASE_URL: 'http://evil.example.com' });
+      expect(() => env()).toThrow(ConfigError);
+    });
+    it('rifiuta URL non valido', () => {
+      setEnv({ ...prod, AI_APP_BASE_URL: 'not a url' });
+      expect(() => env()).toThrow(ConfigError);
+    });
   });
 });

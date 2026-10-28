@@ -1,0 +1,46 @@
+name: DB tests (Supabase reale)
+
+# Lo stub SQL di supabase/tests/supabase-stub.sql (usato dal job db-tests di ci.yml)
+# non riproduce grant ad anon, trigger storage, realtime e PostgREST. Questo workflow
+# esegue gli stessi test contro uno stack Supabase locale vero. Non e bloccante per
+# le PR: gira di notte e a mano.
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-tests-supabase-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  db-tests-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: latest
+      - run: npm ci
+      # Avvia Postgres/Auth/Storage/Realtime in Docker e applica supabase/migrations.
+      - name: Avvia Supabase locale
+        run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
+      - name: Esegui npm run test:db sul Postgres locale di Supabase
+        run: |
+          supabase status -o env > "$RUNNER_TEMP/supabase.env"
+          DB_URL="$(grep -E '^DB_URL=' "$RUNNER_TEMP/supabase.env" | head -1 | cut -d= -f2- | tr -d '"')"
+          test -n "$DB_URL" || { echo "::error::DB_URL non trovato in supabase status"; exit 1; }
+          TEST_DATABASE_URL="$DB_URL" npm run test:db
+      - name: Ferma Supabase
+        if: always()
+        run: supabase stop --no-backup

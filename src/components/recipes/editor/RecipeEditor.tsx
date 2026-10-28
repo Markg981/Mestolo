@@ -19,7 +19,7 @@ import { compressImage } from '@/lib/images/client-compress';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import type { FieldFlag, Visibility } from '@/lib/recipes/types';
 import { Alert, Badge, Button, Field, Input, Select, Textarea, buttonClass, cx, inputClass } from '../../ui';
-import { clearLegacyDrafts, draftGet, draftSet, draftStorageKey, parseDraft, serializeDraft } from '@/lib/drafts';
+import { clearLegacyDrafts, draftGet, draftSet, draftStorageKey, parseDraft, readDraftKey, serializeDraft } from '@/lib/drafts';
 import { useDraftUser } from './DraftUser';
 import { createSaveGuard, emptyIngredient, emptyStep, invalidQuantityIngredients, toEditorIngredient, toPayload } from './convert';
 import type { EditorIngredient, EditorProps, EditorState, EditorStep } from './types';
@@ -66,8 +66,10 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useActionTransition();
-  // one key per editor mount: a double submit or retry of a creation returns the same recipe
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // a double submit or retry of a creation returns the same recipe; the key is persisted in the draft so it survives remounts
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  // set once the recipe is saved: from then on no autosave may recreate the draft
+  const savedRef = useRef(false);
   const saveGuard = useRef(createSaveGuard());
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -103,11 +105,13 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     if (!storageKey) return;
     const raw = draftGet(storageKey);
     if (!raw) return;
+    const storedKey = readDraftKey(raw);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (storedKey) setIdempotencyKey(storedKey);
     // In edit mode the draft is restored directly only if it started from the current server version.
     const res = parseDraft<EditorState>(raw, { serverVersion: mode === 'edit' ? (baseVersion ?? '') : null });
     if (res.status === 'conflict') {
       // Restoring from browser storage (an external system) once on mount; the user decides whether to apply it.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (JSON.stringify(res.state) !== JSON.stringify(initial)) setConflictDraft(res.state);
       return;
     }
@@ -132,9 +136,9 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     if (!storageKey || conflictDraft) return;
     let pending = true;
     const write = () => {
-      if (!pending) return;
+      if (!pending || savedRef.current) return;
       pending = false;
-      setNotStored(!draftSet(storageKey, serializeDraft(s, baseVersion)));
+      setNotStored(!draftSet(storageKey, serializeDraft(s, baseVersion, Date.now(), idempotencyKey)));
     };
     const id = setTimeout(write, 500);
     // Tab hidden or closed before the debounce fires: write now so the last edits are not lost.
@@ -148,16 +152,24 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       window.removeEventListener('pagehide', write);
       document.removeEventListener('visibilitychange', onHide);
     };
-  }, [s, storageKey, baseVersion, conflictDraft]);
+  }, [s, storageKey, baseVersion, conflictDraft, idempotencyKey]);
 
   // Possible duplicates (new recipes and imports)
   useEffect(() => {
     if (mode === 'edit' || s.title.trim().length < 3) return;
+    let stale = false; // risposta obsoleta: l'effetto e stato ripulito (E-09)
     const id = setTimeout(async () => {
-      const res = await checkDuplicates({ title: s.title, source_url: source?.url ?? null, ingredients: s.ingredients.map((i) => ({ name: i.name })) }, recipeId);
-      setDuplicates(res);
+      try {
+        const res = await checkDuplicates({ title: s.title, source_url: source?.url ?? null, ingredients: s.ingredients.map((i) => ({ name: i.name })) }, recipeId);
+        if (!stale) setDuplicates(res);
+      } catch {
+        // fallback silenzioso: il controllo duplicati e solo un suggerimento
+      }
     }, 700);
-    return () => clearTimeout(id);
+    return () => {
+      stale = true;
+      clearTimeout(id);
+    };
   }, [s.title, s.ingredients, mode, source?.url, recipeId]);
 
   // Category suggestion while typing (manual creation): derived, never overrides a user choice
@@ -290,6 +302,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             extras.push('image');
           }
         }
+        savedRef.current = true;
         if (storageKey) draftSet(storageKey, null);
         onSaved?.();
         router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
@@ -335,7 +348,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
 
   return (
     <form onSubmit={submit} className={cx('grid gap-8', aside ? 'lg:grid-cols-[minmax(0,1fr)_22rem]' : '')} noValidate>
-      <div className="flex min-w-0 flex-col gap-8">
+      <fieldset disabled={saving} aria-busy={saving} className="m-0 flex min-w-0 flex-col gap-8 border-0 p-0">
         {restored && (
           <Alert tone="info" title={t('draftRestored')} action={<Button size="sm" onClick={discardDraft}>{t('discardDraft')}</Button>} />
         )}
@@ -390,7 +403,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                 <>
                   <dt className="text-muted">{t('sourceUrl')}</dt>
                   <dd className="min-w-0">
-                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
+                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
                       {source.url}
                       <ExternalLink aria-hidden className="size-4 shrink-0" />
                     </a>
@@ -692,7 +705,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             </Link>
           )}
         </div>
-      </div>
+      </fieldset>
       {aside && <aside className="flex flex-col gap-3 lg:sticky lg:top-6 lg:self-start">{aside}</aside>}
     </form>
   );

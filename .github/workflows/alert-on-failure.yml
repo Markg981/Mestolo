@@ -2,7 +2,8 @@ name: Alert on failure
 
 # Workflow riusabile: apre (o aggiorna) una issue "[Alert] <workflow> fallito" quando un workflow schedulato
 # fallisce, cosi' il problema non resta nascosto nella tab Actions. Una sola issue aperta per workflow: se esiste
-# gia' viene aggiunto un commento; la issue va chiusa a mano dopo la risoluzione.
+# gia' viene aggiunto un commento, al massimo uno ogni 24 ore (altrimenti uno schedule ogni 15 minuti
+# genererebbe fino a 96 commenti al giorno); la issue va chiusa a mano dopo la risoluzione.
 # Uso: job con `needs: [...]`, `if: failure() && github.event_name == 'schedule'`,
 # `permissions: { issues: write }` e `uses: ./.github/workflows/alert-on-failure.yml`.
 on:
@@ -30,7 +31,14 @@ jobs:
           number="$(gh issue list --state open --label ops-alert --json number,title \
             --jq "map(select(.title == \"${title}\"))[0].number // empty")"
           if [ -n "$number" ]; then
-            gh issue comment "$number" --body "Ancora fallito: ${RUN_URL}"
+            # Anti-spam: commenta solo se l'ultimo commento (o, senza commenti, la creazione) risale a piu' di 24 ore fa.
+            last="$(gh issue view "$number" --json createdAt,comments               --jq '(.comments | map(.createdAt) | last) // .createdAt')"
+            age=$(( $(date +%s) - $(date -d "$last" +%s) ))
+            if [ "$age" -ge 86400 ]; then
+              gh issue comment "$number" --body "Ancora fallito: ${RUN_URL}"
+            else
+              echo "Ultimo aggiornamento ${age}s fa (< 24h): commento omesso."
+            fi
           else
             gh issue create --title "$title" --label ops-alert --body "$body"
           fi

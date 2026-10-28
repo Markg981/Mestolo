@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: '/sw-build.js',
+        headers: [{ key: 'Cache-Control', value: 'no-cache' }],
+      },
+      {
         source: '/sw.js',
         headers: [
           { key: 'Cache-Control', value: 'no-cache' },

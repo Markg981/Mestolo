@@ -9,15 +9,20 @@
  * - POST requests (server actions), /api/* (except images) and auth pages are never cached
  */
 importScripts('/sw-logic.js');
+try {
+  importScripts('/sw-build.js'); // scritto da scripts/write-sw-build-id.mjs (prebuild)
+} catch {
+  /* assente in sviluppo: ripiega su 'dev' */
+}
 const L = self.MestoloSw;
-const VERSION = 'v6';
-const STATIC_CACHE = `mestolo-static-${VERSION}`;
+const STATIC_CACHE = L.staticCacheName(self.MESTOLO_BUILD_ID);
 const META_CACHE = 'mestolo-meta';
 const USER_KEY = '/__current-user';
 const OFFLINE_URL = '/offline';
 
 const CACHEABLE_PAGES = [/^\/$/, /^\/recipes\/?$/, /^\/recipes\/[0-9a-f-]{36}\/?$/, /^\/recipes\/[0-9a-f-]{36}\/cook\/?$/, /^\/shopping\/?$/, /^\/plan\/?$/, /^\/collections(\/[0-9a-f-]{36})?\/?$/];
 
+// Nessun skipWaiting automatico in install: la nuova versione si attiva quando l'utente accetta il prompt (PwaClient).
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -29,7 +34,6 @@ self.addEventListener('install', (event) => {
         const html = await (await c.match(OFFLINE_URL)).text();
         await Promise.all(L.staticAssetPaths(html).map((p) => c.add(p).catch(() => undefined)));
       })
-      .then(() => self.skipWaiting()),
   );
 });
 
@@ -37,7 +41,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('mestolo-static-') && k !== STATIC_CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(L.staticCachesToDelete(keys, STATIC_CACHE).map((k) => caches.delete(k))))
       // the legacy shared cache ("mestolo-user") is dropped here
       .then(() => wipeUserCaches(null))
       .then(() => self.clients.claim()),
@@ -85,7 +89,9 @@ async function onSessionLost() {
 self.addEventListener('message', (event) => {
   const data = event.data;
   if (!data) return;
-  if (data.type === 'clear-user-data') {
+  if (data.type === 'skip-waiting') {
+    self.skipWaiting();
+  } else if (data.type === 'clear-user-data') {
     event.waitUntil(onSessionLost());
   } else if (data.type === 'set-user' && typeof data.userHash === 'string' && data.userHash) {
     event.waitUntil(

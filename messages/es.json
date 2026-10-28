@@ -2,6 +2,11 @@
   "meta": {
     "description": "Tu recetario: guarda, importa y comparte recetas en todos tus dispositivos."
   },
+  "manifest": {
+    "shortcutAdd": "Añadir receta",
+    "shortcutImport": "Importar foto",
+    "shortcutShopping": "Lista de la compra"
+  },
   "common": {
     "actionFailed": "La acción falló: revisa tu conexión e inténtalo de nuevo.",
     "add": "Añadir",
@@ -130,7 +135,7 @@
     "too_many_files": "Demasiadas fotos para una sola receta.",
     "audio_too_long": "El audio es demasiado largo. Usa un vídeo más corto.",
     "storage_quota_exceeded": "Has alcanzado el número máximo o el espacio máximo de fotos guardadas. Elimina algunas para subir más.",
-    "auth_invalid": "Email o contraseña incorrectos.",
+    "auth_invalid": "Email o contraseña incorrectos. Si te acabas de registrar, confirma primero tu email (revisa tu bandeja de entrada).",
     "auth_email_taken": "Ya existe una cuenta con este email.",
     "auth_weak_password": "La contraseña debe tener al menos 8 caracteres.",
     "auth_not_confirmed": "Primero confirma tu email: revisa tu bandeja de entrada.",
@@ -1074,7 +1079,9 @@
     "title": "Sin conexión",
     "lead": "Esta página no está disponible sin conexión. Puedes seguir consultando las recetas y la lista de la compra que has abierto hace poco.",
     "retry": "Reintentar",
-    "signOutOffline": "Cerrar sesión requiere conexión. Vuelve a conectarte para salir: mientras tanto tus datos siguen en este dispositivo."
+    "signOutOffline": "Cerrar sesión requiere conexión. Vuelve a conectarte para salir: mientras tanto tus datos siguen en este dispositivo.",
+    "updateAvailable": "Nueva versión disponible",
+    "updateAction": "Actualizar"
   },
   "support": {
     "title": "Soporte",

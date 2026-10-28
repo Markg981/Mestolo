@@ -6,14 +6,51 @@ import { WifiOff } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
 import { clearAllDrafts, clearDraftsOfOtherUsers } from '@/lib/drafts';
 
-/** Registers the service worker (production only, secure contexts only). */
+/** Registers the service worker (production only, secure contexts only) and offers a reload when a new version is waiting. */
 export function ServiceWorkerRegister() {
+  const t = useTranslations('offline');
+  const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator) || !window.isSecureContext) return;
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
+    const sw = navigator.serviceWorker;
+    // true solo se l'aggiornamento e stato richiesto dall'utente: evita reload alla prima installazione (clients.claim)
+    let reloading = false;
+    const onControllerChange = () => {
+      if (!reloading) return;
+      window.location.reload();
+    };
+    sw.addEventListener('controllerchange', onControllerChange);
+    const track = (reg: ServiceWorkerRegistration) => {
+      const check = (worker: ServiceWorker | null) => {
+        if (worker && sw.controller) setWaiting(worker);
+      };
+      check(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const installing = reg.installing;
+        installing?.addEventListener('statechange', () => {
+          if (installing.state === 'installed') check(installing);
+        });
+      });
+    };
+    sw.register('/sw.js', { scope: '/' }).then(track, () => undefined);
+    applyUpdate = (worker: ServiceWorker) => {
+      reloading = true;
+      worker.postMessage({ type: 'skip-waiting' });
+    };
+    return () => sw.removeEventListener('controllerchange', onControllerChange);
   }, []);
-  return null;
+  if (!waiting) return null;
+  return (
+    <div role="status" className="no-print fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 bg-ink px-4 py-2 text-sm text-porcelain">
+      {t('updateAvailable')}
+      <button type="button" className="rounded border border-porcelain px-2 py-0.5 font-medium" onClick={() => applyUpdate(waiting)}>
+        {t('updateAction')}
+      </button>
+    </div>
+  );
 }
+
+let applyUpdate: (worker: ServiceWorker) => void = () => undefined;
 
 /**
  * Deletes cached private pages/images (called on logout and before login).
