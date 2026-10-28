@@ -35,6 +35,8 @@ export interface StoredDraft<T> {
   at: number;
   /** versione del server (content_hash) da cui e' partita la bozza; null per bozze di ricette nuove/importate */
   base: string | null;
+  /** chiave di idempotenza della creazione, stabile tra i remount finche' la bozza esiste (opzionale: bozze vecchie ne sono prive) */
+  key?: string;
 }
 
 export type DraftParseResult<T> =
@@ -63,8 +65,18 @@ export function parseDraft<T>(raw: string, opts: { serverVersion?: string | null
   return { status: 'ok', state: parsed.state };
 }
 
-export function serializeDraft<T>(state: T, base: string | null | undefined, now = Date.now()): string {
-  return JSON.stringify({ state, at: now, base: base ?? null } satisfies StoredDraft<T>);
+export function serializeDraft<T>(state: T, base: string | null | undefined, now = Date.now(), key?: string): string {
+  return JSON.stringify({ state, at: now, base: base ?? null, ...(key ? { key } : {}) } satisfies StoredDraft<T>);
+}
+
+/** Chiave di idempotenza salvata nella bozza serializzata (solo se e' un UUID valido), altrimenti null. */
+export function readDraftKey(raw: string): string | null {
+  try {
+    const k = (JSON.parse(raw) as { key?: unknown } | null)?.key;
+    return typeof k === 'string' && UUID_RE.test(k) ? k : null;
+  } catch {
+    return null;
+  }
 }
 
 function storage(): Storage | null {

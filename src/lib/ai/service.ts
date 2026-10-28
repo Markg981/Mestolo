@@ -36,7 +36,10 @@ async function loadUserKeys(userId: string): Promise<UserKeyRow[]> {
   const { data, error } = await admin.from('user_api_keys').select('provider, ciphertext, iv, auth_tag').eq('user_id', userId);
   // Mai ripiegare in silenzio sul servizio base: se non sappiamo se l'utente ha una chiave, errore esplicito.
   if (error) throw new AiError('keys_unavailable');
-  return (data as UserKeyRow[]) ?? [];
+  // Ordine stabile (C-09): con due chiavi di provider diversi la scelta non deve dipendere dall'ordine della query.
+  // OpenAI prima perche copre tutte le capability (testo, vision, immagini, audio); poi ordine alfabetico del provider.
+  const rank = (p: string) => (p === 'openai' ? 0 : 1);
+  return [...((data as UserKeyRow[]) ?? [])].sort((a, b) => rank(a.provider) - rank(b.provider) || a.provider.localeCompare(b.provider));
 }
 
 /** Best-effort lazy re-encryption under the current key after a fallback decrypt. */

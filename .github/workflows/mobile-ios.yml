@@ -67,13 +67,14 @@ jobs:
     permissions:
       checks: read
     steps:
-      # Il tag fa partire anche il workflow CI sullo stesso commit: la release aspetta che il check passi.
+      # Il tag fa partire anche il workflow CI sullo stesso commit: la release aspetta che passino i job bloccanti di ci.yml
+      # (lint/test/build, Test DB e backup round trip); il job legal e' non bloccante e resta escluso.
       - name: Attendi il check CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           for _ in $(seq 1 90); do
-            res=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs?filter=latest"               --jq '[.check_runs[] | select(.name == "Lint, typecheck, test, build")] | if length == 0 then "pending" elif all(.status == "completed") then (if all(.conclusion == "success") then "success" else "failure" end) else "pending" end')
+            res=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs?filter=latest&per_page=100" --jq '["Lint, typecheck, test, build","Test DB (Postgres)","Backup round trip (Postgres)"] as $req | [.check_runs[] | select(.name as $n | $req | index($n))] as $r | if ($r | map(.name) | unique | length) < ($req | length) then (if any($r[]; .status == "completed" and .conclusion != "success") then "failure" else "pending" end) elif any($r[]; .status == "completed" and .conclusion != "success") then "failure" elif all($r[]; .status == "completed") then "success" else "pending" end')
             echo "CI: $res"
             case "$res" in
               success) exit 0 ;;
@@ -101,13 +102,11 @@ jobs:
       ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
     steps:
       - name: Verifica configurazione
+        id: preflight
         run: |
+          # Config di build (obbligatoria): senza di essa non ha senso nemmeno compilare.
           missing=""
           [ -z "$CAP_SERVER_URL" ] && missing="$missing var:CAP_SERVER_URL"
-          [ -z "$APPLE_TEAM_ID" ] && missing="$missing var:APPLE_TEAM_ID"
-          [ -z "$ASC_KEY_ID" ] && missing="$missing secret:APP_STORE_CONNECT_KEY_ID"
-          [ -z "$ASC_ISSUER_ID" ] && missing="$missing secret:APP_STORE_CONNECT_ISSUER_ID"
-          [ -z "$ASC_PRIVATE_KEY" ] && missing="$missing secret:APP_STORE_CONNECT_PRIVATE_KEY"
           if [ -n "$missing" ]; then
             echo "::error::Configurazione mancante (Settings > Secrets and variables > Actions):$missing. Vedi docs/mobile.md, sezione 4."
             exit 1
@@ -116,6 +115,20 @@ jobs:
             https://*) ;;
             *) echo "::error::CAP_SERVER_URL deve essere un indirizzo https:// per le build da store."; exit 1 ;;
           esac
+          # Firma e upload (facoltativi): se manca qualcosa si compila un archivio NON firmato e si salta il resto.
+          # Diversamente da Android, su tag l'assenza dei secret Apple non e' un errore: l'account Apple Developer
+          # puo' non essere ancora attivo e il tag non deve rompere il workflow. Resta un warning ben visibile.
+          nosign=""
+          [ -z "$APPLE_TEAM_ID" ] && nosign="$nosign var:APPLE_TEAM_ID"
+          [ -z "$ASC_KEY_ID" ] && nosign="$nosign secret:APP_STORE_CONNECT_KEY_ID"
+          [ -z "$ASC_ISSUER_ID" ] && nosign="$nosign secret:APP_STORE_CONNECT_ISSUER_ID"
+          [ -z "$ASC_PRIVATE_KEY" ] && nosign="$nosign secret:APP_STORE_CONNECT_PRIVATE_KEY"
+          if [ -n "$nosign" ]; then
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Credenziali Apple mancanti:$nosign. Archivio NON firmato, export e upload su TestFlight saltati. Vedi docs/mobile.md, sezione 4."
+          else
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -147,6 +160,7 @@ jobs:
           xcodebuild -version
 
       - name: Prepara la chiave App Store Connect
+        if: steps.preflight.outputs.signed == 'true'
         run: |
           # Percorso dove cercano la chiave sia xcodebuild (-authenticationKeyPath) sia altool (AuthKey_<id>.p8).
           mkdir -p "$HOME/.appstoreconnect/private_keys"
@@ -165,24 +179,37 @@ jobs:
         # Firma automatica con la chiave API: -allowProvisioningUpdates crea/aggiorna da solo certificato e profili per
         # entrambi i bundle id (app e ShareExtension, con App Group) senza Mac ne' certificati nel repository.
         # CURRENT_PROJECT_VERSION da riga di comando vale per tutti i target e non dipende dagli script di versione.
+        # Senza credenziali Apple (signed=false) l'archivio viene prodotto con CODE_SIGNING_ALLOWED=NO.
         run: |
           set -o pipefail
-          xcodebuild archive \
-            -project ios/App/App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/Mestolo.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            CURRENT_PROJECT_VERSION="$MOBILE_BUILD_NUMBER" \
-            | tee "$RUNNER_TEMP/archive.log" | tail -n 60
+          if [ "${{ steps.preflight.outputs.signed }}" = "true" ]; then
+            sign_args=(
+              -allowProvisioningUpdates
+              -authenticationKeyPath "$ASC_KEY_PATH"
+              -authenticationKeyID "$ASC_KEY_ID"
+              -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+              DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+              CODE_SIGN_STYLE=Automatic
+            )
+          else
+            sign_args=(CODE_SIGNING_ALLOWED=NO)
+          fi
+          xcodebuild archive             -project ios/App/App.xcodeproj             -scheme App             -configuration Release             -destination 'generic/platform=iOS'             -archivePath "$RUNNER_TEMP/Mestolo.xcarchive"             "${sign_args[@]}"             CURRENT_PROJECT_VERSION="$MOBILE_BUILD_NUMBER"             | tee "$RUNNER_TEMP/archive.log" | tail -n 60
+
+      - name: Archivio non firmato come artifact
+        if: steps.preflight.outputs.signed != 'true'
+        run: ditto -c -k --keepParent "$RUNNER_TEMP/Mestolo.xcarchive" "$RUNNER_TEMP/Mestolo-unsigned.xcarchive.zip"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.preflight.outputs.signed != 'true'
+        with:
+          name: Mestolo-ios-unsigned-${{ github.run_number }}
+          path: ${{ runner.temp }}/Mestolo-unsigned.xcarchive.zip
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Esporta l'.ipa
+        if: steps.preflight.outputs.signed == 'true'
         run: |
           set -o pipefail
           plist="$RUNNER_TEMP/ExportOptions.plist"
@@ -200,6 +227,7 @@ jobs:
           ls -l "$RUNNER_TEMP/export"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.preflight.outputs.signed == 'true'
         with:
           name: Mestolo-ios-build-${{ github.run_number }}
           path: ${{ runner.temp }}/export/*.ipa
@@ -211,7 +239,7 @@ jobs:
         # Cosi' l'.ipa resta disponibile come artifact. (Alternativa equivalente: destination=upload in
         # ExportOptions.plist, che carica direttamente da xcodebuild ma non lascia l'.ipa.) altool resta supportato
         # per il solo upload (e' stata rimossa la parte di notarizzazione); non servono Fastlane ne' notarytool.
-        if: github.event_name == 'push' || inputs.upload
+        if: steps.preflight.outputs.signed == 'true' && (github.event_name == 'push' || inputs.upload)
         run: |
           ipa=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)
           xcrun altool --upload-app --type ios --file "$ipa" \

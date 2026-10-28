@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, getUser } from '@/lib/supabase/server';
-import { buildAccountExport, friendshipsOrFilter } from '@/lib/recipes/account-export';
+import { accountExportStream, buildAccountExport, friendshipsOrFilter } from '@/lib/recipes/account-export';
 import { fetchAllChunked, fetchAllPages } from '@/lib/supabase/paginate';
 import { enforceRateLimit, RateLimitedError } from '@/lib/rate-limit';
 
@@ -12,7 +12,7 @@ export const maxDuration = 60;
  * it only returns the requesting user's own data. API keys are NOT exported
  * (only which providers are configured).
  */
-export async function GET() {
+export async function POST() {
   const user = await getUser();
   if (!user) return new NextResponse(null, { status: 401 });
   try {
@@ -134,7 +134,8 @@ export async function GET() {
     keys: keys.data,
     usage: usage.data,
   });
-  return new NextResponse(JSON.stringify(body, null, 2), {
+  // Risposta in streaming: l'export al tetto (10k ricette) supera i 4,5 MB di una risposta bufferizzata.
+  return new NextResponse(accountExportStream(body), {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'content-disposition': `attachment; filename="mestolo-export-${new Date().toISOString().slice(0, 10)}.json"`,

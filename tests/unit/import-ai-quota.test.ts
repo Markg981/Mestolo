@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/supabase/server', () => ({ getUser: mocks.getUser }));
 vi.mock('@/lib/rate-limit', async (orig) => ({ ...(await orig<object>()), enforceRateLimit: mocks.enforceRateLimit }));
 vi.mock('@/lib/ai/service', () => ({ resolveProvider: mocks.resolveProvider, recordUsage: mocks.recordUsage }));
-vi.mock('@/lib/ai/refund', () => ({ refundQuota: mocks.refundQuota }));
+vi.mock('@/lib/ai/refund', async (orig) => ({ ...(await orig<typeof import('@/lib/ai/refund')>()), refundQuota: mocks.refundQuota }));
 vi.mock('@/lib/ai/extraction', () => ({ draftFromExtraction: mocks.draftFromExtraction }));
 vi.mock('@/lib/images/process', () => ({
   prepareOcrPage: mocks.prepareOcrPage,

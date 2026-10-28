@@ -219,6 +219,8 @@ Da Impostazioni l’utente attiva i promemoria dei pasti del piano settimanale (
 
 ## Test eseguiti
 
+> **Prerequisito:** la suite locale richiede dipendenze allineate al lockfile (`npm ci`, comprese le devDependencies come `jsdom` per i test dei componenti). Con un `node_modules` obsoleto i test in `tests/components/` falliscono con "Cannot find package jsdom".
+
 | Comando | Cosa verifica | Risultato |
 |---|---|---|
 | `npm test` | Test unitari (Vitest, centinaia di casi in `tests/unit/`): parser ingredienti (6 lingue), testo incollato, durate, estrazione Schema.org/microdata/testo, SSRF (IP privati, DNS, rebinding), cifratura chiavi, provider AI, normalizzazione output AI, applicazione selettiva dei suggerimenti, traduzioni (struttura e invalidazione), sostituzioni, categorie, duplicati, scalatura, unione lista spesa, export, validazione input, completezza i18n (chiavi usate nel codice, 6 lingue, sintassi ICU) | ✅ passati |
@@ -256,10 +258,13 @@ I test in `e2e/` guidano un browser reale (Chromium desktop e viewport mobile) c
 export NEXT_PUBLIC_SUPABASE_URL=https://<ref-staging>.supabase.co
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 export SUPABASE_SERVICE_ROLE_KEY=...
+export E2E_SUPABASE_PROJECT_REF=<ref-staging>   # obbligatorio con URL *.supabase.co
 export APP_ENCRYPTION_KEY=$(npm run -s gen:key)
 npx playwright install chromium
 npm run test:e2e
 ```
+
+**Guardia contro la produzione**: il setup usa la service role e cancella utenti e righe di `rate_limit_events`, quindi rifiuta di partire se l’URL è `*.supabase.co` e `E2E_SUPABASE_PROJECT_REF` manca o non coincide con il ref dell’host, oppure se il database contiene più di 50 utenti non e2e. In CI imposta la variabile di repository `E2E_SUPABASE_PROJECT_REF` (Settings, Secrets and variables, Actions, Variables).
 
 Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambiente già pubblicato imposta `E2E_BASE_URL`. Le variabili del progetto staging vanno comunque impostate perché il setup crea gli utenti di test (prefisso `e2e-`, dominio `example.com`) e il teardown li cancella. Il report HTML finisce in `playwright-report/`.
 
@@ -279,6 +284,7 @@ Le migrazioni dello staging non sono applicate dalla CI (evita modifiche allo sc
 - Siti con contenuti caricati via JavaScript o a pagamento possono non essere importabili: l’app lo dice e propone di incollare il testo.
 - Il servizio base AI ha un costo per il gestore: tienilo spento (`AI_APP_PROVIDER` vuoto) o con quote basse finché non sai quanto costa.
 - L’OCR gratuito gira sul dispositivo e non invia le foto a nessuno. Le foto e i testi inviati all’AI (solo se l’utente sceglie l’estrazione con AI) vengono trattati dal provider secondo i suoi termini (vedi [docs/ai-providers.md](docs/ai-providers.md)); la pagina `/privacy` va completata dal gestore con i propri riferimenti.
+- Il progetto è `UNLICENSED`, ma ridistribuisce asset OCR di terze parti (Tesseract.js, core WASM e dati delle lingue) sotto le loro licenze: attribuzioni e fonti in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - Prima di offrire l’uso di chiavi personali verifica i termini attuali dei provider (non è stato possibile farlo con valore legale in questa sede).
 
 ## Prossimi passi consigliati

@@ -7,8 +7,27 @@ const PUBLIC_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/aut
 
 let warnedReportOnly = false;
 
+const IMAGE_PATHS = ['/api/public-images', '/api/images', '/api/avatars', '/api/cook-photos'];
+
+/** Errore transitorio (rete, timeout, 5xx) di Auth: non significa "sessione assente". */
+function isTransientAuthError(error: { name?: string; status?: number } | null | undefined) {
+  if (!error) return false;
+  return error.name === 'AuthRetryableFetchError' || error.status === 0 || (error.status ?? 0) >= 500;
+}
+
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/** Pattern @supabase/ssr: il redirect eredita cookie e header di cache del refresh, altrimenti la sessione ruotata si perde. */
+function redirectWithSession(to: URL, from: NextResponse) {
+  const res = NextResponse.redirect(to);
+  from.cookies.getAll().forEach((c) => res.cookies.set(c));
+  ['cache-control', 'expires', 'pragma'].forEach((h) => {
+    const v = from.headers.get(h);
+    if (v) res.headers.set(h, v);
+  });
+  return res;
 }
 
 /**
@@ -46,9 +65,10 @@ export async function proxy(request: NextRequest) {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const { pathname } = request.nextUrl;
 
-  // Immagini pubbliche: nessuna sessione richiesta, evita la chiamata auth getUser().
-  // Le route private (/api/images, /api/avatars, /api/cook-photos) usano la sessione e restano coperte.
-  if (pathname === '/api/public-images' || pathname.startsWith('/api/public-images/')) return next();
+  // Route immagine: niente round-trip Auth nel proxy. Le pubbliche non vogliono sessione; le private
+  // (/api/images, /api/avatars, /api/cook-photos) validano da sole il JWT con getClaims() (verifica locale,
+  // 401 se assente) e RLS ricontrolla lo stesso JWT a ogni query.
+  if (IMAGE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return next();
 
   if (!url || !anon) {
     if (pathname.startsWith('/setup') || pathname.startsWith('/api')) return next();
@@ -72,18 +92,24 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    // Supabase lento/irraggiungibile: non mandare a /login chi ha una sessione valida, lascia decidere alla pagina.
+    if (!data.user && isTransientAuthError(error)) return response;
+    user = data.user;
+  } catch {
+    return response;
+  }
 
   if (!user && !isPublic(pathname) && !pathname.startsWith('/api')) {
     const to = request.nextUrl.clone();
     to.pathname = pathname === '/' ? '/welcome' : '/login';
     to.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
-    return NextResponse.redirect(to);
+    return redirectWithSession(to, response);
   }
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/welcome')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return redirectWithSession(new URL('/', request.url), response);
   }
   return response;
 }

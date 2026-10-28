@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractClientIp } from '@/lib/client-ip';
+import { extractClientIp, proxyConfigWarning } from '@/lib/client-ip';
 
 const hdr = (o: Record<string, string>) => ({ get: (n: string) => o[n] ?? null });
 
@@ -30,5 +30,19 @@ describe('extractClientIp', () => {
   });
   it('senza header restituisce unknown', () => {
     expect(extractClientIp(hdr({}), {})).toBe('unknown');
+  });
+  it('TRUSTED_PROXY_COUNT=0 significa nessun proxy: x-forwarded-for ignorato', () => {
+    expect(extractClientIp(hdr({ 'x-forwarded-for': '6.6.6.6, 3.3.3.3' }), { TRUSTED_PROXY_COUNT: '0' })).toBe('unknown');
+  });
+});
+
+describe('proxyConfigWarning', () => {
+  it('avvisa in produzione fuori da Vercel senza TRUSTED_PROXY_COUNT', () => {
+    expect(proxyConfigWarning({ NODE_ENV: 'production' })).toContain('TRUSTED_PROXY_COUNT');
+  });
+  it('nessun avviso se impostato (anche 0), su Vercel o in sviluppo', () => {
+    expect(proxyConfigWarning({ NODE_ENV: 'production', TRUSTED_PROXY_COUNT: '0' })).toBeNull();
+    expect(proxyConfigWarning({ NODE_ENV: 'production', VERCEL: '1' })).toBeNull();
+    expect(proxyConfigWarning({ NODE_ENV: 'development' })).toBeNull();
   });
 });

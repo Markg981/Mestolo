@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { COOK_HISTORY_MAX_TURNS, COOK_QUESTION_MAX, COOK_TURN_MAX, cookAskSchema, truncateHistory, type CookTurn } from '@/lib/cooking/assistant';
 import { cookAssistSystem, cookAssistUserPrompt } from '@/lib/ai/prompts';
+import { askCookAssistant } from '@/app/actions/cook-assistant';
 
 const recipe = {
   title: 'Risotto',
@@ -110,13 +111,12 @@ vi.mock('@/lib/ai/service', () => ({ resolveProvider: mocks.resolveProvider, rec
 describe('askCookAssistant (mocked provider)', () => {
   const id = '11111111-1111-4111-8111-111111111111';
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.recipe.current = { ...recipe, id, ingredients: recipe.ingredients, steps: recipe.steps };
     mocks.resolveProvider.mockResolvedValue({ provider: { completeJson: mocks.completeJson }, keySource: 'user', providerName: 'x' });
   });
 
   it('returns the answer, rate-limits and records usage', async () => {
-    const { askCookAssistant } = await import('@/app/actions/cook-assistant');
     mocks.completeJson.mockResolvedValue({ answer: 'Sì, usa meno burro.' });
     const res = await askCookAssistant(id, { question: 'burro?', stepIndex: 0, servings: 4, history: [] });
     expect(res).toEqual({ ok: true, data: { answer: 'Sì, usa meno burro.' } });
@@ -128,27 +128,23 @@ describe('askCookAssistant (mocked provider)', () => {
     expect(req.user).toContain('"burro?"');
   });
   it('sends only the truncated history', async () => {
-    const { askCookAssistant } = await import('@/app/actions/cook-assistant');
     mocks.completeJson.mockResolvedValue({ answer: 'ok' });
     const history: CookTurn[] = Array.from({ length: COOK_HISTORY_MAX_TURNS * 2 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', text: `h${i}` }));
     await askCookAssistant(id, { question: 'q', stepIndex: 0, history });
     expect(mocks.completeJson.mock.calls[0][0].user).toContain('h0');
   });
   it('rejects invalid input without calling the provider', async () => {
-    const { askCookAssistant } = await import('@/app/actions/cook-assistant');
     const res = await askCookAssistant(id, { question: '', stepIndex: 0 });
     expect(res).toMatchObject({ ok: false, error: 'invalid_input' });
     expect(mocks.completeJson).not.toHaveBeenCalled();
   });
   it('not found when the recipe is not visible (RLS)', async () => {
-    const { askCookAssistant } = await import('@/app/actions/cook-assistant');
     mocks.recipe.current = null;
     const res = await askCookAssistant(id, { question: 'q', stepIndex: 0 });
     expect(res).toMatchObject({ ok: false, error: 'not_found' });
     expect(mocks.resolveProvider).not.toHaveBeenCalled();
   });
   it('bad model output', async () => {
-    const { askCookAssistant } = await import('@/app/actions/cook-assistant');
     mocks.completeJson.mockResolvedValue({ nope: 1 });
     const res = await askCookAssistant(id, { question: 'q', stepIndex: 0 });
     expect(res).toMatchObject({ ok: false, error: 'ai_bad_output' });

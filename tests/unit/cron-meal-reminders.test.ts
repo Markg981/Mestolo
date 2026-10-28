@@ -4,6 +4,9 @@ const sendNotification = vi.fn<(endpoint: unknown, payload: unknown, options?: u
 const setVapidDetails = vi.fn();
 vi.mock('web-push', () => ({ default: { sendNotification: (e: unknown, p: unknown, o?: unknown) => sendNotification(e, p, o), setVapidDetails: (...a: unknown[]) => setVapidDetails(...a) } }));
 
+const captureException = vi.fn();
+vi.mock('@sentry/nextjs', () => ({ captureException: (...a: unknown[]) => captureException(...a) }));
+
 const deleted: string[][] = [];
 const rangeCalls: number[][] = [];
 const rpc = vi.fn(async () => ({
@@ -35,6 +38,7 @@ describe('GET /api/cron/meal-reminders', () => {
     vi.stubEnv('VAPID_PRIVATE_KEY', 'priv');
     vi.stubEnv('VAPID_SUBJECT', 'mailto:admin@example.com');
     rpc.mockClear();
+    captureException.mockClear();
     sendNotification.mockClear();
     sendNotification.mockResolvedValue({ statusCode: 201 });
     deleted.length = 0;
@@ -77,6 +81,20 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(deleted).toEqual([['s1']]);
   });
 
+  it('deletes subscriptions rejected with 401/403 (e.g. rotated VAPID keys) as permanent errors', async () => {
+    sendNotification.mockRejectedValueOnce(Object.assign(new Error('unauthorized'), { statusCode: 401 })).mockRejectedValueOnce(Object.assign(new Error('forbidden'), { statusCode: 403 }));
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 0, removed: 2, confirmed: 1 });
+    expect(deleted).toEqual([['s1', 's2']]);
+  });
+
+  it('does not delete nor retry subscriptions answering 400', async () => {
+    sendNotification.mockRejectedValue(Object.assign(new Error('bad'), { statusCode: 400 }));
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 0, removed: 0, confirmed: 1 });
+    expect(deleted).toEqual([]);
+  });
+
   const confirmCalls = () => rpc.mock.calls.filter((c) => (c as unknown[])[0] === 'confirm_meal_reminders');
 
   it('confirms the reminder only after a successful push', async () => {
@@ -116,6 +134,16 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(await res.json()).toMatchObject({ sent: 1001 });
     expect(rangeCalls).toEqual([[0, 999], [1000, 1999]]);
     subs.splice(0, subs.length, ...saved);
+  });
+
+  it('logs and reports to Sentry when the claim fails, without personal data', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom', code: 'XX000' } } as never);
+    const res = await GET(req('Bearer topsecret'));
+    expect(res.status).toBe(500);
+    expect(captureException).toHaveBeenCalledWith(expect.anything(), { tags: { cron: 'meal-reminders', step: 'claim' } });
+    expect(err).toHaveBeenCalledWith('[cron/meal-reminders] claim failed', expect.anything());
+    err.mockRestore();
   });
 
   it('declares a max duration and a 45 minute default window', async () => {
