@@ -269,6 +269,19 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
       .select('id')
       .single();
     if (error) return dbFailure(error, 'copyRecipe');
+    // G-15: porta con se la nutrizione (la RLS limita la lettura a cio che l'utente vede). Fail-soft: la copia resta valida.
+    try {
+      const { data: nut } = await supabase.from('recipe_nutrition').select('*').eq('recipe_id', sourceId).maybeSingle();
+      if (nut) {
+        const values = { ...(nut as Record<string, unknown>) };
+        delete values.recipe_id;
+        delete values.updated_at;
+        const { error: nErr } = await supabase.from('recipe_nutrition').insert({ ...values, recipe_id: data.id });
+        if (nErr) console.error('[copyRecipe] nutrizione non copiata', nErr.message);
+      }
+    } catch (ne) {
+      console.error('[copyRecipe] nutrizione non copiata', ne instanceof Error ? ne.message : 'errore');
+    }
     revalidatePath('/recipes');
     return ok({ id: data.id as string });
   } catch (e) {
