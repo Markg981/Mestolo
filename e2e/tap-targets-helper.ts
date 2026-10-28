@@ -5,7 +5,7 @@ export const MIN_TAP = 44;
 
 /**
  * Restituisce la descrizione dei controlli visibili della pagina corrente sotto MIN_TAP px.
- * Esenti: link dentro un testo (<p>), "stretched link" (misurato sul contenitore) e campi
+ * Esenti: link dentro un testo (<p> o la frase di un <label>), "stretched link" (misurato sul contenitore) e campi
  * il cui <label> raggiunge già la soglia.
  */
 export async function findSmallTargets(page: Page, min = MIN_TAP): Promise<string[]> {
@@ -18,7 +18,7 @@ export async function findSmallTargets(page: Page, min = MIN_TAP): Promise<strin
       let box = el.getBoundingClientRect();
       // non visibile (es. skip link fuori schermo prima del focus)
       if (box.width <= 1 || box.height <= 1 || box.right <= 0 || box.left >= innerWidth) continue;
-      if (el.tagName === 'A' && el.closest('p')) continue;
+      if (el.tagName === 'A' && el.closest('p, label')) continue;
       // "stretched link" (after:absolute after:inset-0): l'area cliccabile è il contenitore posizionato
       if (getComputedStyle(el, '::after').position === 'absolute' && el.offsetParent) box = el.offsetParent.getBoundingClientRect();
       // area utile: il campo o il suo <label>, se più grande (es. checkbox dentro un'etichetta)
