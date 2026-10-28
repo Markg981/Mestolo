@@ -143,3 +143,32 @@ describe('GET /api/cron/meal-reminders', () => {
     }
   });
 });
+
+describe('finestra promemoria', () => {
+  beforeEach(() => {
+    vi.stubEnv('CRON_SECRET', 'topsecret');
+    vi.stubEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY', 'pub');
+    vi.stubEnv('VAPID_PRIVATE_KEY', 'priv');
+    vi.stubEnv('VAPID_SUBJECT', 'mailto:admin@example.com');
+    rpc.mockClear();
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    [undefined, 45],
+    ['', 45],
+    ['abc', 45],
+    ['30abc', 45],
+    ['0', 45],
+    ['-5', 45],
+    ['30', 30],
+    ['60', 60],
+    ['120', 60],
+    ['9999', 60],
+  ])('MEAL_REMINDERS_WINDOW_MINUTES=%s passa %i minuti al claim', async (raw, expected) => {
+    if (raw !== undefined) vi.stubEnv('MEAL_REMINDERS_WINDOW_MINUTES', raw);
+    else vi.stubEnv('MEAL_REMINDERS_WINDOW_MINUTES', '');
+    await GET(req('Bearer topsecret'));
+    expect(rpc).toHaveBeenCalledWith('claim_due_meal_reminders', { p_window_minutes: expected });
+  });
+});
