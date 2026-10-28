@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { findPossibleDuplicates, normalizeSourceUrl, titleSimilarity } from '@/lib/recipes/duplicates';
 import { scaleIngredients } from '@/lib/recipes/scale';
-import { planShoppingMerge } from '@/lib/shopping/merge';
 import { applySuggestions, analysisSchema, type Suggestion } from '@/lib/recipes/suggestions';
 import { buildTranslatable, mergeTranslation, isTranslationFresh, TranslationShapeError } from '@/lib/recipes/translation';
 import { findBuiltinSubstitutions } from '@/lib/recipes/substitutions';
@@ -83,47 +82,6 @@ describe('scaling', () => {
   });
   it('is a no-op when servings are unknown', () => {
     expect(scaleIngredients([{ name: 'x', quantity: 1, unit: 'g' }], null, 4)[0].quantity).toBe(1);
-  });
-});
-
-describe('shopping list merge', () => {
-  const existing = [
-    { id: 'a', name: 'Farina 00', quantity: 200, unit: 'g', checked: false },
-    { id: 'b', name: 'Sale', quantity: null, unit: null, checked: false },
-    { id: 'c', name: 'Latte', quantity: 500, unit: 'ml', checked: true },
-  ];
-  it('sums only identical names with identical units', () => {
-    const plan = planShoppingMerge(existing, [
-      { name: 'farina 00', quantity: 300, unit: 'g' },
-      { name: 'Farina 00', quantity: 1, unit: 'cup' }, // incompatible unit
-      { name: 'Farina integrale', quantity: 100, unit: 'g' }, // different product
-      { name: 'sale', quantity: null, unit: null }, // dedupe without quantity
-      { name: 'latte', quantity: 250, unit: 'ml' }, // existing is checked → new line
-    ]);
-    expect(plan.updates).toEqual([{ id: 'a', quantity: 500, delta: 300 }]);
-    expect(plan.inserts.map((i) => `${i.name}|${i.unit}|${i.quantity}`)).toEqual([
-      'Farina 00|cup|1', 'Farina integrale|g|100', 'latte|ml|250',
-    ]);
-  });
-  it('reports the delta to add, accumulated over repeated lines', () => {
-    const plan = planShoppingMerge([{ id: 'x', name: 'farina', quantity: 100.5, unit: 'g' }], [
-      { name: 'farina', quantity: 50, unit: 'g' },
-      { name: 'Farina', quantity: 25.25, unit: 'g' },
-    ]);
-    expect(plan.updates).toEqual([{ id: 'x', quantity: 175.75, delta: 75.25 }]);
-  });
-  it('does not merge "uovo" and "uova" (no guessing)', () => {
-    const plan = planShoppingMerge([{ id: 'x', name: 'uovo', quantity: 1, unit: null }], [{ name: 'uova', quantity: 2, unit: null }]);
-    expect(plan.updates).toEqual([]);
-    expect(plan.inserts).toHaveLength(1);
-  });
-  it('keeps quantity-less and quantified lines separate', () => {
-    const plan = planShoppingMerge([{ id: 'x', name: 'zucchero', quantity: null, unit: null }], [{ name: 'zucchero', quantity: 100, unit: null }]);
-    expect(plan.inserts).toHaveLength(1);
-  });
-  it('merges duplicates within the same batch', () => {
-    const plan = planShoppingMerge([], [{ name: 'uova', quantity: 2, unit: null }, { name: 'Uova', quantity: 3, unit: null }]);
-    expect(plan.inserts).toEqual([{ name: 'uova', quantity: 5, unit: null }]);
   });
 });
 

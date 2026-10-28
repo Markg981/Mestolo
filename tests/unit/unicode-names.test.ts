@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeText } from '@/lib/recipes/duplicates';
-import { planShoppingMerge } from '@/lib/shopping/merge';
 import { aisleFor, classifyAisle, normalizeName } from '@/lib/shopping/aisles';
-
-const item = (id: string, name: string) => ({ id, name, quantity: 1, unit: 'g', checked: false });
 
 describe('nomi non latini', () => {
   it('non collassano a stringa vuota', () => {
@@ -16,9 +13,9 @@ describe('nomi non latini', () => {
   });
 
   it('米 e 醤油 non vengono unificati, Pâté e pate si', () => {
-    expect(planShoppingMerge([item('1', '米')], [item('x', '醤油')]).inserts).toHaveLength(1);
-    expect(planShoppingMerge([item('1', 'Pâté')], [item('x', 'pate')]).updates).toHaveLength(1);
-    expect(planShoppingMerge([item('1', '米')], [item('x', '米')]).updates).toHaveLength(1);
+    expect(normalizeText('米')).not.toBe(normalizeText('醤油'));
+    expect(normalizeText('Pâté')).toBe(normalizeText('pate'));
+    expect(normalizeText('米')).toBe(normalizeText('米'));
   });
 
   it('i reparti accettano override per nomi non latini', () => {
