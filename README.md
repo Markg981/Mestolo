@@ -256,10 +256,13 @@ I test in `e2e/` guidano un browser reale (Chromium desktop e viewport mobile) c
 export NEXT_PUBLIC_SUPABASE_URL=https://<ref-staging>.supabase.co
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 export SUPABASE_SERVICE_ROLE_KEY=...
+export E2E_SUPABASE_PROJECT_REF=<ref-staging>   # obbligatorio con URL *.supabase.co
 export APP_ENCRYPTION_KEY=$(npm run -s gen:key)
 npx playwright install chromium
 npm run test:e2e
 ```
+
+**Guardia contro la produzione**: il setup usa la service role e cancella utenti e righe di `rate_limit_events`, quindi rifiuta di partire se l’URL è `*.supabase.co` e `E2E_SUPABASE_PROJECT_REF` manca o non coincide con il ref dell’host, oppure se il database contiene più di 50 utenti non e2e. In CI imposta la variabile di repository `E2E_SUPABASE_PROJECT_REF` (Settings, Secrets and variables, Actions, Variables).
 
 Playwright avvia `next dev` sulla porta 3100 (`E2E_PORT`); per testare un ambiente già pubblicato imposta `E2E_BASE_URL`. Le variabili del progetto staging vanno comunque impostate perché il setup crea gli utenti di test (prefisso `e2e-`, dominio `example.com`) e il teardown li cancella. Il report HTML finisce in `playwright-report/`.
 
