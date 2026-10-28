@@ -390,7 +390,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                 <>
                   <dt className="text-muted">{t('sourceUrl')}</dt>
                   <dd className="min-w-0">
-                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
+                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
                       {source.url}
                       <ExternalLink aria-hidden className="size-4 shrink-0" />
                     </a>
