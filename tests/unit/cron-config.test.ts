@@ -77,6 +77,16 @@ describe('backup', () => {
     expect(wf).toContain("grep -nE 'upload-artifac[t]'");
   });
 
+  it('F-11: nessun secret a livello di job, npm ci gira senza secret', () => {
+    expect(wf).not.toMatch(/^ {4}env:/m);
+    const lines = wf.split('\n');
+    const ci = lines.findIndex((l) => l.includes('npm ci'));
+    expect(ci).toBeGreaterThan(-1);
+    let start = ci;
+    while (start > 0 && !lines[start].startsWith('      - ')) start--;
+    expect(lines.slice(start, ci + 1).join('\n')).not.toMatch(/secrets\./);
+  });
+
   it('cifra in modo asimmetrico, senza passphrase', () => {
     expect(wf).not.toMatch(/PASSPHRASE|--symmetric/);
     expect(read('scripts/backup-db.sh')).toContain('backup_encrypt');
