@@ -1079,6 +1079,7 @@
     "title": "Nessuna connessione",
     "lead": "Questa pagina non è disponibile offline. Le ricette e la lista della spesa che hai aperto di recente restano consultabili.",
     "retry": "Riprova",
+    "signOutOffline": "Il logout richiede una connessione. Riconnettiti per uscire: nel frattempo i tuoi dati restano su questo dispositivo.",
     "updateAvailable": "Nuova versione disponibile",
     "updateAction": "Aggiorna"
   },

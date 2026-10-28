@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { invalidatePublicPageForRecipe } from '@/lib/data/public-invalidation';
 import { z } from 'zod';
 import { createClient, getUser, getProfile } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -129,6 +130,7 @@ export async function applyAnalysis(
       if (error) return dbFailure(error, 'applyAnalysis.update');
       if (!updated?.length) return fail('conflict');
       revalidatePath(`/recipes/${recipeId}`);
+      await invalidatePublicPageForRecipe(supabase, recipeId);
       return ok({ id: recipeId, applied: result.applied.length, skipped: result.skipped.length });
     }
     const { data: v, error } = await supabase
@@ -242,6 +244,7 @@ export async function translateRecipe(recipeId: string, target: string): Promise
         .upsert({ recipe_id: recipeId, locale: target, content: guardTranslatedNumbers(r, parsed.data), source_hash: r.content_hash, provider: resolved.provider.id, created_at: new Date().toISOString() });
       if (error) return dbFailure(error, 'translateRecipe.store');
       revalidatePath(`/recipes/${recipeId}`);
+      await invalidatePublicPageForRecipe(supabase, recipeId);
       return ok({ cached: false });
     });
     } finally {

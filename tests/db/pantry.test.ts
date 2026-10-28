@@ -54,4 +54,18 @@ d('db pantry_items', () => {
     await as(a, 'update public.pantry_items set owner_id = $2 where id = $1', [id, b]).catch(() => null);
     expect((await admin('select owner_id from public.pantry_items where id = $1', [id]))[0].owner_id).toBe(a);
   });
+  it('B-10: nome normalizzato+unita unico per utente; add_pantry_item unisce le quantita', async () => {
+    const a = await mkUser(`pa_e_${s}`);
+    const b = await mkUser(`pa_f_${s}`);
+    await as(a, "insert into public.pantry_items (owner_id, name, quantity, unit) values ($1, 'Farina', 1, 'kg')", [a]);
+    await expect(as(a, "insert into public.pantry_items (owner_id, name, quantity, unit) values ($1, '  FARINA ', 2, 'kg')", [a])).rejects.toThrow();
+    // unita diversa: righe distinte consentite
+    await as(a, "insert into public.pantry_items (owner_id, name, quantity, unit) values ($1, 'farina', 1, 'g')", [a]);
+    // altro utente: stesso nome consentito
+    await as(b, "insert into public.pantry_items (owner_id, name, quantity, unit) values ($1, 'farina', 1, 'kg')", [b]);
+    await as(a, "select public.add_pantry_item('Farìna', 2, 'kg', '2026-12-01', 'pantry', null)");
+    const rows = await as(a, "select quantity::float as q from public.pantry_items where unit = 'kg'");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].q).toBe(3);
+  });
 });

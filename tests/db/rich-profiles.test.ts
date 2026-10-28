@@ -129,6 +129,19 @@ d('rich profiles', () => {
     await expect(as(stranger, "delete from storage.objects where bucket_id = 'avatars' and name = $1 returning 1", [`${owner}/a.webp`])).resolves.toHaveLength(0);
   });
 
+  it('storage: un oggetto con cartella non uuid non rompe la select (B-05)', async () => {
+    await setVisibility('friends');
+    const bad = `non-un-uuid-${Math.random().toString(36).slice(2, 7)}/x.webp`;
+    await admin("insert into storage.objects (bucket_id, name) values ('avatars', $1)", [bad]);
+    try {
+      const rows = (await as(friend, "select name from storage.objects where bucket_id = 'avatars'")) as { name: string }[];
+      expect(rows.some((r) => r.name === `${owner}/a.webp`)).toBe(true);
+      expect(rows.some((r) => r.name === bad)).toBe(false);
+    } finally {
+      await admin("delete from storage.objects where bucket_id = 'avatars' and name = $1", [bad]);
+    }
+  });
+
   it('a stranger gets 0 rows for a non-discoverable profile (C-02)', async () => {
     await setVisibility('friends');
     await admin('update public.profiles set discoverable = false where id = $1', [owner]);

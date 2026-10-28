@@ -45,7 +45,8 @@ describe('scheduler dei promemoria dei pasti', () => {
 
   it('il workflow GitHub fallisce se mancano APP_URL o CRON_SECRET (niente run verdi a vuoto)', () => {
     const wf = read('.github/workflows/meal-reminders.yml');
-    const guard = /if \[ -z "\$APP_URL" \] \|\| \[ -z "\$CRON_SECRET" \]; then([\s\S]*?)\n\s*fi\b/.exec(wf)?.[1] ?? '';
+    expect(wf).toContain('for v in APP_URL CRON_SECRET; do');
+    const guard = /if \[ "\$\{#missing\[@\]\}" -gt 0 \]; then([\s\S]*?)\n\s*fi\b/.exec(wf)?.[1] ?? '';
     expect(guard).toMatch(/exit 1/);
     expect(guard).not.toMatch(/exit 0/);
   });

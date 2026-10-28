@@ -3,6 +3,7 @@
 //  - iOS Info.plist WKAppBoundDomains (required for service workers in WKWebView); skipped for development hosts
 // CAP_SERVER_URL is required (no default): unset or *.example.com is refused; set CAP_DEV=1 to default to http://localhost:3000.
 // With MOBILE_STORE_BUILD=1 (release/store builds) a placeholder or non-HTTPS CAP_SERVER_URL is refused.
+// Plain http is an error unless CAP_ALLOW_HTTP=1 (or CAP_DEV=1); store builds always require https.
 // Usage: CAP_SERVER_URL=https://your-domain npm run mobile:sync
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -67,7 +68,11 @@ function main() {
       process.exit(1);
     }
   }
-  if (url.protocol !== 'https:' && process.env.CAP_ALLOW_HTTP !== '1') {
+  if (url.protocol !== 'https:' && process.env.CAP_ALLOW_HTTP !== '1' && process.env.CAP_DEV !== '1') {
+    console.error(`${server} is not HTTPS: refused. For device tests on your network set CAP_ALLOW_HTTP=1 (never for store builds).`);
+    process.exit(1);
+  }
+  if (url.protocol !== 'https:') {
     console.warn(`! ${server} is not HTTPS: fine for device tests on your network, NOT for store builds.`);
   }
   writeFileSync('mobile/www/config.js', `window.MESTOLO_SERVER = ${JSON.stringify(server)};\n`);

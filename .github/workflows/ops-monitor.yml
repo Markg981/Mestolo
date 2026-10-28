@@ -26,13 +26,23 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
     steps:
+      - name: Preflight secrets
+        run: |
+          missing=()
+          for v in BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
+          done
+          # I nomi dei secret differiscono dalle variabili del job: mostra quelli da impostare in GitHub
+          missing=("${missing[@]/AWS_ACCESS_KEY_ID/BACKUP_S3_ACCESS_KEY_ID}")
+          missing=("${missing[@]/AWS_SECRET_ACCESS_KEY/BACKUP_S3_SECRET_ACCESS_KEY}")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error title=Secret mancanti::Controllo eta del backup impossibile, variabili/secret mancanti: ${missing[*]}. Vedi docs/ops-secrets.md (gh secret set NOME)."
+            exit 1
+          fi
+
       - name: Check age of the latest backup
         run: |
           set -euo pipefail
-          if [ -z "${BACKUP_S3_BUCKET}" ] || [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "::error::Secret BACKUP_S3_* non impostati: impossibile controllare l'eta' del backup."
-            exit 1
-          fi
           endpoint=()
           if [ -n "${BACKUP_S3_ENDPOINT}" ]; then endpoint=(--endpoint-url "${BACKUP_S3_ENDPOINT}"); fi
           export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
@@ -54,13 +64,23 @@ jobs:
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
+      - name: Preflight secrets
+        run: |
+          missing=()
+          for v in SUPABASE_DB_URL; do
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
+          done
+          # I nomi dei secret differiscono dalle variabili del job: mostra quelli da impostare in GitHub
+          missing=("${missing[@]/AWS_ACCESS_KEY_ID/BACKUP_S3_ACCESS_KEY_ID}")
+          missing=("${missing[@]/AWS_SECRET_ACCESS_KEY/BACKUP_S3_SECRET_ACCESS_KEY}")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error title=Secret mancanti::Controllo promemoria impossibile, variabili/secret mancanti: ${missing[*]}. Vedi docs/ops-secrets.md (gh secret set NOME)."
+            exit 1
+          fi
+
       - name: Check reminders that were never claimed
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_DB_URL}" ]; then
-            echo "::error::Secret SUPABASE_DB_URL non impostato: impossibile controllare i promemoria."
-            exit 1
-          fi
           # Stessa selezione di claim_due_meal_reminders(), ma su 24 ore (con un'ora di margine) e contando solo i pasti
           # pianificati, attivati e con sottoscrizione PRIMA dell'orario del promemoria: se uno non ha nemmeno una riga
           # in meal_reminders_sent, lo scheduler non ha chiamato la route in tempo.
@@ -100,6 +120,10 @@ jobs:
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
+      # true = i promemoria sono chiamati da uno scheduler esterno: meal-reminders.yml salta il job
+      # (run "skipped", mai "success"), quindi il suo ultimo successo non va controllato qui.
+      # Il controllo missed-reminders resta attivo: legge il DB e vale per qualsiasi scheduler.
+      MEAL_EXTERNAL: ${{ vars.MEAL_REMINDERS_EXTERNAL_SCHEDULER }}
     steps:
       - name: Check recent successful runs of critical workflows
         run: |
@@ -108,6 +132,10 @@ jobs:
           # nome del workflow:ore massime dall'ultimo successo
           for spec in "Backup:48" "Meal reminders:48" "Restore verify:192"; do
             wf="${spec%:*}"; max_h="${spec##*:}"
+            if [ "$wf" = "Meal reminders" ] && [ "$MEAL_EXTERNAL" = "true" ]; then
+              echo "Workflow '$wf': scheduler esterno attivo (MEAL_REMINDERS_EXTERNAL_SCHEDULER=true), controllo saltato; vale il job missed-reminders."
+              continue
+            fi
             last="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$wf" --status success --limit 1               --json updatedAt --jq '.[0].updatedAt // empty')"
             if [ -z "$last" ]; then
               echo "::error::Workflow '$wf': nessuna esecuzione riuscita (secret mancanti o workflow mai eseguito)."

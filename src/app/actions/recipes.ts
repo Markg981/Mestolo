@@ -1,23 +1,17 @@
 'use server';
 
 import { validateNutrition } from '@/lib/nutrition';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
-import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
+import { invalidatePublicPage } from '@/lib/data/public-invalidation';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
-
-/** Drops the cached public page (and the sitemap) after a change that can affect it. */
-function invalidatePublicPage(slug: string | null | undefined) {
-  if (slug) revalidateTag(publicRecipeTag(slug), 'max');
-  revalidateTag(PUBLIC_RECIPES_TAG, 'max');
-}
 
 type Db = Awaited<ReturnType<typeof createClient>>;
 /** Upsert della nota personale; nota vuota = cancellazione. */
@@ -76,6 +70,7 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
         const { error: noteErr } = await writeNote(supabase, id, user.id, d.personal_note);
         if (noteErr) return dbFailure(noteErr, 'saveRecipe.note');
       }
+      const { data: prev } = await supabase.from('recipes').select('ingredients, servings').eq('id', id).eq('owner_id', user.id).maybeSingle();
       let q = supabase
         .from('recipes')
         .update({ ...content, last_change_source: 'edit' })
@@ -90,6 +85,7 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
         if (cur) return fail('conflict');
         return fail('not_found');
       }
+      await invalidateEstimatedNutrition(supabase, id, prev as { ingredients?: unknown; servings?: unknown } | null, content);
       invalidatePublicPage(data.public_slug as string | null);
     } else {
       const key = idempotencyKey && uuid.safeParse(idempotencyKey).success ? idempotencyKey : null;
@@ -307,6 +303,22 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
 }
 
 /**
+ * La nutrizione stimata (fonte 'ai_estimate') e' calcolata dagli ingredienti e dalle porzioni:
+ * se uno dei due cambia il valore e' obsoleto e va eliminato (i valori manual/imported sono dichiarati dall'utente e restano).
+ */
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+async function invalidateEstimatedNutrition(
+  supabase: SupabaseClient,
+  recipeId: string,
+  before: { ingredients?: unknown; servings?: unknown } | null,
+  after: { ingredients?: unknown; servings?: unknown },
+) {
+  if (before && JSON.stringify(before.ingredients) === JSON.stringify(after.ingredients) && before.servings === after.servings) return;
+  const { error } = await supabase.from('recipe_nutrition').delete().eq('recipe_id', recipeId).eq('source', 'ai_estimate');
+  if (error) dbFailure(error, 'invalidateEstimatedNutrition');
+}
+
+/**
  * Ripristina lo snapshot di una versione. `expectedVersion` e' la versione corrente vista dal client:
  * se la ricetta e' cambiata nel frattempo (altra scheda o dispositivo) non si sovrascrive nulla e il risultato e' 'conflict'.
  */
@@ -317,7 +329,7 @@ export async function restoreVersion(recipeId: string, version: number, expected
   const { data: v } = await supabase.from('recipe_versions').select('snapshot').eq('recipe_id', recipeId).eq('version', version).maybeSingle();
   if (!v) return fail('not_found');
   const s = v.snapshot as Record<string, unknown>;
-  const { data: before } = await supabase.from('recipes').select('public_slug').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+  const { data: before } = await supabase.from('recipes').select('public_slug, ingredients, servings').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
   const { data, error } = await supabase
     .from('recipes')
     .update({
@@ -344,6 +356,7 @@ export async function restoreVersion(recipeId: string, version: number, expected
     const { data: cur } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     return fail(cur ? 'conflict' : 'not_found');
   }
+  await invalidateEstimatedNutrition(supabase, recipeId, before as { ingredients?: unknown; servings?: unknown } | null, { ingredients: s.ingredients, servings: s.servings });
   // La pagina pubblica e' in cache: vecchio e nuovo slug (se cambia) mostrerebbero il contenuto precedente al ripristino
   invalidatePublicPage(before?.public_slug as string | null | undefined);
   const newSlug = (data[0] as { public_slug?: string | null }).public_slug;

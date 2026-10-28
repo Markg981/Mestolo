@@ -25,9 +25,15 @@ Tutto e cifrato in modo ASIMMETRICO (`gpg --encrypt`, `scripts/lib/backup-gpg.sh
 - Dell'schema `auth` sono salvate solo `users` e `identities` (bastano per le FK di `public` e per il login con email/OAuth). Sessioni, MFA e refresh token non sono inclusi: gli utenti dovranno riaccedere.
 - Ruoli e configurazione del progetto Supabase (secret, provider auth) non sono inclusi: lo schema e le policy vivono in `supabase/migrations`.
 - Le immagini sono salvate se i secret per lo storage sono presenti; altrimenti il workflow fallisce (opt-out: `BACKUP_SKIP_STORAGE=true` piu `BACKUP_SKIP_STORAGE_REASON` con la motivazione, senza la quale il workflow fallisce). Il conteggio dei file storage non e confrontato con `storage.objects`: sono due letture in istanti diversi.
-- La conservazione e solo su S3. La lifecycle policy versionata in `docs/s3-lifecycle.json` (90 giorni su `mestolo/db/` e `mestolo/storage/`) va applicata una tantum al bucket:
-  `aws s3api put-bucket-lifecycle-configuration --bucket <BUCKET> --lifecycle-configuration file://docs/s3-lifecycle.json [--endpoint-url <ENDPOINT>]`
-  (R2/B2 supportano la stessa API, verificare la compatibilita del provider). `restore-verify.yml` ripristina dalla copia S3 piu recente.
+- La conservazione e solo su S3. La lifecycle policy versionata in `docs/s3-lifecycle.json` (90 giorni su `mestolo/db/` e `mestolo/storage/`, versioni non correnti dopo 7 giorni, pulizia dei delete marker) va applicata una tantum al bucket. Lo script idempotente `scripts/s3-harden-bucket.sh` (non eseguito dal CI) abilita versioning, lifecycle e, opzionalmente, Object Lock:
+  `BACKUP_S3_BUCKET=<BUCKET> [BACKUP_S3_ENDPOINT=<ENDPOINT>] [OBJECT_LOCK_MODE=GOVERNANCE|COMPLIANCE] [OBJECT_LOCK_DAYS=30] scripts/s3-harden-bucket.sh`
+  (R2/B2 supportano parti diverse della stessa API, verificare la compatibilita del provider). `restore-verify.yml` ripristina dalla copia S3 piu recente.
+- Versioning: senza, una cancellazione o sovrascrittura con le credenziali CI e' definitiva; con il versioning resta una versione non corrente recuperabile per 7 giorni. Costo: storage extra per le versioni non correnti.
+- Object Lock (retention di default, `OBJECT_LOCK_DAYS` < 90):
+  - `GOVERNANCE`: chi ha `s3:BypassGovernanceRetention` puo' ancora cancellare; protegge da errori e da chiavi CI compromesse senza quel permesso. Consigliato come primo passo.
+  - `COMPLIANCE`: nessuno, nemmeno root, puo' cancellare o ridurre la retention fino a scadenza; irreversibile, quindi un backup errato o con dati da eliminare (richieste GDPR) resta fino alla scadenza dei giorni impostati.
+  - Su AWS va abilitato preferibilmente alla creazione del bucket (`aws s3api create-bucket ... --object-lock-enabled-for-bucket`); su bucket esistenti serve il versioning attivo e molti provider S3-compatibili non lo supportano.
+  - La chiave usata dal CI non deve avere `s3:BypassGovernanceRetention`, `s3:PutBucketObjectLockConfiguration` ne `s3:DeleteObjectVersion`.
 
 ## Secret
 

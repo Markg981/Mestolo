@@ -21,7 +21,15 @@ export async function addPantryItem(input: unknown): Promise<ActionResult> {
   const p = itemSchema.safeParse(input);
   if (!user || !p.success) return fail('invalid_input');
   const supabase = await createClient();
-  const { error } = await supabase.from('pantry_items').insert({ ...p.data, unit: p.data.unit || null, note: p.data.note || null, owner_id: user.id });
+  // Upsert/merge lato DB: stesso nome normalizzato + stessa unita => quantita sommata.
+  const { error } = await supabase.rpc('add_pantry_item', {
+    p_name: p.data.name,
+    p_quantity: p.data.quantity,
+    p_unit: p.data.unit || null,
+    p_expires_on: p.data.expires_on,
+    p_location: p.data.location,
+    p_note: p.data.note || null,
+  });
   if (error) return dbFailure(error, 'addPantryItem');
   revalidatePath('/pantry');
   return ok();

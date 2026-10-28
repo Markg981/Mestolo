@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-import { env, cronSecret, ConfigError } from '@/lib/env';
+import { env, cronSecret, assertCronSecret, ConfigError } from '@/lib/env';
 
 const KEY = Buffer.alloc(32, 1).toString('base64');
 const prod: Record<string, string> = {
@@ -34,6 +34,29 @@ describe('env fail-fast in produzione', () => {
   it('env() non dipende da CRON_SECRET (il login non deve rompersi)', () => {
     setEnv({ ...prod, CRON_SECRET: undefined });
     expect(() => env()).not.toThrow();
+  });
+  it('assertCronSecret: rifiuta CRON_SECRET mancante in produzione', () => {
+    setEnv({ ...prod, CRON_SECRET: undefined });
+    expect(() => assertCronSecret(process.env)).toThrow(/CRON_SECRET/);
+  });
+  it('assertCronSecret: rifiuta CRON_SECRET corto senza stamparne il valore', () => {
+    setEnv({ ...prod, CRON_SECRET: 'segreto-corto' });
+    expect(() => assertCronSecret(process.env)).toThrow(/at least 16/);
+    try {
+      assertCronSecret(process.env);
+    } catch (err) {
+      expect((err as Error).message).not.toContain('segreto-corto');
+    }
+  });
+  it('assertCronSecret: accetta un segreto valido in produzione', () => {
+    setEnv(prod);
+    expect(() => assertCronSecret(process.env)).not.toThrow();
+  });
+  it('assertCronSecret: in sviluppo e durante il build non richiede nulla', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(() => assertCronSecret(process.env)).not.toThrow();
+    setEnv({ NODE_ENV: 'production', NEXT_PHASE: 'phase-production-build' });
+    expect(() => assertCronSecret(process.env)).not.toThrow();
   });
   it('rifiuta APP_ENCRYPTION_KEY non da 32 byte', () => {
     setEnv({ ...prod, APP_ENCRYPTION_KEY: Buffer.alloc(16).toString('base64') });

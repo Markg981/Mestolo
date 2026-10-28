@@ -1079,6 +1079,7 @@
     "title": "Keine Verbindung",
     "lead": "Diese Seite ist offline nicht verfügbar. Rezepte und Einkaufslisten, die du kürzlich geöffnet hast, kannst du weiterhin ansehen.",
     "retry": "Erneut versuchen",
+    "signOutOffline": "Zum Abmelden brauchst du eine Verbindung. Verbinde dich erneut, um dich abzumelden: bis dahin bleiben deine Daten auf diesem Gerät.",
     "updateAvailable": "Neue Version verfügbar",
     "updateAction": "Aktualisieren"
   },
