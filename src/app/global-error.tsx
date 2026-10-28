@@ -25,7 +25,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <body style={{ fontFamily: 'system-ui, sans-serif', padding: '2.5rem 1rem', textAlign: 'center' }}>
         <h1 style={{ fontSize: '1.25rem' }}>{t.title}</h1>
         <p>{t.body}</p>
-        <button type="button" onClick={reset} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+        <button type="button" onClick={reset} style={{ marginTop: '1rem', padding: '0.5rem 1rem', minHeight: 44, minWidth: 44 }}>
           {t.retry}
         </button>
       </body>
