@@ -39,6 +39,23 @@ Tutto e cifrato in modo ASIMMETRICO (`gpg --encrypt`, `scripts/lib/backup-gpg.sh
 | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | si (salvo `BACKUP_SKIP_STORAGE=true`) | Abilitano il backup delle immagini; se mancano il workflow fallisce |
 | `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` | si | Bucket S3 compatibile PRIVATO: unica destinazione dei backup; se mancano il workflow fallisce |
 | `BACKUP_S3_ENDPOINT` | no | Endpoint per S3 compatibili (R2, B2, ecc.) |
+| `HEARTBEAT_URL_BACKUP`, `HEARTBEAT_URL_MEAL_REMINDERS`, `HEARTBEAT_URL_OPS_MONITOR` | no | URL di ping di un monitor esterno (vedi sezione Heartbeat esterno) |
+
+## Heartbeat esterno
+
+Tutti gli schedule (backup, promemoria dei pasti, ops monitor) girano su GitHub Actions, che disattiva i workflow pianificati dopo 60 giorni senza attivita' nel repo e puo' ritardare o saltare le esecuzioni. In quel caso nemmeno `ops-monitor.yml` gira e nessuno viene avvisato. Per accorgersene serve un controllo esterno a GitHub, basato sull'assenza di ping.
+
+Ogni workflow, a run riuscito, chiama con `curl` l'URL del rispettivo secret (opzionale, fail-open: se manca o il servizio e' irraggiungibile il job non fallisce):
+
+| Secret | Workflow | Periodo atteso | Grace period consigliato |
+| --- | --- | --- | --- |
+| `HEARTBEAT_URL_BACKUP` | `backup.yml` | 1 giorno | 6 ore |
+| `HEARTBEAT_URL_MEAL_REMINDERS` | `meal-reminders.yml` | 15 minuti | 1 ora |
+| `HEARTBEAT_URL_OPS_MONITOR` | `ops-monitor.yml` (solo se tutti i controlli passano) | 6 ore | 2 ore |
+
+Configurazione (es. Healthchecks.io o servizio equivalente): creare un check per workflow con periodo e grace della tabella, notifiche su email/telegram, poi `gh secret set HEARTBEAT_URL_BACKUP` (idem per gli altri) incollando il ping URL. Non loggare mai l'URL: contiene il token del check.
+
+Mitigazioni del limite dei 60 giorni: l'heartbeat segnala il problema; per risolverlo riabilitare i workflow dalla tab Actions (o `gh workflow enable <file>`) e fare periodicamente un commit/`workflow_dispatch`. Il preflight di presenza dei secret resta in `ops-monitor.yml` (OPS-01) e non e' duplicato qui.
 
 ## Restore
 
