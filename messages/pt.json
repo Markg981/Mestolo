@@ -1073,7 +1073,8 @@
     "banner": "Estás offline: estás a ver a última cópia guardada. Para fazer alterações precisas de ligação.",
     "title": "Sem ligação",
     "lead": "Esta página não está disponível offline. As receitas e a lista de compras que abriste recentemente continuam disponíveis.",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "signOutOffline": "Terminar a sessão requer ligação. Volta a ligar-te para sair: entretanto os teus dados ficam neste dispositivo."
   },
   "support": {
     "title": "Suporte",

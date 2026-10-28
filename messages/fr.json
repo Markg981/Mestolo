@@ -1073,7 +1073,8 @@
     "banner": "Vous êtes hors ligne : vous voyez la dernière copie enregistrée. Les modifications nécessitent une connexion.",
     "title": "Pas de connexion",
     "lead": "Cette page n'est pas disponible hors ligne. Les recettes et la liste de courses ouvertes récemment restent consultables.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "signOutOffline": "La déconnexion nécessite une connexion. Reconnecte-toi pour te déconnecter : en attendant, tes données restent sur cet appareil."
   },
   "support": {
     "title": "Assistance",

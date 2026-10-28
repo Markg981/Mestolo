@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { WifiOff } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
@@ -107,9 +107,10 @@ export function OfflineBanner() {
  * Online si pulisce subito: su dispositivo condiviso e meglio non lasciare dati privati se il logout fallisse
  * a meta; l'eventuale sessione residua ripopola la cache al prossimo accesso.
  */
-export function handleSignOutSubmit(e: { preventDefault: () => void }) {
+export function handleSignOutSubmit(e: { preventDefault: () => void }, onOffline?: () => void) {
   if (!navigator.onLine) {
     e.preventDefault();
+    onOffline?.();
     return;
   }
   void clearLocalUserData();
@@ -117,11 +118,22 @@ export function handleSignOutSubmit(e: { preventDefault: () => void }) {
 
 /** Logout button that wipes the offline copy of private pages before signing out. */
 export function SignOutButton({ action, label, className }: { action: () => Promise<void>; label: string; className?: string }) {
+  const t = useTranslations('offline');
+  const [blocked, setBlocked] = useState(false);
   return (
-    <form action={action} onSubmit={handleSignOutSubmit}>
+    <form
+      action={action}
+      onSubmit={(e) => {
+        setBlocked(false);
+        handleSignOutSubmit(e, () => setBlocked(true));
+      }}
+    >
       <button type="submit" className={className}>
         {label}
       </button>
+      <p role="alert" className={blocked ? 'mt-1 px-3 text-sm text-muted' : 'sr-only'}>
+        {blocked ? t('signOutOffline') : ''}
+      </p>
     </form>
   );
 }

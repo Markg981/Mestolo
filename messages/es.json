@@ -1073,7 +1073,8 @@
     "banner": "Estás sin conexión: ves la última copia guardada. Para hacer cambios necesitas conexión.",
     "title": "Sin conexión",
     "lead": "Esta página no está disponible sin conexión. Puedes seguir consultando las recetas y la lista de la compra que has abierto hace poco.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "signOutOffline": "Cerrar sesión requiere conexión. Vuelve a conectarte para salir: mientras tanto tus datos siguen en este dispositivo."
   },
   "support": {
     "title": "Soporte",
