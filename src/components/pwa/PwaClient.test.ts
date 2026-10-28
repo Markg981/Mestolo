@@ -9,8 +9,10 @@ describe('handleSignOutSubmit', () => {
     vi.stubGlobal('window', {});
     vi.stubGlobal('navigator', { onLine: false, serviceWorker: { controller: { postMessage } } });
     const preventDefault = vi.fn();
-    handleSignOutSubmit({ preventDefault });
+    const onOffline = vi.fn();
+    handleSignOutSubmit({ preventDefault }, onOffline);
     expect(preventDefault).toHaveBeenCalled();
+    expect(onOffline).toHaveBeenCalledTimes(1);
     expect(postMessage).not.toHaveBeenCalled();
   });
 

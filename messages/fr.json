@@ -1079,6 +1079,7 @@
     "title": "Pas de connexion",
     "lead": "Cette page n'est pas disponible hors ligne. Les recettes et la liste de courses ouvertes récemment restent consultables.",
     "retry": "Réessayer",
+    "signOutOffline": "La déconnexion nécessite une connexion. Reconnecte-toi pour te déconnecter : en attendant, tes données restent sur cet appareil.",
     "updateAvailable": "Nouvelle version disponible",
     "updateAction": "Mettre à jour"
   },
