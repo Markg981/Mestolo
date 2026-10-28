@@ -2,6 +2,11 @@
   "meta": {
     "description": "Dein Rezeptbuch: Rezepte speichern, importieren und teilen – auf jedem Gerät."
   },
+  "manifest": {
+    "shortcutAdd": "Rezept hinzufügen",
+    "shortcutImport": "Foto importieren",
+    "shortcutShopping": "Einkaufsliste"
+  },
   "common": {
     "actionFailed": "Aktion fehlgeschlagen: Prüfe deine Verbindung und versuche es erneut.",
     "add": "Hinzufügen",

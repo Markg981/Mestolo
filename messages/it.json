@@ -2,6 +2,11 @@
   "meta": {
     "description": "Il tuo ricettario: salva, importa e condividi ricette su ogni dispositivo."
   },
+  "manifest": {
+    "shortcutAdd": "Aggiungi ricetta",
+    "shortcutImport": "Importa foto",
+    "shortcutShopping": "Lista della spesa"
+  },
   "common": {
     "actionFailed": "Azione non riuscita: controlla la connessione e riprova.",
     "add": "Aggiungi",

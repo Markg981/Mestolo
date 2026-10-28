@@ -2,6 +2,11 @@
   "meta": {
     "description": "Votre carnet de recettes : enregistrez, importez et partagez vos recettes sur tous vos appareils."
   },
+  "manifest": {
+    "shortcutAdd": "Ajouter une recette",
+    "shortcutImport": "Importer une photo",
+    "shortcutShopping": "Liste de courses"
+  },
   "common": {
     "actionFailed": "L'action a échoué : vérifie ta connexion et réessaie.",
     "add": "Ajouter",

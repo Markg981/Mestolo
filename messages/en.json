@@ -2,6 +2,11 @@
   "meta": {
     "description": "Your recipe book: save, import, and share recipes on every device."
   },
+  "manifest": {
+    "shortcutAdd": "Add recipe",
+    "shortcutImport": "Import photo",
+    "shortcutShopping": "Shopping list"
+  },
   "common": {
     "actionFailed": "The action failed: check your connection and try again.",
     "add": "Add",
