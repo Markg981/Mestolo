@@ -82,4 +82,17 @@ describe('backup', () => {
     expect(read('scripts/lib/backup-gpg.sh')).toMatch(/--encrypt/);
     expect(read('scripts/lib/backup-gpg.sh')).not.toMatch(/--symmetric/);
   });
+
+  it('separa la chiave di verifica da quella del titolare (F-01)', () => {
+    const lib = read('scripts/lib/backup-gpg.sh');
+    const rv = read('.github/workflows/restore-verify.yml');
+    expect(lib).toContain('BACKUP_GPG_VERIFY_PUBLIC_KEY');
+    expect(lib).toContain('BACKUP_GPG_VERIFY_PRIVATE_KEY');
+    expect(rv).toContain('secrets.BACKUP_GPG_VERIFY_PRIVATE_KEY');
+    expect(wf).toContain('secrets.BACKUP_GPG_VERIFY_PUBLIC_KEY');
+    // backup.yml non deve mai avere accesso a una chiave privata
+    expect(wf).not.toMatch(/secrets\.BACKUP_GPG_(VERIFY_)?PRIVATE_KEY/);
+    // la documentazione dichiara onestamente che la privata di verifica decifra tutto
+    expect(read('docs/backup.md')).toMatch(/DECIFRA TUTTI i backup/);
+  });
 });

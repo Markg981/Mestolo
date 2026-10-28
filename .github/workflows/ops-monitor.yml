@@ -123,6 +123,23 @@ jobs:
           done
           exit $fail
 
+  heartbeat:
+    needs: [backup-age, missed-reminders, recent-success]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Heartbeat esterno (opzionale)
+        if: success()
+        env:
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL_OPS_MONITOR }}
+        run: |
+          # Fail-open: senza secret o con il servizio irraggiungibile il job NON fallisce
+          if [ -z "$HEARTBEAT_URL" ]; then
+            echo "HEARTBEAT_URL_OPS_MONITOR non impostato: heartbeat esterno saltato."
+            exit 0
+          fi
+          curl --silent --show-error --max-time 20 --retry 2 --retry-all-errors -o /dev/null "$HEARTBEAT_URL"       || echo "::warning::Ping di heartbeat non riuscito (ignorato)."
+
   alert:
     needs: [backup-age, missed-reminders, recent-success]
     if: ${{ failure() && github.event_name == 'schedule' }}

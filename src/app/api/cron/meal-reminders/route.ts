@@ -5,6 +5,7 @@ import { cronSecret } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mealReminderText } from '@/lib/notifications/texts';
 import { isAllowedPushEndpoint } from '@/lib/notifications/push-endpoint';
+import { parseReminderWindowMinutes } from '@/lib/notifications/reminder-window';
 import type { MealSlot } from '@/lib/plan/week';
 
 export const dynamic = 'force-dynamic';
@@ -25,18 +26,18 @@ function authorized(request: Request): boolean {
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
-/** Finestra di recupero in minuti (default 45: copre esecuzioni GitHub Actions ritardate o saltate; i duplicati sono esclusi da meal_reminders_sent; la funzione SQL la limita a 1..120). */
+/** Finestra di recupero in minuti (default 45, massimo 60: vedi parseReminderWindowMinutes; i duplicati sono esclusi da meal_reminders_sent). */
 function windowMinutes(): number {
-  const n = Number.parseInt(process.env.MEAL_REMINDERS_WINDOW_MINUTES ?? '', 10);
-  return Number.isFinite(n) && n > 0 ? Math.min(n, 120) : 45;
+  return parseReminderWindowMinutes(process.env.MEAL_REMINDERS_WINDOW_MINUTES);
 }
 
 type Due = { entry_id: string; user_id: string; slot: MealSlot; title: string; locale: string };
 type Sub = { id: string; user_id: string; endpoint: string; p256dh: string; auth: string };
 
 /**
- * Cron (vercel.json: giornaliero, compatibile Hobby ma coprendo solo la finestra dopo le 08:00 UTC; per promemoria puntuali
- * vercel.pro.json o uno scheduler esterno ogni 15 minuti, con NEXT_PUBLIC_FREQUENT_CRON=true per la UI): invia le notifiche Web Push dei pasti
+ * Cron (vercel.json: giornaliero, compatibile Hobby, e' solo un fallback: alle 08:00 UTC prende i soli pasti con promemoria
+ * tra le 07:15 e le 08:00 UTC, cioe' 45 minuti su 24 ore. Lo scheduler reale e' .github/workflows/meal-reminders.yml ogni
+ * 15 minuti, oppure vercel.pro.json; con NEXT_PUBLIC_FREQUENT_CRON=true per la UI): invia le notifiche Web Push dei pasti
  * pianificati il cui orario di promemoria, nel fuso dell'utente, e' appena trascorso.
  * Claim e conferma sono separati: il pasto e' confermato (confirm_meal_reminders) solo dopo l'esito del push.
  * Autenticazione: `Authorization: Bearer $CRON_SECRET`. Le sottoscrizioni scadute (404/410) vengono eliminate.

@@ -42,8 +42,8 @@ export function conflictsWithPreferences(ingredients: Pick<Ingredient, 'name'>[]
  * Only recipes created before the start of the day (UTC, like isoDate) are eligible,
  * so publishing a new recipe during the day does not change the pick.
  */
-export function pickOfTheDay<T extends { id: string; created_at?: string }>(all: T[], userId: string, isoDate: string): T | null {
-  const dayStart = Date.parse(`${isoDate}T00:00:00Z`);
+export function pickOfTheDay<T extends { id: string; created_at?: string }>(all: T[], userId: string, isoDate: string, timeZone: string | null = null): T | null {
+  const dayStart = localDayStart(isoDate, timeZone);
   const older = all.filter((r) => !r.created_at || Date.parse(r.created_at) < dayStart);
   const pool = older.length ? older : all;
   if (!pool.length) return null;
@@ -55,6 +55,23 @@ export function pickOfTheDay<T extends { id: string; created_at?: string }>(all:
   }
   const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
   return sorted[Math.abs(h) % sorted.length];
+}
+
+/** Instant (ms) at which `isoDate` starts in `timeZone` (UTC when null/invalid). */
+export function localDayStart(isoDate: string, timeZone: string | null): number {
+  const utc = Date.parse(`${isoDate}T00:00:00Z`);
+  if (!timeZone) return utc;
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+    const offsetAt = (t: number) => {
+      const p = Object.fromEntries(fmt.formatToParts(new Date(t)).map((x) => [x.type, Number(x.value)]));
+      return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(t / 1000) * 1000;
+    };
+    const first = utc - offsetAt(utc);
+    return utc - offsetAt(first);
+  } catch {
+    return utc;
+  }
 }
 
 /**
