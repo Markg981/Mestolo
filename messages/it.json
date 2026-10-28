@@ -1073,7 +1073,9 @@
     "banner": "Sei offline: vedi l'ultima copia salvata. Le modifiche richiedono la connessione.",
     "title": "Nessuna connessione",
     "lead": "Questa pagina non è disponibile offline. Le ricette e la lista della spesa che hai aperto di recente restano consultabili.",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "updateAvailable": "Nuova versione disponibile",
+    "updateAction": "Aggiorna"
   },
   "support": {
     "title": "Supporto",

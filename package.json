@@ -10,7 +10,7 @@
   "scripts": {
     "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-ocr-assets.mjs && node scripts/check-legal.mjs",
+    "prebuild": "node scripts/write-sw-build-id.mjs && node scripts/copy-ocr-assets.mjs && node scripts/check-legal.mjs",
     "check:legal": "node scripts/check-legal.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "build": "next build",
