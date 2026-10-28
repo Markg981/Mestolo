@@ -19,7 +19,7 @@ import { compressImage } from '@/lib/images/client-compress';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import type { FieldFlag, Visibility } from '@/lib/recipes/types';
 import { Alert, Badge, Button, Field, Input, Select, Textarea, buttonClass, cx, inputClass } from '../../ui';
-import { clearLegacyDrafts, draftGet, draftSet, draftStorageKey, parseDraft, serializeDraft } from '@/lib/drafts';
+import { clearLegacyDrafts, draftGet, draftSet, draftStorageKey, parseDraft, readDraftKey, serializeDraft } from '@/lib/drafts';
 import { useDraftUser } from './DraftUser';
 import { createSaveGuard, emptyIngredient, emptyStep, invalidQuantityIngredients, toEditorIngredient, toPayload } from './convert';
 import type { EditorIngredient, EditorProps, EditorState, EditorStep } from './types';
@@ -66,8 +66,10 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useActionTransition();
-  // one key per editor mount: a double submit or retry of a creation returns the same recipe
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // a double submit or retry of a creation returns the same recipe; the key is persisted in the draft so it survives remounts
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  // set once the recipe is saved: from then on no autosave may recreate the draft
+  const savedRef = useRef(false);
   const saveGuard = useRef(createSaveGuard());
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -103,11 +105,13 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     if (!storageKey) return;
     const raw = draftGet(storageKey);
     if (!raw) return;
+    const storedKey = readDraftKey(raw);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (storedKey) setIdempotencyKey(storedKey);
     // In edit mode the draft is restored directly only if it started from the current server version.
     const res = parseDraft<EditorState>(raw, { serverVersion: mode === 'edit' ? (baseVersion ?? '') : null });
     if (res.status === 'conflict') {
       // Restoring from browser storage (an external system) once on mount; the user decides whether to apply it.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (JSON.stringify(res.state) !== JSON.stringify(initial)) setConflictDraft(res.state);
       return;
     }
@@ -132,9 +136,9 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
     if (!storageKey || conflictDraft) return;
     let pending = true;
     const write = () => {
-      if (!pending) return;
+      if (!pending || savedRef.current) return;
       pending = false;
-      setNotStored(!draftSet(storageKey, serializeDraft(s, baseVersion)));
+      setNotStored(!draftSet(storageKey, serializeDraft(s, baseVersion, Date.now(), idempotencyKey)));
     };
     const id = setTimeout(write, 500);
     // Tab hidden or closed before the debounce fires: write now so the last edits are not lost.
@@ -148,7 +152,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
       window.removeEventListener('pagehide', write);
       document.removeEventListener('visibilitychange', onHide);
     };
-  }, [s, storageKey, baseVersion, conflictDraft]);
+  }, [s, storageKey, baseVersion, conflictDraft, idempotencyKey]);
 
   // Possible duplicates (new recipes and imports)
   useEffect(() => {
@@ -298,6 +302,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             extras.push('image');
           }
         }
+        savedRef.current = true;
         if (storageKey) draftSet(storageKey, null);
         onSaved?.();
         router.push(`/recipes/${id}${extras.length ? '?image=failed' : mode === 'edit' ? '?saved=1' : '?created=1'}`);
