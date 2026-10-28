@@ -32,19 +32,29 @@ jobs:
       # Il dump NON va mai in un artifact: il repository e' pubblico e gli artifact sono scaricabili da qualunque
       # utente GitHub autenticato. L'unica destinazione e' lo storage S3/R2 privato (obbligatorio su ogni run).
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Check secrets
+      - name: Preflight secrets
+        env:
+          BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
         run: |
-          set -euo pipefail
-          missing=0
+          missing=()
           for v in SUPABASE_DB_URL BACKUP_GPG_PUBLIC_KEY BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
-            if [ -z "${!v}" ]; then
-              echo "::error::Secret $v non impostato: il backup NON e stato eseguito. Configurarlo in Settings > Secrets and variables > Actions."
-              missing=1
-            fi
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
           done
-          exit $missing
+          # Il backup delle immagini richiede anche questi due, salvo BACKUP_SKIP_STORAGE=true
+          if [ "${BACKUP_SKIP_STORAGE}" != "true" ]; then
+            for v in NEXT_PUBLIC_SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+              if [ -z "${!v}" ]; then missing+=("$v"); fi
+            done
+          fi
+          # I nomi dei secret differiscono dalle variabili del job: mostra quelli da impostare in GitHub
+          missing=("${missing[@]/AWS_ACCESS_KEY_ID/BACKUP_S3_ACCESS_KEY_ID}")
+          missing=("${missing[@]/AWS_SECRET_ACCESS_KEY/BACKUP_S3_SECRET_ACCESS_KEY}")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error title=Secret mancanti::Backup NON eseguito, variabili/secret mancanti: ${missing[*]}. Vedi docs/ops-secrets.md (gh secret set NOME)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Guardia: il dump (anche cifrato) non deve mai finire in un artifact di GitHub
       - name: Forbid artifact upload of backups

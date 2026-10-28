@@ -162,6 +162,10 @@ In `supabase/config.toml`, sezione `[auth]`: `site_url = "http://localhost:3000"
 5. **Email**: il server SMTP predefinito di Supabase è pensato solo per i test (limiti molto bassi e, secondo la documentazione attuale, invio solo agli indirizzi del team). Per utenti reali configura un SMTP tuo in *Authentication → SMTP Settings* (es. Resend, Postmark, Brevo).
 6. Deploy. Se le variabili Supabase mancano, l’app mostra la pagina `/setup` invece di rompersi.
 
+### Job operativi e secret
+
+I workflow schedulati (backup, verifica del restore, monitor, promemoria dei pasti) richiedono secret di repository che imposta il maintainer: tabella completa, comandi `gh secret set` e piano di verifica manuale in [docs/ops-secrets.md](docs/ops-secrets.md). Se un secret manca, il primo passo del job fallisce subito elencandoli tutti.
+
 ### Servizi e limiti dei piani gratuiti (verificati a ottobre 2026, possono cambiare)
 
 | Servizio | Piano gratuito | Limiti rilevanti |
