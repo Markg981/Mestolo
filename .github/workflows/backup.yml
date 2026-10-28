@@ -16,22 +16,21 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
-      BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
-      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
-      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      # Il dump NON va mai in un artifact: il repository e' pubblico e gli artifact sono scaricabili da qualunque
-      # utente GitHub autenticato. L'unica destinazione e' lo storage S3/R2 privato (obbligatorio su ogni run).
+    # Nessun secret a livello di job: ogni passo riceve solo quelli che usa (npm ci e le azioni non li vedono).
+    # Il dump NON va mai in un artifact: il repository e' pubblico e gli artifact sono scaricabili da qualunque
+    # utente GitHub autenticato. L'unica destinazione e' lo storage S3/R2 privato (obbligatorio su ogni run).
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check secrets
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
+          BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           missing=0
@@ -62,6 +61,10 @@ jobs:
           sudo apt-get install -y -qq postgresql-client-17
 
       - name: Dump database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
+          BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
         run: |
           set -euo pipefail
           # Stesso script provato in CI dal job backup-roundtrip (dump, manifest, cifratura)
@@ -71,13 +74,30 @@ jobs:
 
       - name: Upload to S3
         # Upload + verifica della dimensione con head-object: upload parziale = job rosso
+        env:
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
         run: scripts/s3-upload-verify.sh "out/backup-${STAMP}.tar.gpg" "mestolo/db/backup-${STAMP}.tar.gpg"
+
+      # Senza secret nell'env: gli script di install di terze parti non possono leggerli
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       # Fallisce se mancano i secret dello storage, salvo opt-out esplicito (variabile BACKUP_SKIP_STORAGE=true)
       - name: Backup storage files
         env:
           BACKUP_SKIP_STORAGE: ${{ vars.BACKUP_SKIP_STORAGE }}
           BACKUP_SKIP_STORAGE_REASON: ${{ vars.BACKUP_SKIP_STORAGE_REASON }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
+          BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           if [ "${BACKUP_SKIP_STORAGE}" = "true" ]; then
@@ -95,7 +115,6 @@ jobs:
             exit 1
           fi
           umask 077
-          npm ci --ignore-scripts --no-audit --no-fund
           node scripts/backup-storage.mjs storage-out
           # Rilettura del backup appena creato contro il manifest (dimensione + sha256 di ogni file)
           node scripts/verify-storage-backup.mjs storage-out
