@@ -130,7 +130,7 @@
     "too_many_files": "Troppe foto per una sola ricetta.",
     "audio_too_long": "L'audio è troppo lungo. Usa un video più breve.",
     "storage_quota_exceeded": "Hai raggiunto il numero o lo spazio massimo di foto salvate. Eliminane qualcuna per caricarne altre.",
-    "auth_invalid": "Email o password non corrette.",
+    "auth_invalid": "Email o password non corrette. Se ti sei appena registrato, conferma prima l'email (controlla la tua casella di posta).",
     "auth_email_taken": "Esiste già un account con questa email.",
     "auth_weak_password": "La password deve avere almeno 8 caratteri.",
     "auth_not_confirmed": "Conferma prima l'email: controlla la tua casella di posta.",

@@ -48,8 +48,8 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error || !data.user) {
-    const code: ErrorCode = /confirm/i.test(error?.message ?? '') ? 'auth_not_confirmed' : 'auth_invalid';
-    return { error: code, email: parsed.data.email };
+    // Stesso codice per credenziali errate e account non confermato: nessuna enumerazione delle email registrate.
+    return { error: 'auth_invalid', email: parsed.data.email };
   }
   const { data: profile } = await supabase.rpc('my_profile').maybeSingle<{ locale: string }>();
   await setLocaleCookie(profile?.locale);
