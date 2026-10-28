@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn(), unstable_cache: (fn: unknown) => fn }));
 
 const RID = '11111111-1111-4111-8111-111111111111';
 const recipe = { id: RID, original_language: 'it', content_hash: 'h', title: 'T', description: '', ingredients: [], steps: [] };

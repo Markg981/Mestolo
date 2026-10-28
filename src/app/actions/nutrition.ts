@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -8,7 +8,7 @@ import { resolveProvider, recordUsage, type KeySource } from '@/lib/ai/service';
 import { withRefund } from '@/lib/ai/refund';
 import { NUTRITION_SYSTEM, nutritionUserPrompt } from '@/lib/ai/prompts';
 import { parseAiNutrition, validateNutrition, type NutritionValues } from '@/lib/nutrition';
-import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
+import { invalidatePublicPage } from '@/lib/data/public-invalidation';
 import type { RecipeRow } from '@/lib/recipes/types';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
@@ -16,8 +16,7 @@ const uuid = z.uuid();
 
 function refresh(recipeId: string, slug: string | null | undefined) {
   revalidatePath(`/recipes/${recipeId}`);
-  if (slug) revalidateTag(publicRecipeTag(slug), 'max');
-  revalidateTag(PUBLIC_RECIPES_TAG, 'max');
+  invalidatePublicPage(slug);
 }
 
 async function ownedRecipe(recipeId: string) {

@@ -39,15 +39,15 @@ describe('restoreVersion public page invalidation', () => {
     slugBefore = 'torta';
     updated = [{ id, public_slug: 'torta' }];
     expect(await restoreVersion(id, 1, 2)).toMatchObject({ ok: true });
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', { expire: 0 });
   });
 
   it('invalidates both the old and the new slug when it changes', async () => {
     slugBefore = 'torta';
     updated = [{ id, public_slug: 'torta-nuova' }];
     await restoreVersion(id, 1, 2);
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-nuova', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-nuova', { expire: 0 });
   });
 });
