@@ -2,9 +2,15 @@ import 'server-only';
 import sharp, { type Metadata } from 'sharp';
 
 export const MAX_INPUT_BYTES = 8 * 1024 * 1024;
-const MAX_INPUT_PIXELS = 50_000_000;
+export const MAX_INPUT_PIXELS = 25_000_000;
 const MAX_OCR_INPUT_PIXELS = 60_000_000;
 const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp', 'avif', 'gif', 'heif']);
+
+/** Rifiuta in anticipo (dai soli metadati, prima della decodifica) immagini con troppi pixel. */
+function assertWithinPixelLimit(meta: Metadata, maxPixels: number) {
+  const pixels = (meta.width ?? 0) * (meta.height ?? 0);
+  if (pixels > maxPixels) throw new ImageValidationError('image_too_large');
+}
 
 export class ImageValidationError extends Error {
   constructor(public code: 'image_invalid' | 'image_too_large') {
@@ -28,6 +34,7 @@ export async function processRecipeImage(input: Buffer) {
     throw new ImageValidationError('image_invalid');
   }
   if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
+  assertWithinPixelLimit(meta, MAX_INPUT_PIXELS);
 
   const base = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, animated: false }).rotate();
   const full = await base.clone().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).webp({ quality: 80 }).toBuffer({ resolveWithObject: true });
@@ -41,6 +48,7 @@ export async function processAvatar(input: Buffer): Promise<Buffer> {
   try {
     const meta = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
     if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
+    assertWithinPixelLimit(meta, MAX_INPUT_PIXELS);
     return await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, animated: false })
       .rotate()
       .resize({ width: 256, height: 256, fit: 'cover', position: 'attention' })
@@ -61,6 +69,7 @@ export async function prepareOcrPage(input: Buffer): Promise<Buffer> {
   try {
     const meta = await sharp(input, { limitInputPixels: MAX_OCR_INPUT_PIXELS, animated: false }).metadata();
     if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw new ImageValidationError('image_invalid');
+    assertWithinPixelLimit(meta, MAX_OCR_INPUT_PIXELS);
     return await sharp(input, { limitInputPixels: MAX_OCR_INPUT_PIXELS, animated: false })
       .rotate()
       .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
