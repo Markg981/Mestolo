@@ -127,6 +127,12 @@ describe('units', () => {
     it('trailing form uses unit context', () => {
       expect(parseIngredientLine('Farina 1,250 kg')).toMatchObject({ quantity: 1.25, unit: 'kg' });
     });
+    it('parseNumber: unità energetiche usano il gruppo da 3 cifre come migliaia (G-13)', () => {
+      expect(parseNumber('1,250', 'kcal')).toBe(1250);
+      expect(parseNumber('1.250', 'kJ'.toLowerCase())).toBe(1250);
+      expect(parseNumber('1,25', 'kg')).toBeCloseTo(1.25);
+      expect(parseNumber('1,250', 'kg')).toBeCloseTo(1.25);
+    });
     it('parseNumber leading zero is always decimal', () => {
       expect(parseNumber('0,250')).toBeCloseTo(0.25);
     });
@@ -141,5 +147,55 @@ describe('parseIngredientLine: moltiplicatore e numeri misti con congiunzione (L
   it('"1 e 1/2" vale 1.5', () => {
     expect(parseIngredientLine('1 e 1/2 cucchiai olio')).toMatchObject({ quantity: 1.5, name: 'olio' });
     expect(parseIngredientLine('1 and 1/2 cups flour')).toMatchObject({ quantity: 1.5, unit: 'cup' });
+  });
+});
+
+describe('parseIngredientLine: numerali in parola, doppia notazione, zero e negativi (G-03)', () => {
+  it.each([
+    ['una cipolla', 1, null, 'cipolla'],
+    ['un uovo', 1, null, 'uovo'],
+    ['mezzo limone', 0.5, null, 'limone'],
+    ['due uova', 2, null, 'uova'],
+    ['tre carote', 3, null, 'carote'],
+    ['one onion', 1, null, 'onion'],
+    ['an egg', 1, null, 'egg'],
+    ['half a lemon', 0.5, null, 'lemon'],
+    ['two eggs', 2, null, 'eggs'],
+    ['dos huevos', 2, null, 'huevos'],
+    ['deux oeufs', 2, null, 'oeufs'],
+    ['drei Eier', 3, null, 'Eier'],
+    ['1 cucchiaio e mezzo di miele', 1.5, 'tbsp', 'miele'],
+    ['1 tablespoon and a half honey', 1.5, 'tbsp', 'honey'],
+    ['1 and a half cups flour', 1.5, 'cup', 'flour'],
+    ['30g/1oz sugar', 30, 'g', 'sugar'],
+    ['1 cup/240 ml milk', 1, 'cup', 'milk'],
+    ['200g farina', 200, 'g', 'farina'],
+  ])('%s', (line, q, u, name) => {
+    expect(parseIngredientLine(line)).toMatchObject({ quantity: q, unit: u, name });
+  });
+
+  it('rifiuta i negativi', () => {
+    const r = parseIngredientLine('-2 g sale');
+    expect(r.quantity).toBeNull();
+    expect(r.name).toBe('sale');
+    expect(r.flags).toContain('missing');
+  });
+  it('il trattino-elenco con spazio resta un elenco', () => {
+    expect(parseIngredientLine('- 2 g sale')).toMatchObject({ quantity: 2, unit: 'g', name: 'sale' });
+  });
+  it('zero: quantita null e nome pulito', () => {
+    const r = parseIngredientLine('0 g sale');
+    expect(r.quantity).toBeNull();
+    expect(r.name).toBe('sale');
+    expect(r.flags).toContain('missing');
+  });
+  it('"+ N per ..." finisce nella nota', () => {
+    expect(parseIngredientLine('2 uova + 1 per spennellare')).toMatchObject({
+      quantity: 2, name: 'uova', note: '+ 1 per spennellare',
+    });
+  });
+  it('senza numerale resta invariato', () => {
+    expect(parseIngredientLine('sale q.b.')).toMatchObject({ quantity: null });
+    expect(parseIngredientLine('Farina 00 200 g')).toMatchObject({ quantity: 200, unit: 'g' });
   });
 });

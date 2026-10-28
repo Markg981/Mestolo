@@ -10,16 +10,20 @@ import { downloadPublicCover, getPublicCoverPaths } from '@/lib/data/public-reci
  * The cache is short (no stale-while-revalidate) so a revoked or hidden cover stops being served within minutes;
  * the path lookup is uncached, so server-side visibility changes take effect immediately.
  */
+// 404 con cache breve: attenua le scansioni di id inesistenti senza ritardare a lungo una cover appena pubblicata.
+const NOT_FOUND_HEADERS = { 'cache-control': 'public, max-age=30, s-maxage=30' };
+const notFound = () => new NextResponse(null, { status: 404, headers: NOT_FOUND_HEADERS });
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return new NextResponse(null, { status: 404 });
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return notFound();
 
   const paths = await getPublicCoverPaths(id).catch(() => null);
-  if (!paths) return new NextResponse(null, { status: 404 });
+  if (!paths) return notFound();
 
   const wantThumb = request.nextUrl.searchParams.get('size') === 'thumb';
   const file = await downloadPublicCover(wantThumb && paths.thumb_path ? paths.thumb_path : paths.storage_path);
-  if (!file) return new NextResponse(null, { status: 404 });
+  if (!file) return notFound();
 
   return new NextResponse(file.stream(), {
     headers: {

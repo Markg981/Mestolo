@@ -88,3 +88,44 @@ export function buildAccountExport(d: AccountExportInput) {
 export function friendshipsOrFilter(userId: string): string {
   return `requester_id.eq.${userId},addressee_id.eq.${userId}`;
 }
+
+/**
+ * Serializzazione a pezzi dell'export (D-04): un JSON.stringify unico di 10k ricette
+ * e 20k righe supera facilmente il limite di 4,5 MB di una risposta non-streaming su
+ * Vercel. Si emette un chunk per chiave e per blocco di righe; la concatenazione e'
+ * un JSON valido (compatto) equivalente a JSON.stringify dell'oggetto.
+ */
+const ROWS_PER_CHUNK = 200;
+export function* serializeExportChunks(body: Record<string, unknown>): Generator<string> {
+  yield '{';
+  let firstKey = true;
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined) continue;
+    yield `${firstKey ? '' : ','}${JSON.stringify(key)}:`;
+    firstKey = false;
+    if (Array.isArray(value) && value.length > ROWS_PER_CHUNK) {
+      yield '[';
+      for (let i = 0; i < value.length; i += ROWS_PER_CHUNK) {
+        const part = JSON.stringify(value.slice(i, i + ROWS_PER_CHUNK));
+        yield (i === 0 ? '' : ',') + part.slice(1, -1);
+      }
+      yield ']';
+    } else {
+      yield JSON.stringify(value) ?? 'null';
+    }
+  }
+  yield '}';
+}
+
+/** ReadableStream (UTF-8) dei chunk dell'export: la risposta non e' soggetta al tetto di 4,5 MB. */
+export function accountExportStream(body: Record<string, unknown>): ReadableStream<Uint8Array> {
+  const it = serializeExportChunks(body);
+  const enc = new TextEncoder();
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      const { value, done } = it.next();
+      if (done) controller.close();
+      else controller.enqueue(enc.encode(value));
+    },
+  });
+}

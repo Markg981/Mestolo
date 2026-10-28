@@ -9,10 +9,10 @@ const FRACTION_CHARS = Object.keys(UNICODE_FRACTIONS).join('');
 
 // A single number: "1", "1,5", "1.5", "1/2", "1 / 2" (OCR), "1 1/2", "1½", "½", "1.000"
 const NUM = `(?:\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\s*\\/\\s*\\d+|\\s*[${FRACTION_CHARS}])?|[${FRACTION_CHARS}])`;
-const RANGE_RE = new RegExp(`^(${NUM})(?:\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\s*(${NUM}))?`, 'i');
+const RANGE_RE = new RegExp(`^(${NUM})(?:\\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\\s*(${NUM}))?`, 'i');
 
 /** Units for which "N,ddd" / "N.ddd" is plausibly a thousands group (small units). */
-const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
+const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml', 'kcal', 'kj', 'cal']);
 
 /**
  * Parses a numeric token; returns null if it is not a valid positive number.
@@ -20,7 +20,7 @@ const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
  * Separator disambiguation ("0,250", "1,250", "1.000"):
  *  - a leading "0" followed by a separator is always a decimal ("0,250" = 0.25);
  *  - otherwise a single group of exactly 3 digits is ambiguous: it is read as a
- *    thousands separator only with no unit or a small unit (g, mg, ml: "1.000 g" = 1000);
+ *    thousands separator only with no unit or a small unit (g, mg, ml, kcal, kJ, cal: "1.000 g" = 1000);
  *    with any other unit (kg, l, cup...) it is decimal ("1,250 kg" = 1.25).
  */
 export function parseNumber(token: string, unit?: string | null): number | null {
@@ -51,6 +51,26 @@ export function parseNumber(token: string, unit?: string | null): number | null 
   const n = Number(t.replace(',', '.'));
   return Number.isFinite(n) ? n : null;
 }
+
+// Numerals written as words (it, en, es, fr, de, pt). "a"/"an" are English articles, always followed by a word.
+const WORD_NUMBERS: Record<string, number> = {
+  un: 1, uno: 1, una: 1, one: 1, a: 1, an: 1, une: 1, ein: 1, eine: 1, einen: 1, um: 1, uma: 1,
+  due: 2, two: 2, dos: 2, deux: 2, zwei: 2, dois: 2, duas: 2,
+  tre: 3, three: 3, tres: 3, trois: 3, drei: 3, 'três': 3,
+  quattro: 4, four: 4, cuatro: 4, quatre: 4, vier: 4, quatro: 4,
+  cinque: 5, five: 5, cinco: 5, cinq: 5, 'fünf': 5,
+  sei: 6, six: 6, seis: 6, sechs: 6,
+  sette: 7, seven: 7, siete: 7, sept: 7, sieben: 7, sete: 7,
+  otto: 8, eight: 8, ocho: 8, huit: 8, acht: 8, oito: 8,
+  nove: 9, nine: 9, nueve: 9, neuf: 9, neun: 9,
+  dieci: 10, ten: 10, diez: 10, dix: 10, zehn: 10, dez: 10,
+};
+const HALF_WORDS = 'mezzo|mezza|half|medio|media|demi|demie|halb|halbe|halber|halbes|meio|meia';
+const ARTICLE_RE = /^(?:a|an|un|une|ein|eine)\s+/i;
+const WORD_NUMBER_RE = new RegExp(`^(${Object.keys(WORD_NUMBERS).join('|')}|${HALF_WORDS})(?=\\s)\\s*`, 'i');
+const HALF_RE = new RegExp(`^(?:${HALF_WORDS})$`, 'i');
+const AND_HALF_RE = new RegExp(`^(?:e|and|et|y|und|i)\\\s+(?:(?:a|an|un|une|ein|eine)\\\s+)?(?:${HALF_WORDS})(?![\\\p{L}])\\\s*`, 'iu');
+const NUM_AND_HALF_RE = new RegExp(`^(\\d+)\\s+(?:e|and|et|y|und)\\s+(?:(?:a|an|un|une|ein|eine)\\s+)?(?:${HALF_WORDS})(?![\\p{L}])`, 'iu');
 
 const CONNECTORS = /^(?:di|d'|d’|de|del|della|dei|degli|delle|of|von|vom|do|da|das|dos)\s+/i;
 const CONNECTOR_APOS = /^(?:d'|d’)/i;
@@ -102,12 +122,27 @@ function takeUnit(words: string[]): { unit: string | null; rawUnit: string | nul
  */
 export function parseIngredientLine(line: string): Ingredient {
   const raw = line.trim();
-  let text = raw.replace(BULLET, '').trim();
+  // "-2 g sale": a glued minus sign is a negative quantity, not a bullet ("- 2 g sale" is a bullet)
+  const negative = /^[-−]\d/.test(raw);
+  let text = (negative ? raw.slice(1) : raw.replace(BULLET, '')).trim();
   const { toTaste, cleaned } = detectToTaste(text);
   text = cleaned;
 
   // "1 e 1/2" / "1 and 1/2" -> "1 1/2" (mixed number written with a conjunction)
   text = text.replace(/^(\d+)\s+(?:e|and|et|y|und)\s+(?=\d+\s*\/\s*\d+)/i, '$1 ');
+  // "1 and a half cups" / "1 e mezzo" -> "1½"
+  text = text.replace(NUM_AND_HALF_RE, '$1½');
+  // "30g/1oz sugar" / "1 cup/240 ml milk": dual measures, keep the first
+  text = text.replace(/^(\d+(?:[.,]\d+)?\s*[a-zA-Z]+)\s*\/\s*\d+(?:[.,]\d+)?\s*[a-zA-Z]+\b/, '$1');
+  // Numerals in words: "una cipolla", "mezzo limone", "half a lemon", "due uova"
+  const wordNum = text.match(WORD_NUMBER_RE);
+  if (wordNum && text.slice(wordNum[0].length).trim()) {
+    const w = wordNum[1].toLowerCase();
+    const isHalf = HALF_RE.test(w);
+    let after = text.slice(wordNum[0].length);
+    if (isHalf) after = after.replace(ARTICLE_RE, '');
+    text = `${isHalf ? 0.5 : WORD_NUMBERS[w]} ${after}`;
+  }
   // "2 x 400 g" / "2 × 400 g": multiplier of N packs; quantity becomes the total (800 g)
   let multiplier = 1;
   const mult = text.match(/^(\d{1,3})\s*[x×]\s*(?=\d)/i);
@@ -120,13 +155,15 @@ export function parseIngredientLine(line: string): Ingredient {
   let quantityMax: number | null = null;
   let unit: string | null = null;
   let rest = text;
+  let halfBonus = 0;
+  let extraNote: string | null = null;
 
   // Leading quantity: "200 g farina", "1-2 spicchi d'aglio", "½ cup sugar", "2 uova"
   const lead = text.match(RANGE_RE);
   if (lead && lead[0].trim()) {
     const q = parseNumber(lead[1]);
     const qMax = lead[2] ? parseNumber(lead[2]) : null;
-    if (q !== null && q > 0) {
+    if (q !== null && q >= 0) {
       quantity = q;
       quantityMax = qMax !== null && qMax > q ? qMax : null;
       rest = text.slice(lead[0].length).trim();
@@ -140,6 +177,12 @@ export function parseIngredientLine(line: string): Ingredient {
       } else if (glued && normalizeUnit(glued[1])) {
         unit = normalizeUnit(glued[1]);
         rest = glued[2];
+      }
+      // "1 cucchiaio e mezzo di miele"
+      const andHalf = rest.match(AND_HALF_RE);
+      if (andHalf) {
+        rest = rest.slice(andHalf[0].length);
+        halfBonus = 0.5;
       }
       rest = rest.replace(CONNECTORS, '').replace(CONNECTOR_APOS, '').trim();
       if (unit) {
@@ -176,12 +219,28 @@ export function parseIngredientLine(line: string): Ingredient {
     }
   }
 
+  if (quantity !== null && halfBonus) quantity += halfBonus;
+  // zero or negative quantities are not meaningful: keep the clean name, drop the amount
+  if (quantity !== null && (quantity <= 0 || negative)) {
+    quantity = null;
+    quantityMax = null;
+    unit = null;
+  }
+  // "2 uova + 1 per spennellare": the extra amount is kept as a note
+  const plus = rest.match(/^(.*?)\s+\+\s+(\d.*)$/);
+  if (plus) {
+    rest = plus[1];
+    extraNote = `+ ${plus[2].trim()}`;
+  }
+
   if (multiplier !== 1 && quantity !== null) {
     quantity *= multiplier;
     if (quantityMax !== null) quantityMax *= multiplier;
   }
 
-  const { name, note } = splitNameAndNote(rest);
+  const split = splitNameAndNote(rest);
+  const name = split.name;
+  const note = [split.note, extraNote].filter(Boolean).join('; ') || null;
   const ingredient: Ingredient = {
     name: name || text || raw,
     quantity,

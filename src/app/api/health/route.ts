@@ -17,6 +17,26 @@ async function checkConfig(): Promise<boolean> {
   }
 }
 
+// Cache in memoria (per istanza) dell'esito del ping DB: evita che ogni hit pubblico esegua una query con service role.
+const DB_OK_TTL_MS = 30_000;
+const DB_FAIL_TTL_MS = 5_000; // gli errori si rivalutano presto, cosi il recupero viene rilevato rapidamente
+let dbCache: { value: boolean; expires: number } | null = null;
+let dbInflight: Promise<boolean> | null = null;
+
+async function checkDbCached(): Promise<boolean> {
+  const now = Date.now();
+  if (dbCache && dbCache.expires > now) return dbCache.value;
+  dbInflight ??= checkDb()
+    .then((value) => {
+      dbCache = { value, expires: Date.now() + (value ? DB_OK_TTL_MS : DB_FAIL_TTL_MS) };
+      return value;
+    })
+    .finally(() => {
+      dbInflight = null;
+    });
+  return dbInflight;
+}
+
 async function checkDb(): Promise<boolean> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -49,7 +69,7 @@ async function checkDb(): Promise<boolean> {
 /** Health check pubblico per monitor esterni: nessun dettaglio negli esiti, solo log lato server. */
 export async function GET() {
   const config = await checkConfig();
-  const db = config ? await checkDb() : false;
+  const db = config ? await checkDbCached() : false;
   if (config && db) return NextResponse.json({ status: 'ok' }, { headers: HEADERS });
   return NextResponse.json({ status: 'error', checks: { config, db } }, { status: 503, headers: HEADERS });
 }

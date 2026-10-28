@@ -12,7 +12,7 @@ import { isLocale, DEFAULT_LOCALE } from '@/i18n/config';
 import { suggestCategory } from '@/lib/recipes/classify';
 import { prepareOcrPage, ImageValidationError } from '@/lib/images/process';
 import { resolveProvider, recordUsage } from '@/lib/ai/service';
-import { refundQuota } from '@/lib/ai/refund';
+import { isRefundableError, refundQuota } from '@/lib/ai/refund';
 import { EXTRACT_SYSTEM, extractUserPrompt } from '@/lib/ai/prompts';
 import { draftFromExtraction } from '@/lib/ai/extraction';
 import type { ImportDraft } from '@/lib/recipes/types';
@@ -65,7 +65,7 @@ export async function importFromText(text: string, useAi: boolean, sourceUrl?: s
         const raw = await resolved.provider.completeJson({ system: EXTRACT_SYSTEM, user: extractUserPrompt(0, t.data), maxTokens: 4000 });
         extracted = raw;
       } catch (e) {
-        await refundQuota(user.id, resolved, 'text', 'extract_text');
+        if (isRefundableError(e)) await refundQuota(user.id, resolved, 'text', 'extract_text');
         throw e;
       }
       // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
@@ -136,7 +136,7 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
       });
       extracted = raw;
     } catch (e) {
-      await refundQuota(user.id, resolved, 'vision', 'extract_photo');
+      if (isRefundableError(e)) await refundQuota(user.id, resolved, 'vision', 'extract_photo');
       throw e;
     }
     // Dopo la chiamata al provider (gia' pagata): niente rimborso se l'output non e' valido.
@@ -202,7 +202,7 @@ export async function transcribeVideoAudio(formData: FormData): Promise<ActionRe
         filename: `audio.${sniffed.ext}`,
       });
     } catch (e) {
-      await refundQuota(user.id, resolved, 'text', 'transcribe');
+      if (isRefundableError(e)) await refundQuota(user.id, resolved, 'text', 'transcribe');
       throw e;
     }
     if (!text) {

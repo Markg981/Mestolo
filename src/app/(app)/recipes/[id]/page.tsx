@@ -289,7 +289,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             )}
             {(recipe.source_name || recipe.source_attribution) && <p>{[recipe.source_attribution, recipe.source_name].filter(Boolean).join(', ')}</p>}
             {recipe.source_url && (
-              <a href={recipe.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
+              <a href={recipe.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
                 {recipe.source_url}
                 <ExternalLink aria-hidden className="size-4 shrink-0" />
               </a>

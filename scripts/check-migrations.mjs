@@ -9,10 +9,11 @@
 // possono aggiungere migrazioni senza far correre i timestamp nel futuro.
 // Versioni (prefisso numerico) duplicate tra file sono errore. In CI (CI=true)
 // l'assenza del ref di base e' un errore (usa fetch-depth: 0), in locale un warning.
+// Le migrazioni NUOVE non possono usare 'disable trigger' & co. (vedi DANGEROUS_SQL_RULES).
 // Regole pure in scripts/lib/migrations-rules.mjs.
 // Uso: npm run check:migrations   (ref di base: MIGRATIONS_BASE_REF, default origin/main)
 import { execFileSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { validateMigrations } from './lib/migrations-rules.mjs';
 
 const DIR = 'supabase/migrations';
@@ -57,7 +58,8 @@ try {
   );
 }
 
-errors.push(...validateMigrations({ current, baseFiles, base }));
+const contents = Object.fromEntries(current.map((f) => [f, readFileSync(`${DIR}/${f}`, 'utf8')]));
+errors.push(...validateMigrations({ current, baseFiles, base, contents }));
 
 if (errors.length) {
   for (const e of errors) console.error(`[migrations] ${e}`);

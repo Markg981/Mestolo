@@ -20,9 +20,11 @@ export default async function AccountPage() {
         <h2 className="text-xl font-bold">{t('exportTitle')}</h2>
         <p className="text-muted">{t('exportLead')}</p>
         <div className="flex flex-wrap gap-3">
-          <a href="/api/account/export" className={buttonClass('secondary')}>
-            {t('exportButton')}
-          </a>
+          <form action="/api/account/export" method="post">
+            <button type="submit" className={buttonClass('secondary')}>
+              {t('exportButton')}
+            </button>
+          </form>
           <Link href="/import/file" className={buttonClass('secondary')}>
             {t('importButton')}
           </Link>

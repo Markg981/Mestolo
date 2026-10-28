@@ -13,6 +13,7 @@ export const LIMITS = {
   password_verify: [10, 15 * 60],
   signup_ip: [6, 60 * 60],
   reset_ip: [5, 60 * 60],
+  reset_email: [3, 60 * 60],
   password_update: [10, 60 * 60],
   import_url: [30, 60 * 60],
   import_photo: [12, 60 * 60],
