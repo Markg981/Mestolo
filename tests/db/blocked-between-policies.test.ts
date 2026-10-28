@@ -232,8 +232,8 @@ d('is_blocked_between: policies', () => {
       const [{ id: rid }] = await as<{ id: string }>(third, "insert into public.recipes (owner_id, title, visibility) values ($1, 'R', 'public') returning id", [third]);
       const [{ id: lid }] = await as<{ id: string }>(
         author,
-        "insert into public.cook_logs (recipe_id, user_id, visibility) values ($1, $2, 'recipe') returning id",
-        [rid, author],
+        "select public.insert_cook_log($1, now(), '', 'recipe', null, 0, 2000, 1) as id",
+        [rid],
       );
       expect(await as(reader, 'select id from public.cook_logs where id = $1', [lid])).toHaveLength(1);
       await block(reverse ? reader : author, reverse ? author : reader);
