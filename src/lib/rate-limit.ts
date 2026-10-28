@@ -1,13 +1,14 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { headers } from 'next/headers';
-import { extractClientIp } from '@/lib/client-ip';
+import { extractClientIp, UNKNOWN_IP } from '@/lib/client-ip';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /** Limits per action: [max events, window in seconds]. */
 export const LIMITS = {
   login_ip: [20, 15 * 60],
-  login_email: [60, 15 * 60],
+  // Tentativi (non solo fallimenti) per email, contati PRIMA di interrogare Supabase.
+  login_email: [30, 15 * 60],
   login_email_ip: [8, 15 * 60],
   password_verify: [10, 15 * 60],
   signup_ip: [6, 60 * 60],
@@ -78,4 +79,10 @@ export async function enforceAuthRateLimit(limit: LimitName, subject: string): P
     if (!(e instanceof RateLimitedError)) console.error(`[mestolo] auth rate limiter unavailable (${limit}):`, e);
     throw e;
   }
+}
+
+/** Come clientIpHash ma null se l'IP e sconosciuto: evita il bucket condiviso (DoS globale). */
+export async function clientIpHashOrNull(): Promise<string | null> {
+  const ip = extractClientIp(await headers());
+  return ip === UNKNOWN_IP ? null : hashKey(ip);
 }
