@@ -100,6 +100,10 @@ jobs:
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
+      # true = i promemoria sono chiamati da uno scheduler esterno: meal-reminders.yml salta il job
+      # (run "skipped", mai "success"), quindi il suo ultimo successo non va controllato qui.
+      # Il controllo missed-reminders resta attivo: legge il DB e vale per qualsiasi scheduler.
+      MEAL_EXTERNAL: ${{ vars.MEAL_REMINDERS_EXTERNAL_SCHEDULER }}
     steps:
       - name: Check recent successful runs of critical workflows
         run: |
@@ -108,6 +112,10 @@ jobs:
           # nome del workflow:ore massime dall'ultimo successo
           for spec in "Backup:48" "Meal reminders:48" "Restore verify:192"; do
             wf="${spec%:*}"; max_h="${spec##*:}"
+            if [ "$wf" = "Meal reminders" ] && [ "$MEAL_EXTERNAL" = "true" ]; then
+              echo "Workflow '$wf': scheduler esterno attivo (MEAL_REMINDERS_EXTERNAL_SCHEDULER=true), controllo saltato; vale il job missed-reminders."
+              continue
+            fi
             last="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$wf" --status success --limit 1               --json updatedAt --jq '.[0].updatedAt // empty')"
             if [ -z "$last" ]; then
               echo "::error::Workflow '$wf': nessuna esecuzione riuscita (secret mancanti o workflow mai eseguito)."
