@@ -20,7 +20,7 @@ export default async function globalSetup() {
   const { error } = await adminClient()
     .from('rate_limit_events')
     .delete()
-    .or('bucket.like.signup_ip:*,bucket.like.login_ip:*,bucket.like.reset_ip:*');
+    .or('bucket.like.signup_ip:*,bucket.like.login_ip:*,bucket.like.reset_ip:*,bucket.like.reset_email:*');
   if (error) throw new Error(`Pulizia rate limit fallita: ${error.message}`);
 
   for (const tag of ['main', 'session'] as const) {
