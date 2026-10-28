@@ -4,6 +4,9 @@ import { sentryOptions } from '@/lib/monitoring/scrub';
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Fail-fast: in produzione CRON_SECRET e' obbligatorio (i cron di vercel.json).
+    const { assertCronSecret } = await import('@/lib/env');
+    assertCronSecret(process.env);
     const warning = proxyConfigWarning();
     if (warning) console.warn(warning);
   }
