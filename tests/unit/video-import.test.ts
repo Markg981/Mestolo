@@ -40,6 +40,20 @@ const JSON3 = JSON.stringify({ events: [{ tStartMs: 0, segs: [{ utf8: 'Taglia ' 
 const VTT = `WEBVTT\nKind: captions\nLanguage: it\n\nNOTE commento\n\n00:00:00.000 --> 00:00:02.000 align:start\nMetti <c.colorE5E5E5>l'acqua</c> &amp; il sale\n\n00:00:02.000 --> 00:00:04.000\nMetti l'acqua &amp; il sale\n\n2\n00:00:04.000 --> 00:00:06.000\nCuoci 10 minuti\n`;
 
 describe('captionsToText', () => {
+  it('elabora input ostile da 600 KB in meno di 1 s (ReDoS, C-04)', () => {
+    for (const raw of ['<text>'.repeat(100_000), '<p>'.repeat(200_000), '<text a="1">x</text>'.repeat(30_000) + '<text>'.repeat(50_000)]) {
+      const t0 = performance.now();
+      captionsToText(raw, 'xml');
+      expect(performance.now() - t0).toBeLessThan(1000);
+    }
+  });
+  it('mantiene il comportamento sui casi XML limite e applica il tetto ai segmenti', () => {
+    expect(captionsToText('<pre>no</pre><p>a</p><text start="1">b</text><p t="1"><s>c</s></p>', 'xml')).toBe('a\nb\nc');
+    expect(captionsToText('<text>aperto senza chiusura', 'xml')).toBe('');
+    const many = Array.from({ length: 60_000 }, (_, i) => `<text>c${i}</text>`).join('');
+    expect(captionsToText(many, 'xml').split('\n').length).toBe(50_000);
+  });
+
   it('parses timedtext XML (double-escaped entities, duplicate cues)', () => {
     expect(captionsToText(XML)).toBe("Oggi facciamo la carbonara\n200 g di guanciale & 4 uova\nNon c'è panna");
   });
