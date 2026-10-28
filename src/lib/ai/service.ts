@@ -18,6 +18,8 @@ export interface ResolvedProvider {
   provider: AiProvider;
   keySource: KeySource;
   providerName: string;
+  /** Unita di quota consumate con la chiave dell'app (default 1): serve al rimborso. */
+  quantity?: number;
 }
 
 export interface CapabilityStatus {
@@ -142,7 +144,8 @@ export async function capabilityStatus(userId: string, capability: Capability, g
   return { available: used < limit, keySource: 'app', providerName: app.label, remainingToday: Math.max(0, limit - used), dailyLimit: limit };
 }
 
-export async function resolveProvider(userId: string, capability: Capability, group: QuotaGroup | undefined, action: string): Promise<ResolvedProvider> {
+export async function resolveProvider(userId: string, capability: Capability, group: QuotaGroup | undefined, action: string, quantity = 1): Promise<ResolvedProvider> {
+  if (!Number.isInteger(quantity) || quantity < 1) throw new RangeError('quantity must be a positive integer');
   const keys = await loadUserKeys(userId);
   const usable = capability === 'image' || capability === 'audio' ? keys.filter((k) => k.provider === 'openai') : keys;
   for (const row of usable) {
@@ -161,10 +164,12 @@ export async function resolveProvider(userId: string, capability: Capability, gr
     p_limit: env().ai.limits[g],
     p_action: action,
     p_provider: app.id,
+    // Inviato solo se > 1: per 1 unita' il contratto RPC resta quello storico.
+    ...(quantity > 1 ? { p_qty: quantity } : {}),
   });
   if (error) throw error;
   if (!allowed) throw new AiError('quota_exceeded');
-  return { provider: app, keySource: 'app', providerName: app.label };
+  return { provider: app, keySource: 'app', providerName: app.label, quantity };
 }
 
 export async function recordUsage(userId: string, group: QuotaGroup, action: string, resolved: ResolvedProvider) {

@@ -125,7 +125,8 @@ export async function importFromPhotos(formData: FormData): Promise<ActionResult
       images.push({ mime: 'image/jpeg' as const, base64: jpeg.toString('base64') });
     }
 
-    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo');
+    // Una unita di quota per pagina: il costo del provider cresce con le immagini inviate.
+    const resolved = await resolveProvider(user.id, 'vision', 'vision', 'extract_photo', images.length);
     let extracted: unknown;
     try {
       const raw = await resolved.provider.completeJson({

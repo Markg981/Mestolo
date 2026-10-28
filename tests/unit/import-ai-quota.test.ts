@@ -28,9 +28,9 @@ vi.mock('@/lib/import/video-import', () => ({ fetchVideoText: vi.fn() }));
 
 import { importFromPhotos, importFromText, transcribeVideoAudio } from '@/app/actions/import';
 
-function photoForm() {
+function photoForm(n = 1) {
   const fd = new FormData();
-  fd.append('pages', new File([new Uint8Array([1, 2, 3])], 'a.jpg', { type: 'image/jpeg' }));
+  for (let i = 0; i < n; i++) fd.append('pages', new File([new Uint8Array([1, 2, 3])], `a${i}.jpg`, { type: 'image/jpeg' }));
   return fd;
 }
 function audioForm() {
@@ -64,6 +64,24 @@ describe('import AI: quota consumata solo per richieste valide e rimborsata se f
     const r = await importFromPhotos(photoForm());
     expect(r.ok).toBe(false);
     expect(mocks.resolveProvider).not.toHaveBeenCalled();
+  });
+
+  it('foto: 1 pagina = 1 unita, 8 pagine = 8 unita di quota', async () => {
+    mocks.completeJson.mockResolvedValue({});
+    await importFromPhotos(photoForm());
+    expect(mocks.resolveProvider.mock.calls[0][4]).toBe(1);
+    mocks.resolveProvider.mockClear();
+    await importFromPhotos(photoForm(8));
+    expect(mocks.resolveProvider.mock.calls[0].slice(1)).toEqual(['vision', 'vision', 'extract_photo', 8]);
+  });
+
+  it('foto: errore del provider con 8 pagine -> rimborso della risorsa con quantita 8', async () => {
+    const resolved = { provider: { completeJson: mocks.completeJson }, keySource: 'app', providerName: 'x', quantity: 8 };
+    mocks.resolveProvider.mockResolvedValue(resolved);
+    mocks.completeJson.mockRejectedValue(new Error('boom'));
+    await importFromPhotos(photoForm(8));
+    expect(mocks.refundQuota).toHaveBeenCalledTimes(1);
+    expect(mocks.refundQuota.mock.calls[0][1]).toBe(resolved);
   });
 
   it('foto: provider in errore -> rimborso', async () => {
