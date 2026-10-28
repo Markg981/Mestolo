@@ -113,6 +113,19 @@ d('consume_ai_quota', () => {
     await expect(refund(null)).rejects.toThrow();
   });
 
+  it('quantita (C-02): consumo atomico di N unita e rimborso di N righe', async () => {
+    const uid = await createUser(`quota_q_${Math.random().toString(36).slice(2, 8)}`);
+    const q = async (args: unknown[], sql: string) => (await asRole<{ ok: boolean }>('service_role', null, sql, args))[0].ok;
+    const take = (n: number, limit: number) =>
+      q([uid, 'vision', limit, 'test', 'openai', n], 'select public.consume_ai_quota($1, $2, $3, $4, $5, $6) as ok');
+    expect(await take(8, 10)).toBe(true);
+    expect(await usedCount(uid, 'vision')).toBe(8);
+    expect(await take(3, 10)).toBe(false); // 8 + 3 > 10: nessuna riga scritta
+    expect(await usedCount(uid, 'vision')).toBe(8);
+    expect(await q([uid, 'vision', 'test', 8], 'select public.refund_ai_quota($1, $2, $3, $4) as ok')).toBe(true);
+    expect(await usedCount(uid, 'vision')).toBe(0);
+  });
+
   it('richiede un utente e rifiuta gruppi non validi', async () => {
     await expect(consume(null, 'text', 5)).rejects.toThrow();
     await expect(consume(alice, 'bogus', 5)).rejects.toThrow();
