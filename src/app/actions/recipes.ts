@@ -19,6 +19,14 @@ function invalidatePublicPage(slug: string | null | undefined) {
   revalidateTag(PUBLIC_RECIPES_TAG, 'max');
 }
 
+type Db = Awaited<ReturnType<typeof createClient>>;
+/** Upsert della nota personale; nota vuota = cancellazione. */
+function writeNote(supabase: Db, recipeId: string, ownerId: string, body: string) {
+  return body.trim()
+    ? supabase.from('recipe_notes').upsert({ recipe_id: recipeId, owner_id: ownerId, body })
+    : supabase.from('recipe_notes').delete().eq('recipe_id', recipeId).eq('owner_id', ownerId);
+}
+
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
 /**
  * `expectedVersion` (required when updating) is the recipe version read when the editor was opened: if the row moved on in the
@@ -57,6 +65,17 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
     if (id) {
       // update senza versione attesa = ultima scrittura vince: non ammesso
       if (!uuid.safeParse(id).success || !Number.isInteger(expectedVersion)) return fail('invalid_input');
+      // La nota va scritta PRIMA della ricetta: se fallisce, la versione non e' ancora avanzata e il retry del client
+      // (stesso expectedVersion) non finisce in conflict. Prima si verifica che la versione attesa sia ancora quella corrente.
+      if (d.personal_note !== undefined) {
+        const { data: cur } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).eq('version', expectedVersion as number).maybeSingle();
+        if (!cur) {
+          const { data: exists } = await supabase.from('recipes').select('id').eq('id', id).eq('owner_id', user.id).maybeSingle();
+          return fail(exists ? 'conflict' : 'not_found');
+        }
+        const { error: noteErr } = await writeNote(supabase, id, user.id, d.personal_note);
+        if (noteErr) return dbFailure(noteErr, 'saveRecipe.note');
+      }
       let q = supabase
         .from('recipes')
         .update({ ...content, last_change_source: 'edit' })
@@ -119,13 +138,11 @@ export async function saveRecipe(payload: unknown, recipeId?: string | null, exp
       created = true;
     }
 
-    if (d.personal_note !== undefined) {
-      const { error: noteErr } = d.personal_note.trim()
-        ? await supabase.from('recipe_notes').upsert({ recipe_id: id, owner_id: user.id, body: d.personal_note })
-        : await supabase.from('recipe_notes').delete().eq('recipe_id', id).eq('owner_id', user.id);
+    if (created && d.personal_note !== undefined) {
+      const { error: noteErr } = await writeNote(supabase, id!, user.id, d.personal_note);
       if (noteErr) {
-        // In creazione compensa eliminando la ricetta; in modifica il salvataggio non va dichiarato riuscito.
-        if (created) await supabase.from('recipes').delete().eq('id', id).eq('owner_id', user.id);
+        // In creazione compensa eliminando la ricetta.
+        await supabase.from('recipes').delete().eq('id', id).eq('owner_id', user.id);
         return dbFailure(noteErr, 'saveRecipe.note');
       }
     }
