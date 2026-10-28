@@ -135,7 +135,7 @@
     "too_many_files": "Demasiadas fotos para uma só receita.",
     "audio_too_long": "O áudio é demasiado longo. Usa um vídeo mais curto.",
     "storage_quota_exceeded": "Atingiste o número ou o espaço máximo de fotos guardadas. Elimina algumas para carregar mais.",
-    "auth_invalid": "Email ou palavra-passe incorretos.",
+    "auth_invalid": "Email ou palavra-passe incorretos. Se acabaste de te registar, confirma primeiro o email (verifica a tua caixa de correio).",
     "auth_email_taken": "Já existe uma conta com este email.",
     "auth_weak_password": "A palavra-passe deve ter pelo menos 8 caracteres.",
     "auth_not_confirmed": "Confirma primeiro o email: verifica a tua caixa de correio.",

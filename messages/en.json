@@ -135,7 +135,7 @@
     "too_many_files": "Too many photos for one recipe.",
     "audio_too_long": "The audio is too long. Use a shorter video.",
     "storage_quota_exceeded": "You've reached the maximum number or storage size of stored photos. Delete some to upload more.",
-    "auth_invalid": "Incorrect email or password.",
+    "auth_invalid": "Incorrect email or password. If you just signed up, confirm your email first (check your inbox).",
     "auth_email_taken": "An account with this email already exists.",
     "auth_weak_password": "Password must be at least 8 characters.",
     "auth_not_confirmed": "Confirm your email first: check your inbox.",
