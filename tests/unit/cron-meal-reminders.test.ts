@@ -4,6 +4,9 @@ const sendNotification = vi.fn<(endpoint: unknown, payload: unknown, options?: u
 const setVapidDetails = vi.fn();
 vi.mock('web-push', () => ({ default: { sendNotification: (e: unknown, p: unknown, o?: unknown) => sendNotification(e, p, o), setVapidDetails: (...a: unknown[]) => setVapidDetails(...a) } }));
 
+const captureException = vi.fn();
+vi.mock('@sentry/nextjs', () => ({ captureException: (...a: unknown[]) => captureException(...a) }));
+
 const deleted: string[][] = [];
 const rangeCalls: number[][] = [];
 const rpc = vi.fn(async () => ({
@@ -35,6 +38,7 @@ describe('GET /api/cron/meal-reminders', () => {
     vi.stubEnv('VAPID_PRIVATE_KEY', 'priv');
     vi.stubEnv('VAPID_SUBJECT', 'mailto:admin@example.com');
     rpc.mockClear();
+    captureException.mockClear();
     sendNotification.mockClear();
     sendNotification.mockResolvedValue({ statusCode: 201 });
     deleted.length = 0;
@@ -116,6 +120,16 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(await res.json()).toMatchObject({ sent: 1001 });
     expect(rangeCalls).toEqual([[0, 999], [1000, 1999]]);
     subs.splice(0, subs.length, ...saved);
+  });
+
+  it('logs and reports to Sentry when the claim fails, without personal data', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom', code: 'XX000' } } as never);
+    const res = await GET(req('Bearer topsecret'));
+    expect(res.status).toBe(500);
+    expect(captureException).toHaveBeenCalledWith(expect.anything(), { tags: { cron: 'meal-reminders', step: 'claim' } });
+    expect(err).toHaveBeenCalledWith('[cron/meal-reminders] claim failed', expect.anything());
+    err.mockRestore();
   });
 
   it('declares a max duration and a 45 minute default window', async () => {

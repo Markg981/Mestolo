@@ -1,4 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { cronSecret } from '@/lib/env';
@@ -17,6 +18,12 @@ const SEND_CONCURRENCY = 10;
 // Come il cron di cleanup: margine ampio rispetto a maxDuration. Un pasto avviato sotto budget puo' durare fino al timeout
 // del push (10 s), poi restano i secondi per confirm_meal_reminders: nessun nuovo invio oltre il budget.
 const BUDGET_MS = 40_000;
+
+/** Log strutturato + Sentry come nel cron di cleanup; solo il passo e l'errore del DB, nessun dato di utenti o sottoscrizioni. */
+function reportFailure(step: 'claim' | 'subscriptions' | 'confirm', error: unknown) {
+  console.error(`[cron/meal-reminders] ${step} failed`, error);
+  Sentry.captureException(error, { tags: { cron: 'meal-reminders', step } });
+}
 
 function authorized(request: Request): boolean {
   const secret = cronSecret();
@@ -52,7 +59,10 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
   const { data: due, error } = await admin.rpc('claim_due_meal_reminders', { p_window_minutes: windowMinutes() });
-  if (error) return NextResponse.json({ error: 'claim_failed' }, { status: 500 });
+  if (error) {
+    reportFailure('claim', error);
+    return NextResponse.json({ error: 'claim_failed' }, { status: 500 });
+  }
   const meals = (due as Due[] | null) ?? [];
   if (meals.length === 0) return NextResponse.json({ ok: true, meals: 0, sent: 0, removed: 0 });
 
@@ -68,7 +78,10 @@ export async function GET(request: Request) {
         .in('user_id', chunk)
         .order('id')
         .range(from, from + PAGE_SIZE - 1);
-      if (subsError) return NextResponse.json({ error: 'subscriptions_failed' }, { status: 500 });
+      if (subsError) {
+        reportFailure('subscriptions', subsError);
+        return NextResponse.json({ error: 'subscriptions_failed' }, { status: 500 });
+      }
       const rows = (data as Sub[] | null) ?? [];
       allSubs.push(...rows);
       if (rows.length < PAGE_SIZE) break;
@@ -122,7 +135,7 @@ export async function GET(request: Request) {
   );
   if (confirm.length > 0) {
     const { error: confirmError } = await admin.rpc('confirm_meal_reminders', { p_entry_ids: confirm });
-    if (confirmError) console.error('[mestolo] meal-reminders: confirm failed');
+    if (confirmError) reportFailure('confirm', confirmError);
   }
   // I pasti rinviati restano senza conferma: dopo il lease (5 min) il claim li riseleziona nell'esecuzione successiva.
   const deferred = queue.length;
