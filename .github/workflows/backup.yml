@@ -18,8 +18,11 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
+      # Solo chiavi PUBBLICHE: questo workflow non puo' decifrare. La privata del titolare non sta su GitHub.
+      # ATTENZIONE: il backup e' cifrato anche verso la pubblica di verifica; la sua privata (secret
+      # BACKUP_GPG_VERIFY_PRIVATE_KEY, usato solo da restore-verify.yml) sta su GitHub e decifra TUTTI i backup.
       BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+      BACKUP_GPG_VERIFY_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_VERIFY_PUBLIC_KEY }}
       BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
       BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
       AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
