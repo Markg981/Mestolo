@@ -47,7 +47,7 @@ type Sub = { id: string; user_id: string; endpoint: string; p256dh: string; auth
  * 15 minuti, oppure vercel.pro.json; con NEXT_PUBLIC_FREQUENT_CRON=true per la UI): invia le notifiche Web Push dei pasti
  * pianificati il cui orario di promemoria, nel fuso dell'utente, e' appena trascorso.
  * Claim e conferma sono separati: il pasto e' confermato (confirm_meal_reminders) solo dopo l'esito del push.
- * Autenticazione: `Authorization: Bearer $CRON_SECRET`. Le sottoscrizioni scadute (404/410) vengono eliminate.
+ * Autenticazione: `Authorization: Bearer $CRON_SECRET`. Le sottoscrizioni scadute (404/410) o rifiutate in modo permanente (401/403) vengono eliminate.
  */
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -115,8 +115,16 @@ export async function GET(request: Request) {
         delivered = true;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) gone.add(s.id);
-        else {
+        // 404/410: sottoscrizione scaduta. 401/403: chiavi VAPID non piu' valide per quella sottoscrizione (es. chiave ruotata):
+        // errori permanenti, i tentativi successivi non possono riuscire, quindi la sottoscrizione viene rimossa.
+        if (status === 404 || status === 410 || status === 401 || status === 403) {
+          gone.add(s.id);
+          if (status === 401 || status === 403) console.warn(`[mestolo] meal-reminders: subscription removed (push rejected with ${status})`);
+        } else if (status === 400) {
+          // Richiesta rifiutata: ritentare non serve, quindi non blocca la conferma del pasto. Non si elimina la
+          // sottoscrizione al primo 400 (potrebbe essere un payload/header momentaneamente errato); e' loggato per il monitoraggio.
+          console.warn('[mestolo] meal-reminders: push rejected (400), not retried');
+        } else {
           transient = true;
           console.error(`[mestolo] meal-reminders: push failed (${status ?? 'network'})`);
         }

@@ -81,6 +81,20 @@ describe('GET /api/cron/meal-reminders', () => {
     expect(deleted).toEqual([['s1']]);
   });
 
+  it('deletes subscriptions rejected with 401/403 (e.g. rotated VAPID keys) as permanent errors', async () => {
+    sendNotification.mockRejectedValueOnce(Object.assign(new Error('unauthorized'), { statusCode: 401 })).mockRejectedValueOnce(Object.assign(new Error('forbidden'), { statusCode: 403 }));
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 0, removed: 2, confirmed: 1 });
+    expect(deleted).toEqual([['s1', 's2']]);
+  });
+
+  it('does not delete nor retry subscriptions answering 400', async () => {
+    sendNotification.mockRejectedValue(Object.assign(new Error('bad'), { statusCode: 400 }));
+    const res = await GET(req('Bearer topsecret'));
+    expect(await res.json()).toMatchObject({ sent: 0, removed: 0, confirmed: 1 });
+    expect(deleted).toEqual([]);
+  });
+
   const confirmCalls = () => rpc.mock.calls.filter((c) => (c as unknown[])[0] === 'confirm_meal_reminders');
 
   it('confirms the reminder only after a successful push', async () => {
