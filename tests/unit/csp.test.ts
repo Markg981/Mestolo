@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCsp, cspHeaderName, generateNonce } from '@/lib/csp';
+import { buildCsp, cspHeaderName, cspReportOnlyWarning, generateNonce } from '@/lib/csp';
 
 describe('buildCsp', () => {
   it('usa nonce e strict-dynamic senza unsafe-inline negli script', () => {
@@ -44,5 +44,19 @@ describe('nonce e header', () => {
   it('sceglie il nome header in base al report-only', () => {
     expect(cspHeaderName(true)).toBe('Content-Security-Policy-Report-Only');
     expect(cspHeaderName(false)).toBe('Content-Security-Policy');
+  });
+});
+
+describe('CSP reporting', () => {
+  it('include report-uri e report-to', () => {
+    const csp = buildCsp({ nonce: 'a' });
+    expect(csp).toContain('report-uri /api/csp-report');
+    expect(csp).toContain('report-to csp-endpoint');
+  });
+
+  it('avvisa solo se report-only e produzione', () => {
+    expect(cspReportOnlyWarning(true, true)).toContain('CSP_REPORT_ONLY');
+    expect(cspReportOnlyWarning(true, false)).toBeNull();
+    expect(cspReportOnlyWarning(false, true)).toBeNull();
   });
 });

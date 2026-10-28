@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { buildCsp, cspHeaderName, generateNonce } from '@/lib/csp';
+import { REPORTING_ENDPOINTS, buildCsp, cspHeaderName, cspReportOnlyWarning, generateNonce } from '@/lib/csp';
 import { createTimeoutFetch } from '@/lib/supabase/fetch';
 
 const PUBLIC_PATHS = ['/welcome', '/login', '/signup', '/forgot-password', '/auth', '/setup', '/privacy', '/terms', '/offline', '/invite', '/r', '/sitemap.xml', '/robots.txt'];
+
+let warnedReportOnly = false;
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -22,7 +24,13 @@ export async function proxy(request: NextRequest) {
     sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   });
-  const cspName = cspHeaderName(process.env.CSP_REPORT_ONLY === '1');
+  const reportOnly = process.env.CSP_REPORT_ONLY === '1';
+  const reportOnlyWarning = cspReportOnlyWarning(reportOnly, process.env.NODE_ENV === 'production');
+  if (reportOnlyWarning && !warnedReportOnly) {
+    warnedReportOnly = true;
+    console.warn(reportOnlyWarning);
+  }
+  const cspName = cspHeaderName(reportOnly);
   // Next reads the nonce from the request CSP header to tag its own scripts.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
@@ -30,6 +38,7 @@ export async function proxy(request: NextRequest) {
   const next = () => {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set(cspName, csp);
+    res.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS);
     return res;
   };
 
