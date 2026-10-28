@@ -1,4 +1,4 @@
-/** B-09: i CHECK di dimensione su recipes sono validati (migration 20261121000114). */
+/** B-09: i CHECK di dimensione su recipes sono validati (migration 20261121000115). */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 
