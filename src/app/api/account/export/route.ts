@@ -32,7 +32,7 @@ export async function GET() {
       return q.range(from, to);
     });
   const own = (table: string, col = 'owner_id', order: string[] = ['id']) => paged(table, (q) => q.eq(col, user.id), order);
-  const [profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories] = await Promise.all([
+  const [profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, slugHistory, usage, categories] = await Promise.all([
     supabase.rpc('my_profile').maybeSingle(),
     own('recipes'),
     own('recipe_notes', 'owner_id', ['recipe_id']),
@@ -45,6 +45,8 @@ export async function GET() {
     own('blocks', 'blocker_id', ['blocked_id']),
     own('reports', 'reporter_id'),
     supabase.rpc('my_api_keys'),
+    // Tabella non leggibile da authenticated: RPC security definer limitata alle ricette proprie.
+    supabase.rpc('my_recipe_slug_history'),
     own('ai_usage', 'user_id'),
     own('categories'),
   ]);
@@ -77,13 +79,14 @@ export async function GET() {
       return q.range(from, to);
     });
   const recipeIds = ((recipes.data as { id: string }[]) ?? []).map((r) => r.id);
-  const [versions, images, nutrition] = recipeIds.length
+  const [versions, images, nutrition, translations] = recipeIds.length
     ? await Promise.all([
         chunked('recipe_versions', recipeIds, ['id']),
         chunked('recipe_images', recipeIds, ['id'], 'id, recipe_id, kind, source_url, attribution, alt_text, created_at'),
         chunked('recipe_nutrition', recipeIds, ['recipe_id']),
+        chunked('recipe_translations', recipeIds, ['recipe_id', 'locale']),
       ])
-    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
 
   // Una query fallita non deve produrre un export parziale con 200: l'utente
   // crederebbe di avere tutti i dati. Si logga solo il nome della sezione e il
@@ -91,7 +94,7 @@ export async function GET() {
   const results: Record<string, { data?: unknown; error?: { code?: string } | null }> = {
     profile, recipes, notes, favorites, collections, shoppingLists, shoppingItems, plan, friendships, blocks, reports, keys, usage, categories,
     cookLogs, ratings, pantry, planPrefs, notifPrefs, pushSubs, invites, redemptions, collMembers, listMembers, aisles, suggestions, feedback, modCases, modNotices,
-    versions, images, nutrition,
+    versions, images, nutrition, translations, slugHistory,
   };
   const failed = Object.entries(results).filter(([, r]) => r.error);
   if (failed.length) {
@@ -106,6 +109,8 @@ export async function GET() {
     versions: versions.data,
     images: images.data,
     nutrition: nutrition.data,
+    translations: translations.data,
+    slugHistory: slugHistory.data,
     cookLogs: cookLogs.data,
     ratings: ratings.data,
     pantry: pantry.data,

@@ -9,6 +9,8 @@ export interface AccountExportInput {
   versions: Rows;
   images: Rows;
   nutrition: Rows;
+  translations: Rows;
+  slugHistory: Rows;
   cookLogs: Rows;
   ratings: Rows;
   pantry: Rows;
@@ -49,6 +51,8 @@ export function buildAccountExport(d: AccountExportInput) {
     recipe_versions: d.versions,
     recipe_images_metadata: d.images,
     recipe_nutrition: d.nutrition,
+    recipe_translations: d.translations,
+    recipe_slug_history: d.slugHistory,
     cook_logs: d.cookLogs,
     recipe_ratings: d.ratings,
     pantry_items: d.pantry,

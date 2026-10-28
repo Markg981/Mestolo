@@ -91,7 +91,7 @@ describe('import of Mestolo JSON exports', () => {
     const empty = [] as unknown[];
     const body = buildAccountExport({
       user: { id: 'u1', email: 'a@b.c', created_at: '2026-01-01' },
-      profile: null, versions: empty, images: empty, nutrition: empty, cookLogs: empty, ratings: empty, pantry: empty,
+      profile: null, versions: empty, images: empty, nutrition: empty, translations: empty, slugHistory: empty, cookLogs: empty, ratings: empty, pantry: empty,
       planPrefs: empty, notifPrefs: empty, pushSubs: empty, invites: empty, redemptions: empty, collMembers: empty,
       listMembers: empty, aisles: empty, suggestions: empty, feedback: empty, favorites: empty, collections: empty,
       shoppingLists: empty, shoppingItems: empty, plan: empty, friendships: empty, blocks: empty, reports: empty,
