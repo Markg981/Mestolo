@@ -66,6 +66,8 @@ Le app **non contengono dati né chiavi**: si collegano allo stesso sito e allo 
 
 ## 4. App Store (iOS)
 
+> Senza `APPLE_TEAM_ID` e i tre secret `APP_STORE_CONNECT_*` il workflow iOS non fallisce (nemmeno sui tag `v*`): emette un warning, compila un archivio non firmato (artifact `Mestolo-ios-unsigned-<run>`) e salta export e upload su TestFlight. Su Android, invece, un tag senza keystore resta un errore.
+
 1. **Apple Developer Program** (99 $ l'anno).
 2. **Non serve un Mac**: la build iOS gira su un runner macOS di GitHub Actions (`.github/workflows/mobile-ios.yml`) con firma automatica tramite chiave API di App Store Connect. (Con un Mac si può comunque fare a mano: `npm run mobile:ios`, poi in Xcode *Product → Archive*.)
 

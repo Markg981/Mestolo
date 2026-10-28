@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { resolveProvider, recordUsage, type KeySource } from '@/lib/ai/service';
 import { withRefund } from '@/lib/ai/refund';
-import { analyzeSystem, analyzeUserPrompt, substituteSystem, substituteUserPrompt, translateSystem } from '@/lib/ai/prompts';
+import { analyzeSystem, analyzeUserPrompt, substituteSystem, substituteUserPrompt, translateSystem, translateUserPrompt } from '@/lib/ai/prompts';
 import { analysisSchema, applySuggestions, type Analysis } from '@/lib/recipes/suggestions';
 import { findBuiltinSubstitutions, substitutionResultSchema, type SubstitutionResult } from '@/lib/recipes/substitutions';
 import { buildTranslatable, guardTranslatedNumbers, isTranslationFresh, mergeTranslation, translatedPayloadSchema, TranslationShapeError } from '@/lib/recipes/translation';
@@ -228,7 +228,7 @@ export async function translateRecipe(recipeId: string, target: string): Promise
     const resolved = await resolveProvider(user.id, 'text', 'translate', 'recipe');
     return await withRefund(user.id, resolved, 'translate', 'recipe', async (paid) => {
       const payload = buildTranslatable(r);
-      const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: JSON.stringify(payload), maxTokens: 6000 });
+      const raw = await resolved.provider.completeJson({ system: translateSystem(r.original_language, target), user: translateUserPrompt(JSON.stringify(payload)), maxTokens: 6000 });
       paid();
       await recordUsage(user.id, 'translate', 'recipe', resolved);
       const parsed = translatedPayloadSchema.safeParse(raw);

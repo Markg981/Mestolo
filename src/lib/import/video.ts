@@ -60,10 +60,16 @@ export function detectVideoUrl(raw: string): VideoRef | null {
 
 export type CaptionFormat = 'xml' | 'json3' | 'vtt';
 
+function safeCodePoint(cp: number, original: string): string {
+  // Fuori range o surrogato: String.fromCodePoint lancerebbe RangeError (o darebbe un surrogato isolato).
+  if (!Number.isInteger(cp) || cp <= 0 || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) return original;
+  return String.fromCodePoint(cp);
+}
+
 export function decodeEntities(s: string): string {
   return s
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (m, n) => safeCodePoint(Number(n), m))
+    .replace(/&#x([0-9a-f]+);/gi, (m, n) => safeCodePoint(parseInt(n, 16), m))
     .replace(/&quot;/g, '"')
     .replace(/&apos;|&#39;/g, "'")
     .replace(/&lt;/g, '<')
@@ -88,6 +94,40 @@ export function sniffCaptionFormat(raw: string): CaptionFormat {
   if (head.startsWith('WEBVTT')) return 'vtt';
   if (head.startsWith('{')) return 'json3';
   return 'xml';
+}
+
+const MAX_CAPTION_XML_CHARS = 5_000_000;
+const MAX_CAPTION_CUES = 50_000;
+
+/**
+ * Linear scan equivalent to /<(?:text|p)[^>]*>([\s\S]*?)<\/(?:text|p)>/g, without the
+ * quadratic backtracking on hostile input (audit C-04). Input size and cue count are capped.
+ */
+function scanXmlCues(input: string): string[] {
+  const raw = input.length > MAX_CAPTION_XML_CHARS ? input.slice(0, MAX_CAPTION_XML_CHARS) : input;
+  const out: string[] = [];
+  const isWord = (c: string | undefined) => c !== undefined && /\w/.test(c);
+  let nextText = -2; // cached position of the next '</text>' (-1 = none left)
+  let nextP = -2;
+  let pos = 0;
+  while (out.length < MAX_CAPTION_CUES) {
+    const lt = raw.indexOf('<', pos);
+    if (lt < 0) break;
+    const nameLen = raw.startsWith('<text', lt) ? 5 : raw.startsWith('<p', lt) ? 2 : 0;
+    if (!nameLen || isWord(raw[lt + nameLen])) {
+      pos = lt + 1;
+      continue;
+    }
+    const gt = raw.indexOf('>', lt + nameLen);
+    if (gt < 0) break;
+    if (nextText !== -1 && nextText < gt + 1) nextText = raw.indexOf('</text>', gt + 1);
+    if (nextP !== -1 && nextP < gt + 1) nextP = raw.indexOf('</p>', gt + 1);
+    const close = nextText < 0 ? nextP : nextP < 0 ? nextText : Math.min(nextText, nextP);
+    if (close < 0) break;
+    out.push(raw.slice(gt + 1, close));
+    pos = close + (close === nextText ? 7 : 4);
+  }
+  return out;
 }
 
 /** Converts a caption payload (YouTube timedtext XML srv1/srv3, json3, or WebVTT) to plain text, one cue per line. */
@@ -118,9 +158,9 @@ export function captionsToText(raw: string, format: CaptionFormat = sniffCaption
   }
   // xml: <text start dur>..</text> (srv1) or <p t d><s>..</s></p> (srv3)
   const cues: string[] = [];
-  for (const m of raw.matchAll(/<(?:text|p)\b[^>]*>([\s\S]*?)<\/(?:text|p)>/g)) {
+  for (const inner of scanXmlCues(raw)) {
     // The payload is double-escaped (&amp;#39;): decode, strip inline tags, decode again.
-    cues.push(decodeEntities(decodeEntities(m[1]).replace(/<[^>]+>/g, '')));
+    cues.push(decodeEntities(decodeEntities(inner).replace(/<[^>]+>/g, '')));
   }
   return joinSegments(cues);
 }

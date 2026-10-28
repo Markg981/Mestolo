@@ -1,4 +1,4 @@
-import { adminClient, createTestUser, deleteTestUsers, randomUser, requireEnv, runId } from './helpers';
+import { adminClient, assertStagingTarget, createTestUser, deleteTestUsers, randomUser, requireEnv, runId } from './helpers';
 
 /**
  * Crea due utenti di test sul progetto di staging tramite l'API admin:
@@ -11,6 +11,9 @@ export default async function globalSetup() {
   requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
   requireEnv('SUPABASE_SERVICE_ROLE_KEY');
 
+  // Prima di qualsiasi cancellazione: il target deve essere lo staging atteso (F-03)
+  await assertStagingTarget();
+
   // Pulisce i residui di esecuzioni interrotte, non gli utenti di quelle ancora in corso
   runId();
   await deleteTestUsers({ ownRun: false });
@@ -20,7 +23,7 @@ export default async function globalSetup() {
   const { error } = await adminClient()
     .from('rate_limit_events')
     .delete()
-    .or('bucket.like.signup_ip:*,bucket.like.login_ip:*,bucket.like.reset_ip:*');
+    .or('bucket.like.signup_ip:*,bucket.like.login_ip:*,bucket.like.reset_ip:*,bucket.like.reset_email:*');
   if (error) throw new Error(`Pulizia rate limit fallita: ${error.message}`);
 
   for (const tag of ['main', 'session'] as const) {

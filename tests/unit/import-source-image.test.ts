@@ -44,14 +44,14 @@ describe('importSourceImage', () => {
   });
 
   it('rejects an over-long attribution before fetching', async () => {
-    owned.value = { id: RECIPE_ID };
+    owned.value = { id: RECIPE_ID, source_url: 'https://example.com/r' };
     const r = await importSourceImage(RECIPE_ID, 'https://example.com/a.jpg', 'x'.repeat(301));
     expect(r.ok).toBe(false);
     expect(safeFetch).not.toHaveBeenCalled();
   });
 
   it('rejects a non-string attribution', async () => {
-    owned.value = { id: RECIPE_ID };
+    owned.value = { id: RECIPE_ID, source_url: 'https://example.com/r' };
     const r = await importSourceImage(RECIPE_ID, 'https://example.com/a.jpg', { a: 1 } as unknown as string);
     expect(r.ok).toBe(false);
     expect(safeFetch).not.toHaveBeenCalled();

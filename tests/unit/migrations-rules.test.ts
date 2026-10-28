@@ -22,4 +22,13 @@ describe('migrations-rules', () => {
     const errs = validateMigrations({ current: [...base, '20261121000008_x.sql', '20261121000008_y.sql'], baseFiles: base, now });
     expect(errs.some((e: string) => e.includes('duplicata'))).toBe(true);
   });
+  it('vieta disable trigger nelle migrazioni nuove, non nei commenti ne nelle esistenti', () => {
+    const f = '20261121000008_x.sql';
+    const run = (sql: string, baseFiles = base) =>
+      validateMigrations({ current: [...new Set([...base, f])], baseFiles, now, contents: { [f]: sql } });
+    expect(run('alter table t DISABLE TRIGGER user;')).toHaveLength(1);
+    expect(run("set session_replication_role = 'replica';")).toHaveLength(1);
+    expect(run('-- disable trigger\n/* disable trigger */ select 1;')).toEqual([]);
+    expect(run('alter table t disable trigger user;', [...base, f])).toEqual([]);
+  });
 });

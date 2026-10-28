@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { safeNextPath } from '@/lib/safe-redirect';
-import { clientIpHash, enforceAuthRateLimit, hashKey } from '@/lib/rate-limit';
+import { clientIpHash, clientIpHashOrNull, enforceAuthRateLimit, hashKey } from '@/lib/rate-limit';
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config';
 import { passwordSchema } from '@/lib/password';
 import { isRecoverySession } from '@/lib/recovery-session';
@@ -32,26 +32,24 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
   const parsed = credentials.safeParse({ email: formData.get('email'), password: formData.get('password') });
   if (!parsed.success) return { error: 'auth_invalid', email: String(formData.get('email') ?? '') };
   try {
-    const ipHash = await clientIpHash();
+    const ipHash = await clientIpHashOrNull();
     const emailHash = hashKey(parsed.data.email.toLowerCase());
-    await authRateLimit('login_ip', ipHash);
-    // Tight limit per (email, IP). The email-only counter is NOT checked here: it only counts failures
-    // (see below), so a third party cannot lock a victim out by burning it from other IPs.
-    await authRateLimit('login_email_ip', `${emailHash}:${ipHash}`);
+    // Limite per email applicato PRIMA del tentativo: frena il guessing distribuito da molti IP.
+    // Compromesso: un terzo puo rallentare il login di una vittima per la finestra (15 min); messaggio generico.
+    await authRateLimit('login_email', emailHash);
+    // IP sconosciuto: niente bucket condiviso (bloccherebbe tutti); resta il limite per email.
+    if (ipHash) {
+      await authRateLimit('login_ip', ipHash);
+      await authRateLimit('login_email_ip', `${emailHash}:${ipHash}`);
+    }
   } catch {
     return { error: 'rate_limited', email: parsed.data.email };
   }
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error || !data.user) {
-    // Count only failed attempts per email; this never blocks an IP that has not failed.
-    try {
-      await authRateLimit('login_email', hashKey(parsed.data.email.toLowerCase()));
-    } catch {
-      return { error: 'rate_limited', email: parsed.data.email };
-    }
-    const code: ErrorCode = /confirm/i.test(error?.message ?? '') ? 'auth_not_confirmed' : 'auth_invalid';
-    return { error: code, email: parsed.data.email };
+    // Stesso codice per credenziali errate e account non confermato: nessuna enumerazione delle email registrate.
+    return { error: 'auth_invalid', email: parsed.data.email };
   }
   const { data: profile } = await supabase.rpc('my_profile').maybeSingle<{ locale: string }>();
   await setLocaleCookie(profile?.locale);
@@ -121,6 +119,8 @@ export async function requestPasswordReset(_: AuthState, formData: FormData): Pr
   if (!email.success) return { error: 'invalid_input' };
   try {
     await authRateLimit('reset_ip', await clientIpHash());
+    // Per destinatario: impedisce di inondare una casella da IP diversi. Stessa risposta se l'account non esiste.
+    await authRateLimit('reset_email', hashKey(email.data.toLowerCase()));
   } catch {
     return { error: 'rate_limited' };
   }

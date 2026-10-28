@@ -89,19 +89,42 @@ function roundMetric(n: number): number {
 
 type Result = { quantity: number; unit: string };
 
+/**
+ * Errore relativo massimo (6%) tollerato per la conversione massa -> oz (sotto 1 lb). Se
+ * l'arrotondamento "da cucina" supera la soglia (es. 4 g -> 0,25 oz = +77%),
+ * non si converte e si mantiene l'unita originale.
+ */
+export const MAX_CONVERSION_ERROR = 0.06;
+
+function withinTolerance(exact: number, r: Result | null, factors: Record<string, number>): Result | null {
+  if (!r) return null;
+  const f = factors[r.unit];
+  if (f === undefined || exact <= 0) return r;
+  return Math.abs(r.quantity * f - exact) / exact <= MAX_CONVERSION_ERROR ? r : null;
+}
+
 function toMetricMass(grams: number): Result | null {
+  return toMetricMassRaw(grams);
+}
+function toMetricMassRaw(grams: number): Result | null {
   if (grams >= 1000) return { quantity: Math.round(grams / 50) / 20, unit: 'kg' };
   const q = roundMetric(grams);
   return q > 0 ? { quantity: q, unit: 'g' } : null;
 }
 
 function toMetricVolume(ml: number): Result | null {
+  return toMetricVolumeRaw(ml);
+}
+function toMetricVolumeRaw(ml: number): Result | null {
   if (ml >= 1000) return { quantity: Math.round(ml / 50) / 20, unit: 'l' };
   const q = roundMetric(ml);
   return q > 0 ? { quantity: q, unit: 'ml' } : null;
 }
 
 function toUsVolume(ml: number): Result | null {
+  return toUsVolumeRaw(ml);
+}
+function toUsVolumeRaw(ml: number): Result | null {
   let r: Result;
   if (ml < 14) r = { quantity: snap(ml / ML.tsp, [8]), unit: 'tsp' };
   else if (ml < 59) r = { quantity: snap(ml / ML.tbsp, [2]), unit: 'tbsp' };
@@ -110,6 +133,11 @@ function toUsVolume(ml: number): Result | null {
 }
 
 function toUsMass(grams: number): Result | null {
+  // Sopra 1 lb l'arrotondamento al quarto di libbra resta quello "da cucina".
+  if (grams >= G.lb) return toUsMassRaw(grams);
+  return withinTolerance(grams, toUsMassRaw(grams), G);
+}
+function toUsMassRaw(grams: number): Result | null {
   if (grams >= G.lb) return { quantity: snap(grams / G.lb, [4]), unit: 'lb' };
   const oz = grams / G.oz;
   const q = oz < 4 ? snap(oz, [4]) : oz < 16 ? snap(oz, [2]) : Math.round(oz);
