@@ -44,6 +44,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_SUPABASE_PROJECT_REF: ${{ vars.E2E_SUPABASE_PROJECT_REF }}
       APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW0=
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
@@ -54,6 +55,11 @@ jobs:
             # Formato dell'URL verificato senza stamparne il valore.
             if ! printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | grep -Eq '^https://[a-z0-9]+\.supabase\.co/?$'; then
               echo "::error::STAGING_SUPABASE_URL non valido (lunghezza ${#NEXT_PUBLIC_SUPABASE_URL}): atteso https://<ref>.supabase.co, senza virgolette, spazi o a capo."
+              exit 1
+            fi
+            # Allow-list: l'host deve essere il project ref di staging (variabile di repository).
+            if [ -z "$E2E_SUPABASE_PROJECT_REF" ] || ! printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | grep -Fxq -e "https://${E2E_SUPABASE_PROJECT_REF}.supabase.co" -e "https://${E2E_SUPABASE_PROJECT_REF}.supabase.co/"; then
+              echo "::error::Variabile E2E_SUPABASE_PROJECT_REF mancante o non coincidente con STAGING_SUPABASE_URL: rifiuto di eseguire gli E2E con service role."
               exit 1
             fi
             echo "available=true" >> "$GITHUB_OUTPUT"
