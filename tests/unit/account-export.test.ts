@@ -104,7 +104,7 @@ describe('POST /api/account/export', () => {
     expect((await res.json()).recipes).toHaveLength(1050);
     expect(ranges.filter(([t]) => t === 'recipes').map(([, f]) => f)).toEqual([0, 1000]);
     expect(Math.max(...inLengths)).toBe(100);
-    expect(inLengths.filter((n) => n === 100)).toHaveLength(30); // 10 full chunks x 3 tables (+ a 50-id tail)
+    expect(inLengths.filter((n) => n === 100)).toHaveLength(40); // 10 full chunks x 4 tables (+ a 50-id tail)
   });
 
   it('returns 500 when a chunked section fails', async () => {

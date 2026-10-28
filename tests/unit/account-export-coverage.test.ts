@@ -30,6 +30,7 @@ function exportedTables(): Set<string> {
   // Tabelle lette via RPC dedicata (colonne sensibili escluse lato SQL).
   if (src.includes("rpc('my_profile')")) t.add('profiles');
   if (src.includes("rpc('my_api_keys')")) t.add('user_api_keys');
+  if (src.includes("rpc('my_recipe_slug_history')")) t.add('recipe_slug_history');
   return t;
 }
 
@@ -52,6 +53,11 @@ describe('copertura export account', () => {
   it('include i dati di moderazione', () => {
     expect(exported.has('moderation_cases')).toBe(true);
     expect(exported.has('moderation_notices')).toBe(true);
+  });
+
+  it('include traduzioni e storico slug delle ricette', () => {
+    expect(exported.has('recipe_translations')).toBe(true);
+    expect(exported.has('recipe_slug_history')).toBe(true);
   });
 
   it("l'allowlist non contiene voci obsolete", () => {

@@ -40,6 +40,7 @@
   "move_plan_entry",
   "my_api_keys",
   "my_profile",
+  "my_recipe_slug_history",
   "public_cover_paths",
   "rate_limit_hit",
   "refund_ai_quota",

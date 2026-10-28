@@ -52,7 +52,7 @@ Endpoint: `GET /api/recipes/{id}/export?format=schema`. Formato standard leggibi
 
 ## 3. Esportazione dell'account
 
-Endpoint: `POST /api/account/export` (*Impostazioni → Account e dati*). File `mestolo.account-export/v1` con profilo, ricette, versioni, metadati immagini, note, preferiti, categorie personali, raccolte, lista della spesa, piano pasti, amicizie, blocchi, segnalazioni, provider configurati (**mai i valori delle chiavi**) e uso AI.
+Endpoint: `POST /api/account/export` (*Impostazioni → Account e dati*). File `mestolo.account-export/v1` con profilo, ricette, versioni, traduzioni delle ricette (`recipe_translations`), storico degli slug (`recipe_slug_history`), metadati immagini, note, preferiti, categorie personali, raccolte, lista della spesa, piano pasti, amicizie, blocchi, segnalazioni, provider configurati (**mai i valori delle chiavi**) e uso AI.
 
 ## 4. Importazione dei file esportati
 
