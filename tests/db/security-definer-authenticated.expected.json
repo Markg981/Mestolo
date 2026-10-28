@@ -27,6 +27,7 @@
   "get_profile_card",
   "get_public_recipe",
   "get_public_recipe_nutrition",
+  "insert_cook_log",
   "insert_recipe_image",
   "invite_preview",
   "is_blocked_between",
