@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { countPublicRecipes, SITEMAP_PAGE_SIZE } from '@/lib/data/public-recipes';
-import { env, isSupabaseConfigured } from '@/lib/env';
+import { SITEMAP_PAGE_SIZE } from '@/lib/data/public-recipes';
+import { env } from '@/lib/env';
+import { countPublicRecipesSafe } from '@/lib/seo/public-count';
 
 export const revalidate = 3600;
 export const dynamic = 'force-dynamic';
@@ -8,12 +9,7 @@ export const dynamic = 'force-dynamic';
 /** Crawlers may read the public recipe pages (/r/) and the welcome page; the app itself is off limits. */
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const { siteUrl } = env();
-  let pages = 1;
-  try {
-    if (isSupabaseConfigured()) pages = Math.max(1, Math.ceil((await countPublicRecipes()) / SITEMAP_PAGE_SIZE));
-  } catch {
-    pages = 1;
-  }
+  const pages = Math.max(1, Math.ceil((await countPublicRecipesSafe()) / SITEMAP_PAGE_SIZE));
   return {
     rules: [
       {
