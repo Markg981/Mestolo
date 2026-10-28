@@ -33,18 +33,21 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Check secrets
+      - name: Preflight secrets
         run: |
-          missing=0
+          missing=()
           for v in BACKUP_GPG_PRIVATE_KEY BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
-            if [ -z "${!v}" ]; then
-              echo "::error::Secret $v non impostato: impossibile verificare il restore."
-              missing=1
-            fi
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
           done
-          exit $missing
+          # I nomi dei secret differiscono dalle variabili del job: mostra quelli da impostare in GitHub
+          missing=("${missing[@]/AWS_ACCESS_KEY_ID/BACKUP_S3_ACCESS_KEY_ID}")
+          missing=("${missing[@]/AWS_SECRET_ACCESS_KEY/BACKUP_S3_SECRET_ACCESS_KEY}")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error title=Secret mancanti::Restore verify NON eseguito, variabili/secret mancanti: ${missing[*]}. Vedi docs/ops-secrets.md (gh secret set NOME)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install PostgreSQL 17 client
         run: |
