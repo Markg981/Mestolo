@@ -105,6 +105,18 @@ jobs:
           rm -f "out/storage-${STAMP}.tar"
           scripts/s3-upload-verify.sh "out/storage-${STAMP}.tar.gpg" "mestolo/storage/storage-${STAMP}.tar.gpg"
 
+      - name: Heartbeat esterno (opzionale)
+        if: success()
+        env:
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL_BACKUP }}
+        run: |
+          # Fail-open: senza secret o con il servizio irraggiungibile il job NON fallisce
+          if [ -z "$HEARTBEAT_URL" ]; then
+            echo "HEARTBEAT_URL_BACKUP non impostato: heartbeat esterno saltato."
+            exit 0
+          fi
+          curl --silent --show-error --max-time 20 --retry 2 --retry-all-errors -o /dev/null "$HEARTBEAT_URL"       || echo "::warning::Ping di heartbeat non riuscito (ignorato)."
+
   alert:
     needs: [backup]
     if: ${{ failure() && github.event_name == 'schedule' }}
