@@ -159,3 +159,28 @@ d('search_profiles', () => {
     expect((await find(`a\\b${s}`)).map((r) => r.display_name)).toEqual([`a\\b${s}`]);
   });
 });
+
+d('search_recipes: ordinamento e preferiti prima del limit (G-01)', () => {
+  it('un preferito tra le 300 ricette piu vecchie compare con il filtro preferiti', async () => {
+    pool ??= new pg.Pool({ connectionString: url });
+    const s = Math.random().toString(36).slice(2, 7);
+    const word = `gz${s}`;
+    const u = await createUser(`g01_${s}`);
+    await admin(
+      `insert into public.recipes (owner_id, title, visibility, ingredients, created_at)
+       select $1::uuid, $2::text || ' ' || lpad(g::text, 3, '0'), 'private', '[]'::jsonb, now() - (g || ' minutes')::interval
+       from generate_series(1, 300) g`,
+      [u, word],
+    );
+    const oldest = await admin<{ id: string }>('select id from public.recipes where owner_id = $1 order by created_at asc limit 1', [u]);
+    await admin('insert into public.favorites (user_id, recipe_id) values ($1, $2)', [u, oldest[0].id]);
+    const rows = await as<{ id: string }>(
+      u,
+      'select id from public.search_recipes(p_query => $1, p_only_favorites => true, p_limit => 25)',
+      [word],
+    );
+    expect(rows.map((r) => r.id)).toEqual([oldest[0].id]);
+    const byTitle = await as<{ title: string }>(u, "select title from public.search_recipes(p_query => $1, p_sort => 'title', p_limit => 1)", [word]);
+    expect(byTitle[0].title).toBe(`${word} 001`);
+  });
+});
