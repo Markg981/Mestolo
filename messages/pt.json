@@ -2,6 +2,11 @@
   "meta": {
     "description": "O teu livro de receitas: guarda, importa e partilha receitas em qualquer dispositivo."
   },
+  "manifest": {
+    "shortcutAdd": "Adicionar receita",
+    "shortcutImport": "Importar foto",
+    "shortcutShopping": "Lista de compras"
+  },
   "common": {
     "actionFailed": "A ação falhou: verifica a ligação e tenta novamente.",
     "add": "Adicionar",

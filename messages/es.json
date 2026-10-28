@@ -2,6 +2,11 @@
   "meta": {
     "description": "Tu recetario: guarda, importa y comparte recetas en todos tus dispositivos."
   },
+  "manifest": {
+    "shortcutAdd": "Añadir receta",
+    "shortcutImport": "Importar foto",
+    "shortcutShopping": "Lista de la compra"
+  },
   "common": {
     "actionFailed": "La acción falló: revisa tu conexión e inténtalo de nuevo.",
     "add": "Añadir",
