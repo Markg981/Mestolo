@@ -3,7 +3,7 @@
 # con il manifest (calcolato nello stesso snapshot dei dump) in modo ESATTO: conteggi righe, checksum del
 # contenuto ordinato delle tabelle chiave, conteggi di oggetti di schema. Qualsiasi differenza fallisce.
 # I metadati storage si contano nel dump: le tabelle storage reali di Supabase non esistono nel target.
-# Uso: BACKUP_GPG_PRIVATE_KEY=... (oppure chiave nel portachiavi gpg) scripts/restore-verify-db.sh <backup.tar.gpg> <target_url> <work_dir>
+# Uso: BACKUP_GPG_VERIFY_PRIVATE_KEY=... (oppure chiave nel portachiavi gpg) scripts/restore-verify-db.sh <backup.tar.gpg> <target_url> <work_dir>
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/backup-probes.sh
