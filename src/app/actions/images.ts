@@ -25,6 +25,30 @@ const attributionSchema = z
   .pipe(z.string().max(300))
   .nullable();
 
+const SECOND_LEVEL = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu']);
+
+/** Dominio "registrabile" approssimato (euristica senza public suffix list). */
+function baseDomain(host: string): string {
+  const labels = host.toLowerCase().replace(/\.$/, '').split('.');
+  const keep = labels.length >= 3 && labels[labels.length - 1].length === 2 && SECOND_LEVEL.has(labels[labels.length - 2]) ? 3 : 2;
+  return labels.slice(-keep).join('.');
+}
+
+/** True se l'immagine sta sullo stesso sito (o un suo sottodominio/CDN fratello) della source_url della ricetta. */
+function isImageFromRecipeSource(sourceUrl: string | null | undefined, imageUrl: string): boolean {
+  if (!sourceUrl) return false;
+  try {
+    const s = new URL(sourceUrl);
+    const i = new URL(imageUrl);
+    if (!/^https?:$/.test(s.protocol) || !/^https?:$/.test(i.protocol)) return false;
+    if (s.hostname.toLowerCase() === i.hostname.toLowerCase()) return true;
+    if (!s.hostname.includes('.') || !i.hostname.includes('.')) return false;
+    return baseDomain(s.hostname) === baseDomain(i.hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function storeImage(opts: {
   userId: string;
   recipeId: string;
@@ -120,8 +144,10 @@ export async function importSourceImage(recipeId: string, imageUrl: string, attr
     const cleanAttribution = attr.data ? attr.data : null;
     // Ownership check BEFORE any outbound fetch (no SSRF/bandwidth for non-owners).
     const supabase = await createClient();
-    const { data: owned } = await supabase.from('recipes').select('id').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
+    const { data: owned } = await supabase.from('recipes').select('id, source_url').eq('id', recipeId).eq('owner_id', user.id).maybeSingle();
     if (!owned) return fail('not_found');
+    // Solo immagini provenienti dalla pagina importata (stesso sito della source_url), non URL arbitrari.
+    if (!isImageFromRecipeSource((owned as { source_url?: string | null }).source_url, imageUrl)) return fail('invalid_input');
     await enforceRateLimit('upload_image', user.id);
     await enforceRateLimit('upload_image_day', user.id);
     const res = await safeFetch(imageUrl, { maxBytes: MAX_UPLOAD_BYTES, accept: 'image/*', allowedContentTypes: /^image\/(jpeg|png|webp|avif|gif)/i });

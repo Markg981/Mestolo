@@ -20,7 +20,7 @@ export default defineConfig({
         branches: 36,
         functions: 30,
         lines: 41,
-        'src/app/actions/**': { statements: 42, branches: 35, functions: 37, lines: 46 },
+        'src/app/actions/**': { statements: 45, branches: 38, functions: 40, lines: 50 },
         'src/lib/data/**': { statements: 29, branches: 25, functions: 28, lines: 30 },
       },
       reporter: ['text-summary', 'lcov'],

@@ -12,7 +12,7 @@ const NUM = `(?:\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?(?:\\s+\\d+\\s*\\/\\s*\\d+|
 const RANGE_RE = new RegExp(`^(${NUM})(?:\\\s*(?:-|–|—|to|a|à|bis|ou|o|or)\\\s*(${NUM}))?`, 'i');
 
 /** Units for which "N,ddd" / "N.ddd" is plausibly a thousands group (small units). */
-const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
+const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml', 'kcal', 'kj', 'cal']);
 
 /**
  * Parses a numeric token; returns null if it is not a valid positive number.
@@ -20,7 +20,7 @@ const THOUSANDS_UNITS = new Set(['g', 'mg', 'ml']);
  * Separator disambiguation ("0,250", "1,250", "1.000"):
  *  - a leading "0" followed by a separator is always a decimal ("0,250" = 0.25);
  *  - otherwise a single group of exactly 3 digits is ambiguous: it is read as a
- *    thousands separator only with no unit or a small unit (g, mg, ml: "1.000 g" = 1000);
+ *    thousands separator only with no unit or a small unit (g, mg, ml, kcal, kJ, cal: "1.000 g" = 1000);
  *    with any other unit (kg, l, cup...) it is decimal ("1,250 kg" = 1.25).
  */
 export function parseNumber(token: string, unit?: string | null): number | null {

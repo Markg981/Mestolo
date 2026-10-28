@@ -2,6 +2,11 @@
   "meta": {
     "description": "Your recipe book: save, import, and share recipes on every device."
   },
+  "manifest": {
+    "shortcutAdd": "Add recipe",
+    "shortcutImport": "Import photo",
+    "shortcutShopping": "Shopping list"
+  },
   "common": {
     "actionFailed": "The action failed: check your connection and try again.",
     "add": "Add",
@@ -130,7 +135,7 @@
     "too_many_files": "Too many photos for one recipe.",
     "audio_too_long": "The audio is too long. Use a shorter video.",
     "storage_quota_exceeded": "You've reached the maximum number or storage size of stored photos. Delete some to upload more.",
-    "auth_invalid": "Incorrect email or password.",
+    "auth_invalid": "Incorrect email or password. If you just signed up, confirm your email first (check your inbox).",
     "auth_email_taken": "An account with this email already exists.",
     "auth_weak_password": "Password must be at least 8 characters.",
     "auth_not_confirmed": "Confirm your email first: check your inbox.",
@@ -1073,7 +1078,9 @@
     "banner": "You're offline: you're seeing the last saved copy. Changes need a connection.",
     "title": "No connection",
     "lead": "This page isn't available offline. Recipes and shopping lists you opened recently are still available.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "updateAvailable": "A new version is available",
+    "updateAction": "Update"
   },
   "support": {
     "title": "Support",

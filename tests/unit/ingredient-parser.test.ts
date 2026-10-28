@@ -127,6 +127,12 @@ describe('units', () => {
     it('trailing form uses unit context', () => {
       expect(parseIngredientLine('Farina 1,250 kg')).toMatchObject({ quantity: 1.25, unit: 'kg' });
     });
+    it('parseNumber: unità energetiche usano il gruppo da 3 cifre come migliaia (G-13)', () => {
+      expect(parseNumber('1,250', 'kcal')).toBe(1250);
+      expect(parseNumber('1.250', 'kJ'.toLowerCase())).toBe(1250);
+      expect(parseNumber('1,25', 'kg')).toBeCloseTo(1.25);
+      expect(parseNumber('1,250', 'kg')).toBeCloseTo(1.25);
+    });
     it('parseNumber leading zero is always decimal', () => {
       expect(parseNumber('0,250')).toBeCloseTo(0.25);
     });

@@ -10,11 +10,13 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }));
 
-import { GET } from '@/app/api/health/route';
+let GET: () => Promise<Response>;
 
 describe('GET /api/health', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
+    vi.resetModules(); // azzera la cache in memoria del modulo
+    ({ GET } = await import('@/app/api/health/route'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
     env.mockReturnValue({ supabaseUrl: 'http://x', serviceRoleKey: 'k' });
   });
@@ -54,5 +56,33 @@ describe('GET /api/health', () => {
     const res = await p;
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ status: 'error', checks: { config: true, db: false } });
+  });
+
+  it('riusa l esito del DB entro il TTL senza rifare la query', async () => {
+    vi.useFakeTimers();
+    result.mockResolvedValue({ error: null });
+    await GET();
+    await GET();
+    await GET();
+    expect(result).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(31_000);
+    await GET();
+    expect(result).toHaveBeenCalledTimes(2);
+  });
+
+  it('richieste concorrenti condividono un solo ping', async () => {
+    result.mockResolvedValue({ error: null });
+    await Promise.all([GET(), GET(), GET()]);
+    expect(result).toHaveBeenCalledTimes(1);
+  });
+
+  it('un errore DB viene rivalutato dopo pochi secondi', async () => {
+    vi.useFakeTimers();
+    result.mockResolvedValueOnce({ error: { message: 'boom' } }).mockResolvedValue({ error: null });
+    expect((await GET()).status).toBe(503);
+    expect((await GET()).status).toBe(503);
+    expect(result).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(6_000);
+    expect((await GET()).status).toBe(200);
   });
 });

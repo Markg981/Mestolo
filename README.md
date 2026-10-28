@@ -219,6 +219,8 @@ Da Impostazioni l’utente attiva i promemoria dei pasti del piano settimanale (
 
 ## Test eseguiti
 
+> **Prerequisito:** la suite locale richiede dipendenze allineate al lockfile (`npm ci`, comprese le devDependencies come `jsdom` per i test dei componenti). Con un `node_modules` obsoleto i test in `tests/components/` falliscono con "Cannot find package jsdom".
+
 | Comando | Cosa verifica | Risultato |
 |---|---|---|
 | `npm test` | Test unitari (Vitest, centinaia di casi in `tests/unit/`): parser ingredienti (6 lingue), testo incollato, durate, estrazione Schema.org/microdata/testo, SSRF (IP privati, DNS, rebinding), cifratura chiavi, provider AI, normalizzazione output AI, applicazione selettiva dei suggerimenti, traduzioni (struttura e invalidazione), sostituzioni, categorie, duplicati, scalatura, unione lista spesa, export, validazione input, completezza i18n (chiavi usate nel codice, 6 lingue, sintassi ICU) | ✅ passati |
@@ -282,6 +284,7 @@ Le migrazioni dello staging non sono applicate dalla CI (evita modifiche allo sc
 - Siti con contenuti caricati via JavaScript o a pagamento possono non essere importabili: l’app lo dice e propone di incollare il testo.
 - Il servizio base AI ha un costo per il gestore: tienilo spento (`AI_APP_PROVIDER` vuoto) o con quote basse finché non sai quanto costa.
 - L’OCR gratuito gira sul dispositivo e non invia le foto a nessuno. Le foto e i testi inviati all’AI (solo se l’utente sceglie l’estrazione con AI) vengono trattati dal provider secondo i suoi termini (vedi [docs/ai-providers.md](docs/ai-providers.md)); la pagina `/privacy` va completata dal gestore con i propri riferimenti.
+- Il progetto è `UNLICENSED`, ma ridistribuisce asset OCR di terze parti (Tesseract.js, core WASM e dati delle lingue) sotto le loro licenze: attribuzioni e fonti in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - Prima di offrire l’uso di chiavi personali verifica i termini attuali dei provider (non è stato possibile farlo con valore legale in questa sede).
 
 ## Prossimi passi consigliati

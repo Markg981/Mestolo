@@ -9,6 +9,7 @@ import {
   draftStorageKey,
   isLegacyDraftKey,
   parseDraft,
+  readDraftKey,
   serializeDraft,
 } from '@/lib/drafts';
 import { clearUserCache } from '@/components/pwa/PwaClient';
@@ -149,5 +150,19 @@ describe('draftSet', () => {
     expect(draftSet('k', 'v')).toBe(false);
     vi.stubGlobal('window', {});
     expect(draftSet('k', 'v')).toBe(false);
+  });
+});
+
+describe('chiave di idempotenza nella bozza', () => {
+  const KEY = '44444444-4444-4444-8444-444444444444';
+  it('viene salvata e riletta', () => {
+    const raw = serializeDraft({ title: 'x' }, null, 1000, KEY);
+    expect(readDraftKey(raw)).toBe(KEY);
+    expect(parseDraft(raw, { now: 1000 })).toEqual({ status: 'ok', state: { title: 'x' } });
+  });
+  it('assente, non UUID o JSON rotto: null', () => {
+    expect(readDraftKey(serializeDraft({ title: 'x' }, null))).toBeNull();
+    expect(readDraftKey(serializeDraft({ title: 'x' }, null, 1, 'abc'))).toBeNull();
+    expect(readDraftKey('{rotto')).toBeNull();
   });
 });
