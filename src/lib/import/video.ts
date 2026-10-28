@@ -96,6 +96,40 @@ export function sniffCaptionFormat(raw: string): CaptionFormat {
   return 'xml';
 }
 
+const MAX_CAPTION_XML_CHARS = 5_000_000;
+const MAX_CAPTION_CUES = 50_000;
+
+/**
+ * Linear scan equivalent to /<(?:text|p)[^>]*>([\s\S]*?)<\/(?:text|p)>/g, without the
+ * quadratic backtracking on hostile input (audit C-04). Input size and cue count are capped.
+ */
+function scanXmlCues(input: string): string[] {
+  const raw = input.length > MAX_CAPTION_XML_CHARS ? input.slice(0, MAX_CAPTION_XML_CHARS) : input;
+  const out: string[] = [];
+  const isWord = (c: string | undefined) => c !== undefined && /\w/.test(c);
+  let nextText = -2; // cached position of the next '</text>' (-1 = none left)
+  let nextP = -2;
+  let pos = 0;
+  while (out.length < MAX_CAPTION_CUES) {
+    const lt = raw.indexOf('<', pos);
+    if (lt < 0) break;
+    const nameLen = raw.startsWith('<text', lt) ? 5 : raw.startsWith('<p', lt) ? 2 : 0;
+    if (!nameLen || isWord(raw[lt + nameLen])) {
+      pos = lt + 1;
+      continue;
+    }
+    const gt = raw.indexOf('>', lt + nameLen);
+    if (gt < 0) break;
+    if (nextText !== -1 && nextText < gt + 1) nextText = raw.indexOf('</text>', gt + 1);
+    if (nextP !== -1 && nextP < gt + 1) nextP = raw.indexOf('</p>', gt + 1);
+    const close = nextText < 0 ? nextP : nextP < 0 ? nextText : Math.min(nextText, nextP);
+    if (close < 0) break;
+    out.push(raw.slice(gt + 1, close));
+    pos = close + (close === nextText ? 7 : 4);
+  }
+  return out;
+}
+
 /** Converts a caption payload (YouTube timedtext XML srv1/srv3, json3, or WebVTT) to plain text, one cue per line. */
 export function captionsToText(raw: string, format: CaptionFormat = sniffCaptionFormat(raw)): string {
   if (format === 'json3') {
@@ -124,9 +158,9 @@ export function captionsToText(raw: string, format: CaptionFormat = sniffCaption
   }
   // xml: <text start dur>..</text> (srv1) or <p t d><s>..</s></p> (srv3)
   const cues: string[] = [];
-  for (const m of raw.matchAll(/<(?:text|p)\b[^>]*>([\s\S]*?)<\/(?:text|p)>/g)) {
+  for (const inner of scanXmlCues(raw)) {
     // The payload is double-escaped (&amp;#39;): decode, strip inline tags, decode again.
-    cues.push(decodeEntities(decodeEntities(m[1]).replace(/<[^>]+>/g, '')));
+    cues.push(decodeEntities(decodeEntities(inner).replace(/<[^>]+>/g, '')));
   }
   return joinSegments(cues);
 }
