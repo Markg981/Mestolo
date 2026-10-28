@@ -261,8 +261,9 @@ export async function copyRecipe(sourceId: string, mode: 'copy' | 'variant', tit
         source_name: s.source_name,
         source_attribution: s.source_attribution,
         parent_recipe_id: mode === 'variant' ? s.id : null,
-        copied_from_recipe_id: own ? null : s.id,
-        original_author_id: own ? null : (s.original_author_id ?? s.owner_id),
+        // Copia di una propria ricetta: eredita la catena di attribuzione della sorgente invece di azzerarla.
+        copied_from_recipe_id: own ? s.copied_from_recipe_id : s.id,
+        original_author_id: own ? s.original_author_id : (s.original_author_id ?? s.owner_id),
         last_change_source: 'copy',
       })
       .select('id')
