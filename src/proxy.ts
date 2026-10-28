@@ -17,6 +17,17 @@ function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+/** Pattern @supabase/ssr: il redirect eredita cookie e header di cache del refresh, altrimenti la sessione ruotata si perde. */
+function redirectWithSession(to: URL, from: NextResponse) {
+  const res = NextResponse.redirect(to);
+  from.cookies.getAll().forEach((c) => res.cookies.set(c));
+  ['cache-control', 'expires', 'pragma'].forEach((h) => {
+    const v = from.headers.get(h);
+    if (v) res.headers.set(h, v);
+  });
+  return res;
+}
+
 /**
  * Refreshes the Supabase session cookie on every request and redirects
  * anonymous users to the welcome page. Authorization itself is enforced by
@@ -86,10 +97,10 @@ export async function proxy(request: NextRequest) {
     const to = request.nextUrl.clone();
     to.pathname = pathname === '/' ? '/welcome' : '/login';
     to.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
-    return NextResponse.redirect(to);
+    return redirectWithSession(to, response);
   }
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/welcome')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return redirectWithSession(new URL('/', request.url), response);
   }
   return response;
 }
