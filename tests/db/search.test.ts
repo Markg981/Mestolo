@@ -161,8 +161,15 @@ d('search_profiles', () => {
 });
 
 d('search_recipes: ordinamento e preferiti prima del limit (G-01)', () => {
+  beforeAll(() => {
+    pool = new pg.Pool({ connectionString: url });
+  });
+
+  afterAll(async () => {
+    await pool?.end();
+  });
+
   it('un preferito tra le 300 ricette piu vecchie compare con il filtro preferiti', async () => {
-    pool ??= new pg.Pool({ connectionString: url });
     const s = Math.random().toString(36).slice(2, 7);
     const word = `gz${s}`;
     const u = await createUser(`g01_${s}`);
