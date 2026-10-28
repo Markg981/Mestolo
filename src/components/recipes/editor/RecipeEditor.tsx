@@ -153,11 +153,19 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
   // Possible duplicates (new recipes and imports)
   useEffect(() => {
     if (mode === 'edit' || s.title.trim().length < 3) return;
+    let stale = false; // risposta obsoleta: l'effetto e stato ripulito (E-09)
     const id = setTimeout(async () => {
-      const res = await checkDuplicates({ title: s.title, source_url: source?.url ?? null, ingredients: s.ingredients.map((i) => ({ name: i.name })) }, recipeId);
-      setDuplicates(res);
+      try {
+        const res = await checkDuplicates({ title: s.title, source_url: source?.url ?? null, ingredients: s.ingredients.map((i) => ({ name: i.name })) }, recipeId);
+        if (!stale) setDuplicates(res);
+      } catch {
+        // fallback silenzioso: il controllo duplicati e solo un suggerimento
+      }
     }, 700);
-    return () => clearTimeout(id);
+    return () => {
+      stale = true;
+      clearTimeout(id);
+    };
   }, [s.title, s.ingredients, mode, source?.url, recipeId]);
 
   // Category suggestion while typing (manual creation): derived, never overrides a user choice
