@@ -12,8 +12,9 @@ vi.mock('@/lib/supabase/server', () => ({
     from: (table: string) => {
       if (table === 'recipe_versions') return { select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { snapshot: { title: 'T' } } }) }) }) }) };
       const chain: Record<string, unknown> = {
-        select: (cols: string) => (cols === 'public_slug' ? { eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { public_slug: slugBefore } }) }) }) } : chain),
+        select: (cols: string) => (cols.startsWith('public_slug') ? { eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { public_slug: slugBefore } }) }) }) } : chain),
         update: () => chain,
+        delete: () => chain,
         eq: () => chain,
         then: (r: (v: unknown) => unknown) => r({ data: updated, error: null }),
       };
