@@ -100,7 +100,7 @@ beforeEach(() => {
   userOverImageQuota.mockResolvedValue(false);
   upload.mockResolvedValue({ error: null });
   remove.mockResolvedValue({ error: null });
-  recipeRow = { id: R };
+  recipeRow = { id: R, source_url: 'https://example.com/ricetta' };
   insertRes = { data: 'img1', error: null };
   profileUpdateRes = { error: null };
   safeFetch.mockResolvedValue({ body: Buffer.from('bytes'), truncated: false, finalUrl: 'https://cdn.example.com/a.jpg' });
@@ -118,6 +118,19 @@ describe('importSourceImage', () => {
     getUser.mockResolvedValue({ id: 'u1' });
     expect(await importSourceImage('nope', 'https://x.com/a.jpg', null)).toMatchObject({ ok: false, error: 'forbidden' });
     expect(safeFetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects an image host different from the recipe source_url, without fetching', async () => {
+    expect(await run('https://evil.test/a.jpg')).toMatchObject({ ok: false, error: 'invalid_input' });
+    recipeRow = { id: R, source_url: null };
+    expect(await run()).toMatchObject({ ok: false, error: 'invalid_input' });
+    expect(safeFetch).not.toHaveBeenCalled();
+  });
+
+  it('accepts the same host and sibling CDN subdomains of the source_url', async () => {
+    expect(await run('https://example.com/b.jpg')).toMatchObject({ ok: true });
+    expect(await run('https://cdn.example.com/b.jpg')).toMatchObject({ ok: true });
+    expect(safeFetch).toHaveBeenCalledTimes(2);
   });
 
   it('applies both upload rate limits and maps a rate-limit error', async () => {
