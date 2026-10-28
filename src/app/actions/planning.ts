@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { scaleIngredients } from '@/lib/recipes/scale';
-import { weekDays, type MealSlot } from '@/lib/plan/week';
+import { isoDateSchema, isValidIsoDate, weekDays, type MealSlot } from '@/lib/plan/week';
 import { generatePlan, planCells, type Candidate, type Proposal } from '@/lib/plan/generator';
 import { normalizePrefs, prefsFromRow, prefsSchema, prefsToRow, type PrefsRow } from '@/lib/plan/preferences';
 import type { Ingredient } from '@/lib/recipes/types';
@@ -131,7 +131,7 @@ export async function clearCheckedItems(listId: string): Promise<ActionResult> {
 }
 
 const entrySchema = z.object({
-  plan_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  plan_date: isoDateSchema,
   slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
   recipe_id: z.uuid().nullable().default(null),
   title: z.string().trim().max(200).default(''),
@@ -170,7 +170,7 @@ export async function deletePlanEntry(id: string): Promise<ActionResult> {
 /** Adds the ingredients of every planned recipe in the week to the shopping list. */
 export async function addWeekToShopping(weekStart: string, listId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number; recipes: number }>> {
   const user = await getUser();
-  if (!user || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || (listId !== undefined && !uuid.safeParse(listId).success) || (idempotencyKey !== undefined && !uuid.safeParse(idempotencyKey).success)) return fail('invalid_input');
+  if (!user || !isValidIsoDate(weekStart) || (listId !== undefined && !uuid.safeParse(listId).success) || (idempotencyKey !== undefined && !uuid.safeParse(idempotencyKey).success)) return fail('invalid_input');
   const days = weekDays(weekStart);
   const supabase = await createClient();
   const { data: entries } = await supabase
@@ -202,7 +202,7 @@ export async function addWeekToShopping(weekStart: string, listId?: string, idem
 
 // ---------- Preferenze e generatore ------------------------------------
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const isoDate = isoDateSchema;
 const slotEnum = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
 
 export async function savePlanPreferences(input: unknown): Promise<ActionResult> {
