@@ -4,6 +4,7 @@ import 'server-only';
 export function env() {
   const e = process.env;
   assertProductionEnv(e);
+  assertAiBaseUrl(e);
   return {
     supabaseUrl: e.NEXT_PUBLIC_SUPABASE_URL ?? '',
     supabaseAnonKey: e.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
@@ -62,6 +63,25 @@ export function assertProductionEnv(e: NodeJS.ProcessEnv) {
   if (prev && Buffer.from(prev, 'base64').length !== 32) {
     throw new ConfigError('APP_ENCRYPTION_KEY_PREVIOUS must be 32 bytes (base64)');
   }
+}
+
+/**
+ * AI_APP_BASE_URL deve essere https: la chiave applicativa viaggia nell'header
+ * Authorization. http e' ammesso solo per localhost/127.0.0.1 fuori produzione.
+ */
+export function assertAiBaseUrl(e: NodeJS.ProcessEnv) {
+  const raw = e.AI_APP_BASE_URL?.trim();
+  if (!raw) return;
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    throw new ConfigError('AI_APP_BASE_URL is not a valid URL');
+  }
+  if (u.protocol === 'https:') return;
+  const local = u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+  if (u.protocol === 'http:' && local && e.NODE_ENV !== 'production') return;
+  throw new ConfigError('AI_APP_BASE_URL must use https (http is allowed only for localhost outside production)');
 }
 
 /**

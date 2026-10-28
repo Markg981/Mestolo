@@ -48,8 +48,8 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error || !data.user) {
-    const code: ErrorCode = /confirm/i.test(error?.message ?? '') ? 'auth_not_confirmed' : 'auth_invalid';
-    return { error: code, email: parsed.data.email };
+    // Stesso codice per credenziali errate e account non confermato: nessuna enumerazione delle email registrate.
+    return { error: 'auth_invalid', email: parsed.data.email };
   }
   const { data: profile } = await supabase.rpc('my_profile').maybeSingle<{ locale: string }>();
   await setLocaleCookie(profile?.locale);
@@ -119,6 +119,8 @@ export async function requestPasswordReset(_: AuthState, formData: FormData): Pr
   if (!email.success) return { error: 'invalid_input' };
   try {
     await authRateLimit('reset_ip', await clientIpHash());
+    // Per destinatario: impedisce di inondare una casella da IP diversi. Stessa risposta se l'account non esiste.
+    await authRateLimit('reset_email', hashKey(email.data.toLowerCase()));
   } catch {
     return { error: 'rate_limited' };
   }

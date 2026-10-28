@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Nessun secret a livello di job: ogni passo riceve solo quelli che usa (npm ci e le azioni non li vedono).
+    # Solo chiavi PUBBLICHE: questo workflow non puo' decifrare. La privata del titolare non sta su GitHub.
+    # ATTENZIONE: il backup e' cifrato anche verso la pubblica di verifica; la sua privata (secret
+    # BACKUP_GPG_VERIFY_PRIVATE_KEY, usato solo da restore-verify.yml) sta su GitHub e decifra TUTTI i backup.
     # Il dump NON va mai in un artifact: il repository e' pubblico e gli artifact sono scaricabili da qualunque
     # utente GitHub autenticato. L'unica destinazione e' lo storage S3/R2 privato (obbligatorio su ogni run).
     steps:
@@ -65,6 +68,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
           BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_GPG_VERIFY_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_VERIFY_PUBLIC_KEY }}
         run: |
           set -euo pipefail
           # Stesso script provato in CI dal job backup-roundtrip (dump, manifest, cifratura)
@@ -94,6 +98,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           # Solo chiave PUBBLICA: la privata non sta su GitHub (serve solo al restore)
           BACKUP_GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_GPG_VERIFY_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_VERIFY_PUBLIC_KEY }}
           BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
           BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
           AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
@@ -123,6 +128,18 @@ jobs:
           backup_encrypt "out/storage-${STAMP}.tar" "out/storage-${STAMP}.tar.gpg"
           rm -f "out/storage-${STAMP}.tar"
           scripts/s3-upload-verify.sh "out/storage-${STAMP}.tar.gpg" "mestolo/storage/storage-${STAMP}.tar.gpg"
+
+      - name: Heartbeat esterno (opzionale)
+        if: success()
+        env:
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL_BACKUP }}
+        run: |
+          # Fail-open: senza secret o con il servizio irraggiungibile il job NON fallisce
+          if [ -z "$HEARTBEAT_URL" ]; then
+            echo "HEARTBEAT_URL_BACKUP non impostato: heartbeat esterno saltato."
+            exit 0
+          fi
+          curl --silent --show-error --max-time 20 --retry 2 --retry-all-errors -o /dev/null "$HEARTBEAT_URL"       || echo "::warning::Ping di heartbeat non riuscito (ignorato)."
 
   alert:
     needs: [backup]

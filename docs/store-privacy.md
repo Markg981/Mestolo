@@ -16,6 +16,26 @@ Basata sull'audit del codice (ottobre 2026). **Non è consulenza legale: va veri
 | **Web Push (PWA / browser)** | `src/app/actions/notifications.ts`, `src/app/api/cron/meal-reminders/route.ts`, tabella `push_subscriptions` | **Solo sul web e solo se l'utente attiva le notifiche.** Si usa Web Push con chiavi VAPID. Salvati in Supabase, collegati all'account: `endpoint` della sottoscrizione, chiavi `p256dh` e `auth`. Un cron lato server invia i promemoria all'endpoint, cioè al **servizio push del browser** (es. Google FCM, Mozilla, Apple), che riceve l'endpoint e il payload cifrato con le chiavi della sottoscrizione. Disattivando le notifiche la sottoscrizione viene rimossa; i dati sono inclusi nell'esportazione e cancellati con l'account. Coerente con `privacy.push` in `messages/*.json`. |
 | Analytics, SDK pubblicitari, geolocalizzazione, contatti | — | **Nessuno.** |
 
+## Permessi dichiarati nei manifest nativi (microfono, riconoscimento vocale, notifiche, rete)
+
+Verificati su `android/app/src/main/AndroidManifest.xml`, `ios/App/App/Info.plist` e sui manifest dei plugin Capacitor (che Gradle unisce nel manifest finale). Da riverificare ad ogni aggiunta di plugin o permesso.
+
+| Piattaforma | Permesso | Origine | Scopo | Trattamento dei dati |
+|---|---|---|---|---|
+| Android | `INTERNET` | `AndroidManifest.xml:43` | Comunicazione con il backend (Supabase, server dell'app) | Dati descritti sopra, cifrati in transito (HTTPS). |
+| Android | `RECORD_AUDIO` | `AndroidManifest.xml:44` | Comandi vocali in modalita cucina (`CookMode.tsx`) e dettatura nell'assistente (`CookAssistant.tsx`) | Richiesto a runtime solo quando l'utente attiva il microfono. Nessun audio e registrato o salvato da Mestolo (nessun `MediaRecorder`, nessun upload). |
+| Android | `MODIFY_AUDIO_SETTINGS` | `AndroidManifest.xml:45` | Gestione dell'audio durante l'ascolto | Nessun dato. |
+| Android | `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK`, `SCHEDULE_EXACT_ALARM` | manifest di `@capacitor/local-notifications` (unito al build) | Promemoria pasti locali, pianificati all'ora esatta e ripristinati dopo il riavvio | Solo notifiche locali sul dispositivo: nessun token push, nessun dato inviato a server. `SCHEDULE_EXACT_ALARM` puo richiedere una dichiarazione in Play Console (uso: promemoria/sveglia scelti dall'utente). |
+| iOS | `NSMicrophoneUsageDescription` | `Info.plist:11` | Comandi vocali in modalita cucina e assistente | Come sopra: nessuna registrazione conservata da Mestolo. |
+| iOS | `NSSpeechRecognitionUsageDescription` | `Info.plist:13` | Riconoscimento vocale dei comandi mentre si cucina | Vedi sotto: il riconoscimento e eseguito dal servizio di sistema. |
+| iOS | `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription` | `Info.plist` | Foto di pagine e ricette; scelta/salvataggio in libreria | Solo su azione dell'utente, come in tabella "Capacitor". |
+
+**Dove va l'audio del riconoscimento vocale.** `CookMode.tsx` (righe 63-64) e `CookAssistant.tsx` usano la Web Speech API del WebView (`SpeechRecognition` / `webkitSpeechRecognition`). Mestolo non riceve l'audio ma solo il testo trascritto, usato in locale per riconoscere i comandi (avanti/indietro, ecc.) o per compilare il campo di testo dell'assistente. L'elaborazione dell'audio e a carico del servizio di sistema: su Android del riconoscimento vocale di Google (puo avvenire in cloud), su iOS di Apple Speech (on-device o server Apple a seconda di lingua e dispositivo). Mestolo non controlla questa elaborazione ne la conserva. Il testo dettato nell'assistente viene inviato al provider AI solo se l'utente invia il messaggio. Va menzionato in `/privacy`.
+
+**Distinzione dalla trascrizione video.** L'import da video estrae l'audio nel browser (`src/lib/import/audio.ts`) e lo invia al provider AI per la trascrizione solo su azione esplicita dell'utente; non usa il permesso microfono.
+
+Conseguenze per le schede: Google Play, "Audio -> Registrazioni vocali o audio" = **non raccolto da Mestolo** (elaborazione affidata al riconoscimento vocale di sistema); Apple, nessun tipo *Audio Data* raccolto, ma `NSMicrophoneUsageDescription` e `NSSpeechRecognitionUsageDescription` devono restare presenti e coerenti con questa sezione. Il gestore deve confermare questa lettura prima dell'invio.
+
 ## Dati raccolti
 
 | Dato | Raccolto | Scopo | Collegato all'identità | Tracciamento |

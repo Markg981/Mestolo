@@ -1,6 +1,6 @@
 /** Recorded fixtures only: no network. */
 import { describe, expect, it } from 'vitest';
-import { captionsToText, detectVideoUrl, extractVideoMeta, pickCaptionTrack, sniffCaptionFormat } from '@/lib/import/video';
+import { captionsToText, decodeEntities, detectVideoUrl, extractVideoMeta, pickCaptionTrack, sniffCaptionFormat } from '@/lib/import/video';
 import { encodeWav8 } from '@/lib/import/audio';
 
 describe('detectVideoUrl', () => {
@@ -40,6 +40,20 @@ const JSON3 = JSON.stringify({ events: [{ tStartMs: 0, segs: [{ utf8: 'Taglia ' 
 const VTT = `WEBVTT\nKind: captions\nLanguage: it\n\nNOTE commento\n\n00:00:00.000 --> 00:00:02.000 align:start\nMetti <c.colorE5E5E5>l'acqua</c> &amp; il sale\n\n00:00:02.000 --> 00:00:04.000\nMetti l'acqua &amp; il sale\n\n2\n00:00:04.000 --> 00:00:06.000\nCuoci 10 minuti\n`;
 
 describe('captionsToText', () => {
+  it('elabora input ostile da 600 KB in meno di 1 s (ReDoS, C-04)', () => {
+    for (const raw of ['<text>'.repeat(100_000), '<p>'.repeat(200_000), '<text a="1">x</text>'.repeat(30_000) + '<text>'.repeat(50_000)]) {
+      const t0 = performance.now();
+      captionsToText(raw, 'xml');
+      expect(performance.now() - t0).toBeLessThan(1000);
+    }
+  });
+  it('mantiene il comportamento sui casi XML limite e applica il tetto ai segmenti', () => {
+    expect(captionsToText('<pre>no</pre><p>a</p><text start="1">b</text><p t="1"><s>c</s></p>', 'xml')).toBe('a\nb\nc');
+    expect(captionsToText('<text>aperto senza chiusura', 'xml')).toBe('');
+    const many = Array.from({ length: 60_000 }, (_, i) => `<text>c${i}</text>`).join('');
+    expect(captionsToText(many, 'xml').split('\n').length).toBe(50_000);
+  });
+
   it('parses timedtext XML (double-escaped entities, duplicate cues)', () => {
     expect(captionsToText(XML)).toBe("Oggi facciamo la carbonara\n200 g di guanciale & 4 uova\nNon c'è panna");
   });
@@ -113,5 +127,18 @@ describe('encodeWav8', () => {
     expect(v.getUint16(34, true)).toBe(8);
     expect(v.getUint32(40, true)).toBe(3);
     expect([...wav.slice(44)]).toEqual([0, 128, 255]);
+  });
+});
+
+describe('decodeEntities', () => {
+  it('decodifica entita valide', () => {
+    expect(decodeEntities('a &#65; &#x42; &amp; &lt;')).toBe('a A B & <');
+  });
+  it('non lancia su code point fuori range o surrogati e lascia l entita intatta', () => {
+    expect(() => decodeEntities('&#99999999;')).not.toThrow();
+    expect(decodeEntities('x &#99999999; y')).toBe('x &#99999999; y');
+    expect(decodeEntities('&#x110000;')).toBe('&#x110000;');
+    expect(decodeEntities('&#xD800;')).toBe('&#xD800;');
+    expect(decodeEntities('&#0;')).toBe('&#0;');
   });
 });

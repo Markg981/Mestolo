@@ -35,3 +35,4 @@ store/screenshots/
 # IDE e worktree degli agenti
 .claude/
 **/.idea/
+public/sw-build.js
