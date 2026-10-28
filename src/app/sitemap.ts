@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { countPublicRecipes, listPublicRecipeSlugs, SITEMAP_PAGE_SIZE } from '@/lib/data/public-recipes';
+import { listPublicRecipeSlugs, SITEMAP_PAGE_SIZE } from '@/lib/data/public-recipes';
 import { isSupabaseConfigured, env } from '@/lib/env';
+import { countPublicRecipesSafe } from '@/lib/seo/public-count';
 import { publicRecipeUrl } from '@/lib/recipes/public-page';
 
 // Rebuilt at most once an hour; owners' edits and moderation also invalidate the data tag.
@@ -9,12 +10,7 @@ export const dynamic = 'force-dynamic';
 
 /** One sitemap file (/sitemap/<id>.xml) per SITEMAP_PAGE_SIZE public recipes. */
 export async function generateSitemaps() {
-  let total = 0;
-  try {
-    if (isSupabaseConfigured()) total = await countPublicRecipes();
-  } catch {
-    total = 0;
-  }
+  const total = await countPublicRecipesSafe();
   const pages = Math.max(1, Math.ceil(total / SITEMAP_PAGE_SIZE));
   return Array.from({ length: pages }, (_, id) => ({ id }));
 }

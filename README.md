@@ -219,6 +219,8 @@ Da Impostazioni l’utente attiva i promemoria dei pasti del piano settimanale (
 
 ## Test eseguiti
 
+> **Prerequisito:** la suite locale richiede dipendenze allineate al lockfile (`npm ci`, comprese le devDependencies come `jsdom` per i test dei componenti). Con un `node_modules` obsoleto i test in `tests/components/` falliscono con "Cannot find package jsdom".
+
 | Comando | Cosa verifica | Risultato |
 |---|---|---|
 | `npm test` | Test unitari (Vitest, centinaia di casi in `tests/unit/`): parser ingredienti (6 lingue), testo incollato, durate, estrazione Schema.org/microdata/testo, SSRF (IP privati, DNS, rebinding), cifratura chiavi, provider AI, normalizzazione output AI, applicazione selettiva dei suggerimenti, traduzioni (struttura e invalidazione), sostituzioni, categorie, duplicati, scalatura, unione lista spesa, export, validazione input, completezza i18n (chiavi usate nel codice, 6 lingue, sintassi ICU) | ✅ passati |
