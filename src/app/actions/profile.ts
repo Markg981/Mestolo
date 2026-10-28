@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
+import { invalidateAllPublicPages } from '@/lib/data/public-invalidation';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { MAX_UPLOAD_BYTES, isAllowedUploadType } from '@/lib/images/limits';
@@ -38,6 +39,7 @@ export async function uploadAvatar(formData: FormData): Promise<ActionResult> {
     }
     if (old) await admin.storage.from('avatars').remove([old]);
     revalidatePath('/', 'layout');
+    invalidateAllPublicPages(); // l'avatar dell'autore compare nelle pagine pubbliche
     return ok();
   } catch (e) {
     if (e instanceof ImageValidationError) return fail(e.code);
@@ -55,6 +57,7 @@ export async function removeAvatar(): Promise<ActionResult> {
     if (error) return fail('generic');
     if (old) await admin.storage.from('avatars').remove([old]);
     revalidatePath('/', 'layout');
+    invalidateAllPublicPages(); // l'avatar dell'autore compare nelle pagine pubbliche
     return ok();
   } catch (e) {
     return toFailure(e, 'removeAvatar');

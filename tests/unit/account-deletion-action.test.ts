@@ -95,9 +95,9 @@ beforeEach(() => {
 describe('deleteAccount action', () => {
   it('invalidates the cached public pages of the user after the deletion', async () => {
     expect(await deleteAccount('ada', 'pw')).toMatchObject({ ok: true });
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-1', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:zuppa-2', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-1', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:zuppa-2', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', { expire: 0 });
     expect(deleteUser.mock.invocationCallOrder[0]).toBeLessThan(revalidateTag.mock.invocationCallOrder[0]);
   });
 

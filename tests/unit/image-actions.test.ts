@@ -61,7 +61,7 @@ vi.mock('@/lib/supabase/admin', () => ({
     }),
   }),
 }));
-vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a), revalidateTag: vi.fn(), unstable_cache: (f: unknown) => f }));
 vi.mock('@/lib/rate-limit', () => ({
   RateLimitedError: class RateLimitedError extends Error {},
   enforceRateLimit: (...a: unknown[]) => enforceRateLimit(...a),

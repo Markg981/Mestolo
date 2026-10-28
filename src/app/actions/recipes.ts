@@ -1,23 +1,17 @@
 'use server';
 
 import { validateNutrition } from '@/lib/nutrition';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { cleanEditorPayload, effectiveVerificationStatus, recipeInputSchema } from '@/lib/recipes/schema';
 import type { DuplicateMatch } from '@/lib/recipes/duplicates';
 import { VISIBILITIES, type Ingredient, type RecipeRow } from '@/lib/recipes/types';
-import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
+import { invalidatePublicPage } from '@/lib/data/public-invalidation';
 import { dbFailure, fail, ok, toFailure, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
-
-/** Drops the cached public page (and the sitemap) after a change that can affect it. */
-function invalidatePublicPage(slug: string | null | undefined) {
-  if (slug) revalidateTag(publicRecipeTag(slug), 'max');
-  revalidateTag(PUBLIC_RECIPES_TAG, 'max');
-}
 
 /** Creates or updates a recipe. The editor never changes a recipe silently: every save is a new version. */
 /**

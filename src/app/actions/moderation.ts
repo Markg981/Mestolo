@@ -1,7 +1,7 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { PUBLIC_RECIPES_TAG } from '@/lib/data/public-recipes';
+import { revalidatePath } from 'next/cache';
+import { invalidateAllPublicPages } from '@/lib/data/public-invalidation';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
@@ -14,6 +14,6 @@ export async function moderateReport(reportId: string, action: 'hide' | 'restore
   const { error } = await supabase.rpc('moderate_report', { p_report: reportId, p_action: action });
   if (error) return error.code === '42501' ? fail('forbidden') : dbFailure(error, 'moderateReport');
   revalidatePath('/moderation');
-  revalidateTag(PUBLIC_RECIPES_TAG, 'max'); // a hidden or restored recipe changes the public pages
+  invalidateAllPublicPages(); // a hidden or restored recipe changes the public pages
   return ok();
 }
