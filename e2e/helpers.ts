@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { checkNonE2eUsers, checkSupabaseTarget } from './staging-guard';
 import { expect, type Browser, type Page, type TestInfo } from '@playwright/test';
 
 /** Prefisso di tutti gli utenti creati dai test: il teardown cancella quelli che lo hanno. */
@@ -31,6 +32,26 @@ export function adminClient(): SupabaseClient {
   return createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE_KEY'), {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+}
+
+/**
+ * Rifiuta di proseguire se il target non e' lo staging atteso: URL *.supabase.co solo con
+ * E2E_SUPABASE_PROJECT_REF coincidente, e al massimo poche decine di utenti non e2e.
+ */
+export async function assertStagingTarget(): Promise<void> {
+  const url = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const target = checkSupabaseTarget(url, process.env.E2E_SUPABASE_PROJECT_REF);
+  if (!target.ok) throw new Error(`Guardia staging: ${target.reason}`);
+  const admin = adminClient();
+  let nonE2e = 0;
+  for (let page = 1; page <= 5; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw new Error(`Guardia staging: elenco utenti fallito: ${error.message}`);
+    nonE2e += data.users.filter((u) => !(u.email?.startsWith(E2E_PREFIX) && u.email.endsWith(`@${E2E_DOMAIN}`))).length;
+    if (nonE2e > 1000 || data.users.length < 200) break;
+  }
+  const users = checkNonE2eUsers(nonE2e);
+  if (!users.ok) throw new Error(`Guardia staging: ${users.reason}`);
 }
 
 export interface TestUser {

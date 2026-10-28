@@ -9,7 +9,7 @@
 # connessione diretta e con il session pooler (porta 5432), perche' la sessione e' dedicata e persistente.
 # NON funziona col transaction pooler (porta 6543): lo snapshot esportato non sarebbe visibile ai pg_dump.
 #
-# Cifratura ASIMMETRICA (gpg --encrypt): serve solo la chiave PUBBLICA, la privata sta fuori da GitHub.
+# Cifratura ASIMMETRICA (gpg --encrypt): servono solo chiavi PUBBLICHE; la privata del titolare sta fuori da GitHub (quella di verifica no: vedi lib/backup-gpg.sh).
 #
 # Uso: BACKUP_GPG_PUBLIC_KEY=... [PG_BIN=/usr/lib/postgresql/17/bin] scripts/backup-db.sh <db_url> <out_dir>
 # Scrive <out_dir>/backup-<stamp>.tar.gpg e stampa lo stamp su stdout (il resto va su stderr).
@@ -17,7 +17,7 @@ set -euo pipefail
 db="$1"
 out="$2"
 bin="${PG_BIN:+$PG_BIN/}"
-: "${BACKUP_GPG_PUBLIC_KEY:?BACKUP_GPG_PUBLIC_KEY richiesto}"
+: "${BACKUP_GPG_PUBLIC_KEY:-${BACKUP_GPG_VERIFY_PUBLIC_KEY:?BACKUP_GPG_PUBLIC_KEY richiesto}}"
 here="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=lib/backup-probes.sh
 . "$here/lib/backup-probes.sh"
@@ -65,7 +65,7 @@ wait "$PSQL_PID" 2>/dev/null || true
 trap - EXIT
 
 while read -r l; do echo "$l" >&2; done < "$out/manifest-$stamp.txt"
-# Manifest completo: 7 conteggi + 4 hash + 7 conteggi di schema
+# Manifest completo: conteggi e hash per ogni tabella (dinamici) + 7 conteggi di schema
 if [ "$(grep -c . "$out/manifest-$stamp.txt")" -lt 18 ]; then
   echo "::error::manifest incompleto: backup non valido" >&2; exit 1
 fi

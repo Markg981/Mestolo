@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
+import { proxyConfigWarning } from '@/lib/client-ip';
 import { sentryOptions } from '@/lib/monitoring/scrub';
 
 export async function register() {
@@ -6,6 +7,8 @@ export async function register() {
     // Fail-fast: in produzione CRON_SECRET e' obbligatorio (i cron di vercel.json).
     const { assertCronSecret } = await import('@/lib/env');
     assertCronSecret(process.env);
+    const warning = proxyConfigWarning();
+    if (warning) console.warn(warning);
   }
   // Inactive unless a DSN is configured.
   if (process.env.NEXT_RUNTIME === 'nodejs' || process.env.NEXT_RUNTIME === 'edge') {
