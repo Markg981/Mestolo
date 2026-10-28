@@ -2,6 +2,27 @@ import { normalizeText } from '@/lib/recipes/duplicates';
 
 export const EXPIRING_DAYS = 3;
 
+function stemToken(t: string): string {
+  if (t.length <= 3 || /\d/.test(t)) return t;
+  let w = t;
+  // inglese: berries -> berry, tomatoes -> tomato, eggs -> egg (non "glass", "citrus")
+  if (w.endsWith('ies') && w.length > 4) w = w.slice(0, -3) + 'y';
+  else if (w.endsWith('oes')) w = w.slice(0, -2);
+  else if (w.endsWith('s') && !w.endsWith('ss') && !w.endsWith('us')) w = w.slice(0, -1);
+  // italiano: vocale finale (uovo/uova, pomodoro/pomodori, cipolla/cipolle)
+  if (w.length > 3 && /[aeio]$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+
+/**
+ * Chiave di confronto per il match dispensa/ingrediente: minuscole, senza
+ * accenti/punteggiatura e con singolare/plurale semplificato (it/en). E'
+ * euristica e simmetrica: serve solo a far coincidere varianti dello stesso nome.
+ */
+export function pantryMatchKey(name: string): string {
+  return normalizeText(name).split(' ').filter(Boolean).map(stemToken).join(' ');
+}
+
 export type PantryLocation = 'fridge' | 'freezer' | 'pantry';
 export const PANTRY_LOCATIONS: PantryLocation[] = ['fridge', 'freezer', 'pantry'];
 
@@ -74,8 +95,8 @@ export interface RecipeSuggestion {
 }
 
 /**
- * Ranks recipes by what the pantry already covers. Matching is exact on the
- * normalised name (same normalisation as the shopping merge); expired items are
+ * Ranks recipes by what the pantry already covers. Matching is on the
+ * normalised name (accents, case, simple it/en plurals: pantryMatchKey); expired items are
  * not counted as available. "q.b." ingredients are optional: they never count
  * as missing, and count as present only when matched. Recipes with no matched
  * ingredient are excluded.
@@ -83,7 +104,7 @@ export interface RecipeSuggestion {
 export function suggestRecipes(recipes: RecipeLike[], pantry: PantryItem[], today: string, soonDays = EXPIRING_DAYS): RecipeSuggestion[] {
   const usable = new Map<string, PantryItem>();
   for (const p of pantry) {
-    const key = normalizeText(p.name);
+    const key = pantryMatchKey(p.name);
     if (!key) continue;
     const status = expiryStatus(p.expires_on, today, soonDays);
     if (status === 'expired') continue;
@@ -102,7 +123,7 @@ export function suggestRecipes(recipes: RecipeLike[], pantry: PantryItem[], toda
     let urgency = 0;
     let have = 0;
     for (const { ing, idx } of r.ingredients.map((ing, idx) => ({ ing, idx }))) {
-      const hit = usable.get(normalizeText(ing.name));
+      const hit = usable.get(pantryMatchKey(ing.name));
       if (hit) {
         if (!ing.toTaste) have++;
         haveNames.push(hit.name);

@@ -214,3 +214,24 @@ export function convertTemperatures(text: string, system: UnitSystem): string {
     return `${c1}${/^[a-z]/i.test(sep) ? ` ${sep} ` : sep}${c2} ${unit}`;
   });
 }
+
+/**
+ * Quantita' in unita' base per confrontare/sommare importi: ml per i volumi,
+ * g per le masse, `unit:<u>` (conteggio/altro) solo per unita' identiche.
+ * Nessun passaggio volume <-> massa (serve la densita'): dimensioni diverse,
+ * il chiamante non deve combinare i valori.
+ */
+export function toBaseAmount(quantity: number, unit: string | null): { dim: string; amount: number } {
+  const u = (unit ?? '').trim().toLowerCase();
+  if (isVol(u)) return { dim: 'vol', amount: quantity * ML[u] };
+  if (isMass(u)) return { dim: 'mass', amount: quantity * G[u] };
+  return { dim: `unit:${u}`, amount: quantity };
+}
+
+/** Converte un importo in unita' base nell'unita' indicata (stessa dimensione). */
+export function fromBaseAmount(amount: number, unit: string | null): number {
+  const u = (unit ?? '').trim().toLowerCase();
+  if (isVol(u)) return amount / ML[u];
+  if (isMass(u)) return amount / G[u];
+  return amount;
+}
