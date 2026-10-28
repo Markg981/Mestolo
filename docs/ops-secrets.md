@@ -8,7 +8,7 @@ I workflow schedulati (`backup.yml`, `restore-verify.yml`, `ops-monitor.yml`, `m
 | --- | --- | --- | --- |
 | `SUPABASE_DB_URL` | `SUPABASE_DB_URL` | `backup.yml`, `ops-monitor.yml` (job `missed-reminders`) | URI Postgres (session pooler, porta 5432) per `pg_dump` e per controllare i promemoria non elaborati |
 | `BACKUP_GPG_PUBLIC_KEY` | `BACKUP_GPG_PUBLIC_KEY` | `backup.yml` | Chiave PUBBLICA gpg con cui il dump viene cifrato |
-| `BACKUP_GPG_PRIVATE_KEY` | `BACKUP_GPG_PRIVATE_KEY` | `restore-verify.yml` | Chiave PRIVATA (armored, senza passphrase) di una coppia dedicata alla sola verifica del restore |
+| `BACKUP_GPG_VERIFY_PRIVATE_KEY` | `BACKUP_GPG_VERIFY_PRIVATE_KEY` | `restore-verify.yml` | Chiave PRIVATA (armored, senza passphrase) di una coppia dedicata alla sola verifica del restore, mai quella del titolare (vedi `docs/backup.md`). Il vecchio nome `BACKUP_GPG_PRIVATE_KEY` e' deprecato ma ancora accettato |
 | `BACKUP_S3_BUCKET` | `BACKUP_S3_BUCKET` | `backup.yml`, `restore-verify.yml`, `ops-monitor.yml` (job `backup-age`) | Bucket S3 compatibile PRIVATO, unica destinazione dei backup |
 | `BACKUP_S3_ACCESS_KEY_ID` | `AWS_ACCESS_KEY_ID` | `backup.yml`, `restore-verify.yml`, `ops-monitor.yml` (job `backup-age`) | Access key del bucket |
 | `BACKUP_S3_SECRET_ACCESS_KEY` | `AWS_SECRET_ACCESS_KEY` | `backup.yml`, `restore-verify.yml`, `ops-monitor.yml` (job `backup-age`) | Secret key del bucket |
@@ -20,7 +20,7 @@ I workflow schedulati (`backup.yml`, `restore-verify.yml`, `ops-monitor.yml`, `m
 
 Variabili di repository (non secret), opzionali: `BACKUP_SKIP_STORAGE=true` con `BACKUP_SKIP_STORAGE_REASON` (motivazione obbligatoria) per escludere il backup delle immagini; `MEAL_REMINDERS_EXTERNAL_SCHEDULER=true` per disattivare `meal-reminders.yml` se la route e' chiamata da un altro scheduler.
 
-`ops-monitor.yml` (job `recent-success`) e `alert-on-failure.yml` usano solo il `GITHUB_TOKEN` automatico: nessun secret da impostare. Dettagli su backup e restore: `docs/backup.md`.
+`ops-monitor.yml` (job `recent-success`) e `alert-on-failure.yml` usano solo il `GITHUB_TOKEN` automatico: nessun secret da impostare. Il job `heartbeat` di `ops-monitor.yml` legge `HEARTBEAT_URL_OPS_MONITOR`, opzionale e fail-open (senza secret il ping e' saltato), quindi non ha preflight. Dettagli su backup e restore: `docs/backup.md`.
 
 ## Impostare i secret
 
@@ -29,7 +29,7 @@ Da una shell con `gh` autenticato sul repository. Senza `--body`, `gh` chiede il
 ```bash
 gh secret set SUPABASE_DB_URL
 gh secret set BACKUP_GPG_PUBLIC_KEY
-gh secret set BACKUP_GPG_PRIVATE_KEY
+gh secret set BACKUP_GPG_VERIFY_PRIVATE_KEY
 gh secret set BACKUP_S3_BUCKET
 gh secret set BACKUP_S3_ACCESS_KEY_ID
 gh secret set BACKUP_S3_SECRET_ACCESS_KEY

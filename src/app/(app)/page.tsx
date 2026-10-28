@@ -19,7 +19,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     listMyRecipes({ limit: 6 }),
     listMyRecipes({ review: true, limit: 50 }),
     listCollections(),
-    discover(categories, { limit: 60 }),
+    discover(categories, { limit: 6 }),
   ]);
   const supabase = await createClient();
   const today = todayIso(new Date(), timeZone);

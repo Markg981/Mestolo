@@ -34,6 +34,9 @@ export function normalizeIpForRateLimit(raw: string): string {
   return `${prefix.join(':')}::/64`;
 }
 
+/** Valore restituito quando l'IP non e determinabile. */
+export const UNKNOWN_IP = 'unknown';
+
 export function extractClientIp(
   h: { get(name: string): string | null },
   env: Record<string, string | undefined> = process.env,
@@ -46,6 +49,8 @@ export function extractClientIp(
     if (real) return normalizeIpForRateLimit(real);
   }
   const parsed = Number.parseInt(env.TRUSTED_PROXY_COUNT ?? '', 10);
+  // 0 = nessun proxy davanti all'app: x-forwarded-for e interamente controllato dal client, quindi si ignora.
+  if (parsed === 0) return UNKNOWN_IP;
   const trusted = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
   const hops = (h.get('x-forwarded-for') ?? '')
     .split(',')
@@ -53,5 +58,16 @@ export function extractClientIp(
     .filter(Boolean);
   // Meno hop dei proxy attesi: la catena non e affidabile, usa il primo disponibile da destra.
   const picked = hops[Math.max(hops.length - trusted, 0)];
-  return picked ? normalizeIpForRateLimit(picked) : 'unknown';
+  return picked ? normalizeIpForRateLimit(picked) : UNKNOWN_IP;
+}
+
+/**
+ * Avviso all'avvio: in produzione fuori da Vercel senza TRUSTED_PROXY_COUNT si assume 1 proxy,
+ * ipotesi che se errata rende l'IP falsificabile. Solo avviso (non fail-fast): un fail-fast
+ * romperebbe deploy legittimi dietro un singolo proxy, che e il default.
+ */
+export function proxyConfigWarning(env: Record<string, string | undefined> = process.env): string | null {
+  if (env.NODE_ENV !== 'production' || env.VERCEL) return null;
+  if (env.TRUSTED_PROXY_COUNT !== undefined && env.TRUSTED_PROXY_COUNT.trim() !== '') return null;
+  return '[mestolo] TRUSTED_PROXY_COUNT non impostato fuori da Vercel: si assume 1 proxy fidato. Impostalo (0 = nessun proxy) per evitare IP falsificabili nei rate limit.';
 }

@@ -25,7 +25,11 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      # Chiave PRIVATA (armored, senza passphrase) dedicata alla verifica: i backup stanno solo su S3 privato
+      # Chiave PRIVATA usa-e-getta (armored, senza passphrase) di SOLA verifica, mai quella del titolare.
+      # Onesta': decifra TUTTI i backup (sono cifrati anche verso la sua pubblica); con le credenziali S3 che
+      # questo workflow ha, chi controlla i secret di GitHub puo' leggere i backup. Vedi docs/backup.md.
+      BACKUP_GPG_VERIFY_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_VERIFY_PRIVATE_KEY }}
+      # DEPRECATO: vecchio nome di BACKUP_GPG_VERIFY_PRIVATE_KEY, accettato come fallback
       BACKUP_GPG_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_PRIVATE_KEY }}
       TARGET: postgresql://postgres:pw@localhost:5432/postgres
       BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
@@ -36,7 +40,9 @@ jobs:
       - name: Preflight secrets
         run: |
           missing=()
-          for v in BACKUP_GPG_PRIVATE_KEY BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+          # BACKUP_GPG_PRIVATE_KEY: vecchio nome deprecato, accettato come fallback (F-01)
+          if [ -z "$BACKUP_GPG_VERIFY_PRIVATE_KEY" ] && [ -z "$BACKUP_GPG_PRIVATE_KEY" ]; then missing+=("BACKUP_GPG_VERIFY_PRIVATE_KEY"); fi
+          for v in BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
             if [ -z "${!v}" ]; then missing+=("$v"); fi
           done
           # I nomi dei secret differiscono dalle variabili del job: mostra quelli da impostare in GitHub

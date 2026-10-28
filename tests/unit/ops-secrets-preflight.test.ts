@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 // OPS-01: i workflow operativi devono fallire SUBITO e elencare TUTTI i secret mancanti in un solo ::error::
 const WORKFLOWS: Record<string, string[]> = {
   "backup.yml": ["SUPABASE_DB_URL", "BACKUP_GPG_PUBLIC_KEY", "BACKUP_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
-  "restore-verify.yml": ["BACKUP_GPG_PRIVATE_KEY", "BACKUP_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+  "restore-verify.yml": ["BACKUP_GPG_VERIFY_PRIVATE_KEY", "BACKUP_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
   "ops-monitor.yml": ["BACKUP_S3_BUCKET", "SUPABASE_DB_URL"],
   "meal-reminders.yml": ["APP_URL", "CRON_SECRET"],
 };
@@ -35,6 +35,8 @@ describe("preflight dei secret nei workflow operativi", () => {
     for (const file of Object.keys(WORKFLOWS)) {
       for (const m of read(file).matchAll(/^ {4}steps:\n( {6}- .*)\n/gm)) {
         if (file === "ops-monitor.yml" && m[1].includes("recent-success")) continue;
+        // heartbeat esterno: secret opzionale e fail-open, niente preflight
+        if (m[1].includes("Heartbeat esterno")) continue;
         expect(m[1], file).toMatch(/Preflight secrets|Check recent successful runs/);
       }
     }
