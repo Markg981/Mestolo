@@ -9,6 +9,7 @@ import { weekDays, type MealSlot } from '@/lib/plan/week';
 import { generatePlan, planCells, type Candidate, type Proposal } from '@/lib/plan/generator';
 import { normalizePrefs, prefsFromRow, prefsSchema, prefsToRow, type PrefsRow } from '@/lib/plan/preferences';
 import type { Ingredient } from '@/lib/recipes/types';
+import { chunkIdempotencyKey, chunkShoppingItems, collapseShoppingItems } from '@/lib/shopping/batch';
 import { subtractPantry } from '@/lib/shopping/planning';
 import type { PantryItem } from '@/lib/pantry/match';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
@@ -34,12 +35,8 @@ const itemSchema = z.object({
 
 type NewItem = z.infer<typeof itemSchema> & { recipe_id?: string | null; recipe_title?: string | null };
 
-const MAX_SHOPPING_ITEMS = 200;
-
 async function addItems(userId: string, items: NewItem[], targetListId?: string, idempotencyKey?: string): Promise<ActionResult<{ added: number; merged: number }>> {
   const supabase = await createClient();
-  // Stesso tetto della funzione SQL add_shopping_items (DB-04).
-  if (items.length > MAX_SHOPPING_ITEMS) return fail('invalid_input');
   let listId: string | null;
   if (targetListId) {
     // RLS: la lista e visibile solo al proprietario e ai membri
@@ -48,16 +45,25 @@ async function addItems(userId: string, items: NewItem[], targetListId?: string,
     if (!listId) return fail('forbidden');
   } else listId = await defaultListId(userId);
   if (!listId) return fail('generic');
-  // Merge + insert in un'unica transazione lato DB; la chiave rende il retry/doppio clic innocuo.
-  const { data, error } = await supabase.rpc('add_shopping_items', {
-    p_list_id: listId,
-    p_items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, note: i.note ?? null, recipe_id: i.recipe_id ?? null, recipe_title: i.recipe_title ?? null })),
-    p_idempotency_key: idempotencyKey ?? randomUUID(),
-  } as never);
-  if (error) return dbFailure(error, 'addItems');
-  const res = data as unknown as { added: number; merged: number };
+  // Merge dei duplicati PRIMA del tetto; se restano piu' di 200 elementi, piu' chiamate RPC (limite DB-04),
+  // ognuna con chiave di idempotenza derivata: un retry rigioca gli stessi blocchi senza duplicare.
+  const baseKey = idempotencyKey ?? randomUUID();
+  const chunks = chunkShoppingItems(collapseShoppingItems(items));
+  let added = 0;
+  let merged = 0;
+  for (const [n, chunk] of chunks.entries()) {
+    const { data, error } = await supabase.rpc('add_shopping_items', {
+      p_list_id: listId,
+      p_items: chunk.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, note: i.note ?? null, recipe_id: i.recipe_id ?? null, recipe_title: i.recipe_title ?? null })),
+      p_idempotency_key: chunkIdempotencyKey(baseKey, n),
+    } as never);
+    if (error) return dbFailure(error, 'addItems');
+    const res = data as unknown as { added: number; merged: number };
+    added += res.added;
+    merged += res.merged;
+  }
   revalidatePath('/shopping');
-  return ok({ added: res.added, merged: res.merged });
+  return ok({ added, merged });
 }
 
 export async function addShoppingItem(input: unknown): Promise<ActionResult<{ added: number; merged: number }>> {
@@ -188,10 +194,10 @@ export async function addWeekToShopping(weekStart: string, listId?: string, idem
   // Quanto e' gia' in dispensa (unita' compatibile) non va comprato (G-10).
   const { data: pantry } = await supabase.from('pantry_items').select('id, name, quantity, unit, expires_on, location, note').eq('owner_id', user.id);
   const needed = subtractPantry(items, (pantry as PantryItem[]) ?? [], new Date().toISOString().slice(0, 10));
-  if (!needed.length) return ok({ added: 0, merged: 0, recipes: list.length });
+  if (!needed.length) return ok({ added: 0, merged: 0, recipes: new Set(list.map((e) => e.recipe_id)).size });
   const res = await addItems(user.id, needed, listId, idempotencyKey);
   if (!res.ok) return res;
-  return ok({ ...res.data, recipes: list.length });
+  return ok({ ...res.data, recipes: new Set(list.map((e) => e.recipe_id)).size });
 }
 
 // ---------- Preferenze e generatore ------------------------------------

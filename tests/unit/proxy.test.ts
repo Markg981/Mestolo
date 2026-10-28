@@ -36,9 +36,41 @@ describe('proxy', () => {
       expect(res.headers.get('content-security-policy')).toBeTruthy();
     });
 
-    it.each(['/api/images/1', '/api/avatars/u1', '/api/cook-photos/1'])('still refreshes the session for %s', async (p) => {
-      await call(p);
+    it.each(['/api/images/1', '/api/avatars/u1', '/api/cook-photos/1'])('skips getUser() for %s (the route validates the JWT itself)', async (p) => {
+      const res = await call(p);
+      expect(res.status).toBe(200);
+      expect(getUser).not.toHaveBeenCalled();
+      expect(res.headers.get('content-security-policy')).toBeTruthy();
+    });
+
+    it('does not bypass look-alike prefixes', async () => {
+      await call('/api/imagesx/1');
       expect(getUser).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('transient auth errors', () => {
+    it.each([
+      ['AuthRetryableFetchError', { name: 'AuthRetryableFetchError', status: 0 }],
+      ['5xx', { name: 'AuthApiError', status: 503 }],
+    ])('does not redirect to /login on %s', async (_n, error) => {
+      getUser.mockResolvedValue({ data: { user: null }, error });
+      const res = await call('/ricette');
+      expect(res.status).toBe(200);
+      expect(loc(res)).toBeNull();
+    });
+
+    it('does not redirect when getUser() throws', async () => {
+      getUser.mockRejectedValue(new Error('network'));
+      const res = await call('/ricette');
+      expect(res.status).toBe(200);
+      expect(loc(res)).toBeNull();
+    });
+
+    it('still redirects on a genuinely missing session', async () => {
+      getUser.mockResolvedValue({ data: { user: null }, error: { name: 'AuthSessionMissingError', status: 400 } });
+      const res = await call('/ricette');
+      expect(loc(res)).toContain('/login');
     });
   });
 
@@ -70,7 +102,7 @@ describe('proxy', () => {
     });
 
     it('does not redirect /api routes (they answer 401 themselves)', async () => {
-      const res = await call('/api/images/1');
+      const res = await call('/api/recipes/1');
       expect(res.status).toBe(200);
       expect(loc(res)).toBeNull();
     });
@@ -160,7 +192,7 @@ describe('proxy', () => {
         });
         return { data: { user: { id: 'u1' } } };
       });
-      const res = await call('/api/images/1');
+      const res = await call('/api/recipes/1');
       expect(res.cookies.get('sb-token')?.value).toBe('new');
       expect(res.headers.get('cache-control')).toContain('no-store');
       expect(res.headers.get('pragma')).toBe('no-cache');
@@ -182,6 +214,32 @@ describe('proxy', () => {
     });
     it('runs on pages and API routes', () => {
       for (const p of ['/', '/recipes', '/api/images/1', '/auth/callback']) expect(re.test(p)).toBe(true);
+    });
+  });
+
+  describe('refreshed session cookies on redirects', () => {
+    const refresh = () =>
+      capturedCookies!.setAll([{ name: 'sb-access-token', value: 'new-token', options: { path: '/' } }], { 'Cache-Control': 'no-store' });
+
+    it('keeps Set-Cookie on the redirect to /login', async () => {
+      getUser.mockImplementation(async () => {
+        refresh();
+        return { data: { user: null } };
+      });
+      const res = await call('/recipes/1');
+      expect(loc(res)).toContain('/login');
+      expect(res.headers.get('set-cookie')).toContain('sb-access-token=new-token');
+      expect(res.headers.get('cache-control')).toBe('no-store');
+    });
+
+    it('keeps Set-Cookie on the redirect of a logged-in user away from /login', async () => {
+      getUser.mockImplementation(async () => {
+        refresh();
+        return { data: { user: { id: 'u1' } } };
+      });
+      const res = await call('/login');
+      expect(loc(res)).toBe('https://mestolo.test/');
+      expect(res.headers.get('set-cookie')).toContain('sb-access-token=new-token');
     });
   });
 });
