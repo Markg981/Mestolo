@@ -348,7 +348,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
 
   return (
     <form onSubmit={submit} className={cx('grid gap-8', aside ? 'lg:grid-cols-[minmax(0,1fr)_22rem]' : '')} noValidate>
-      <div className="flex min-w-0 flex-col gap-8">
+      <fieldset disabled={saving} aria-busy={saving} className="m-0 flex min-w-0 flex-col gap-8 border-0 p-0">
         {restored && (
           <Alert tone="info" title={t('draftRestored')} action={<Button size="sm" onClick={discardDraft}>{t('discardDraft')}</Button>} />
         )}
@@ -705,7 +705,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             </Link>
           )}
         </div>
-      </div>
+      </fieldset>
       {aside && <aside className="flex flex-col gap-3 lg:sticky lg:top-6 lg:self-start">{aside}</aside>}
     </form>
   );
