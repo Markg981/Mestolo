@@ -25,4 +25,20 @@ d('realtime publication', () => {
     const ident = await pool.query("select relname, relreplident from pg_class where relname in ('shopping_items', 'recipes') and relkind = 'r'");
     for (const r of ident.rows) expect(r.relreplident).toBe('d');
   });
+
+  // B-06: per i DELETE Realtime NON applica la RLS e invia le colonne della
+  // replica identity. Con FULL l'intera riga eliminata sarebbe visibile a chi
+  // ascolta; con DEFAULT viaggia solo la chiave primaria. Il client reagisce a
+  // ogni evento (event '*') rifacendo il fetch, che passa dalla RLS.
+  it('ogni tabella pubblicata in public ha replica identity DEFAULT (solo PK nei DELETE)', async () => {
+    const { rows } = await pool.query(
+      `select c.relname, c.relreplident
+         from pg_publication_tables p
+         join pg_class c on c.relname = p.tablename
+         join pg_namespace n on n.oid = c.relnamespace and n.nspname = p.schemaname
+        where p.pubname = 'supabase_realtime' and p.schemaname = 'public'`,
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) expect({ table: r.relname, ident: r.relreplident }).toEqual({ table: r.relname, ident: 'd' });
+  });
 });
