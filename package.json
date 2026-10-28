@@ -12,6 +12,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/copy-ocr-assets.mjs && node scripts/check-legal.mjs",
     "check:legal": "node scripts/check-legal.mjs",
+    "check:supabase-remote": "node scripts/check-supabase-remote-config.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "build": "next build",
     "start": "next start",
