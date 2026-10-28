@@ -41,7 +41,7 @@ jobs:
     timeout-minutes: 40
     env:
       # Solo compilazione: serve un URL valido per mobile:sync, non viene pubblicato nulla.
-      CAP_SERVER_URL: https://mestolo.vercel.app
+      CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL || 'https://mestolo.vercel.app' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

@@ -38,7 +38,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     env:
-      CAP_SERVER_URL: https://mestolo.vercel.app
+      CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL || 'https://mestolo.vercel.app' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -93,6 +93,7 @@ jobs:
     env:
       CAP_SERVER_URL: ${{ vars.CAP_SERVER_URL }}
       CAP_APP_ID: ${{ vars.CAP_APP_ID }}
+      MOBILE_STORE_BUILD: "1"
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
       # Il numero di build deve crescere a ogni upload: usiamo il numero di run del workflow.
       MOBILE_BUILD_NUMBER: ${{ github.run_number }}
