@@ -65,7 +65,7 @@ wait "$PSQL_PID" 2>/dev/null || true
 trap - EXIT
 
 while read -r l; do echo "$l" >&2; done < "$out/manifest-$stamp.txt"
-# Manifest completo: 7 conteggi + 4 hash + 7 conteggi di schema
+# Manifest completo: conteggi e hash per ogni tabella (dinamici) + 7 conteggi di schema
 if [ "$(grep -c . "$out/manifest-$stamp.txt")" -lt 18 ]; then
   echo "::error::manifest incompleto: backup non valido" >&2; exit 1
 fi
