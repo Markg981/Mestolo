@@ -12,7 +12,7 @@ export const maxDuration = 60;
  * it only returns the requesting user's own data. API keys are NOT exported
  * (only which providers are configured).
  */
-export async function GET() {
+export async function POST() {
   const user = await getUser();
   if (!user) return new NextResponse(null, { status: 401 });
   try {
