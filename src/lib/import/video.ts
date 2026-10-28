@@ -60,10 +60,16 @@ export function detectVideoUrl(raw: string): VideoRef | null {
 
 export type CaptionFormat = 'xml' | 'json3' | 'vtt';
 
+function safeCodePoint(cp: number, original: string): string {
+  // Fuori range o surrogato: String.fromCodePoint lancerebbe RangeError (o darebbe un surrogato isolato).
+  if (!Number.isInteger(cp) || cp <= 0 || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) return original;
+  return String.fromCodePoint(cp);
+}
+
 export function decodeEntities(s: string): string {
   return s
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (m, n) => safeCodePoint(Number(n), m))
+    .replace(/&#x([0-9a-f]+);/gi, (m, n) => safeCodePoint(parseInt(n, 16), m))
     .replace(/&quot;/g, '"')
     .replace(/&apos;|&#39;/g, "'")
     .replace(/&lt;/g, '<')

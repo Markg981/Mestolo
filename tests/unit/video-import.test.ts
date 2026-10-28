@@ -1,6 +1,6 @@
 /** Recorded fixtures only: no network. */
 import { describe, expect, it } from 'vitest';
-import { captionsToText, detectVideoUrl, extractVideoMeta, pickCaptionTrack, sniffCaptionFormat } from '@/lib/import/video';
+import { captionsToText, decodeEntities, detectVideoUrl, extractVideoMeta, pickCaptionTrack, sniffCaptionFormat } from '@/lib/import/video';
 import { encodeWav8 } from '@/lib/import/audio';
 
 describe('detectVideoUrl', () => {
@@ -113,5 +113,18 @@ describe('encodeWav8', () => {
     expect(v.getUint16(34, true)).toBe(8);
     expect(v.getUint32(40, true)).toBe(3);
     expect([...wav.slice(44)]).toEqual([0, 128, 255]);
+  });
+});
+
+describe('decodeEntities', () => {
+  it('decodifica entita valide', () => {
+    expect(decodeEntities('a &#65; &#x42; &amp; &lt;')).toBe('a A B & <');
+  });
+  it('non lancia su code point fuori range o surrogati e lascia l entita intatta', () => {
+    expect(() => decodeEntities('&#99999999;')).not.toThrow();
+    expect(decodeEntities('x &#99999999; y')).toBe('x &#99999999; y');
+    expect(decodeEntities('&#x110000;')).toBe('&#x110000;');
+    expect(decodeEntities('&#xD800;')).toBe('&#xD800;');
+    expect(decodeEntities('&#0;')).toBe('&#0;');
   });
 });
