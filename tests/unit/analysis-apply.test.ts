@@ -29,7 +29,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({ from: (t: string) => builder(t) }),
 }));
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({}) }));
-vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a), revalidateTag: vi.fn(), unstable_cache: (f: unknown) => f }));
 vi.mock('@/lib/rate-limit', () => ({ RateLimitedError: class RateLimitedError extends Error {}, enforceRateLimit: vi.fn() }));
 
 import { applyAnalysis } from '@/app/actions/ai';

@@ -22,6 +22,7 @@ function client() {
       const q = {
         update: (v: Record<string, unknown>) => { lastUpdate = v; return q; },
         select: () => q,
+        delete: () => q,
         eq: (c: string, v: unknown) => { if (c === 'version') expected = v as number; return q; },
         maybeSingle: async () => ({ data: { id: RID } }),
         then: (res: (v: unknown) => unknown) => res({ data: expected === dbVersion ? [{ id: RID }] : [], error: null }),

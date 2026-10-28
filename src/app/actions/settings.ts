@@ -1,8 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { PUBLIC_RECIPES_TAG, publicRecipeTag } from '@/lib/data/public-recipes';
+import { revalidatePath } from 'next/cache';
+import { invalidateAllPublicPages } from '@/lib/data/public-invalidation';
 import { z } from 'zod';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient, getUser } from '@/lib/supabase/server';
@@ -120,8 +120,7 @@ export async function deleteAccount(confirmUsername: string, password: string): 
     // Slug pubblici letti prima: dopo l'eliminazione le righe non esistono piu' e le pagine in cache resterebbero online
     const { data: pubs } = await supabase.from('recipes').select('public_slug').eq('owner_id', user.id).not('public_slug', 'is', null);
     await deleteAccountData(createAdminClient() as unknown as DeletionAdmin, user.id);
-    for (const p of (pubs as { public_slug: string | null }[] | null) ?? []) if (p.public_slug) revalidateTag(publicRecipeTag(p.public_slug), 'max');
-    revalidateTag(PUBLIC_RECIPES_TAG, 'max');
+    invalidateAllPublicPages(((pubs as { public_slug: string | null }[] | null) ?? []).map((p) => p.public_slug));
     await supabase.auth.signOut();
   } catch (e) {
     return toFailure(e, 'deleteAccount');

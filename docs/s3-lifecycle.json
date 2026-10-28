@@ -5,6 +5,7 @@
       "Filter": { "Prefix": "mestolo/db/" },
       "Status": "Enabled",
       "Expiration": { "Days": 90 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 7 },
       "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
     },
     {
@@ -12,7 +13,14 @@
       "Filter": { "Prefix": "mestolo/storage/" },
       "Status": "Enabled",
       "Expiration": { "Days": 90 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 7 },
       "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+    },
+    {
+      "ID": "mestolo-backup-expired-delete-marker-cleanup",
+      "Filter": { "Prefix": "mestolo/" },
+      "Status": "Enabled",
+      "Expiration": { "ExpiredObjectDeleteMarker": true }
     }
   ]
 }

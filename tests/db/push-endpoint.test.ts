@@ -35,8 +35,11 @@ d('db push endpoint allowlist', () => {
   });
   afterAll(async () => pool?.end());
 
-  const sub = (endpoint: string) =>
-    as(u, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k') returning id", [u, endpoint]);
+  // Le scritture passano solo dalla RPC (D-07: insert/update diretti revocati).
+  const sub = async (endpoint: string) => {
+    await as(u, "select public.save_push_subscription($1, 'p', 'k', null)", [endpoint]);
+    return admin('select id from public.push_subscriptions where endpoint = $1', [endpoint]);
+  };
 
   it.each([
     'https://fcm.googleapis.com/fcm/send/abc',
@@ -64,6 +67,13 @@ d('db push endpoint allowlist', () => {
 
   it('an existing subscription cannot be moved to a foreign host', async () => {
     const [row] = await sub(`https://fcm.googleapis.com/fcm/send/mv-${s}`);
-    await expect(as(u, "update public.push_subscriptions set endpoint = 'https://evil.example/x' where id = $1", [row.id])).rejects.toMatchObject({ code: '23514' });
+    await expect(admin("update public.push_subscriptions set endpoint = 'https://evil.example/x' where id = $1", [row.id])).rejects.toMatchObject({ code: '23514' });
+  });
+
+  it('D-07: insert e update diretti da authenticated sono negati (solo RPC)', async () => {
+    const ep = `https://fcm.googleapis.com/fcm/send/direct-${s}`;
+    await expect(as(u, "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'p', 'k')", [u, ep])).rejects.toMatchObject({ code: '42501' });
+    await sub(`https://fcm.googleapis.com/fcm/send/upd-${s}`);
+    await expect(as(u, "update public.push_subscriptions set auth = 'x'")).rejects.toMatchObject({ code: '42501' });
   });
 });

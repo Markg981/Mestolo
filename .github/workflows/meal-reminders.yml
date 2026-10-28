@@ -7,7 +7,7 @@ name: Meal reminders
 # recupero e' di 45 minuti) e disattiva gli schedule dopo 60 giorni senza attivita' nel repo: controllare la tab
 # Actions e riabilitare il workflow se serve. Senza i secret APP_URL e CRON_SECRET il job fallisce; se la route
 # e' chiamata da un altro scheduler (vercel.pro.json o servizio esterno) impostare la variabile
-# MEAL_REMINDERS_EXTERNAL_SCHEDULER=true per disattivarlo. ops-monitor.yml segnala i promemoria mai elaborati.
+# MEAL_REMINDERS_EXTERNAL_SCHEDULER=true per disattivarlo. ops-monitor.yml segnala comunque i promemoria mai elaborati (controllo sul DB) ma, con la variabile a true, non richiede piu un run riuscito di questo workflow.
 on:
   schedule:
     - cron: '*/15 * * * *'
@@ -28,13 +28,20 @@ jobs:
       APP_URL: ${{ secrets.APP_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
+      - name: Preflight secrets
+        run: |
+          missing=()
+          for v in APP_URL CRON_SECRET; do
+            if [ -z "${!v}" ]; then missing+=("$v"); fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error title=Secret mancanti::Promemoria dei pasti NON inviati, secret mancanti: ${missing[*]}. Vedi docs/ops-secrets.md (gh secret set NOME), oppure imposta la variabile MEAL_REMINDERS_EXTERNAL_SCHEDULER=true se la route e' chiamata da un altro scheduler."
+            exit 1
+          fi
+
       - name: Call /api/cron/meal-reminders
         run: |
           set -euo pipefail
-          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "::error::APP_URL o CRON_SECRET non impostati: i promemoria dei pasti NON vengono inviati. Configurare i secret oppure impostare la variabile MEAL_REMINDERS_EXTERNAL_SCHEDULER=true se la route e' chiamata da un altro scheduler."
-            exit 1
-          fi
           curl --fail-with-body --silent --show-error --max-time 60 --retry 2 --retry-all-errors \
             -H "Authorization: Bearer $CRON_SECRET" \
             "${APP_URL%/}/api/cron/meal-reminders"

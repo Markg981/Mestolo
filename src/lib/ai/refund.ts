@@ -44,7 +44,12 @@ export function isRefundableError(e: unknown): boolean {
 export async function refundQuota(userId: string, resolved: ResolvedProvider, group: QuotaGroup, action: string): Promise<void> {
   if (resolved.keySource !== 'app') return;
   try {
-    await createAdminClient().rpc('refund_ai_quota', { p_user_id: userId, p_group: group, p_action: action });
+    await createAdminClient().rpc('refund_ai_quota', {
+      p_user_id: userId,
+      p_group: group,
+      p_action: action,
+      ...((resolved.quantity ?? 1) > 1 ? { p_qty: resolved.quantity } : {}),
+    });
   } catch {
     // ignorato di proposito
   }

@@ -9,7 +9,7 @@ const { safeFetch, owned, getUser } = vi.hoisted(() => ({
   getUser: vi.fn(),
 }));
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn(), unstable_cache: (f: unknown) => f }));
 vi.mock('@/lib/import/safe-fetch', () => ({ safeFetch }));
 vi.mock('@/lib/rate-limit', () => ({ enforceRateLimit: vi.fn() }));
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: vi.fn() }));

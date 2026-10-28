@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
+import { invalidatePublicPageForRecipe } from '@/lib/data/public-invalidation';
 import { z } from 'zod';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -103,6 +104,7 @@ async function storeImage(opts: {
     return fail('storage_quota_exceeded');
   }
   revalidatePath(`/recipes/${opts.recipeId}`);
+  await invalidatePublicPageForRecipe(supabase, opts.recipeId);
   return ok({ id: newId as string });
 }
 
@@ -172,6 +174,7 @@ export async function deleteRecipeImage(imageId: string): Promise<ActionResult> 
   const { error: storageError } = await supabase.storage.from('recipe-images').remove([img.storage_path, img.thumb_path].filter(Boolean) as string[]);
   if (storageError) console.error(`[mestolo] deleteRecipeImage: storage remove failed: ${storageError.message}`);
   revalidatePath(`/recipes/${img.recipe_id}`);
+  await invalidatePublicPageForRecipe(supabase, img.recipe_id as string);
   return ok();
 }
 

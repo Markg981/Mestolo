@@ -5,7 +5,7 @@ const remove = vi.fn();
 let delRes: { data: unknown; error: { code?: string; message?: string } | null };
 let removeRes: { error: { message: string } | null };
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn(), unstable_cache: (f: unknown) => f }));
 vi.mock('@/lib/supabase/server', () => ({
   getUser: () => getUser(),
   createClient: async () => ({

@@ -39,7 +39,12 @@ function recipesTable() {
 vi.mock('@/lib/supabase/server', () => ({
   getUser: () => getUser(),
   createClient: async () => ({
-    from: (t: string) => (t === 'recipes' ? recipesTable() : { upsert }),
+    from: (t: string) => {
+      if (t === 'recipes') return recipesTable();
+      // G-08: invalidazione della nutrizione stimata quando cambiano ingredienti/porzioni
+      if (t === 'recipe_nutrition') return { delete: () => ({ eq: () => ({ eq: async () => ({ error: null }) }) }) };
+      return { upsert };
+    },
   }),
 }));
 

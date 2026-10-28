@@ -92,6 +92,21 @@ d('db add_shopping_items', () => {
     expect(Number(r.find((x) => x.unit === 'g')!.quantity)).toBe(150);
   });
 
+  it('merge: recipe_id conservato (primo non nullo), unita diversa resta separata', async () => {
+    const { u, list } = await setup('r');
+    const r1 = (await admin("insert into public.recipes (owner_id, title) values ($1, 'R1') returning id", [u]))[0].id as string;
+    const r2 = (await admin("insert into public.recipes (owner_id, title) values ($1, 'R2') returning id", [u]))[0].id as string;
+    await add(u, list, [{ name: 'Sale', quantity: 1, unit: 'g' }], randomUUID());
+    await add(u, list, [{ name: 'sale', quantity: 2, unit: 'g', recipe_id: r1, recipe_title: 'R1' }], randomUUID());
+    await add(u, list, [{ name: 'sale', quantity: 3, unit: 'g', recipe_id: r2, recipe_title: 'R2' }, { name: 'sale', quantity: 1, unit: 'kg' }], randomUUID());
+    const r = await admin('select quantity, unit, recipe_id, recipe_title from public.shopping_items where list_id = $1 order by unit', [list]);
+    expect(r).toHaveLength(2);
+    const g = r.find((x) => x.unit === 'g')!;
+    expect(Number(g.quantity)).toBe(6);
+    expect(g.recipe_id).toBe(r1);
+    expect(g.recipe_title).toBe('R1');
+  });
+
   it('errore: stato invariato e la key non resta consumata', async () => {
     const { u, list } = await setup('c');
     await add(u, list, [{ name: 'uova', quantity: 2, unit: null }], randomUUID());

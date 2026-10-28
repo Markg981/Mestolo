@@ -66,6 +66,23 @@ export function assertProductionEnv(e: NodeJS.ProcessEnv) {
 }
 
 /**
+ * Fail-fast all'avvio (instrumentation.register) in produzione: vercel.json pianifica
+ * sempre i cron, quindi CRON_SECRET mancante o corto farebbe rispondere 401 in silenzio.
+ * Separata da assertProductionEnv: il login e il resto dell'app non dipendono da env()
+ * per CRON_SECRET. Nei messaggi mai il valore, solo la lunghezza minima.
+ */
+export function assertCronSecret(e: NodeJS.ProcessEnv) {
+  if (e.NODE_ENV !== 'production' || e.NEXT_PHASE === 'phase-production-build') return;
+  const secret = e.CRON_SECRET;
+  if (!secret?.trim()) {
+    throw new ConfigError('Missing required environment variable: CRON_SECRET (min 16 characters, e.g. `openssl rand -hex 32`)');
+  }
+  if (secret.length < CRON_SECRET_MIN_LENGTH) {
+    throw new ConfigError(`CRON_SECRET must be at least ${CRON_SECRET_MIN_LENGTH} characters`);
+  }
+}
+
+/**
  * AI_APP_BASE_URL deve essere https: la chiave applicativa viaggia nell'header
  * Authorization. http e' ammesso solo per localhost/127.0.0.1 fuori produzione.
  */
@@ -86,7 +103,8 @@ export function assertAiBaseUrl(e: NodeJS.ProcessEnv) {
 
 /**
  * Secret delle route cron, validato solo dove serve (non in env(): il login e il
- * resto dell'app non devono dipendere da CRON_SECRET). Restituisce null se manca
+ * resto dell'app non devono dipendere da CRON_SECRET; in produzione assertCronSecret
+ * lo impone all'avvio). Restituisce null se manca
  * o, in produzione, e' piu' corto del minimo: le route cron rispondono 401 (fail-closed).
  */
 export function cronSecret(): string | null {

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const getUser = vi.fn();
 let res: { data: unknown; error: unknown };
 const calls: string[] = [];
+const rpcArgs: unknown[] = [];
 
 function builder() {
   const b: Record<string, unknown> = {
@@ -19,7 +20,14 @@ function builder() {
 
 vi.mock('@/lib/supabase/server', () => ({
   getUser: () => getUser(),
-  createClient: async () => ({ from: () => builder() }),
+  createClient: async () => ({
+    from: () => builder(),
+    rpc: (name: string, args: unknown) => {
+      calls.push(`rpc:${name}`);
+      rpcArgs.push(args);
+      return Promise.resolve(res);
+    },
+  }),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
@@ -35,6 +43,7 @@ beforeEach(() => {
   getUser.mockResolvedValue({ id: OTHER });
   res = { data: [{ id: ID }], error: null };
   calls.length = 0;
+  rpcArgs.length = 0;
 });
 
 describe('pantry', () => {
@@ -52,6 +61,12 @@ describe('pantry', () => {
     expect(await addPantryItem({ name: 'x' })).toMatchObject({ ok: false });
     expect(await updatePantryItem(ID, { name: 'x' })).toMatchObject({ ok: false });
     expect(await deletePantryItem(ID)).toMatchObject({ ok: false });
+  });
+  it('addPantryItem usa la RPC di upsert/merge (B-10) con unita e nota normalizzate', async () => {
+    expect(await addPantryItem({ name: '  Farina ', quantity: 2, unit: '', note: '' })).toMatchObject({ ok: true });
+    expect(calls).toContain('rpc:add_pantry_item');
+    expect(calls).not.toContain('insert');
+    expect(rpcArgs[0]).toMatchObject({ p_name: 'Farina', p_quantity: 2, p_unit: null, p_note: null, p_location: 'pantry' });
   });
   it('ok sul percorso felice', async () => {
     expect(await addPantryItem({ name: 'farina', quantity: 2 })).toMatchObject({ ok: true });

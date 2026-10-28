@@ -1079,6 +1079,7 @@
     "title": "No connection",
     "lead": "This page isn't available offline. Recipes and shopping lists you opened recently are still available.",
     "retry": "Try again",
+    "signOutOffline": "Signing out needs a connection. Reconnect to sign out: meanwhile your data stays on this device.",
     "updateAvailable": "A new version is available",
     "updateAction": "Update"
   },

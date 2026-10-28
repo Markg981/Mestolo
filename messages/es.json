@@ -1079,6 +1079,7 @@
     "title": "Sin conexión",
     "lead": "Esta página no está disponible sin conexión. Puedes seguir consultando las recetas y la lista de la compra que has abierto hace poco.",
     "retry": "Reintentar",
+    "signOutOffline": "Cerrar sesión requiere conexión. Vuelve a conectarte para salir: mientras tanto tus datos siguen en este dispositivo.",
     "updateAvailable": "Nueva versión disponible",
     "updateAction": "Actualizar"
   },

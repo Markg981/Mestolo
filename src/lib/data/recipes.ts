@@ -2,7 +2,8 @@ import 'server-only';
 import { createClient, getUser } from '@/lib/supabase/server';
 import type { CategoryRow } from '@/lib/recipes/categories';
 import type { RecipeRow } from '@/lib/recipes/types';
-import { PAGE_SIZE, applyKeyset, decodeCursor, toPage, type KeysetSort, type Page } from '@/lib/pagination';
+import { PAGE_SIZE, applyKeyset, decodeCursor, toPage, type Cursor, type KeysetSort, type Page } from '@/lib/pagination';
+import { buildSearchRpcParams } from '@/lib/recipes/search-params';
 
 /** All reads go through the user's client: RLS decides what is visible. */
 
@@ -100,25 +101,21 @@ function keysetSortFor(sort: RecipeFilters['sort']): KeysetSort {
   }
 }
 
-// Explicit bound on search matches (matches PostgREST max_rows; avoids unbounded p_limit null).
-export const SEARCH_FETCH_LIMIT = 1000;
-
-async function buildMyRecipesQuery(f: RecipeFilters, userId: string) {
+async function buildMyRecipesQuery(f: RecipeFilters, userId: string, limit: number, cursor: Cursor | null = null) {
   const supabase = await createClient();
   // With a text query the search goes through the search_recipes RPC (full-text + trigram,
-  // security invoker so RLS still applies). the SQL cap (1000) bounds the matches, so sorting and
-  // keyset pagination are applied by PostgREST on its result like on the plain table.
-  // Favourites are filtered DB-side with an inner embed on favorites (RLS limits it to the user's own rows):
-  // no id list round-trip, no max_rows truncation, no oversized URL. The embed is stripped by stripFavEmbed.
-  const cols = f.favorites ? `${LIST_COLUMNS}, favorites!inner(user_id)` : LIST_COLUMNS;
-  const base = (owner: string | null) =>
-    f.q
-      ? supabase.rpc('search_recipes', { p_query: f.q.slice(0, 100), p_owner: owner, p_limit: SEARCH_FETCH_LIMIT }).select(cols)
-      : owner
-        ? supabase.from('recipes').select(cols).eq('owner_id', owner)
-        : supabase.from('recipes').select(cols);
+  // security invoker so RLS still applies). The RPC itself applies sort, favourites, filters and the
+  // keyset cursor BEFORE its row cap (200): doing it afterwards in PostgREST would act on a truncated set.
+  // Without a text query, favourites are filtered DB-side with an inner embed on favorites (RLS limits it to
+  // the user's own rows); the embed is stripped by stripFavEmbed.
+  const cols = f.favorites && !f.q ? `${LIST_COLUMNS}, favorites!inner(user_id)` : LIST_COLUMNS;
   // favourites may include recipes of other people: no owner filter in that case
-  let query = f.favorites ? base(null).eq('favorites.user_id', userId) : base(userId);
+  const owner = f.favorites ? null : userId;
+  let query = f.q
+    ? supabase.rpc('search_recipes', buildSearchRpcParams({ ...f, q: f.q, owner, limit, cursor })).select(cols)
+    : f.favorites
+      ? supabase.from('recipes').select(cols).eq('favorites.user_id', userId)
+      : supabase.from('recipes').select(cols).eq('owner_id', userId);
 
   if (f.category) query = query.eq('category_id', f.category);
   if (f.tag) query = query.contains('tags', [f.tag]);
@@ -139,7 +136,7 @@ function stripFavEmbed<T>(rows: T[] | null): T[] {
 export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListItem[]> {
   const user = await getUser();
   if (!user) return [];
-  const { query } = await buildMyRecipesQuery(f, user.id);
+  const { query } = await buildMyRecipesQuery(f, user.id, f.limit ?? 120);
   const sort = keysetSortFor(f.sort);
   const { data, error } = await query.order(sort.column, { ascending: sort.ascending, nullsFirst: false }).order('id', { ascending: sort.ascending }).limit(f.limit ?? 120);
   assertNoError(error, 'listMyRecipes');
@@ -150,10 +147,11 @@ export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListIt
 export async function listMyRecipesPage(f: RecipeFilters = {}, cursor?: string | null): Promise<Page<RecipeListItem>> {
   const user = await getUser();
   if (!user) return { items: [], nextCursor: null };
-  const { query } = await buildMyRecipesQuery(f, user.id);
   const sort = keysetSortFor(f.sort);
   const pageSize = f.limit ?? PAGE_SIZE;
-  const { data, error } = await applyKeyset(query, sort, decodeCursor(cursor), pageSize);
+  const decoded = decodeCursor(cursor);
+  const { query } = await buildMyRecipesQuery(f, user.id, pageSize + 1, decoded);
+  const { data, error } = await applyKeyset(query, sort, decoded, pageSize);
   assertNoError(error, 'listMyRecipesPage');
   const page = toPage(stripFavEmbed(data as RecipeListItem[] | null), sort, pageSize);
   return { items: await attachCovers(page.items), nextCursor: page.nextCursor };

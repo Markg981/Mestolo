@@ -28,7 +28,7 @@ const mkUser = async (name: string) =>
 const mkRecipe = async (owner: string, visibility: string) =>
   (await as(owner, 'insert into public.recipes (owner_id, title, visibility) values ($1, $2, $3) returning id', [owner, 'R', visibility]))[0].id as string;
 const log = async (uid: string, rid: string, visibility = 'recipe', extra = '') =>
-  (await as(uid, `insert into public.cook_logs (user_id, recipe_id, visibility, note ${extra ? ', photo_path' : ''}) values ($1, $2, $3, 'ottima' ${extra ? ', $4' : ''}) returning id`, extra ? [uid, rid, visibility, extra] : [uid, rid, visibility]))[0].id as string;
+  (await as(uid, 'select public.insert_cook_log($1, now(), $2, $3, $4, 0, 2000, 524288000) as id', [rid, 'ottima', visibility, extra || null]))[0].id as string;
 const count = async (uid: string, id: string) => (await as(uid, 'select id from public.cook_logs where id = $1', [id])).length;
 
 d('db cook_logs', () => {
@@ -84,7 +84,8 @@ d('db cook_logs', () => {
     expect(await as(cook, "update public.cook_logs set note = 'ok' where id = $1 returning id", [id])).toHaveLength(1);
     await expect(as(cook, 'update public.cook_logs set recipe_id = $2 where id = $1', [id, rid2])).rejects.toThrow();
     await expect(as(cook, "update public.cook_logs set photo_path = $2 where id = $1", [id, `${cook}/cook/a.webp`])).rejects.toThrow();
-    await expect(as(cook, 'insert into public.cook_logs (user_id, recipe_id) values ($1, $2)', [other, rid])).rejects.toThrow();
+    await expect(as(cook, 'insert into public.cook_logs (user_id, recipe_id) values ($1, $2)', [cook, rid])).rejects.toThrow();
+    await expect(as(cook, 'update public.cook_logs set size_bytes = 1 where id = $1', [id])).rejects.toThrow();
     expect(await as(other, 'delete from public.cook_logs where id = $1 returning id', [id])).toHaveLength(0);
     expect(await as(owner, 'delete from public.cook_logs where id = $1 returning id', [id])).toHaveLength(1);
   });
@@ -92,10 +93,10 @@ d('db cook_logs', () => {
   it('validates note length and photo path ownership', async () => {
     const cook = await mkUser(`cl_v_${s}`);
     const rid = await mkRecipe(cook, 'private');
-    await expect(as(cook, 'insert into public.cook_logs (user_id, recipe_id, note) values ($1, $2, $3)', [cook, rid, 'x'.repeat(1001)])).rejects.toThrow();
+    await expect(as(cook, "select public.insert_cook_log($1, now(), $2, 'recipe', null, 0, 2000, 1)", [rid, 'x'.repeat(1001)])).rejects.toThrow();
     await expect(log(cook, rid, 'recipe', `${cook}/other/a.webp`)).rejects.toThrow();
     await expect(log(cook, rid, 'recipe', `00000000-0000-0000-0000-000000000000/cook/a.webp`)).rejects.toThrow();
-    await expect(as(cook, "insert into public.cook_logs (user_id, recipe_id, visibility) values ($1, $2, 'friends')", [cook, rid])).rejects.toThrow();
+    await expect(log(cook, rid, 'friends')).rejects.toThrow();
     await log(cook, rid, 'recipe', `${cook}/cook/a.webp`);
   });
 
@@ -115,7 +116,17 @@ d('db cook_logs', () => {
     expect(await read(cook, p2)).toHaveLength(1);
   });
 
-  it('blocks the 31st log of the day, even via direct insert', async () => {
+  it('insert diretto rifiutato, RPC ok, ricetta non leggibile rifiutata', async () => {
+    const owner = await mkUser(`cl_di_${s}`);
+    const cook = await mkUser(`cl_dc_${s}`);
+    const pub = await mkRecipe(owner, 'public');
+    const priv = await mkRecipe(owner, 'private');
+    await expect(as(cook, 'insert into public.cook_logs (user_id, recipe_id, photo_path, size_bytes) values ($1, $2, $3, 0)', [cook, pub, `${cook}/cook/d-${s}.webp`])).rejects.toThrow(/permission denied/);
+    expect(await log(cook, pub)).toBeTruthy();
+    await expect(log(cook, priv)).rejects.toThrow();
+  });
+
+  it('blocks the 31st log of the day', async () => {
     const me = await mkUser(`cl_rl_${s}`);
     const rid = await mkRecipe(me, 'private');
     for (let i = 0; i < 30; i++) await log(me, rid);

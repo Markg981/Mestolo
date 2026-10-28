@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /** ISO date helpers for the weekly meal plan (weeks start on Monday, dates in YYYY-MM-DD, UTC arithmetic). */
 export function toIsoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -52,3 +54,12 @@ export function weekDays(weekStart: string): string[] {
 
 export const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export type MealSlot = (typeof MEAL_SLOTS)[number];
+
+/** True solo per date di calendario reali: "2026-02-31" viene rifiutata invece di essere normalizzata a marzo. */
+export function isValidIsoDate(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = parseIsoDate(s);
+  return !Number.isNaN(d.getTime()) && toIsoDate(d) === s;
+}
+
+export const isoDateSchema = z.string().refine(isValidIsoDate, { message: 'invalid_date' });

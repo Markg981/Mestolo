@@ -12,8 +12,9 @@ vi.mock('@/lib/supabase/server', () => ({
     from: (table: string) => {
       if (table === 'recipe_versions') return { select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { snapshot: { title: 'T' } } }) }) }) }) };
       const chain: Record<string, unknown> = {
-        select: (cols: string) => (cols === 'public_slug' ? { eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { public_slug: slugBefore } }) }) }) } : chain),
+        select: (cols: string) => (cols.startsWith('public_slug') ? { eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { public_slug: slugBefore } }) }) }) } : chain),
         update: () => chain,
+        delete: () => chain,
         eq: () => chain,
         then: (r: (v: unknown) => unknown) => r({ data: updated, error: null }),
       };
@@ -38,15 +39,15 @@ describe('restoreVersion public page invalidation', () => {
     slugBefore = 'torta';
     updated = [{ id, public_slug: 'torta' }];
     expect(await restoreVersion(id, 1, 2)).toMatchObject({ ok: true });
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipes', { expire: 0 });
   });
 
   it('invalidates both the old and the new slug when it changes', async () => {
     slugBefore = 'torta';
     updated = [{ id, public_slug: 'torta-nuova' }];
     await restoreVersion(id, 1, 2);
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-nuova', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta', { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith('public-recipe:torta-nuova', { expire: 0 });
   });
 });
