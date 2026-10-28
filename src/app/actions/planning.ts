@@ -10,6 +10,8 @@ import { generatePlan, planCells, type Candidate, type Proposal } from '@/lib/pl
 import { normalizePrefs, prefsFromRow, prefsSchema, prefsToRow, type PrefsRow } from '@/lib/plan/preferences';
 import type { Ingredient } from '@/lib/recipes/types';
 import { chunkIdempotencyKey, chunkShoppingItems, collapseShoppingItems } from '@/lib/shopping/batch';
+import { subtractPantry } from '@/lib/shopping/planning';
+import type { PantryItem } from '@/lib/pantry/match';
 import { dbFailure, fail, ok, type ActionResult } from './_utils';
 
 const uuid = z.uuid();
@@ -189,7 +191,11 @@ export async function addWeekToShopping(weekStart: string, listId?: string, idem
     const ings = e.servings && r.servings ? scaleIngredients(r.ingredients ?? [], Number(r.servings), Number(e.servings)) : r.ingredients ?? [];
     items.push(...ingredientsToItems(ings, r));
   }
-  const res = await addItems(user.id, items, listId, idempotencyKey);
+  // Quanto e' gia' in dispensa (unita' compatibile) non va comprato (G-10).
+  const { data: pantry } = await supabase.from('pantry_items').select('id, name, quantity, unit, expires_on, location, note').eq('owner_id', user.id);
+  const needed = subtractPantry(items, (pantry as PantryItem[]) ?? [], new Date().toISOString().slice(0, 10));
+  if (!needed.length) return ok({ added: 0, merged: 0, recipes: new Set(list.map((e) => e.recipe_id)).size });
+  const res = await addItems(user.id, needed, listId, idempotencyKey);
   if (!res.ok) return res;
   return ok({ ...res.data, recipes: new Set(list.map((e) => e.recipe_id)).size });
 }
