@@ -184,4 +184,30 @@ describe('proxy', () => {
       for (const p of ['/', '/recipes', '/api/images/1', '/auth/callback']) expect(re.test(p)).toBe(true);
     });
   });
+
+  describe('refreshed session cookies on redirects', () => {
+    const refresh = () =>
+      capturedCookies!.setAll([{ name: 'sb-access-token', value: 'new-token', options: { path: '/' } }], { 'Cache-Control': 'no-store' });
+
+    it('keeps Set-Cookie on the redirect to /login', async () => {
+      getUser.mockImplementation(async () => {
+        refresh();
+        return { data: { user: null } };
+      });
+      const res = await call('/recipes/1');
+      expect(loc(res)).toContain('/login');
+      expect(res.headers.get('set-cookie')).toContain('sb-access-token=new-token');
+      expect(res.headers.get('cache-control')).toBe('no-store');
+    });
+
+    it('keeps Set-Cookie on the redirect of a logged-in user away from /login', async () => {
+      getUser.mockImplementation(async () => {
+        refresh();
+        return { data: { user: { id: 'u1' } } };
+      });
+      const res = await call('/login');
+      expect(loc(res)).toBe('https://mestolo.test/');
+      expect(res.headers.get('set-cookie')).toContain('sb-access-token=new-token');
+    });
+  });
 });
