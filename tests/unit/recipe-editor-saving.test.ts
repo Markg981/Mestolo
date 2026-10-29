@@ -11,6 +11,7 @@ describe('RecipeEditor durante il salvataggio', () => {
   });
 
   it('chiude il fieldset prima dell aside', () => {
-    expect(src.indexOf('</fieldset>\n      {aside')).toBeGreaterThan(0);
+    // \r? perche' su Windows con core.autocrlf il sorgente ha fine riga CRLF.
+    expect(src).toMatch(/<\/fieldset>\r?\n {6}\{aside/);
   });
 });
