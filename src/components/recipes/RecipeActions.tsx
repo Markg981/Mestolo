@@ -181,7 +181,7 @@ export function RecipeActions(p: Props) {
                 {vis === 'public' ? tpp('toggleHint') : tpp('needsPublic')}
               </p>
               {pubOn && pubSlug && (
-                <Link href={`/r/${pubSlug}`} target="_blank" className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-basil underline underline-offset-4">
+                <Link href={`/r/${pubSlug}`} target="_blank" className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-terracotta-deep underline underline-offset-4">
                   {tpp('viewPage')}
                 </Link>
               )}

@@ -84,7 +84,7 @@ export default async function PublicRecipePage({ params }: Params) {
       </LinkButton>
       <p className="text-sm text-muted">
         {t('publicPage.haveAccount')}{' '}
-        <Link href={`/login?next=${encodeURIComponent(path)}`} className="font-semibold text-basil underline underline-offset-4" rel="nofollow">
+        <Link href={`/login?next=${encodeURIComponent(path)}`} className="font-semibold text-terracotta-deep underline underline-offset-4" rel="nofollow">
           {t('publicPage.login')}
         </Link>
       </p>

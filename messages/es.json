@@ -52,7 +52,7 @@
     "moderation": "Moderación"
   },
   "welcome": {
-    "title": "Todas tus recetas, en un solo cajón.",
+    "title": "Todas tus recetas, <em>en un solo cajón</em>.",
     "lead": "Fotografía las páginas del recetario de la abuela, pega un enlace o escribe a mano. Mestolo lo mantiene todo en orden y lo tienes en el móvil, la tableta y el ordenador.",
     "signup": "Crear una cuenta",
     "login": "Iniciar sesión",
@@ -60,6 +60,7 @@
     "point1": "Desde fotos de varias páginas, un enlace o texto pegado. Lo revisas todo antes de guardar.",
     "point2Title": "Privado por defecto",
     "point2": "Cada receta nace visible solo para ti. Tú decides si compartirla con tus amigos o con todos.",
+    "privateNote": "Cada receta nace visible solo para ti.",
     "point3Title": "Cocina toda la semana",
     "point3": "Plan de comidas, lista de la compra y raciones recalculadas con un toque.",
     "privacy": "Cómo tratamos tus datos",
@@ -72,7 +73,18 @@
     "sampleIng2": "600 g de patatas",
     "sampleIng3": "1 corteza de parmesano",
     "sampleIng4": "Pimienta negra al gusto",
-    "terms": "Normas de la comunidad"
+    "terms": "Normas de la comunidad",
+    "eyebrow": "Tu recetario personal",
+    "howTitle": "Cómo funciona",
+    "sourcePhoto": "Foto",
+    "sourceLink": "Enlace",
+    "sourceText": "Texto",
+    "findTitle": "Encuéntralas al momento",
+    "find": "Busca por título, ingrediente o etiqueta y agrupa tus recetas en colecciones. En el móvil, la tableta y el ordenador.",
+    "previewSource": "Importada de 2 fotos",
+    "finalTitle": "Tu recetario te espera.",
+    "finalLead": "Crea una cuenta y añade tu primera receta desde una foto, un enlace o un texto.",
+    "haveAccount": "¿Ya tienes cuenta?"
   },
   "auth": {
     "loginTitle": "Hola de nuevo",

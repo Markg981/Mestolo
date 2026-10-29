@@ -52,7 +52,7 @@
     "moderation": "Moderação"
   },
   "welcome": {
-    "title": "Todas as tuas receitas, numa só gaveta.",
+    "title": "Todas as tuas receitas, <em>numa só gaveta</em>.",
     "lead": "Fotografa as páginas do livro de receitas da avó, cola um link ou escreve à mão. O Mestolo mantém tudo organizado e encontras tudo no telemóvel, no tablet e no computador.",
     "signup": "Criar conta",
     "login": "Entrar",
@@ -60,6 +60,7 @@
     "point1": "A partir de fotos de várias páginas, de um link ou de texto colado. Revês tudo antes de guardar.",
     "point2Title": "Privado por predefinição",
     "point2": "Cada receita começa visível só para ti. Tu decides se a partilhas com amigos ou com todos.",
+    "privateNote": "Cada receita começa visível só para ti.",
     "point3Title": "Planeia a semana",
     "point3": "Plano de refeições, lista de compras e porções recalculadas num toque.",
     "privacy": "Como tratamos os teus dados",
@@ -72,7 +73,18 @@
     "sampleIng2": "600 g de batatas",
     "sampleIng3": "1 casca de parmesão",
     "sampleIng4": "Pimenta preta q.b.",
-    "terms": "Regras da comunidade"
+    "terms": "Regras da comunidade",
+    "eyebrow": "O teu livro de receitas",
+    "howTitle": "Como funciona",
+    "sourcePhoto": "Foto",
+    "sourceLink": "Link",
+    "sourceText": "Texto",
+    "findTitle": "Encontra-as num instante",
+    "find": "Pesquisa por título, ingrediente ou etiqueta e junta as receitas em coleções. No telemóvel, no tablet e no computador.",
+    "previewSource": "Importada de 2 fotos",
+    "finalTitle": "O teu livro de receitas está à tua espera.",
+    "finalLead": "Cria uma conta e adiciona a tua primeira receita a partir de uma foto, de um link ou de um texto.",
+    "haveAccount": "Já tens conta?"
   },
   "auth": {
     "loginTitle": "Bem-vindo de volta",

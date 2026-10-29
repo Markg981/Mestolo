@@ -52,12 +52,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <Link
               key={q.href}
               href={q.href}
-              className={`flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] border p-4 ${i === 0 ? 'border-transparent bg-saffron text-[#2a1a2e]' : 'border-line bg-surface hover:bg-sunk'}`}
+              className={`lift flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] p-4 ${i === 0 ? 'bg-accent text-on-accent hover:bg-accent-deep' : 'bg-surface shadow-[var(--shadow-card)] hover:bg-sunk'}`}
             >
-              <q.icon aria-hidden className="size-6" />
+              <q.icon aria-hidden className={`size-6 ${i === 0 ? '' : 'text-basil'}`} />
               <span className="flex flex-col">
                 <span className="font-display text-lg font-bold leading-tight">{q.title}</span>
-                <span className={`text-sm ${i === 0 ? 'text-[#2a1a2e]/80' : 'text-muted'}`}>{q.desc}</span>
+                <span className={`text-sm ${i === 0 ? 'text-on-accent/90' : 'text-muted'}`}>{q.desc}</span>
               </span>
             </Link>
           ))}
@@ -69,14 +69,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           {t('home.dayTitle')}
         </h2>
         {day ? (
-          <Link href={`/recipes/${day.id}`} className="group grid overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface md:grid-cols-[1.1fr_1fr]">
-            <div className="aspect-[16/10] w-full overflow-hidden bg-sunk md:aspect-auto md:min-h-80">
-              <RecipeImage imageId={day.coverImageId} title={day.title} size="full" className="h-full w-full" priority />
+          <Link href={`/recipes/${day.id}`} className="group flex flex-col overflow-hidden rounded-[2rem] bg-surface shadow-[var(--shadow-raised)] sm:grid sm:grid-cols-[1.1fr_1fr]">
+            <div className="wave-b aspect-[16/11] overflow-hidden bg-sunk sm:order-2 sm:aspect-auto sm:min-h-80 sm:[mask:none]">
+              <RecipeImage imageId={day.coverImageId} title={day.title} size="full" className="h-full w-full motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.04]" priority />
             </div>
-            <div className="flex flex-col justify-center gap-3 p-6 sm:p-8">
-              <span className="text-sm font-semibold text-basil">{categoryLabel(dayCat, t)}</span>
-              <span className="display-xl text-[clamp(2rem,5vw,3.6rem)] group-hover:underline">{day.title}</span>
-              {day.description && <span className="line-clamp-3 text-muted">{day.description}</span>}
+            <div className="flex flex-col justify-center gap-3 px-6 pb-7 pt-1 sm:p-10">
+              <span className="eyebrow">{categoryLabel(dayCat, t)}</span>
+              <span className="display-lg decoration-accent decoration-2 underline-offset-[6px] group-hover:underline">{day.title}</span>
+              {day.description && <span className="line-clamp-3 text-ink/80">{day.description}</span>}
               <span className="text-sm text-muted">{t('home.dayFromCommunity', { name: day.ownerUsername ? `@${day.ownerUsername}` : '' })}</span>
             </div>
           </Link>
@@ -93,7 +93,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <h2 id="plan-title" className="text-2xl font-bold">
               {t('home.todayPlanTitle')}
             </h2>
-            <Link href="/plan" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
+            <Link href="/plan" className="inline-flex min-h-11 items-center text-terracotta-deep underline underline-offset-4">
               {t('home.openPlan')}
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {t('home.recentTitle')}
           </h2>
           {recent.length > 0 && (
-            <Link href="/recipes" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
+            <Link href="/recipes" className="inline-flex min-h-11 items-center text-terracotta-deep underline underline-offset-4">
               {t('home.seeAll')}
             </Link>
           )}
@@ -158,7 +158,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <h2 id="col-title" className="text-2xl font-bold">
             {t('home.collectionsTitle')}
           </h2>
-          <Link href="/collections" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
+          <Link href="/collections" className="inline-flex min-h-11 items-center text-terracotta-deep underline underline-offset-4">
             {t('home.manage')}
           </Link>
         </div>

@@ -52,7 +52,7 @@
     "moderation": "Moderazione"
   },
   "welcome": {
-    "title": "Tutte le tue ricette, in un cassetto solo.",
+    "title": "Tutte le tue ricette, <em>in un cassetto solo</em>.",
     "lead": "Fotografa le pagine del ricettario della nonna, incolla un link o scrivi a mano. Mestolo tiene tutto in ordine e lo ritrovi su telefono, tablet e computer.",
     "signup": "Crea un account",
     "login": "Accedi",
@@ -60,6 +60,7 @@
     "point1": "Da foto di più pagine, da un link o da testo incollato. Controlli tutto prima di salvare.",
     "point2Title": "Privato per default",
     "point2": "Ogni ricetta nasce visibile solo a te. Decidi tu se condividerla con gli amici o con tutti.",
+    "privateNote": "Ogni ricetta nasce visibile solo a te.",
     "point3Title": "Cucina la settimana",
     "point3": "Piano pasti, lista della spesa e porzioni ricalcolate in un tocco.",
     "privacy": "Come trattiamo i tuoi dati",
@@ -72,7 +73,18 @@
     "sampleIng2": "600 g patate",
     "sampleIng3": "1 crosta di parmigiano",
     "sampleIng4": "Pepe nero q.b.",
-    "terms": "Regole della community"
+    "terms": "Regole della community",
+    "eyebrow": "Il tuo ricettario personale",
+    "howTitle": "Come funziona",
+    "sourcePhoto": "Foto",
+    "sourceLink": "Link",
+    "sourceText": "Testo",
+    "findTitle": "Ritrovale al volo",
+    "find": "Cerca per titolo, ingrediente o tag e raccogli le ricette in collezioni. Le ritrovi su telefono, tablet e computer.",
+    "previewSource": "Importata da 2 foto",
+    "finalTitle": "Il tuo ricettario ti aspetta.",
+    "finalLead": "Crea un account e porta dentro la prima ricetta: da una foto, da un link o da un testo.",
+    "haveAccount": "Hai già un account?"
   },
   "auth": {
     "loginTitle": "Bentornato",

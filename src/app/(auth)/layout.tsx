@@ -4,7 +4,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Link href="/welcome" aria-label="Mestolo" className="inline-flex min-h-11 items-center">
           <Logo />

@@ -14,19 +14,19 @@ export async function RecipeCard({ recipe, categories, showAuthor, priority }: {
   // Only the declared total: prep + cook may miss resting/rising times, so it is not shown as a total.
   const time = recipe.total_minutes;
   return (
-    <article className="card-tab group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
-      <div className="aspect-[4/3] w-full overflow-hidden bg-sunk">
-        <RecipeImage imageId={recipe.coverImageId} title={recipe.title} className="h-full w-full" priority={priority} />
+    <article className="group relative flex w-full flex-col gap-3">
+      <div className="aspect-square w-full overflow-hidden rounded-[var(--radius-card)] bg-sunk shadow-[0_18px_30px_-22px_rgb(var(--shadow-color)/0.55)] group-has-[a:focus-visible]:outline-3 group-has-[a:focus-visible]:outline-offset-2 group-has-[a:focus-visible]:outline-[var(--focus)]">
+        <RecipeImage imageId={recipe.coverImageId} title={recipe.title} className="h-full w-full motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.03]" priority={priority} />
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <span className="text-sm font-semibold text-basil">{categoryLabel(cat, t)}</span>
-        <h3 className="text-lg font-bold leading-snug">
-          <Link href={`/recipes/${recipe.id}`} className="after:absolute after:inset-0 hover:underline focus-visible:outline-none">
+      <div className="flex flex-1 flex-col gap-1.5 px-0.5">
+        <span className="text-[0.74rem] font-bold uppercase tracking-[0.14em] text-basil">{categoryLabel(cat, t)}</span>
+        <h3 className="text-[1.12rem] font-semibold leading-snug sm:text-[1.3rem]">
+          <Link href={`/recipes/${recipe.id}`} className="after:absolute after:inset-0 decoration-basil decoration-2 underline-offset-4 hover:underline focus-visible:outline-none">
             {recipe.title}
           </Link>
         </h3>
         {showAuthor && recipe.ownerUsername && <span className="text-sm text-muted">{t('card.by', { name: `@${recipe.ownerUsername}` })}</span>}
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-sm text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
           {time !== null && (
             <span className="inline-flex items-center gap-1">
               <Clock aria-hidden className="size-4" />
@@ -62,5 +62,5 @@ export async function RecipeCard({ recipe, categories, showAuthor, priority }: {
 }
 
 export function RecipeGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3">{children}</div>;
+  return <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-3">{children}</div>;
 }

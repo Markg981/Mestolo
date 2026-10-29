@@ -80,23 +80,23 @@ export function IngredientList({ recipeId, ingredients, baseServings, showFlags,
   return (
     <div className="flex flex-col gap-4">
       {baseServings ? (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-saffron-wash p-2 pl-4">
           <span className="font-semibold" id="servings-label">
             {t('servingsLabel')}
           </span>
-          <div role="group" aria-labelledby="servings-label" className="inline-flex items-center rounded-full border border-line bg-surface">
-            <Button variant="ghost" className="size-11 px-0" aria-label={t('lessServings')} disabled={!servings || servings <= 1} onClick={() => setServings((s) => Math.max(1, (s ?? 1) - 1))}>
+          <div role="group" aria-labelledby="servings-label" className="inline-flex items-center gap-1">
+            <Button className="size-11 bg-surface px-0 shadow-[var(--shadow-card)] hover:text-basil" aria-label={t('lessServings')} disabled={!servings || servings <= 1} onClick={() => setServings((s) => Math.max(1, (s ?? 1) - 1))}>
               <Minus aria-hidden className="size-4" />
             </Button>
             <output aria-live="polite" className="tabular min-w-10 text-center text-lg font-bold">
               {servings}
             </output>
-            <Button variant="ghost" className="size-11 px-0" aria-label={t('moreServings')} onClick={() => setServings((s) => Math.min(1000, (s ?? 0) + 1))}>
+            <Button className="size-11 bg-surface px-0 shadow-[var(--shadow-card)] hover:text-basil" aria-label={t('moreServings')} onClick={() => setServings((s) => Math.min(1000, (s ?? 0) + 1))}>
               <Plus aria-hidden className="size-4" />
             </Button>
           </div>
           {changed && (
-            <button type="button" className="inline-flex min-h-11 items-center text-sm text-basil underline underline-offset-4" onClick={() => setServings(baseServings)}>
+            <button type="button" className="inline-flex min-h-11 items-center text-sm text-terracotta-deep underline underline-offset-4" onClick={() => setServings(baseServings)}>
               {t('resetServings', { n: baseServings })}
             </button>
           )}

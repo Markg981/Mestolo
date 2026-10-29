@@ -12,7 +12,7 @@ export async function SupportContact() {
           {t.rich('lead', {
             email,
             link: (c) => (
-              <a href={`mailto:${email}`} className="font-semibold text-basil underline underline-offset-4">
+              <a href={`mailto:${email}`} className="font-semibold text-terracotta-deep underline underline-offset-4">
                 {c}
               </a>
             ),

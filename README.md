@@ -11,7 +11,7 @@ Ricettario **web, Android e iOS** con un solo codice (Next.js + Capacitor), mult
 | Livello | Scelta | Perché |
 |---|---|---|
 | App web | **Next.js 16** (App Router, Server Components, Server Actions), React 19, TypeScript | Un'unica app per telefono, tablet e desktop; rendering lato server veloce su mobile; deploy in un clic su Vercel. |
-| Stile | **Tailwind CSS 4**, design system proprio (token in `src/app/globals.css`), font self-hosted (Bricolage Grotesque + Atkinson Hyperlegible Next) | Nessuna dipendenza da CDN esterni, CSP restrittiva, leggibilità elevata. |
+| Stile | **Tailwind CSS 4**, design system proprio (token in `src/app/globals.css`), font self-hosted (Fraunces + Atkinson Hyperlegible Next) | Nessuna dipendenza da CDN esterni, CSP restrittiva, leggibilità elevata. |
 | Dati, auth, file | **Supabase** (Postgres, Auth, Storage) | Database relazionale con **Row Level Security**: i permessi sono applicati dal database, non solo dall'interfaccia. Piano gratuito adatto a iniziare. |
 | i18n | **next-intl** (lingua da cookie/profilo/`Accept-Language`) | Aggiungere una lingua = aggiungere un file in `messages/` (un test verifica la completezza). |
 | AI | Provider sostituibili via HTTPS (`src/lib/ai/providers.ts`): **Anthropic**, **OpenAI**, **endpoint compatibile OpenAI** (Ollama, OpenRouter, Mistral, Groq…) | Nessun lock-in; il gestore può offrire un servizio base con quote, l'utente può usare la propria chiave. |

@@ -11,7 +11,7 @@ export default async function AccountPage() {
       <PageHeader
         title={t('title')}
         back={
-          <Link href="/settings" className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
+          <Link href="/settings" className="inline-flex min-h-11 items-center self-start text-terracotta-deep underline underline-offset-4">
             {t('back')}
           </Link>
         }

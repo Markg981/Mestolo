@@ -22,8 +22,8 @@ export function buildManifest(locale: Locale, t: ManifestTexts): MetadataRoute.M
     scope: '/',
     display: 'standalone',
     orientation: 'any',
-    background_color: '#f3f6f2',
-    theme_color: '#2a1a2e',
+    background_color: '#fbf6ee',
+    theme_color: '#b5502f',
     categories: ['food', 'lifestyle'],
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

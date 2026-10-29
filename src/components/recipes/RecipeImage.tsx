@@ -14,8 +14,8 @@ function hash(s: string) {
 }
 
 /** Elegant placeholder: the recipe initial on a tile pattern, coloured from the title. */
-export function RecipePlaceholder({ title, className, large }: { title: string; className?: string; large?: boolean }) {
-  const [fg, bg] = PALETTES[hash(title) % PALETTES.length];
+export function RecipePlaceholder({ title, className, large, palette }: { title: string; className?: string; large?: boolean; palette?: number }) {
+  const [fg, bg] = PALETTES[(palette ?? hash(title)) % PALETTES.length];
   const initial = (title.trim()[0] ?? 'M').toUpperCase();
   return (
     <div aria-hidden className={cx('relative flex items-center justify-center overflow-hidden', className)} style={{ background: bg }}>
@@ -27,7 +27,7 @@ export function RecipePlaceholder({ title, className, large }: { title: string; 
         </defs>
         <rect width="40" height="40" fill={`url(#p${hash(title)})`} />
       </svg>
-      <span className="relative font-display font-extrabold" style={{ color: fg, fontSize: large ? '7rem' : '3.2rem', fontStretch: '75%' }}>
+      <span className="relative font-display font-semibold italic" style={{ color: fg, fontSize: large ? '7rem' : '3.4rem' }}>
         {initial}
       </span>
     </div>
