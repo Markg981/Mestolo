@@ -11,16 +11,16 @@ type Size = 'md' | 'sm' | 'lg';
 
 export function buttonClass(variant: Variant = 'secondary', size: Size = 'md', extra?: string) {
   return cx(
-    'inline-flex items-center justify-center gap-2 rounded-full font-semibold select-none text-center leading-tight',
+    'inline-flex items-center justify-center gap-2 rounded-[var(--radius-field)] font-bold select-none text-center leading-tight',
     'motion-safe:transition-[background-color,border-color,color,box-shadow,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97]',
     'disabled:opacity-55 disabled:cursor-not-allowed disabled:active:scale-100',
     size === 'sm' && 'min-h-11 px-4 text-[0.95rem]',
     size === 'md' && 'min-h-11 px-5',
     size === 'lg' && 'min-h-13 px-7 text-lg',
-    variant === 'primary' && 'bg-accent text-on-accent shadow-[0_10px_20px_-12px_rgb(var(--shadow-color)/0.55)] hover:bg-accent-deep hover:shadow-[0_14px_26px_-12px_rgb(var(--shadow-color)/0.6)]',
-    variant === 'secondary' && 'bg-surface text-ink border-[1.5px] border-line-strong/55 hover:border-basil hover:text-basil',
+    variant === 'primary' && 'bg-accent text-on-accent shadow-[0_10px_20px_-12px_rgb(150_64_38/0.85)] hover:bg-accent-deep hover:shadow-[0_14px_26px_-12px_rgb(150_64_38/0.9)]',
+    variant === 'secondary' && 'bg-transparent text-ink border-[1.5px] border-ink/80 hover:bg-sunk',
     variant === 'ghost' && 'text-ink hover:bg-sunk',
-    variant === 'quiet' && 'text-basil underline-offset-4 hover:underline px-1 min-h-11',
+    variant === 'quiet' && 'text-terracotta-deep underline-offset-4 hover:underline px-1 min-h-11',
     variant === 'danger' && 'border border-tomato/50 bg-tomato-wash text-tomato hover:bg-tomato hover:text-on-accent',
     extra,
   );

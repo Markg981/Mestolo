@@ -108,7 +108,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       <header className="grid gap-6 first:-mt-6 sm:first:mt-0 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div className="flex flex-col gap-3">
           <div className="-mx-4 sm:mx-0">
-            <div className="aspect-[4/3] w-full overflow-hidden rounded-b-[2rem] bg-sunk shadow-[0_24px_40px_-28px_rgb(var(--shadow-color)/0.6)] sm:rounded-[2rem]">
+            <div className="wave-b aspect-[4/3] w-full overflow-hidden bg-sunk sm:rounded-[2rem] sm:shadow-[0_24px_40px_-28px_rgb(var(--shadow-color)/0.6)] sm:[mask:none]">
               <RecipeImage imageId={cover?.id ?? null} title={recipe.title} alt={cover?.alt_text || recipe.title} size="full" className="h-full w-full" priority />
             </div>
           </div>
@@ -127,7 +127,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
           </h1>
           {!isOwner && owner && (
             <p className="text-muted">
-              {t.rich('recipe.ownerBy', { name: owner.display_name || owner.username, link: (c) => <Link href={`/u/${owner.username}`} className="font-semibold text-basil underline underline-offset-4">{c}</Link> })}
+              {t.rich('recipe.ownerBy', { name: owner.display_name || owner.username, link: (c) => <Link href={`/u/${owner.username}`} className="font-semibold text-terracotta-deep underline underline-offset-4">{c}</Link> })}
             </p>
           )}
           {view.description && <p className="max-w-prose whitespace-pre-line text-lg leading-relaxed">{view.description}</p>}
@@ -209,7 +209,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       )}
 
       {recipe.verification_status === 'needs_review' && isOwner && (
-        <Alert tone="warn" title={t('recipe.needsReviewTitle')} action={<Link href={`/recipes/${id}/edit`} className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">{t('recipe.reviewNow')}</Link>}>
+        <Alert tone="warn" title={t('recipe.needsReviewTitle')} action={<Link href={`/recipes/${id}/edit`} className="inline-flex min-h-11 items-center font-semibold text-terracotta-deep underline underline-offset-4">{t('recipe.reviewNow')}</Link>}>
           {t('recipe.needsReviewBanner')}
         </Alert>
       )}
@@ -234,7 +234,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             <ol className="flex flex-col gap-5">
               {view.steps.map((s, i) => (
                 <li key={i} className="flex gap-4">
-                  <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-basil font-display text-xl font-semibold text-on-accent">
+                  <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink font-display text-xl font-semibold italic text-porcelain">
                     {i + 1}
                   </span>
                   <div className="flex flex-col gap-1 pt-1">
@@ -261,7 +261,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             <NutritionBox values={nutrition} source={nutrition.source} updatedAt={nutrition.updated_at} baseServings={recipe.servings === null ? null : Number(recipe.servings)} editHref={isOwner ? `/recipes/${id}/nutrition` : undefined} />
           ) : (
             isOwner && (
-              <Link href={`/recipes/${id}/nutrition`} className="inline-flex min-h-11 items-center self-start font-semibold text-basil underline underline-offset-4">
+              <Link href={`/recipes/${id}/nutrition`} className="inline-flex min-h-11 items-center self-start font-semibold text-terracotta-deep underline underline-offset-4">
                 {t('nutrition.add')}
               </Link>
             )
@@ -278,7 +278,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
                 {copiedFrom.data && (
                   <>
                     {' '}
-                    <Link href={`/recipes/${copiedFrom.data.id}`} className="text-basil underline underline-offset-4">
+                    <Link href={`/recipes/${copiedFrom.data.id}`} className="text-terracotta-deep underline underline-offset-4">
                       {t('recipe.viewOriginal')}
                     </Link>
                   </>
@@ -288,14 +288,14 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             {parent.data && (
               <p>
                 {t('recipe.variantOf')}{' '}
-                <Link href={`/recipes/${parent.data.id}`} className="font-semibold text-basil underline underline-offset-4">
+                <Link href={`/recipes/${parent.data.id}`} className="font-semibold text-terracotta-deep underline underline-offset-4">
                   {parent.data.title}
                 </Link>
               </p>
             )}
             {(recipe.source_name || recipe.source_attribution) && <p>{[recipe.source_attribution, recipe.source_name].filter(Boolean).join(', ')}</p>}
             {recipe.source_url && (
-              <a href={recipe.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
+              <a href={recipe.source_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-terracotta-deep underline underline-offset-4">
                 {recipe.source_url}
                 <ExternalLink aria-hidden className="size-4 shrink-0" />
               </a>

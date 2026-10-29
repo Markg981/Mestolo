@@ -115,7 +115,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Pro
       {hiddenByPreferences > 0 && (
         <p className="text-sm text-muted">
           {t('discover.filteredNote', { n: hiddenByPreferences })}{' '}
-          <Link href="/settings" className="text-basil underline underline-offset-4">
+          <Link href="/settings" className="text-terracotta-deep underline underline-offset-4">
             {t('discover.preferencesLink')}
           </Link>
         </p>

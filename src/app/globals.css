@@ -1,93 +1,100 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/fraunces/wght.css';
-@import '@fontsource-variable/fraunces/wght-italic.css';
+@import '@fontsource-variable/fraunces/soft.css';
+@import '@fontsource-variable/fraunces/soft-italic.css';
 @import '@fontsource-variable/atkinson-hyperlegible-next/index.css';
 
 /* ------------------------------------------------------------------
-   Mestolo design tokens: a fresh market kitchen.
-   Warm ivory page, green-black ink, sage for actions and active states,
-   honey as the warm accent (featured blocks, servings), tomato only for
-   warnings and destructive actions. Food photography carries the colour.
+   Mestolo design tokens: home cooking.
+   Warm cream page, plum ink, terracotta for the main action, sage and
+   honey for details and featured blocks, tomato only for warnings and
+   destructive actions. Full-bleed food photography with a soft wave edge
+   carries the colour.
    Token names are roles kept for compatibility: porcelain = page,
    saffron = honey, basil = sage.
    ------------------------------------------------------------------ */
 :root {
-  --porcelain: #fffdf8;
-  --surface: #ffffff;
-  --surface-sunk: #f5f1e8;
-  --ink: #1e2a22;
-  --ink-muted: #5f6a62;
-  --line: #ece5d8;
-  --line-strong: #8c958e;
-  --saffron: #f2a516;
-  --saffron-deep: #8a5a05;
-  --saffron-wash: #fdf0d3;
-  --basil: #2f6a4f;
-  --basil-deep: #24523d;
-  --basil-wash: #e6efe7;
-  --tomato: #c2412a;
-  --tomato-deep: #a03420;
-  --tomato-wash: #fbe6de;
-  --accent: var(--basil);
-  --accent-deep: var(--basil-deep);
+  --porcelain: #fbf6ee;
+  --surface: #fffdf9;
+  --surface-sunk: #f3ebdf;
+  --ink: #3d1a2e;
+  --ink-muted: #6f5d66;
+  --line: #e6d9c8;
+  --line-strong: #9a8890;
+  --saffron: #e3a33b;
+  --saffron-deep: #855405;
+  --saffron-wash: #f8ebcf;
+  --basil: #557349;
+  --basil-deep: #435c39;
+  --basil-wash: #e8eedf;
+  --tomato: #b83a2a;
+  --tomato-deep: #962d20;
+  --tomato-wash: #fbe4dc;
+  --terracotta: #b5502f;
+  --terracotta-deep: #964026;
+  --accent: var(--terracotta);
+  --accent-deep: var(--terracotta-deep);
   --on-accent: #ffffff;
-  --focus: #2f6a4f;
-  --shadow-color: 30 42 34;
-  --rule: rgb(47 106 79 / 0.1);
+  --focus: #3d1a2e;
+  --shadow-color: 61 26 46;
+  --rule: rgb(61 26 46 / 0.08);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --porcelain: #121a15;
-    --surface: #1a241e;
-    --surface-sunk: #222e27;
-    --ink: #eef2ec;
-    --ink-muted: #a9b5ac;
-    --line: #2d3a32;
-    --line-strong: #6f7d73;
-    --saffron: #f5b941;
-    --saffron-deep: #f5b941;
-    --saffron-wash: #3a2c0c;
-    --basil: #8fd0ad;
-    --basil-deep: #a9dec1;
-    --basil-wash: #1c3328;
+    --porcelain: #1c1418;
+    --surface: #271d22;
+    --surface-sunk: #30252b;
+    --ink: #f8e9ef;
+    --ink-muted: #b5a1aa;
+    --line: #3b2d34;
+    --line-strong: #7d6a73;
+    --saffron: #f0bd5e;
+    --saffron-deep: #f0bd5e;
+    --saffron-wash: #3a2d14;
+    --basil: #a3c194;
+    --basil-deep: #bcd4af;
+    --basil-wash: #24301f;
     --tomato: #ff8f78;
     --tomato-deep: #ffa894;
     --tomato-wash: #42211a;
-    --accent: var(--basil);
-    --accent-deep: var(--basil-deep);
-    --on-accent: #10201a;
-    --focus: #8fd0ad;
+    --terracotta: #e8845f;
+    --terracotta-deep: #f2a283;
+    --accent: var(--terracotta);
+    --accent-deep: var(--terracotta-deep);
+    --on-accent: #24110a;
+    --focus: #f0bd5e;
     --shadow-color: 0 0 0;
-    --rule: rgb(143 208 173 / 0.08);
+    --rule: rgb(248 233 239 / 0.07);
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --porcelain: #121a15;
-  --surface: #1a241e;
-  --surface-sunk: #222e27;
-  --ink: #eef2ec;
-  --ink-muted: #a9b5ac;
-  --line: #2d3a32;
-  --line-strong: #6f7d73;
-  --saffron: #f5b941;
-  --saffron-deep: #f5b941;
-  --saffron-wash: #3a2c0c;
-  --basil: #8fd0ad;
-  --basil-deep: #a9dec1;
-  --basil-wash: #1c3328;
+  --porcelain: #1c1418;
+  --surface: #271d22;
+  --surface-sunk: #30252b;
+  --ink: #f8e9ef;
+  --ink-muted: #b5a1aa;
+  --line: #3b2d34;
+  --line-strong: #7d6a73;
+  --saffron: #f0bd5e;
+  --saffron-deep: #f0bd5e;
+  --saffron-wash: #3a2d14;
+  --basil: #a3c194;
+  --basil-deep: #bcd4af;
+  --basil-wash: #24301f;
   --tomato: #ff8f78;
   --tomato-deep: #ffa894;
   --tomato-wash: #42211a;
-  --accent: var(--basil);
-  --accent-deep: var(--basil-deep);
-  --on-accent: #10201a;
-  --focus: #8fd0ad;
+  --terracotta: #e8845f;
+  --terracotta-deep: #f2a283;
+  --accent: var(--terracotta);
+  --accent-deep: var(--terracotta-deep);
+  --on-accent: #24110a;
+  --focus: #f0bd5e;
   --shadow-color: 0 0 0;
-  --rule: rgb(143 208 173 / 0.08);
+  --rule: rgb(248 233 239 / 0.07);
   color-scheme: dark;
 }
 
@@ -108,6 +115,8 @@
   --color-tomato: var(--tomato);
   --color-tomato-deep: var(--tomato-deep);
   --color-tomato-wash: var(--tomato-wash);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-deep: var(--terracotta-deep);
   --color-accent: var(--accent);
   --color-accent-deep: var(--accent-deep);
   --color-on-accent: var(--on-accent);
@@ -139,15 +148,16 @@ h2,
 h3,
 .font-display {
   font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
   font-optical-sizing: auto;
   letter-spacing: -0.012em;
   line-height: 1.12;
 }
 
-/* Serif titles; <em> inside turns to a lighter sage italic */
+/* Soft serif titles; <em> inside turns to a lighter terracotta italic */
 .display-xl {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 750;
   font-size: clamp(2.5rem, 8.5vw, 4.75rem);
   line-height: 1.02;
   letter-spacing: -0.028em;
@@ -156,7 +166,7 @@ h3,
 
 .display-lg {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: clamp(1.9rem, 4.5vw, 2.75rem);
   line-height: 1.06;
   letter-spacing: -0.022em;
@@ -166,8 +176,8 @@ h3,
 .display-xl em,
 .display-lg em {
   font-style: italic;
-  font-weight: 480;
-  color: var(--basil);
+  font-weight: 520;
+  color: var(--accent);
 }
 
 /* Small uppercase label above titles */
@@ -217,47 +227,40 @@ h3,
   font-variant-numeric: tabular-nums;
 }
 
-/* Round food photo with an offset honey disc behind it, as on a set table */
-.plate {
-  position: relative;
-  isolation: isolate;
-}
-.plate::before {
-  content: '';
-  position: absolute;
-  inset: 9% -7% -7% 9%;
-  z-index: -1;
-  border-radius: 9999px;
-  background: var(--saffron);
+/* Soft wave on a photo's bottom (or top) edge, as on the welcome page.
+   In the components layer so utilities such as lg:[mask:none] can drop it. */
+@layer components {
+  .wave-b,
+  .auth-panel::before {
+    mask:
+      linear-gradient(#000 0 0) top / 100% calc(100% - 2rem) no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 34' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V14C350 4 300 2 220 16C140 30 70 2 0 18Z'/%3E%3C/svg%3E") bottom / 100% calc(2rem + 1px) no-repeat;
+  }
+  .wave-t {
+    mask:
+      linear-gradient(#000 0 0) bottom / 100% calc(100% - 2rem) no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 34' preserveAspectRatio='none'%3E%3Cpath d='M0 34H400V20C350 30 300 32 220 18C140 4 70 32 0 16Z'/%3E%3C/svg%3E") top / 100% calc(2rem + 1px) no-repeat;
+  }
 }
 
-/* Auth forms: a white sheet with a small round plate resting on its top edge */
+/* Auth forms: a white sheet opened by a food photo with a wave edge */
 .auth-panel {
-  position: relative;
-  isolation: isolate;
-  margin-top: 5rem;
+  --panel-pad: 1.5rem;
   border-radius: 2rem;
   background: var(--surface);
   box-shadow: var(--shadow-raised);
-}
-.auth-panel::before,
-.auth-panel::after {
-  content: '';
-  position: absolute;
-  top: -5.5rem;
-  right: 1.5rem;
-  width: 7rem;
-  aspect-ratio: 1;
-  border-radius: 9999px;
+  overflow: hidden;
 }
 .auth-panel::before {
-  background: url('../assets/food/plate-sm.webp') center / cover;
-  box-shadow: 0 16px 28px -18px rgb(var(--shadow-color) / 0.6);
+  content: '';
+  aspect-ratio: 16 / 8;
+  margin: calc(-1 * var(--panel-pad)) calc(-1 * var(--panel-pad)) -0.5rem;
+  background: var(--surface-sunk) url('../assets/food/bowl.webp') center 40% / cover;
 }
-.auth-panel::after {
-  z-index: -1;
-  transform: translate(0.6rem, 0.6rem);
-  background: var(--saffron);
+@media (min-width: 40rem) {
+  .auth-panel {
+    --panel-pad: 2.5rem;
+  }
 }
 
 /* Kept as a no-op hook: cards used to carry a honey index tab */
@@ -279,7 +282,7 @@ h3,
 }
 
 dialog::backdrop {
-  background: rgb(18 26 21 / 0.55);
+  background: rgb(36 14 27 / 0.55);
 }
 
 @media (prefers-reduced-motion: no-preference) {

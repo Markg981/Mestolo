@@ -40,7 +40,7 @@ export default async function ModerationPage() {
         title={t('title')}
         lead={t('lead')}
         actions={
-          <Link href="/moderation/feedback" className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">
+          <Link href="/moderation/feedback" className="inline-flex min-h-11 items-center font-semibold text-terracotta-deep underline underline-offset-4">
             {t('feedbackLink')}
           </Link>
         }
@@ -60,7 +60,7 @@ export default async function ModerationPage() {
                     <Badge>{t('reportsCount', { n: openCount(r.recipe_id) })}</Badge>
                   </div>
                   {recipe ? (
-                    <Link href={`/recipes/${recipe.id}`} className="font-display text-lg font-bold text-basil underline underline-offset-4">
+                    <Link href={`/recipes/${recipe.id}`} className="font-display text-lg font-bold text-terracotta-deep underline underline-offset-4">
                       {recipe.title}
                     </Link>
                   ) : (

@@ -18,7 +18,7 @@ export function NavLink({ href, icon, label }: { href: string; icon: IconName; l
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={cx('flex min-h-11 items-center gap-3 rounded-full px-3 font-semibold', active ? 'bg-basil-wash text-basil' : 'text-muted hover:bg-sunk hover:text-ink')}
+      className={cx('flex min-h-11 items-center gap-3 rounded-full px-3 font-semibold', active ? 'bg-saffron-wash text-terracotta-deep' : 'text-muted hover:bg-sunk hover:text-ink')}
     >
       <NavIcon name={icon} />
       {label}
@@ -51,9 +51,9 @@ export function BottomNav({ labels }: { labels: Labels }) {
       <Link
         href={href}
         aria-current={active ? 'page' : undefined}
-        className={cx('flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[0.78rem] font-semibold', active ? 'text-ink' : 'text-muted')}
+        className={cx('flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[0.78rem] font-semibold', active ? 'text-terracotta-deep' : 'text-muted')}
       >
-        <span className={cx('rounded-full px-4 py-1 motion-safe:transition-colors', active && 'bg-basil-wash text-basil')}>
+        <span className={cx('rounded-full px-4 py-1 motion-safe:transition-colors', active && 'bg-saffron-wash')}>
           <NavIcon name={icon} />
         </span>
         {label}
@@ -64,7 +64,7 @@ export function BottomNav({ labels }: { labels: Labels }) {
   return (
     <>
       {open && (
-        <div className="no-print fixed inset-0 z-40 bg-[rgb(18_26_21/0.55)] lg:hidden" onClick={() => setOpen(false)} aria-hidden />
+        <div className="no-print fixed inset-0 z-40 bg-[rgb(36_14_27/0.55)] lg:hidden" onClick={() => setOpen(false)} aria-hidden />
       )}
       {open && (
         <div

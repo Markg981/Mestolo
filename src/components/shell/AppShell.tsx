@@ -10,12 +10,11 @@ import { OfflineBanner, SignOutButton } from '@/components/pwa/PwaClient';
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
-      <svg viewBox="0 0 64 64" aria-hidden className="size-8 shrink-0">
-        <rect width="64" height="64" rx="20" fill="var(--basil)" />
-        <path d="M38 10c-3 0-5 2-5 5v16c0 2-1 3-3 3h-1c-6 0-11 5-11 11s5 11 11 11 11-5 11-11V15c0-3-1-5-2-5z" fill="var(--saffron)" />
-        <circle cx="29" cy="45" r="5" fill="var(--basil)" />
+      <svg viewBox="0 0 30 38" fill="none" aria-hidden className="h-9 w-7 shrink-0">
+        <path d="M26 3c-3 9-6 18-10 25a7 7 0 1 1-6-5" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+        <path d="M6 14c-4-1-5-5-4-8 3 0 6 3 4 8ZM8 13c0-4 2-7 6-7 0 3-2 6-6 7Z" fill="var(--basil)" />
       </svg>
-      <span className="font-display text-[1.55rem] font-semibold leading-none tracking-tight">
+      <span className="font-display text-[1.6rem] font-bold leading-none tracking-tight">
         Mestolo
       </span>
     </span>

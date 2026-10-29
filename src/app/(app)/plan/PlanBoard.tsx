@@ -120,7 +120,7 @@ export function PlanBoard({ weekStart, days, slots, entries, recipes, lists = []
           {t('addToList')}
         </Button>
         <ShoppingTargetSelect lists={lists} value={targetList} onChange={setTargetList} />
-        <Link href="/shopping" className="inline-flex min-h-11 items-center text-basil underline underline-offset-4">
+        <Link href="/shopping" className="inline-flex min-h-11 items-center text-terracotta-deep underline underline-offset-4">
           {t('openList')}
         </Link>
         <LiveMessage message={msg?.text ?? null} tone={msg?.tone} />

@@ -1,169 +1,145 @@
 import Link from 'next/link';
 import Image, { type StaticImageData } from 'next/image';
 import { getTranslations } from 'next-intl/server';
-import { CalendarDays, Camera, Globe, Laptop, Link2, Lock, Scale, Search, ShoppingBasket, Smartphone, Tablet, Type, Users } from 'lucide-react';
+import { CalendarHeart, Camera, Link2, Lock, Type } from 'lucide-react';
 import { Alert, LinkButton, cx } from '@/components/ui';
-import bowl from '@/assets/food/bowl.webp';
-import farfalle from '@/assets/food/farfalle.webp';
+import hero from '@/assets/food/hero.webp';
 import tagliatelle from '@/assets/food/tagliatelle.webp';
-import vegetables from '@/assets/food/vegetables.webp';
 import salad from '@/assets/food/salad.webp';
 import plate from '@/assets/food/plate.webp';
 
-/** Decorative round food photo; `plate` adds the offset honey disc behind it. */
-function Round({ src, sizes, className, disc, eager }: { src: StaticImageData; sizes: string; className?: string; disc?: boolean; eager?: boolean }) {
+/** Decorative round food photo. */
+function Round({ src, sizes, className }: { src: StaticImageData; sizes: string; className?: string }) {
   return (
-    <div aria-hidden className={cx('aspect-square shrink-0', disc && 'plate', className)}>
-      <Image
-        src={src}
-        alt=""
-        sizes={sizes}
-        placeholder="blur"
-        fetchPriority={eager ? 'high' : undefined}
-        loading={eager ? 'eager' : undefined}
-        className="size-full rounded-full object-cover shadow-[0_24px_40px_-24px_rgb(var(--shadow-color)/0.5)]"
-      />
+    <div aria-hidden className={cx('aspect-square shrink-0', className)}>
+      <Image src={src} alt="" sizes={sizes} placeholder="blur" className="size-full rounded-full object-cover shadow-[0_20px_34px_-22px_rgb(var(--shadow-color)/0.5)]" />
     </div>
   );
 }
 
-function Chip({ icon: Icon, children, active }: { icon: typeof Camera; children: React.ReactNode; active?: boolean }) {
+function Sprig() {
   return (
-    <span className={cx('inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold', active ? 'bg-basil text-on-accent' : 'bg-surface text-ink')}>
-      <Icon aria-hidden className="size-4 shrink-0" />
-      {children}
-    </span>
+    <div aria-hidden className="flex items-center gap-3 text-basil before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
+      <svg viewBox="0 0 22 16" className="h-4 w-6" fill="currentColor">
+        <path d="M2 14C6 10 12 7 20 2" stroke="currentColor" strokeWidth="1.6" fill="none" />
+        <path d="M8 10c-1-3 0-6 3-7 1 3 0 6-3 7ZM14 6c0-3 2-5 5-5 0 3-2 5-5 5Z" />
+      </svg>
+    </div>
   );
 }
 
 export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ deleted?: string }> }) {
   const t = await getTranslations('welcome');
-  const tv = await getTranslations('visibility');
-  const tr = await getTranslations('recipes');
   const { deleted } = await searchParams;
   const em = (c: React.ReactNode) => <em>{c}</em>;
 
+  const features = [
+    [Camera, t('point1Title')],
+    [Lock, t('point2Title')],
+    [CalendarHeart, t('point3Title')],
+  ] as const;
+
   const sources = [
-    [farfalle, Camera, t('sourcePhoto')],
-    [tagliatelle, Link2, t('sourceLink')],
-    [vegetables, Type, t('sourceText')],
+    [Camera, t('sourcePhoto')],
+    [Link2, t('sourceLink')],
+    [Type, t('sourceText')],
   ] as const;
 
   return (
-    <div className="flex flex-1 flex-col gap-16 pb-4 sm:gap-24">
-      {/* Hero: a round plate photo leads, the promise and the two actions follow */}
-      <section className="relative grid items-center gap-6 pt-2 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:pt-10">
-        <div className="relative -mr-14 -mt-2 w-[16rem] justify-self-end sm:-mr-8 sm:w-[20rem] lg:order-2 lg:mr-0 lg:w-full lg:max-w-[30rem]">
-          <Round src={bowl} disc eager sizes="(min-width: 1024px) 30rem, 17rem" className="w-full" />
-          <Round src={tagliatelle} sizes="(min-width: 1024px) 11rem, 7.5rem" className="absolute -bottom-4 -left-24 w-[7.5rem] rounded-full ring-[6px] ring-porcelain sm:-left-28 sm:w-[9rem] lg:-left-10 lg:w-[11rem]" />
+    <div className="flex flex-1 flex-col gap-14 pb-4 sm:gap-20">
+      {/* Hero: a full-bleed photo with a soft wave edge, then the promise and the two actions */}
+      <section className="grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12 lg:pt-6">
+        <div className="wave-b -mx-4 aspect-[1/0.86] overflow-hidden bg-sunk sm:mx-0 sm:aspect-[16/10] sm:rounded-t-[2rem] lg:order-2 lg:aspect-[1.05] lg:rounded-[50%_2.5rem_2.5rem_50%/60%_2.5rem_2.5rem_60%] lg:[mask:none]">
+          <Image src={hero} alt="" sizes="(min-width: 1024px) 36rem, (min-width: 640px) 90vw, 100vw" placeholder="blur" fetchPriority="high" loading="eager" className="size-full object-cover" />
         </div>
         <div className="flex flex-col gap-5">
           {deleted && <Alert tone="success">{t('deleted')}</Alert>}
           <span className="eyebrow">{t('eyebrow')}</span>
-          <h1 className="display-xl max-w-[13ch]">{t.rich('title', { em })}</h1>
-          <p className="max-w-[44ch] text-lg leading-relaxed text-muted sm:text-xl">{t('lead')}</p>
-          <div className="mt-1 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:flex-wrap">
-            <LinkButton href="/signup" variant="primary" size="lg">
+          <h1 className="display-xl max-w-[14ch]">{t.rich('title', { em })}</h1>
+          <p className="max-w-[46ch] text-lg leading-relaxed sm:text-xl">{t('lead')}</p>
+          <div className="mt-1 flex flex-wrap gap-3">
+            <LinkButton href="/signup" variant="primary" size="lg" className="flex-[1.5_1_auto] lg:flex-none">
               {t('signup')}
             </LinkButton>
-            <LinkButton href="/login" size="lg">
+            <LinkButton href="/login" size="lg" className="flex-[1_1_auto] lg:flex-none">
               {t('login')}
             </LinkButton>
           </div>
+          <p className="flex items-center justify-center gap-2.5 text-[0.95rem] text-muted lg:justify-start">
+            <Lock aria-hidden className="size-5 shrink-0 text-basil" />
+            {t('privateNote')}
+          </p>
         </div>
       </section>
 
-      {/* Import: a solid sage band with the three sources as round photos */}
-      <section aria-labelledby="how-title" className="-mx-4 bg-basil px-6 pb-12 pt-16 text-on-accent [clip-path:polygon(0_2.5rem,100%_0,100%_100%,0_100%)] sm:mx-0 sm:rounded-b-[2rem] sm:px-10 sm:pt-20">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
-          <div className="flex max-w-xl flex-col gap-3">
-            <span className="text-[0.78rem] font-bold uppercase tracking-[0.16em] text-on-accent/85">{t('howTitle')}</span>
-            <h2 id="how-title" className="display-lg">
-              {t('point1Title')}
-            </h2>
-            <p className="text-lg text-on-accent/90">{t('point1')}</p>
-          </div>
-          <ul aria-hidden className="grid grid-cols-3 gap-3 sm:gap-6 lg:shrink-0">
-            {sources.map(([src, Icon, label]) => (
-              <li key={label} className="flex flex-col items-center gap-3">
-                <Round src={src} sizes="(min-width: 640px) 8rem, 6rem" className="w-full max-w-[8rem] rounded-full ring-4 ring-on-accent/25" />
-                <span className="inline-flex items-center gap-1.5 font-semibold">
-                  <Icon className="size-4 shrink-0" />
-                  {label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* The three promises as a quiet icon row */}
+      <section className="flex flex-col gap-6">
+        <Sprig />
+        <ul className="grid grid-cols-3">
+          {features.map(([Icon, label]) => (
+            <li key={label} className="flex flex-col items-center gap-2 px-1.5 text-center font-semibold leading-tight text-ink [&+&]:border-l [&+&]:border-line">
+              <Icon aria-hidden strokeWidth={1.6} className="size-8 sm:size-9" />
+              {label}
+            </li>
+          ))}
+        </ul>
       </section>
 
-      {/* Find and privacy */}
-      <section className="grid gap-5 md:grid-cols-2">
-        <div className="flex flex-col gap-4 rounded-[var(--radius-card)] bg-sunk p-6 sm:p-8">
-          <h2 className="text-3xl font-semibold">{t('findTitle')}</h2>
-          <p className="text-muted">{t('find')}</p>
-          <div aria-hidden className="mt-auto flex flex-col gap-4 pt-2">
-            <span className="flex min-h-12 items-center gap-2 rounded-full bg-surface px-4 text-muted shadow-[var(--shadow-card)]">
-              <Search className="size-5 shrink-0 text-basil" />
-              <span className="truncate">{tr('searchPlaceholder')}</span>
-            </span>
-            <span className="flex gap-3 text-basil">
-              <Smartphone className="size-6" />
-              <Tablet className="size-6" />
-              <Laptop className="size-6" />
-            </span>
+      {/* How it works, finding recipes, the week */}
+      <section className="grid gap-4 md:grid-cols-3 md:gap-5">
+        <div className="flex flex-col gap-3 rounded-[2rem] bg-basil-wash p-6">
+          <div className="grid grid-cols-[1fr_6.5rem] items-center gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="eyebrow">{t('howTitle')}</span>
+              <h2 className="text-[1.65rem] font-bold">{t('point1Title')}</h2>
+            </div>
+            <Round src={tagliatelle} sizes="7rem" />
           </div>
-        </div>
-        <div className="flex flex-col gap-4 rounded-[var(--radius-card)] bg-basil-wash p-6 sm:p-8">
-          <h2 className="text-3xl font-semibold">{t('point2Title')}</h2>
-          <p className="text-muted">{t('point2')}</p>
-          <div aria-hidden className="mt-auto flex flex-wrap gap-2 pt-2">
-            <Chip icon={Lock} active>
-              {tv('private')}
-            </Chip>
-            <Chip icon={Users}>{tv('friends')}</Chip>
-            <Chip icon={Globe}>{tv('public')}</Chip>
-          </div>
-        </div>
-      </section>
-
-      {/* The week: honey block with a plate bleeding off the edge */}
-      <section aria-labelledby="week-title" className="relative overflow-hidden rounded-[2rem] bg-saffron-wash">
-        <div className="relative z-10 flex max-w-[34rem] flex-col gap-4 p-6 pb-48 sm:p-10 sm:pb-10 sm:pr-[15rem] md:max-w-none md:pr-[22rem]">
-          <h2 id="week-title" className="display-lg">
-            {t('point3Title')}
-          </h2>
-          <p className="text-lg">{t('point3')}</p>
-          <div aria-hidden className="flex gap-3">
-            {[CalendarDays, ShoppingBasket, Scale].map((Icon, i) => (
-              <span key={i} className="flex size-14 items-center justify-center rounded-full bg-surface text-saffron-deep shadow-[var(--shadow-card)]">
-                <Icon className="size-6" />
+          <p>{t('point1')}</p>
+          <div aria-hidden className="mt-auto flex flex-wrap gap-2 pt-1">
+            {sources.map(([Icon, label]) => (
+              <span key={label} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-sm font-semibold text-ink">
+                <Icon className="size-4 shrink-0" />
+                {label}
               </span>
             ))}
           </div>
         </div>
-        <Round src={salad} sizes="(min-width: 768px) 22rem, 15rem" className="absolute -bottom-14 -right-10 w-[15rem] sm:-bottom-10 sm:top-1/2 sm:w-[17rem] sm:-translate-y-1/2 md:w-[22rem] md:-right-12" />
+        <div className="flex flex-col gap-3 rounded-[2rem] bg-saffron-wash p-6">
+          <div className="grid grid-cols-[1fr_6.5rem] items-center gap-4">
+            <h2 className="text-[1.65rem] font-bold">{t('findTitle')}</h2>
+            <Round src={salad} sizes="7rem" />
+          </div>
+          <p>{t('find')}</p>
+        </div>
+        <div className="flex flex-col gap-3 rounded-[2rem] bg-surface p-6 shadow-[var(--shadow-raised)]">
+          <h2 className="text-[1.65rem] font-bold">{t('point3Title')}</h2>
+          <p>{t('point3')}</p>
+          <p className="text-muted">{t('point2')}</p>
+        </div>
       </section>
 
-      {/* Closing call to action */}
-      <section aria-labelledby="final-title" className="flex flex-col items-center gap-5 px-2 py-6 text-center">
-        <Round src={plate} disc sizes="10rem" className="mb-2 w-40" />
+      {/* Closing call to action under a second photo */}
+      <section aria-labelledby="final-title" className="flex flex-col items-center gap-5 text-center">
+        <div aria-hidden className="wave-t -mx-4 aspect-[1/0.62] self-stretch overflow-hidden bg-sunk sm:mx-0 sm:aspect-[21/8] sm:rounded-b-[2rem]">
+          <Image src={plate} alt="" sizes="(min-width: 1152px) 72rem, 100vw" placeholder="blur" className="size-full object-cover" />
+        </div>
         <h2 id="final-title" className="display-lg max-w-[20ch]">
           {t('finalTitle')}
         </h2>
-        <p className="max-w-[48ch] text-lg text-muted">{t('finalLead')}</p>
-        <LinkButton href="/signup" variant="primary" size="lg" className="w-full max-w-xs">
+        <p className="max-w-[48ch] text-lg">{t('finalLead')}</p>
+        <LinkButton href="/signup" variant="primary" size="lg" className="w-full max-w-sm">
           {t('signup')}
         </LinkButton>
         <p className="flex flex-wrap items-center justify-center gap-x-2 text-muted">
           {t('haveAccount')}
-          <Link href="/login" className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">
+          <Link href="/login" className="inline-flex min-h-11 items-center font-bold text-terracotta-deep underline underline-offset-4">
             {t('login')}
           </Link>
         </p>
       </section>
 
-      <footer className="flex flex-wrap gap-x-5 border-t border-line pt-4">
+      <footer className="flex flex-wrap justify-center gap-x-5 border-t border-line pt-4">
         <Link href="/privacy" className="inline-flex min-h-11 items-center text-sm text-muted underline underline-offset-4 hover:text-ink">
           {t('privacy')}
         </Link>

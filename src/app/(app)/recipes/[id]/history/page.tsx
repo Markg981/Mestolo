@@ -25,7 +25,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
         title={t('title')}
         lead={t('lead')}
         back={
-          <Link href={`/recipes/${id}`} className="inline-flex min-h-11 items-center self-start text-basil underline underline-offset-4">
+          <Link href={`/recipes/${id}`} className="inline-flex min-h-11 items-center self-start text-terracotta-deep underline underline-offset-4">
             {detail.recipe.title}
           </Link>
         }

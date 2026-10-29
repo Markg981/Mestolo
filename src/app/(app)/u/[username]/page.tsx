@@ -62,7 +62,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       </div>
       {profile.website && (
         <p>
-          <a href={profile.website} rel="nofollow ugc noopener" target="_blank" className="text-basil underline underline-offset-4">
+          <a href={profile.website} rel="nofollow ugc noopener" target="_blank" className="text-terracotta-deep underline underline-offset-4">
             {profile.website.replace(/^https:\/\//, '').replace(/\/$/, '')}
           </a>
         </p>

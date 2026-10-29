@@ -403,7 +403,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
                 <>
                   <dt className="text-muted">{t('sourceUrl')}</dt>
                   <dd className="min-w-0">
-                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-basil underline underline-offset-4">
+                    <a href={source.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 max-w-full items-center gap-1 break-all text-terracotta-deep underline underline-offset-4">
                       {source.url}
                       <ExternalLink aria-hidden className="size-4 shrink-0" />
                     </a>
@@ -433,7 +433,7 @@ export function RecipeEditor({ mode, recipeId, initial, categories, draftKey, ba
             <ul className="mt-2 flex flex-col gap-1">
               {duplicatesShown.map((d) => (
                 <li key={d.id}>
-                  <Link href={`/recipes/${d.id}`} target="_blank" className="inline-flex min-h-11 items-center font-semibold text-basil underline underline-offset-4">
+                  <Link href={`/recipes/${d.id}`} target="_blank" className="inline-flex min-h-11 items-center font-semibold text-terracotta-deep underline underline-offset-4">
                     {d.title}
                   </Link>{' '}
                   <span className="text-sm text-muted">({t(`duplicateReason.${d.reason}`)})</span>

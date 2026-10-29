@@ -74,7 +74,7 @@ export default async function FriendsPage() {
         )}
       <p className="text-sm text-muted">
         {t('privacyNote')}{' '}
-        <Link href="/settings" className="text-basil underline underline-offset-4">
+        <Link href="/settings" className="text-terracotta-deep underline underline-offset-4">
           {t('privacyLink')}
         </Link>
       </p>
