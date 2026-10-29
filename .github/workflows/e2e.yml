@@ -46,7 +46,9 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
       E2E_SUPABASE_PROJECT_REF: ${{ vars.E2E_SUPABASE_PROJECT_REF }}
       APP_ENCRYPTION_KEY: Y2ktZHVtbXkta2V5LWNpLWR1bW15LWtleS1jaS1kdW0=
-      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      # Il server sotto test e' locale e nessun test chiama i cron: basta un valore
+      # fittizio (>= 16 caratteri) per superare il fail-fast di instrumentation.ts.
+      CRON_SECRET: ci-dummy-cron-secret
     steps:
       - name: Verifica secret di staging
         id: secrets
