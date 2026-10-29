@@ -18,7 +18,7 @@ export function NavLink({ href, icon, label }: { href: string; icon: IconName; l
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={cx('flex min-h-11 items-center gap-3 rounded-xl px-3 font-semibold', active ? 'bg-ink text-porcelain' : 'text-ink hover:bg-sunk')}
+      className={cx('flex min-h-11 items-center gap-3 rounded-full px-3 font-semibold', active ? 'bg-basil-wash text-basil' : 'text-muted hover:bg-sunk hover:text-ink')}
     >
       <NavIcon name={icon} />
       {label}
@@ -53,7 +53,7 @@ export function BottomNav({ labels }: { labels: Labels }) {
         aria-current={active ? 'page' : undefined}
         className={cx('flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[0.78rem] font-semibold', active ? 'text-ink' : 'text-muted')}
       >
-        <span className={cx('rounded-full px-4 py-1', active && 'bg-saffron-wash')}>
+        <span className={cx('rounded-full px-4 py-1 motion-safe:transition-colors', active && 'bg-basil-wash text-basil')}>
           <NavIcon name={icon} />
         </span>
         {label}
@@ -64,7 +64,7 @@ export function BottomNav({ labels }: { labels: Labels }) {
   return (
     <>
       {open && (
-        <div className="no-print fixed inset-0 z-40 bg-[rgb(27_19_32/0.5)] lg:hidden" onClick={() => setOpen(false)} aria-hidden />
+        <div className="no-print fixed inset-0 z-40 bg-[rgb(18_26_21/0.55)] lg:hidden" onClick={() => setOpen(false)} aria-hidden />
       )}
       {open && (
         <div
@@ -72,7 +72,7 @@ export function BottomNav({ labels }: { labels: Labels }) {
           role="dialog"
           aria-modal="true"
           aria-label={labels.add}
-          className="sheet-in no-print fixed inset-x-3 bottom-24 z-50 flex flex-col gap-1 rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-2xl lg:hidden"
+          className="sheet-in no-print fixed inset-x-3 bottom-24 z-50 flex flex-col gap-1 rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-[var(--shadow-float)] lg:hidden"
         >
           {(
             [
@@ -82,8 +82,8 @@ export function BottomNav({ labels }: { labels: Labels }) {
               ['/import/text', 'text', labels.importText],
             ] as const
           ).map(([href, icon, label], i) => (
-            <Link key={href} href={href} autoFocus={i === 0} className="flex min-h-13 items-center gap-3 rounded-xl px-3 text-lg font-semibold hover:bg-sunk">
-              <span className="flex size-10 items-center justify-center rounded-full bg-saffron-wash">
+            <Link key={href} href={href} autoFocus={i === 0} className="flex min-h-13 items-center gap-3 rounded-2xl px-3 text-lg font-semibold hover:bg-sunk">
+              <span className="flex size-10 items-center justify-center rounded-full bg-basil-wash text-basil">
                 <NavIcon name={icon} />
               </span>
               {label}
@@ -102,7 +102,7 @@ export function BottomNav({ labels }: { labels: Labels }) {
               aria-expanded={open}
               aria-controls="add-sheet"
               aria-label={open ? labels.close : labels.add}
-              className="-mt-6 flex size-15 items-center justify-center rounded-full bg-saffron text-[#2a1a2e] shadow-lg ring-4 ring-porcelain"
+              className="-mt-6 flex size-15 items-center justify-center rounded-full bg-accent text-on-accent shadow-[var(--shadow-raised)] ring-4 ring-porcelain hover:bg-accent-deep motion-safe:transition-[background-color,transform] motion-safe:active:scale-95"
             >
               {open ? <X aria-hidden className="size-7" /> : <Plus aria-hidden className="size-7" />}
             </button>

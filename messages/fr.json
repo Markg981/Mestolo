@@ -52,7 +52,7 @@
     "moderation": "Modération"
   },
   "welcome": {
-    "title": "Toutes vos recettes, dans un seul tiroir.",
+    "title": "Toutes vos recettes, <em>dans un seul tiroir</em>.",
     "lead": "Photographiez les pages du carnet de grand-mère, collez un lien ou écrivez à la main. Mestolo garde tout en ordre et vous retrouvez vos recettes sur téléphone, tablette et ordinateur.",
     "signup": "Créer un compte",
     "login": "Se connecter",
@@ -72,7 +72,18 @@
     "sampleIng2": "600 g de pommes de terre",
     "sampleIng3": "1 croûte de parmesan",
     "sampleIng4": "Poivre noir à volonté",
-    "terms": "Règles de la communauté"
+    "terms": "Règles de la communauté",
+    "eyebrow": "Votre carnet de recettes",
+    "howTitle": "Comment ça marche",
+    "sourcePhoto": "Photo",
+    "sourceLink": "Lien",
+    "sourceText": "Texte",
+    "findTitle": "Retrouvez-les en un instant",
+    "find": "Cherchez par titre, ingrédient ou tag et rangez vos recettes en collections. Sur téléphone, tablette et ordinateur.",
+    "previewSource": "Importée depuis 2 photos",
+    "finalTitle": "Votre carnet de recettes vous attend.",
+    "finalLead": "Créez un compte et ajoutez votre première recette à partir d’une photo, d’un lien ou d’un texte.",
+    "haveAccount": "Vous avez déjà un compte ?"
   },
   "auth": {
     "loginTitle": "Bon retour parmi nous",

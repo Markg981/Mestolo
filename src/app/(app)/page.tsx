@@ -52,12 +52,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <Link
               key={q.href}
               href={q.href}
-              className={`flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] border p-4 ${i === 0 ? 'border-transparent bg-saffron text-[#2a1a2e]' : 'border-line bg-surface hover:bg-sunk'}`}
+              className={`lift flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] p-4 ${i === 0 ? 'bg-accent text-on-accent hover:bg-accent-deep' : i === 1 ? 'bg-saffron-wash hover:bg-saffron-wash/70' : i === 2 ? 'bg-basil-wash hover:bg-basil-wash/70' : 'bg-sunk hover:bg-sunk/70'}`}
             >
               <q.icon aria-hidden className="size-6" />
               <span className="flex flex-col">
                 <span className="font-display text-lg font-bold leading-tight">{q.title}</span>
-                <span className={`text-sm ${i === 0 ? 'text-[#2a1a2e]/80' : 'text-muted'}`}>{q.desc}</span>
+                <span className={`text-sm ${i === 0 ? 'text-on-accent/90' : 'text-muted'}`}>{q.desc}</span>
               </span>
             </Link>
           ))}
@@ -69,15 +69,18 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           {t('home.dayTitle')}
         </h2>
         {day ? (
-          <Link href={`/recipes/${day.id}`} className="group grid overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface md:grid-cols-[1.1fr_1fr]">
-            <div className="aspect-[16/10] w-full overflow-hidden bg-sunk md:aspect-auto md:min-h-80">
-              <RecipeImage imageId={day.coverImageId} title={day.title} size="full" className="h-full w-full" priority />
+          <Link href={`/recipes/${day.id}`} className="group relative isolate flex min-h-[19rem] overflow-hidden rounded-[2rem] bg-saffron-wash sm:min-h-80">
+            <div className="relative z-10 flex max-w-[60%] flex-col justify-center gap-3 p-6 sm:max-w-[55%] sm:p-10">
+              <span className="eyebrow">{categoryLabel(dayCat, t)}</span>
+              <span className="display-lg decoration-basil decoration-2 underline-offset-[6px] group-hover:underline">{day.title}</span>
+              {day.description && <span className="line-clamp-3 text-ink/80">{day.description}</span>}
+              <span className="text-sm text-saffron-deep">{t('home.dayFromCommunity', { name: day.ownerUsername ? `@${day.ownerUsername}` : '' })}</span>
             </div>
-            <div className="flex flex-col justify-center gap-3 p-6 sm:p-8">
-              <span className="text-sm font-semibold text-basil">{categoryLabel(dayCat, t)}</span>
-              <span className="display-xl text-[clamp(2rem,5vw,3.6rem)] group-hover:underline">{day.title}</span>
-              {day.description && <span className="line-clamp-3 text-muted">{day.description}</span>}
-              <span className="text-sm text-muted">{t('home.dayFromCommunity', { name: day.ownerUsername ? `@${day.ownerUsername}` : '' })}</span>
+            <div className="absolute -right-[22%] top-1/2 aspect-square w-[62%] -translate-y-1/2 sm:-right-[8%] sm:w-[52%] lg:w-[46%]">
+              <div aria-hidden className="absolute inset-0 translate-x-[-6%] translate-y-[6%] rounded-full bg-saffron" />
+              <div className="relative size-full overflow-hidden rounded-full shadow-[0_24px_40px_-24px_rgb(var(--shadow-color)/0.6)]">
+                <RecipeImage imageId={day.coverImageId} title={day.title} size="full" className="h-full w-full motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.04]" priority />
+              </div>
             </div>
           </Link>
         ) : (

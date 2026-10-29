@@ -105,10 +105,12 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       )}
 
 
-      <header className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
+      <header className="grid gap-6 first:-mt-6 sm:first:mt-0 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div className="flex flex-col gap-3">
-          <div className="aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-card)] bg-sunk">
-            <RecipeImage imageId={cover?.id ?? null} title={recipe.title} alt={cover?.alt_text || recipe.title} size="full" className="h-full w-full" priority />
+          <div className="-mx-4 sm:mx-0">
+            <div className="aspect-[4/3] w-full overflow-hidden rounded-b-[2rem] bg-sunk shadow-[0_24px_40px_-28px_rgb(var(--shadow-color)/0.6)] sm:rounded-[2rem]">
+              <RecipeImage imageId={cover?.id ?? null} title={recipe.title} alt={cover?.alt_text || recipe.title} size="full" className="h-full w-full" priority />
+            </div>
           </div>
           {cover?.kind === 'ai_generated' && <Badge tone="ink">{t('image.aiLabel')}</Badge>}
           {cover?.kind === 'imported' && <p className="text-sm text-muted">{t('image.importedCaption', { source: cover.attribution ?? '' })}</p>}
@@ -129,20 +131,24 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             </p>
           )}
           {view.description && <p className="max-w-prose whitespace-pre-line text-lg leading-relaxed">{view.description}</p>}
-          <dl className="flex flex-wrap gap-x-6 gap-y-2">
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {times.map(([key, val, field]) => (
-              <div key={key} className="flex items-center gap-2">
-                <Clock aria-hidden className="size-4 text-muted" />
-                <dt className="text-muted">{t(`recipe.${key}`)}</dt>
+              <div key={key} className="flex flex-col gap-0.5 rounded-2xl bg-basil-wash px-3 py-2.5">
+                <dt className="flex items-center gap-1.5 text-sm text-basil">
+                  <Clock aria-hidden className="size-4 shrink-0" />
+                  {t(`recipe.${key}`)}
+                </dt>
                 <dd className="font-semibold">
                   {val !== null ? formatMinutes(val, labels) : <span className="font-normal text-muted">{t('recipe.notDetected')}</span>}
                   {flags[field]?.includes('ai_estimate') && <Badge className="ml-2">{t('flags.ai_estimate')}</Badge>}
                 </dd>
               </div>
             ))}
-            <div className="flex items-center gap-2">
-              <Users aria-hidden className="size-4 text-muted" />
-              <dt className="text-muted">{t('recipe.servings')}</dt>
+            <div className="flex flex-col gap-0.5 rounded-2xl bg-basil-wash px-3 py-2.5">
+              <dt className="flex items-center gap-1.5 text-sm text-basil">
+                <Users aria-hidden className="size-4 shrink-0" />
+                {t('recipe.servings')}
+              </dt>
               <dd className="font-semibold">{recipe.servings !== null ? Number(recipe.servings) : <span className="font-normal text-muted">{t('recipe.notDetected')}</span>}</dd>
             </div>
           </dl>
@@ -209,7 +215,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
       )}
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_1fr]">
-        <section aria-labelledby="ing-title" className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
+        <section aria-labelledby="ing-title" className="flex flex-col gap-4 rounded-[2rem] bg-surface p-5 shadow-[var(--shadow-raised)] sm:p-6 lg:sticky lg:top-6 lg:self-start">
           <h2 id="ing-title" className="text-2xl font-bold">
             {t('recipe.ingredients')}
           </h2>
@@ -228,7 +234,7 @@ export default async function RecipePage({ params, searchParams }: { params: Pro
             <ol className="flex flex-col gap-5">
               {view.steps.map((s, i) => (
                 <li key={i} className="flex gap-4">
-                  <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-saffron font-display text-lg font-bold text-[#2a1a2e]">
+                  <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-basil font-display text-xl font-semibold text-on-accent">
                     {i + 1}
                   </span>
                   <div className="flex flex-col gap-1 pt-1">

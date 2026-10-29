@@ -52,7 +52,7 @@
     "moderation": "Moderation"
   },
   "welcome": {
-    "title": "All your recipes, in one drawer.",
+    "title": "All your recipes, <em>in one drawer</em>.",
     "lead": "Snap the pages of grandma's cookbook, paste a link, or type it in. Mestolo keeps everything organized and ready on your phone, tablet, and computer.",
     "signup": "Create an account",
     "login": "Sign in",
@@ -72,7 +72,18 @@
     "sampleIng2": "600 g potatoes",
     "sampleIng3": "1 Parmesan rind",
     "sampleIng4": "Black pepper to taste",
-    "terms": "Community rules"
+    "terms": "Community rules",
+    "eyebrow": "Your personal cookbook",
+    "howTitle": "How it works",
+    "sourcePhoto": "Photo",
+    "sourceLink": "Link",
+    "sourceText": "Text",
+    "findTitle": "Find them in a moment",
+    "find": "Search by title, ingredient or tag and gather recipes into collections. They are there on your phone, tablet and computer.",
+    "previewSource": "Imported from 2 photos",
+    "finalTitle": "Your cookbook is waiting.",
+    "finalLead": "Create an account and bring in your first recipe from a photo, a link or a piece of text.",
+    "haveAccount": "Already have an account?"
   },
   "auth": {
     "loginTitle": "Welcome back",

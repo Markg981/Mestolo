@@ -52,7 +52,7 @@
     "moderation": "Moderation"
   },
   "welcome": {
-    "title": "Alle deine Rezepte an einem Ort.",
+    "title": "Alle deine Rezepte <em>an einem Ort</em>.",
     "lead": "Fotografiere die Seiten aus Omas Kochbuch, füge einen Link ein oder schreib selbst. Mestolo hält alles ordentlich – auf Handy, Tablet und Computer.",
     "signup": "Konto erstellen",
     "login": "Anmelden",
@@ -72,7 +72,18 @@
     "sampleIng2": "600 g Kartoffeln",
     "sampleIng3": "1 Parmesanrinde",
     "sampleIng4": "Schwarzer Pfeffer nach Geschmack",
-    "terms": "Community-Regeln"
+    "terms": "Community-Regeln",
+    "eyebrow": "Dein persönliches Kochbuch",
+    "howTitle": "So funktioniert’s",
+    "sourcePhoto": "Foto",
+    "sourceLink": "Link",
+    "sourceText": "Text",
+    "findTitle": "Schnell wiedergefunden",
+    "find": "Suche nach Titel, Zutat oder Tag und ordne Rezepte in Sammlungen. Auf Handy, Tablet und Computer immer griffbereit.",
+    "previewSource": "Aus 2 Fotos importiert",
+    "finalTitle": "Dein Kochbuch wartet auf dich.",
+    "finalLead": "Erstelle ein Konto und hole dein erstes Rezept herein: aus einem Foto, einem Link oder einem Text.",
+    "haveAccount": "Schon ein Konto?"
   },
   "auth": {
     "loginTitle": "Willkommen zurück",

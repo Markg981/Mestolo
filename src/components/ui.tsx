@@ -11,16 +11,17 @@ type Size = 'md' | 'sm' | 'lg';
 
 export function buttonClass(variant: Variant = 'secondary', size: Size = 'md', extra?: string) {
   return cx(
-    'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors select-none',
-    'disabled:opacity-55 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-2 rounded-full font-semibold select-none text-center leading-tight',
+    'motion-safe:transition-[background-color,border-color,color,box-shadow,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97]',
+    'disabled:opacity-55 disabled:cursor-not-allowed disabled:active:scale-100',
     size === 'sm' && 'min-h-11 px-4 text-[0.95rem]',
     size === 'md' && 'min-h-11 px-5',
     size === 'lg' && 'min-h-13 px-7 text-lg',
-    variant === 'primary' && 'bg-saffron text-[#2a1a2e] hover:bg-saffron-deep hover:text-[#2a1a2e]',
-    variant === 'secondary' && 'bg-surface text-ink border border-line hover:bg-sunk',
+    variant === 'primary' && 'bg-accent text-on-accent shadow-[0_10px_20px_-12px_rgb(var(--shadow-color)/0.55)] hover:bg-accent-deep hover:shadow-[0_14px_26px_-12px_rgb(var(--shadow-color)/0.6)]',
+    variant === 'secondary' && 'bg-surface text-ink border-[1.5px] border-line-strong/55 hover:border-basil hover:text-basil',
     variant === 'ghost' && 'text-ink hover:bg-sunk',
     variant === 'quiet' && 'text-basil underline-offset-4 hover:underline px-1 min-h-11',
-    variant === 'danger' && 'bg-tomato text-white hover:opacity-90',
+    variant === 'danger' && 'border border-tomato/50 bg-tomato-wash text-tomato hover:bg-tomato hover:text-on-accent',
     extra,
   );
 }
@@ -54,7 +55,7 @@ export function Field({ label, hint, error, children, htmlFor, flag }: { label: 
 }
 
 export const inputClass =
-  'w-full min-h-11 rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-2 text-ink placeholder:text-muted/80 focus:border-basil';
+  'w-full min-h-11 rounded-[var(--radius-field)] border border-line-strong bg-surface px-3.5 py-2 text-ink placeholder:text-muted/80 shadow-[inset_0_1px_2px_rgb(var(--shadow-color)/0.05)] hover:border-ink/60 focus:border-basil focus-visible:outline-offset-1 aria-[invalid=true]:border-tomato';
 
 export function Input(props: ComponentProps<'input'>) {
   return <input {...props} className={cx(inputClass, props.className)} />;
@@ -75,7 +76,7 @@ export function Alert({ tone = 'info', title, children, action }: { tone?: 'info
       role={tone === 'error' ? 'alert' : 'status'}
       className={cx(
         'flex gap-3 rounded-2xl border p-4',
-        tone === 'info' && 'border-line bg-surface',
+        tone === 'info' && 'border-line bg-surface shadow-[var(--shadow-card)]',
         tone === 'warn' && 'border-saffron-deep/40 bg-saffron-wash',
         tone === 'error' && 'border-tomato/40 bg-tomato-wash',
         tone === 'success' && 'border-basil/40 bg-basil-wash',
@@ -97,7 +98,7 @@ export function Badge({ tone = 'neutral', children, className }: { tone?: 'neutr
       className={cx(
         'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.82rem] font-semibold leading-6',
         tone === 'neutral' && 'bg-sunk text-ink',
-        tone === 'saffron' && 'bg-saffron-wash text-ink',
+        tone === 'saffron' && 'bg-saffron-wash text-ink ring-1 ring-inset ring-saffron/40',
         tone === 'basil' && 'bg-basil-wash text-basil',
         tone === 'tomato' && 'bg-tomato-wash text-tomato',
         tone === 'ink' && 'bg-ink text-porcelain',
@@ -111,9 +112,9 @@ export function Badge({ tone = 'neutral', children, className }: { tone?: 'neutr
 
 export function EmptyState({ illustration, title, children, action }: { illustration?: ReactNode; title: ReactNode; children?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-[var(--radius-card)] border border-dashed border-line bg-surface/60 p-6 sm:p-8">
+    <div className="flex flex-col items-start gap-3 rounded-[var(--radius-card)] bg-basil-wash/60 p-6 sm:p-8">
       {illustration}
-      <h2 className="text-xl font-bold">{title}</h2>
+      <h2 className="text-2xl font-semibold">{title}</h2>
       {children && <div className="max-w-prose text-muted">{children}</div>}
       {action && <div className="mt-1 flex flex-wrap gap-2">{action}</div>}
     </div>
@@ -127,7 +128,7 @@ export function PageHeader({ title, lead, actions, back }: { title: ReactNode; l
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex max-w-3xl flex-col gap-2">
           <h1 className="display-lg">{title}</h1>
-          {lead && <p className="text-muted">{lead}</p>}
+          {lead && <p className="max-w-[60ch] text-[1.08rem] text-muted">{lead}</p>}
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
@@ -136,7 +137,7 @@ export function PageHeader({ title, lead, actions, back }: { title: ReactNode; l
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <section className={cx('rounded-[var(--radius-card)] border border-line bg-surface p-5 sm:p-6', className)}>{children}</section>;
+  return <section className={cx('surface-card p-5 sm:p-6', className)}>{children}</section>;
 }
 
 export function Spinner({ label }: { label: string }) {
@@ -152,10 +153,11 @@ export function Spinner({ label }: { label: string }) {
 export function LadleMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 120 80" aria-hidden className={cx('h-16 w-auto', className)}>
-      <ellipse cx="44" cy="54" rx="30" ry="16" fill="var(--saffron)" />
-      <ellipse cx="44" cy="50" rx="30" ry="12" fill="var(--saffron-wash)" />
+      <path d="M34 30c2-5-2-8 0-13M46 28c2-5-2-8 0-13" fill="none" stroke="var(--ink-muted)" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
+      <ellipse cx="44" cy="54" rx="30" ry="16" fill="var(--basil)" />
+      <ellipse cx="44" cy="50" rx="30" ry="12" fill="var(--saffron)" />
       <path d="M70 46 L112 10" stroke="var(--ink)" strokeWidth="7" strokeLinecap="round" />
-      <circle cx="112" cy="10" r="5" fill="var(--ink)" />
+      <circle cx="112" cy="10" r="5" fill="var(--saffron)" />
     </svg>
   );
 }

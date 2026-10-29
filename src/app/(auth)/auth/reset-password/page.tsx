@@ -8,7 +8,7 @@ export default async function ResetPasswordPage() {
   if (!user) redirect('/login?error=link');
   const t = await getTranslations('auth');
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6 py-8 sm:py-14">
+    <div className="auth-panel mx-auto mb-4 flex w-full max-w-md flex-col gap-6 p-6 sm:mb-12 sm:p-10">
       <h1 className="display-lg">{t('resetTitle')}</h1>
       <ResetForm />
     </div>

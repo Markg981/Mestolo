@@ -10,12 +10,12 @@ import { OfflineBanner, SignOutButton } from '@/components/pwa/PwaClient';
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
-      <svg viewBox="0 0 64 64" aria-hidden className="size-8">
-        <rect width="64" height="64" rx="16" fill="var(--ink)" />
+      <svg viewBox="0 0 64 64" aria-hidden className="size-8 shrink-0">
+        <rect width="64" height="64" rx="20" fill="var(--basil)" />
         <path d="M38 10c-3 0-5 2-5 5v16c0 2-1 3-3 3h-1c-6 0-11 5-11 11s5 11 11 11 11-5 11-11V15c0-3-1-5-2-5z" fill="var(--saffron)" />
-        <circle cx="29" cy="45" r="5" fill="var(--ink)" />
+        <circle cx="29" cy="45" r="5" fill="var(--basil)" />
       </svg>
-      <span className="font-display text-2xl font-extrabold tracking-tight" style={{ fontStretch: '82%' }}>
+      <span className="font-display text-[1.55rem] font-semibold leading-none tracking-tight">
         Mestolo
       </span>
     </span>
@@ -35,9 +35,9 @@ export async function AppShell({ children, username, isModerator = false, userId
         <Link href="/" className="inline-flex min-h-11 items-center px-2">
           <Logo />
         </Link>
-        <div className="flex flex-col gap-2 rounded-[var(--radius-card)] bg-saffron-wash p-3">
+        <div className="flex flex-col gap-1 rounded-[var(--radius-card)] bg-saffron-wash p-2">
           {QUICK_ACTIONS.map((a) => (
-            <Link key={a.href} href={a.href} className="flex min-h-11 items-center gap-3 rounded-xl px-3 font-semibold hover:bg-saffron/40">
+            <Link key={a.href} href={a.href} className="flex min-h-11 items-center gap-3 rounded-full px-3 font-semibold hover:bg-surface">
               <NavIcon name={a.icon} />
               {t(a.key)}
             </Link>
