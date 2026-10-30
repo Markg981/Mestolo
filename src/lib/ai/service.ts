@@ -3,6 +3,7 @@ import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { decryptWithKeys, encryptSecret, keyAad, loadEncryptionKey, loadPreviousEncryptionKey, SecretDecryptionError } from '@/lib/crypto/secrets';
 import { AiError, anthropicProvider, openAiProvider, type AiProvider, type Capability } from './providers';
+import { OPENROUTER_BASE_URL } from './openrouter';
 
 /**
  * Decides which provider/key serves a request:
@@ -31,7 +32,9 @@ export interface CapabilityStatus {
   dailyLimit: number | null;
 }
 
-type UserKeyRow = { provider: 'anthropic' | 'openai'; ciphertext: string; iv: string; auth_tag: string };
+type UserKeyRow = { provider: 'anthropic' | 'openai' | 'openrouter'; ciphertext: string; iv: string; auth_tag: string };
+
+const PROVIDER_LABEL: Record<UserKeyRow['provider'], string> = { anthropic: 'Anthropic', openai: 'OpenAI', openrouter: 'OpenRouter' };
 
 async function loadUserKeys(userId: string): Promise<UserKeyRow[]> {
   const admin = createAdminClient();
@@ -78,6 +81,11 @@ async function userProviderFor(row: UserKeyRow, userId: string, capability: Capa
   if (row.provider === 'anthropic') {
     if (capability === 'image' || capability === 'audio') return null;
     return anthropicProvider({ apiKey, model: cfg.ai.userAnthropicModel });
+  }
+  if (row.provider === 'openrouter') {
+    // gateway OpenAI-compatibile: testo e vision si', immagini e trascrizione no
+    if (capability === 'image' || capability === 'audio') return null;
+    return openAiProvider({ apiKey, textModel: cfg.ai.userOpenrouterModel, baseUrl: OPENROUTER_BASE_URL, compatible: true, as: { id: 'openrouter', label: PROVIDER_LABEL.openrouter } });
   }
   return openAiProvider({ apiKey, textModel: cfg.ai.userOpenaiTextModel, imageModel: cfg.ai.userOpenaiImageModel, transcribeModel: cfg.ai.transcribeModel });
 }
@@ -137,7 +145,7 @@ export async function capabilityStatus(userId: string, capability: Capability, g
       console.error(`[ai] stored ${row.provider} key for user ${userId} cannot be decrypted: re-entry needed`);
       return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };
     }
-    return { available: true, keySource: 'user', providerName: row.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', remainingToday: null, dailyLimit: null };
+    return { available: true, keySource: 'user', providerName: PROVIDER_LABEL[row.provider], remainingToday: null, dailyLimit: null };
   }
   const app = appProvider(capability);
   if (!app) return { available: false, keySource: null, providerName: null, remainingToday: null, dailyLimit: null };

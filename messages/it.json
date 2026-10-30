@@ -1059,7 +1059,34 @@
     "costTitle": "Costi",
     "costText": "Il servizio base è pagato dal gestore dell'app ed è limitato a poche richieste al giorno per utente; può essere disattivato in qualsiasi momento. Con la tua chiave ogni richiesta (analisi, lettura foto, traduzione, immagine) può avere un costo sul tuo account presso il provider: prima di ogni azione ti diciamo quale chiave verrà usata.",
     "privacyTitle": "Privacy",
-    "privacyText": "Quando usi una funzione AI, il contenuto necessario (testo della ricetta o foto delle pagine) viene inviato al provider indicato, che lo tratta secondo i propri termini. Le foto per l'OCR non vengono conservate da Mestolo. La tua chiave viene usata solo per le azioni che avvii tu."
+    "privacyText": "Quando usi una funzione AI, il contenuto necessario (testo della ricetta o foto delle pagine) viene inviato al provider indicato, che lo tratta secondo i propri termini. Le foto per l'OCR non vengono conservate da Mestolo. La tua chiave viene usata solo per le azioni che avvii tu.",
+    "openrouter": {
+      "kicker": "Consigliato",
+      "title": "Collega il tuo account AI",
+      "lead": "Usa l'AI senza i limiti giornalieri di Mestolo. Paghi solo quello che consumi, direttamente a OpenRouter.",
+      "step1": "Premi il bottone e accedi a OpenRouter, anche con Google",
+      "step2": "Aggiungi un po' di credito (bastano 5 €)",
+      "step3": "Autorizza Mestolo: torni qui già collegato",
+      "connect": "Collega con OpenRouter →",
+      "connecting": "Apertura di OpenRouter…",
+      "privacy": "Mestolo non vede mai la tua password: riceve solo una chiave, salvata cifrata.",
+      "connectedTitle": "Account AI collegato",
+      "connectedMeta": "OpenRouter · chiave {hint} · dal {date}",
+      "imagesNote": "Analisi, lettura delle foto e traduzioni passano dal tuo account. La generazione di immagini e la dettatura restano al servizio base o a una chiave OpenAI: OpenRouter non le offre.",
+      "manage": "Credito e limiti",
+      "disconnect": "Scollega",
+      "disconnectTitle": "Scollegare l'account AI?",
+      "disconnectConfirm": "Mestolo eliminerà la chiave e tornerà al servizio base. Per revocarla del tutto, eliminala anche dalle",
+      "keysPage": "chiavi di OpenRouter.",
+      "disconnected": "Account AI scollegato.",
+      "flash": {
+        "connected": "Fatto! Il tuo account AI è collegato.",
+        "cancelled": "Collegamento annullato: non è cambiato nulla.",
+        "error": "Non siamo riusciti a collegare l'account. Riprova tra qualche minuto."
+      },
+      "advancedTitle": "Ho già una chiave API",
+      "advancedLead": "Anthropic o OpenAI · per utenti esperti"
+    }
   },
   "account": {
     "title": "Account e dati",

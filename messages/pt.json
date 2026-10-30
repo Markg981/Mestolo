@@ -1059,7 +1059,34 @@
     "costTitle": "Custos",
     "costText": "O serviço base é pago pelo gestor da app e está limitado a poucos pedidos por dia por utilizador; pode ser desativado a qualquer momento. Com a tua chave, cada pedido (análise, leitura de fotos, tradução, imagem) pode ter um custo na tua conta junto do fornecedor: antes de cada ação dizemos-te que chave será usada.",
     "privacyTitle": "Privacidade",
-    "privacyText": "Quando usas uma função de IA, o conteúdo necessário (texto da receita ou fotos das páginas) é enviado ao fornecedor indicado, que o trata segundo os seus próprios termos. As fotos para OCR não são guardadas pelo Mestolo. A tua chave só é usada nas ações que tu iniciares."
+    "privacyText": "Quando usas uma função de IA, o conteúdo necessário (texto da receita ou fotos das páginas) é enviado ao fornecedor indicado, que o trata segundo os seus próprios termos. As fotos para OCR não são guardadas pelo Mestolo. A tua chave só é usada nas ações que tu iniciares.",
+    "openrouter": {
+      "kicker": "Recomendado",
+      "title": "Ligue a sua conta de IA",
+      "lead": "Use a IA sem os limites diários do Mestolo. Paga apenas o que consome, diretamente à OpenRouter.",
+      "step1": "Carregue no botão e entre na OpenRouter, também com o Google",
+      "step2": "Adicione um pouco de crédito (5 € chegam)",
+      "step3": "Autorize o Mestolo: volta aqui já ligado",
+      "connect": "Ligar com OpenRouter →",
+      "connecting": "A abrir a OpenRouter…",
+      "privacy": "O Mestolo nunca vê a sua palavra-passe: recebe apenas uma chave, guardada cifrada.",
+      "connectedTitle": "Conta de IA ligada",
+      "connectedMeta": "OpenRouter · chave {hint} · desde {date}",
+      "imagesNote": "A análise, a leitura de fotos e as traduções passam pela sua conta. A geração de imagens e o ditado continuam no serviço base ou numa chave OpenAI: a OpenRouter não os oferece.",
+      "manage": "Crédito e limites",
+      "disconnect": "Desligar",
+      "disconnectTitle": "Desligar a conta de IA?",
+      "disconnectConfirm": "O Mestolo vai eliminar a chave e voltar ao serviço base. Para a revogar por completo, elimine-a também nas",
+      "keysPage": "chaves da OpenRouter.",
+      "disconnected": "Conta de IA desligada.",
+      "flash": {
+        "connected": "Feito! A sua conta de IA está ligada.",
+        "cancelled": "Ligação cancelada: nada mudou.",
+        "error": "Não foi possível ligar a conta. Tente novamente dentro de alguns minutos."
+      },
+      "advancedTitle": "Já tenho uma chave API",
+      "advancedLead": "Anthropic ou OpenAI · para utilizadores avançados"
+    }
   },
   "account": {
     "title": "Conta e dados",

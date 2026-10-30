@@ -4,7 +4,7 @@ import { redactSecrets } from '@/lib/crypto/secrets';
  * Replaceable AI providers. They are plain HTTPS calls (no SDK) so that the
  * implementation is easy to audit and to mock in tests.
  */
-export type ProviderId = 'anthropic' | 'openai' | 'openai-compatible';
+export type ProviderId = 'anthropic' | 'openai' | 'openai-compatible' | 'openrouter';
 export type Capability = 'text' | 'vision' | 'image' | 'audio';
 
 export interface ImageInput {
@@ -126,14 +126,16 @@ export function openAiProvider(opts: {
   transcribeModel?: string;
   baseUrl?: string;
   compatible?: boolean;
+  /** Identity of an OpenAI-compatible gateway with its own name (e.g. OpenRouter). */
+  as?: { id: ProviderId; label: string };
   fetchImpl?: FetchLike;
 }): AiProvider {
   const f = opts.fetchImpl ?? fetch;
   const base = (opts.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
   const compatible = !!opts.compatible;
   const provider: AiProvider = {
-    id: compatible ? 'openai-compatible' : 'openai',
-    label: compatible ? 'OpenAI-compatible' : 'OpenAI',
+    id: opts.as?.id ?? (compatible ? 'openai-compatible' : 'openai'),
+    label: opts.as?.label ?? (compatible ? 'OpenAI-compatible' : 'OpenAI'),
     capabilities: opts.imageModel ? ['text', 'vision', 'audio', 'image'] : ['text', 'vision', 'audio'],
     async completeJson(req) {
       const userContent = req.images?.length
