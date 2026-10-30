@@ -73,7 +73,7 @@ vi.mock('@/lib/images/process', () => ({
 }));
 vi.mock('@/lib/images/quota', () => ({ userOverImageQuota: async () => false }));
 
-import { analyzeRecipe, suggestSubstitutions, translateRecipe } from '@/app/actions/ai';
+import { analyzeRecipe, checkIngredientPairing, suggestSubstitutions, translateRecipe } from '@/app/actions/ai';
 import { askCookAssistant } from '@/app/actions/cook-assistant';
 import { estimateNutrition } from '@/app/actions/nutrition';
 import { generateRecipeImage } from '@/app/actions/images';
@@ -91,10 +91,27 @@ const cases = [
   },
   {
     name: 'substitutions',
-    run: () => suggestSubstitutions(RECIPE_ID, ['burro'], true),
+    // l'errore AI non fa fallire la richiesta (restano le alternative integrate): qui conta aiError
+    run: async () => {
+      const r = await suggestSubstitutions(RECIPE_ID, ['burro'], true);
+      return r.ok && r.data.aiError ? { ok: false, error: r.data.aiError } : r;
+    },
     refund: refund('text', 'substitute'),
     bad: { ingredients: 'nope' },
     good: { ingredients: [] },
+    badError: 'ai_bad_output',
+  },
+  {
+    name: 'ingredient pairing',
+    run: () => checkIngredientPairing(RECIPE_ID, 'noci'),
+    refund: refund('text', 'pairing'),
+    bad: { is_food: true, criteria: [{ key: 'flavor', rating: 4, note: '' }] },
+    good: {
+      is_food: true,
+      ingredient: 'noci',
+      criteria: ['flavor', 'balance', 'texture', 'technique', 'tradition'].map((key) => ({ key, rating: 4, note: '' })),
+      confidence: 'medium',
+    },
     badError: 'ai_bad_output',
   },
   {
@@ -158,6 +175,20 @@ describe.each(cases)('$name: quota refund', (c) => {
     const res = await c.run();
     expect(res.ok).toBe(true);
     expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe('substitutions: AI failure', () => {
+  it('keeps the built-in alternatives and reports the AI error', async () => {
+    completeJson.mockRejectedValue(new Error('upstream 503'));
+    const res = await suggestSubstitutions(RECIPE_ID, ['burro', 'Burro'], true);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.ai).toBeNull();
+    expect(res.data.aiError).toBe('generic');
+    // duplicati (maiuscole/minuscole) uniti
+    expect(res.data.builtin).toHaveLength(1);
+    expect(res.data.builtin[0].alternatives.length).toBeGreaterThan(0);
   });
 });
 

@@ -32,7 +32,7 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({}) }));
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a), revalidateTag: vi.fn(), unstable_cache: (f: unknown) => f }));
 vi.mock('@/lib/rate-limit', () => ({ RateLimitedError: class RateLimitedError extends Error {}, enforceRateLimit: vi.fn() }));
 
-import { applyAnalysis } from '@/app/actions/ai';
+import { applyAnalysis, saveVariantWithIngredient } from '@/app/actions/ai';
 
 const R = '3f2b8a4e-1c5d-4e6f-8a9b-0c1d2e3f4a5b';
 const A = '7a1c9d2e-5b4f-4a3c-9e8d-1f2a3b4c5d6e';
@@ -145,5 +145,49 @@ describe('applyAnalysis', () => {
     await applyAnalysis(R, A, ['a1'], 'apply');
     const q = ops.find((o) => o.table === 'ai_suggestions');
     expect(q?.eqs).toContainEqual(['kind', 'analysis']);
+  });
+});
+
+describe('saveVariantWithIngredient', () => {
+  const P = '9b2c4d6e-8f1a-4b3c-8d5e-6f7a8b9c0d1e';
+  beforeEach(() => {
+    vi.clearAllMocks();
+    ops.length = 0;
+    getUser.mockResolvedValue({ id: 'u1' });
+    recipe = {
+      id: R, title: 'Pasta', description: null, original_language: 'it', servings: '4', prep_minutes: null, cook_minutes: null, total_minutes: null,
+      ingredients: [{ name: 'Sale', quantity: 1, quantityMax: null, unit: 'g', toTaste: false, note: null }], steps: [], category_id: null, tags: ['a'],
+      field_flags: {}, content_hash: 'h1', source_url: null, source_name: null, source_attribution: null, verification_status: 'unverified',
+    };
+    suggestion = { payload: { addition: '50 g noci', result: { when_to_add: 'A fine cottura' } }, recipe_hash: 'h1' };
+    writeRes = { data: { id: 'new-id' }, error: null };
+  });
+
+  it('saves a private variant with the parsed ingredient and leaves the original alone', async () => {
+    const res = await saveVariantWithIngredient(R, P, '(con noci)');
+    expect(res).toMatchObject({ ok: true, data: { id: 'new-id' } });
+    expect(ops[0]).toMatchObject({ table: 'recipes', eqs: [['id', R], ['owner_id', 'u1']] });
+    expect(ops[1]).toMatchObject({ table: 'ai_suggestions', eqs: [['id', P], ['recipe_id', R], ['kind', 'pairing']] });
+    const insert = ops.find((o) => o.op === 'insert')!;
+    expect(insert.payload).toMatchObject({ title: 'Pasta (con noci)', visibility: 'private', source_type: 'variant', parent_recipe_id: R });
+    const ings = insert.payload!.ingredients as { name: string; quantity: number | null; unit: string | null; note: string | null }[];
+    expect(ings[1]).toMatchObject({ name: 'noci', quantity: 50, unit: 'g', note: 'A fine cottura' });
+    expect(ops.some((o) => o.op === 'update')).toBe(false);
+    expect(revalidatePath).toHaveBeenCalledWith('/recipes');
+  });
+
+  it('rejects non-owners, stale assessments and duplicates', async () => {
+    recipe = null;
+    expect(await saveVariantWithIngredient(R, P)).toMatchObject({ ok: false, error: 'not_found' });
+    recipe = { ingredients: [], steps: [], content_hash: 'h2' };
+    expect(await saveVariantWithIngredient(R, P)).toMatchObject({ ok: false, error: 'invalid_input', detail: 'stale' });
+    recipe = { title: 'Pasta', ingredients: [{ name: 'Noci', quantity: 10, quantityMax: null, unit: 'g', toTaste: false, note: null }], steps: [], content_hash: 'h1', field_flags: {} };
+    expect(await saveVariantWithIngredient(R, P)).toMatchObject({ ok: false, error: 'invalid_input', detail: 'duplicate' });
+    expect(ops.some((o) => o.op === 'insert')).toBe(false);
+  });
+
+  it('rejects malformed ids before touching the database', async () => {
+    expect(await saveVariantWithIngredient(R, 'x')).toMatchObject({ ok: false, error: 'forbidden' });
+    expect(ops).toHaveLength(0);
   });
 });
