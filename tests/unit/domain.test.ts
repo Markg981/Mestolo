@@ -178,6 +178,16 @@ describe('built-in substitutions', () => {
   it('returns nothing for unknown ingredients (no invention)', () => {
     expect(findBuiltinSubstitutions('zafferano', 'it')).toEqual([]);
   });
+  it('does not match a different product that contains the base word', () => {
+    for (const name of ['burro di arachidi', 'peanut butter', 'burro di cacao', 'latte di cocco', 'lait de coco', 'latte di mandorla', 'latte condensato', 'panna acida', 'zucchero a velo', 'scorza di limone', 'aceto di vino bianco', 'crème brûlée']) {
+      expect(findBuiltinSubstitutions(name, 'it'), name).toEqual([]);
+    }
+  });
+  it('still matches the base product with qualifiers', () => {
+    for (const name of ['burro chiarificato', 'latte intero', 'panna fresca', 'zucchero di canna', 'succo di limone', 'vino bianco secco', 'pan grattato']) {
+      expect(findBuiltinSubstitutions(name, 'it').length, name).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('export & validation', () => {

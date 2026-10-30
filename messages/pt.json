@@ -704,7 +704,54 @@
     "quantityHint": "Quantidade indicativa",
     "effect": "Efeito esperado",
     "limits": "Limitações",
-    "risky": "Pode comprometer o resultado"
+    "risky": "Pode comprometer o resultado",
+    "aiFailed": "As propostas da IA não estão disponíveis: {error} Acima tens na mesma as alternativas comuns.",
+    "pairing": {
+      "title": "Combina bem?",
+      "lead": "Escreva um ingrediente que gostaria de acrescentar: dizemos-lhe se combina com o resto da receita, critério a critério.",
+      "label": "Gostaria de acrescentar…",
+      "placeholder": "ex. nozes, 50 g de pancetta, uma pitada de canela",
+      "check": "Avaliar",
+      "checking": "A avaliar…",
+      "empty": "Escreva primeiro o ingrediente a acrescentar.",
+      "notFood": "Não parece um ingrediente: experimente um alimento, por exemplo «nozes» ou «gengibre fresco».",
+      "unavailable": "A avaliação de combinações requer um serviço de IA.",
+      "levels": {
+        "excellent": "Combinação excelente",
+        "good": "Boa combinação",
+        "bold": "Combinação ousada",
+        "poor": "Combinação desaconselhada"
+      },
+      "confidence": {
+        "high": "fiável",
+        "medium": "bastante fiável",
+        "low": "avaliação incerta"
+      },
+      "criteria": {
+        "flavor": "Sabor",
+        "balance": "Equilíbrio",
+        "texture": "Textura",
+        "technique": "Técnica",
+        "tradition": "Tradição"
+      },
+      "ratingOf": "{n} de 5",
+      "pairsWith": "Combina com",
+      "clashesWith": "Cuidado com",
+      "howTitle": "Como acrescentar",
+      "role": "Função",
+      "quantity": "Quanto",
+      "when": "Quando",
+      "atStep": "Passo {n}",
+      "risky": "Adição delicada: pode comprometer o resultado ou a segurança do prato. Por isso a pontuação não passa de {cap}/100.",
+      "already": "«{name}» já está na receita: considere antes aumentar a quantidade.",
+      "warningsTitle": "A ter em conta",
+      "tryAnother": "Experimentar outro",
+      "variantSuffix": "(com {name})",
+      "stale": "A receita mudou depois da avaliação: repita-a para obter um parecer atualizado.",
+      "duplicate": "O ingrediente já está na receita: a variante não mudaria nada.",
+      "disclaimer": "É uma estimativa indicativa, não uma garantia de resultado. Não avalia alergias nem intolerâncias: verifique sempre.",
+      "source": "Avaliação IA ({provider})"
+    }
   },
   "history": {
     "title": "Histórico",

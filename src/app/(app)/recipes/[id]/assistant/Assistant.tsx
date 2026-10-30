@@ -12,6 +12,7 @@ import { Alert, Badge, Button, Card, Input, buttonClass, cx } from '@/components
 import { formatQuantity } from '@/lib/recipes/ingredient-parser';
 import { UNIT_KEYS } from '@/lib/recipes/units';
 import type { Suggestion } from '@/lib/recipes/suggestions';
+import { PairingCard } from './PairingCard';
 
 interface Props {
   recipeId: string;
@@ -234,6 +235,8 @@ export function Assistant(p: Props) {
         )}
       </Card>
 
+      <PairingCard recipeId={p.recipeId} isOwner={p.isOwner} status={p.status} ingredients={p.ingredients} />
+
       <Card className="flex flex-col gap-4">
         <h2 className="text-2xl font-bold">{t('subsTitle')}</h2>
         <p className="text-muted">{t('subsLead')}</p>
@@ -305,6 +308,7 @@ export function Assistant(p: Props) {
                 {subs.ai.general_warning && <p className="text-sm text-muted">{subs.ai.general_warning}</p>}
               </div>
             )}
+            {subs.aiError && <Alert tone="info">{t('aiFailed', { error: te(subs.aiError) })}</Alert>}
           </div>
         )}
       </Card>

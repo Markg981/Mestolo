@@ -704,7 +704,54 @@
     "quantityHint": "Approximate quantity",
     "effect": "Expected effect",
     "limits": "Limits",
-    "risky": "May affect the result"
+    "risky": "May affect the result",
+    "aiFailed": "AI suggestions are not available: {error} The common alternatives above still apply.",
+    "pairing": {
+      "title": "Does it go well?",
+      "lead": "Type an ingredient you'd like to add: we'll tell you how well it fits the rest of the recipe, criterion by criterion.",
+      "label": "I'd like to add…",
+      "placeholder": "e.g. walnuts, 50 g pancetta, a pinch of cinnamon",
+      "check": "Check",
+      "checking": "Checking…",
+      "empty": "Type the ingredient to add first.",
+      "notFood": "That doesn't look like an ingredient: try a food, for example \"walnuts\" or \"fresh ginger\".",
+      "unavailable": "Checking pairings needs an AI service.",
+      "levels": {
+        "excellent": "Excellent match",
+        "good": "Good match",
+        "bold": "Bold match",
+        "poor": "Not recommended"
+      },
+      "confidence": {
+        "high": "reliable",
+        "medium": "fairly reliable",
+        "low": "uncertain"
+      },
+      "criteria": {
+        "flavor": "Flavour",
+        "balance": "Balance",
+        "texture": "Texture",
+        "technique": "Technique",
+        "tradition": "Tradition"
+      },
+      "ratingOf": "{n} out of 5",
+      "pairsWith": "Goes with",
+      "clashesWith": "Careful with",
+      "howTitle": "How to add it",
+      "role": "Role",
+      "quantity": "How much",
+      "when": "When",
+      "atStep": "Step {n}",
+      "risky": "Delicate addition: it can compromise the result or the safety of the dish. That's why the score stays at or below {cap}/100.",
+      "already": "\"{name}\" is already in the recipe: consider increasing the amount instead.",
+      "warningsTitle": "Keep in mind",
+      "tryAnother": "Try another",
+      "variantSuffix": "(with {name})",
+      "stale": "The recipe changed after the check: run it again for an up-to-date verdict.",
+      "duplicate": "The ingredient is already in the recipe: the variant would change nothing.",
+      "disclaimer": "This is an indicative estimate, not a guaranteed result. It doesn't assess allergies or intolerances: always check yourself.",
+      "source": "AI assessment ({provider})"
+    }
   },
   "history": {
     "title": "History",

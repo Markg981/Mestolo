@@ -99,6 +99,41 @@ Missing ingredients (data):
 ${untrusted('missing_ingredients', JSON.stringify(missing))}`;
 }
 
+export function pairingSystem(locale: string) {
+  return `You assess whether adding ONE extra ingredient to a tested home recipe is a good idea. Write in ${languageName(locale)}.
+Judge the addition against the whole recipe (all ingredients, the steps and the character of the dish), not the ingredient in isolation.
+Rate each criterion with an integer from 1 (bad) to 5 (excellent):
+- "flavor": harmony of its taste and aroma with the main ingredients of the recipe
+- "balance": whether the dish stays balanced (it does not overpower or mask the other ingredients; consider the quantity if one is given)
+- "texture": effect on texture and consistency
+- "technique": how well it fits the method (cooking times and temperatures, moisture, leavening and baking chemistry)
+- "tradition": how established this pairing is in cooking (5 = classic combination, 1 = no known precedent)
+Be calibrated and honest: do not inflate ratings to please the user. A bold but defensible pairing can have good flavor and low tradition.
+"pairs_with" and "clashes_with": recipe ingredients (by index) it goes especially well or badly with; at most 4 each, only when clear.
+"quantity_hint": a suggested amount for the recipe's servings. "when_to_add" and "stepIndex": when and in which step (index) to add it; stepIndex null if no step fits.
+"confidence": how sure you are of this assessment; use "low" for unusual ingredients or when the recipe gives too little information.
+Set "risky": true when the addition may compromise the result or food safety (leavening and baking chemistry, acids curdling dairy, raw fruit enzymes with gelatin, preserving/canning, undercooking).
+If the ingredient is already in the recipe, set "already_in_recipe" to its index, otherwise null.
+If the text is not a food ingredient, respond with "is_food": false and empty values.
+Never make claims about allergies, intolerances, health or diets.
+${UNTRUSTED_CLAUSE}
+Respond ONLY with JSON:
+{"is_food":boolean,"ingredient":string,"already_in_recipe":number|null,"summary":string,"role":string,
+ "criteria":[{"key":"flavor"|"balance"|"texture"|"technique"|"tradition","rating":number,"note":string}],
+ "pairs_with":[{"ingredientIndex":number,"reason":string}],"clashes_with":[{"ingredientIndex":number,"reason":string}],
+ "quantity_hint":string,"when_to_add":string,"stepIndex":number|null,
+ "confidence":"high"|"medium"|"low","risky":boolean,"warnings":[string]}
+"criteria" must contain each of the 5 keys exactly once.`;
+}
+
+export function pairingUserPrompt(r: Parameters<typeof recipeForPrompt>[0], addition: string) {
+  return `Recipe (data):
+${untrusted('recipe', recipeForPrompt(r))}
+
+Ingredient to add (data):
+${untrusted('added_ingredient', JSON.stringify(addition))}`;
+}
+
 export function cookAssistSystem(locale: string) {
   return `You are a kitchen assistant answering quick questions from someone who is cooking right now, hands busy. Answer in ${languageName(locale)}.
 Rules:

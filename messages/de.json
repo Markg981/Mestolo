@@ -704,7 +704,54 @@
     "quantityHint": "Ungefähre Menge",
     "effect": "Erwartete Wirkung",
     "limits": "Grenzen",
-    "risky": "Kann das Gelingen gefährden"
+    "risky": "Kann das Gelingen gefährden",
+    "aiFailed": "KI-Vorschläge sind nicht verfügbar: {error} Die üblichen Alternativen oben gelten trotzdem.",
+    "pairing": {
+      "title": "Passt das dazu?",
+      "lead": "Gib eine Zutat ein, die du hinzufügen möchtest: Wir sagen dir, wie gut sie zum Rest des Rezepts passt, Kriterium für Kriterium.",
+      "label": "Ich möchte hinzufügen …",
+      "placeholder": "z. B. Walnüsse, 50 g Pancetta, eine Prise Zimt",
+      "check": "Bewerten",
+      "checking": "Wird bewertet …",
+      "empty": "Gib zuerst die Zutat ein, die du hinzufügen möchtest.",
+      "notFood": "Das sieht nicht nach einer Zutat aus: Versuch es mit einem Lebensmittel, zum Beispiel „Walnüsse“ oder „frischer Ingwer“.",
+      "unavailable": "Die Bewertung von Kombinationen braucht einen KI-Dienst.",
+      "levels": {
+        "excellent": "Hervorragende Kombination",
+        "good": "Gute Kombination",
+        "bold": "Gewagte Kombination",
+        "poor": "Nicht empfohlen"
+      },
+      "confidence": {
+        "high": "zuverlässig",
+        "medium": "recht zuverlässig",
+        "low": "unsichere Bewertung"
+      },
+      "criteria": {
+        "flavor": "Geschmack",
+        "balance": "Balance",
+        "texture": "Textur",
+        "technique": "Technik",
+        "tradition": "Tradition"
+      },
+      "ratingOf": "{n} von 5",
+      "pairsWith": "Passt zu",
+      "clashesWith": "Vorsicht mit",
+      "howTitle": "So fügst du es hinzu",
+      "role": "Rolle",
+      "quantity": "Wie viel",
+      "when": "Wann",
+      "atStep": "Schritt {n}",
+      "risky": "Heikle Zugabe: Sie kann das Gelingen oder die Sicherheit des Gerichts gefährden. Deshalb liegt die Bewertung höchstens bei {cap}/100.",
+      "already": "„{name}“ ist schon im Rezept: Erhöhe eher die Menge.",
+      "warningsTitle": "Gut zu wissen",
+      "tryAnother": "Andere probieren",
+      "variantSuffix": "(mit {name})",
+      "stale": "Das Rezept wurde nach der Bewertung geändert: Bewerte erneut für ein aktuelles Ergebnis.",
+      "duplicate": "Die Zutat ist schon im Rezept: Die Variante würde nichts ändern.",
+      "disclaimer": "Das ist eine grobe Einschätzung, keine Erfolgsgarantie. Allergien und Unverträglichkeiten werden nicht bewertet: Prüfe das immer selbst.",
+      "source": "KI-Bewertung ({provider})"
+    }
   },
   "history": {
     "title": "Verlauf",

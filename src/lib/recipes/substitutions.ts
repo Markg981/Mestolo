@@ -10,12 +10,15 @@ type L = Record<'it' | 'en' | 'es' | 'fr' | 'de' | 'pt', string>;
 
 export interface BuiltinSubstitution {
   match: string[];
+  /** Words that make the name a different product (peanut butter, coconut milk, lemon zest...). */
+  exclude?: string[];
   alternatives: { name: L; ratio: L; effect: L; limits: L }[];
 }
 
 export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   {
     match: ['burro', 'butter', 'mantequilla', 'beurre', 'manteiga'],
+    exclude: ['arachidi', 'peanut', 'mani', 'cacahuete', 'amendoim', 'cacao', 'cocoa', 'cacau', 'karite', 'shea'],
     alternatives: [
       {
         name: { it: 'Olio extravergine d’oliva', en: 'Extra virgin olive oil', es: 'Aceite de oliva virgen extra', fr: 'Huile d’olive vierge extra', de: 'Natives Olivenöl extra', pt: 'Azeite extra virgem' },
@@ -27,6 +30,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   },
   {
     match: ['latte', 'milk', 'leche', 'lait', 'milch', 'leite'],
+    exclude: ['cocco', 'coco', 'kokos', 'condensato', 'condensed', 'condensada', 'concentre', 'evaporato', 'evaporated', 'mandorla', 'almond', 'almendra', 'amande', 'mandel', 'amendoa', 'soia', 'soy', 'soja', 'avena', 'oat', 'avoine', 'hafer', 'aveia', 'riso', 'rice', 'arroz', 'riz', 'reis', 'vegetale', 'vegetal', 'plant'],
     alternatives: [
       {
         name: { it: 'Bevanda vegetale non zuccherata (soia, avena)', en: 'Unsweetened plant drink (soy, oat)', es: 'Bebida vegetal sin azúcar (soja, avena)', fr: 'Boisson végétale non sucrée (soja, avoine)', de: 'Ungesüßter Pflanzendrink (Soja, Hafer)', pt: 'Bebida vegetal sem açúcar (soja, aveia)' },
@@ -49,6 +53,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   },
   {
     match: ['panna', 'panna fresca', 'panna da cucina', 'cream', 'heavy cream', 'nata', 'crème', 'crème fraîche', 'sahne', 'natas', 'creme de leite'],
+    exclude: ['acida', 'sour', 'agria', 'acide', 'saure', 'brulee', 'patissiere', 'anglaise', 'vegetale', 'vegetal', 'plant', 'cocco', 'coco', 'soia', 'soy', 'soja'],
     alternatives: [
       {
         name: { it: 'Yogurt greco intero', en: 'Full-fat Greek yogurt', es: 'Yogur griego entero', fr: 'Yaourt grec entier', de: 'Griechischer Joghurt (vollfett)', pt: 'Iogurte grego integral' },
@@ -71,6 +76,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   },
   {
     match: ['zucchero', 'sugar', 'azúcar', 'sucre', 'zucker', 'açúcar'],
+    exclude: ['velo', 'icing', 'powdered', 'confectioners', 'glas', 'glace', 'confeiteiro'],
     alternatives: [
       {
         name: { it: 'Miele', en: 'Honey', es: 'Miel', fr: 'Miel', de: 'Honig', pt: 'Mel' },
@@ -81,7 +87,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
     ],
   },
   {
-    match: ['pangrattato', 'breadcrumbs', 'pan rallado', 'chapelure', 'paniermehl', 'semmelbrösel', 'pão ralado'],
+    match: ['pangrattato', 'pan grattato', 'breadcrumbs', 'pan rallado', 'chapelure', 'paniermehl', 'semmelbrösel', 'pão ralado'],
     alternatives: [
       {
         name: { it: 'Fiocchi d’avena tritati o crackers sbriciolati', en: 'Blitzed rolled oats or crushed crackers', es: 'Copos de avena triturados o galletas saladas', fr: 'Flocons d’avoine mixés ou crackers écrasés', de: 'Gemahlene Haferflocken oder zerbröselte Cracker', pt: 'Flocos de aveia triturados ou bolachas de água e sal' },
@@ -93,6 +99,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   },
   {
     match: ['vino bianco', 'white wine', 'vino blanco', 'vin blanc', 'weißwein', 'weisswein', 'vinho branco'],
+    exclude: ['aceto', 'vinegar', 'vinagre', 'vinaigre', 'essig'],
     alternatives: [
       {
         name: { it: 'Brodo + un cucchiaino di aceto o succo di limone', en: 'Stock + a teaspoon of vinegar or lemon juice', es: 'Caldo + una cucharadita de vinagre o limón', fr: 'Bouillon + une cuillère à café de vinaigre ou citron', de: 'Brühe + ein TL Essig oder Zitronensaft', pt: 'Caldo + uma colher de chá de vinagre ou limão' },
@@ -115,6 +122,7 @@ export const BUILTIN_SUBSTITUTIONS: BuiltinSubstitution[] = [
   },
   {
     match: ['limone', 'succo di limone', 'lemon', 'lemon juice', 'limón', 'zumo de limón', 'citron', 'jus de citron', 'zitrone', 'zitronensaft', 'limão', 'sumo de limão'],
+    exclude: ['scorza', 'buccia', 'zest', 'peel', 'ralladura', 'cascara', 'zeste', 'ecorce', 'schale', 'raspa', 'casca', 'candito', 'candied'],
     alternatives: [
       {
         name: { it: 'Aceto di vino bianco o di mele', en: 'White wine or cider vinegar', es: 'Vinagre de vino blanco o de manzana', fr: 'Vinaigre de vin blanc ou de cidre', de: 'Weißwein- oder Apfelessig', pt: 'Vinagre de vinho branco ou de maçã' },
@@ -131,9 +139,8 @@ export type SubLocale = keyof L;
 export function findBuiltinSubstitutions(ingredientName: string, locale: string) {
   const loc = (['it', 'en', 'es', 'fr', 'de', 'pt'].includes(locale) ? locale : 'en') as SubLocale;
   const n = ` ${normalizeText(ingredientName)} `;
-  const entry = BUILTIN_SUBSTITUTIONS.find((e) =>
-    e.match.some((m) => n.includes(` ${normalizeText(m)} `)),
-  );
+  const has = (w: string) => n.includes(` ${normalizeText(w)} `);
+  const entry = BUILTIN_SUBSTITUTIONS.find((e) => e.match.some(has) && !e.exclude?.some(has));
   if (!entry) return [];
   return entry.alternatives.map((a) => ({
     name: a.name[loc],
