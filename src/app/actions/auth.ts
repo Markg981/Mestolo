@@ -88,7 +88,7 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
   // `next` torna dopo la conferma email (es. /invite/<token>): solo percorsi interni
   const next = safeNextPath(formData.get('next'));
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -111,6 +111,8 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
     return { error: 'generic', email: parsed.data.email };
   }
   await setLocaleCookie(parsed.data.locale);
+  // Conferma email disattivata nel progetto: utente già confermato e sessione aperta, nessuna email inviata.
+  if (data.session) redirect(next);
   return { sent: true, email: parsed.data.email };
 }
 
