@@ -6,7 +6,8 @@ import { login, logout, newUserPage, randomUser } from './helpers';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('autenticazione', () => {
-  test('registrazione: mostra l\'avviso di controllo email', async ({ page, isMobile }) => {
+  // Con la conferma email disattivata (config.toml) Supabase apre subito la sessione: niente avviso, si entra nell'app
+  test('registrazione: con conferma email disattivata entra subito nell\'app', async ({ page, isMobile }) => {
     test.skip(isMobile, 'una sola esecuzione, per non saturare i rate limit di registrazione');
     const user = randomUser('signup');
     await page.goto('/signup');
@@ -15,7 +16,9 @@ test.describe('autenticazione', () => {
     await page.getByLabel('Password').fill(user.password);
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Crea account' }).click();
-    await expect(page.getByText('Controlla la tua email')).toBeVisible();
+    await expect(page).not.toHaveURL(/\/signup/);
+    await expect(page.getByRole('main')).toBeVisible();
+    await expect(page.getByText('Controlla la tua email')).toHaveCount(0);
   });
 
   test('accesso con credenziali errate mostra un errore', async ({ page }) => {
