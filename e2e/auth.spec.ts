@@ -6,8 +6,9 @@ import { login, logout, newUserPage, randomUser } from './helpers';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('autenticazione', () => {
-  // Con la conferma email disattivata (config.toml) Supabase apre subito la sessione: niente avviso, si entra nell'app
-  test('registrazione: con conferma email disattivata entra subito nell\'app', async ({ page, isMobile }) => {
+  // L'esito dipende dal progetto Supabase: con "Confirm email" attivo (staging) compare l'avviso,
+  // con la conferma disattivata (Supabase locale, config.toml) la sessione si apre subito e si entra nell'app.
+  test('registrazione: avviso di controllo email o ingresso diretto nell\'app', async ({ page, isMobile }) => {
     test.skip(isMobile, 'una sola esecuzione, per non saturare i rate limit di registrazione');
     const user = randomUser('signup');
     await page.goto('/signup');
@@ -16,9 +17,14 @@ test.describe('autenticazione', () => {
     await page.getByLabel('Password').fill(user.password);
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Crea account' }).click();
-    await expect(page).not.toHaveURL(/\/signup/);
-    await expect(page.getByRole('main')).toBeVisible();
-    await expect(page.getByText('Controlla la tua email')).toHaveCount(0);
+    const checkEmail = page.getByText('Controlla la tua email');
+    await expect(async () => {
+      const sent = await checkEmail.isVisible();
+      expect(sent || !new URL(page.url()).pathname.startsWith('/signup')).toBe(true);
+    }).toPass({ timeout: 10_000 });
+    if (!(await checkEmail.isVisible())) {
+      await expect(page.getByRole('main')).toBeVisible();
+    }
   });
 
   test('accesso con credenziali errate mostra un errore', async ({ page }) => {
