@@ -33,6 +33,7 @@
     "main": "Main navigation",
     "home": "Home",
     "recipes": "Recipe book",
+    "favorites": "Favorites",
     "discover": "Discover",
     "collections": "Collections",
     "shopping": "Shopping list",
@@ -186,6 +187,7 @@
     "reviewLead": "They contain imported data that wasn't detected with certainty.",
     "reviewAction": "Review now",
     "recentTitle": "Latest recipes",
+    "favoritesTitle": "Your favorites",
     "seeAll": "See all",
     "recentEmptyTitle": "Your recipe book is empty",
     "recentEmpty": "Start with the recipe you cook most often, or import one from a website.",
@@ -231,7 +233,8 @@
     "servings": "{n, plural, one {# serving} other {# servings}}",
     "needsReview": "Needs review",
     "aiImage": "AI image",
-    "by": "by {name}"
+    "by": "by {name}",
+    "favoriteToggle": "Favorite: {title}"
   },
   "recipes": {
     "title": "Recipe book",

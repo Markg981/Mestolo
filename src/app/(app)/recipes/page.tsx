@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
-import { listCategories, listMyRecipesPage, parseRecipeFilters } from '@/lib/data/recipes';
+import { favoriteIdsAmong, listCategories, listMyRecipesPage, parseRecipeFilters } from '@/lib/data/recipes';
 import { loadMoreMyRecipes } from '@/app/actions/pagination';
 import { InfiniteList } from '@/components/recipes/InfiniteList';
 import { categoryLabel } from '@/lib/recipes/categories';
@@ -20,6 +20,8 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const filters = parseRecipeFilters(sp);
   const [categories, { items: recipes, nextCursor }] = await Promise.all([listCategories(), listMyRecipesPage(filters)]);
+  // in the favourites view every recipe is a favourite: no need to ask
+  const favs = filters.favorites ? null : await favoriteIdsAmong(recipes.map((r) => r.id));
   const filtered = !!(filters.q || filters.category || filters.favorites || filters.review || filters.tag);
 
   return (
@@ -98,7 +100,7 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
         <InfiniteList key={JSON.stringify(sp)} initialCursor={nextCursor} loadMore={loadMoreMyRecipes.bind(null, sp)}>
           <RecipeGrid>
             {recipes.map((r, i) => (
-              <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={filters.favorites} priority={i < 3} />
+              <RecipeCard key={r.id} recipe={r} categories={categories} showAuthor={filters.favorites} priority={i < 3} favorite={favs ? favs.has(r.id) : true} />
             ))}
           </RecipeGrid>
         </InfiniteList>

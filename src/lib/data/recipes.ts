@@ -143,6 +143,16 @@ export async function listMyRecipes(f: RecipeFilters = {}): Promise<RecipeListIt
   return attachCovers(stripFavEmbed(data as RecipeListItem[] | null));
 }
 
+/** Which of these recipes the user has among favourites (one query for a whole grid of cards). */
+export async function favoriteIdsAmong(recipeIds: string[]): Promise<Set<string>> {
+  const user = await getUser();
+  if (!user || !recipeIds.length) return new Set();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('favorites').select('recipe_id').eq('user_id', user.id).in('recipe_id', recipeIds);
+  assertNoError(error, 'favoriteIdsAmong');
+  return new Set((data ?? []).map((f) => f.recipe_id as string));
+}
+
 /** One page of the user's recipes, keyset-paginated on the chosen sort (+ id as tie-breaker). */
 export async function listMyRecipesPage(f: RecipeFilters = {}, cursor?: string | null): Promise<Page<RecipeListItem>> {
   const user = await getUser();

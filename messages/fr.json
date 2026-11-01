@@ -33,6 +33,7 @@
     "main": "Navigation principale",
     "home": "Accueil",
     "recipes": "Mes recettes",
+    "favorites": "Favoris",
     "discover": "Découvrir",
     "collections": "Collections",
     "shopping": "Liste de courses",
@@ -186,6 +187,7 @@
     "reviewLead": "Elles contiennent des données importées qui n'ont pas été détectées avec certitude.",
     "reviewAction": "Vérifier maintenant",
     "recentTitle": "Dernières recettes",
+    "favoritesTitle": "Vos favoris",
     "seeAll": "Tout voir",
     "recentEmptyTitle": "Votre carnet est vide",
     "recentEmpty": "Commencez par la recette que vous cuisinez le plus souvent, ou importez-en une depuis un site.",
@@ -231,7 +233,8 @@
     "servings": "{n, plural, one {# portion} other {# portions}}",
     "needsReview": "À vérifier",
     "aiImage": "Image IA",
-    "by": "par {name}"
+    "by": "par {name}",
+    "favoriteToggle": "Favori : {title}"
   },
   "recipes": {
     "title": "Mes recettes",
