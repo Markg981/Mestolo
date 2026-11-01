@@ -1,10 +1,11 @@
-import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Home, Link2, Menu, Plus, Settings, ShieldCheck, ShoppingBasket, Users, Type, Refrigerator } from 'lucide-react';
+import { BookOpen, CalendarDays, Camera, Compass, FolderHeart, Heart, Home, Link2, Menu, Plus, Settings, ShieldCheck, ShoppingBasket, Users, Type, Refrigerator } from 'lucide-react';
 
 const MAP = {
   home: Home,
   book: BookOpen,
   compass: Compass,
   folder: FolderHeart,
+  heart: Heart,
   cart: ShoppingBasket,
   pantry: Refrigerator,
   calendar: CalendarDays,

@@ -33,6 +33,7 @@
     "main": "Hauptnavigation",
     "home": "Start",
     "recipes": "Rezeptbuch",
+    "favorites": "Favoriten",
     "discover": "Entdecken",
     "collections": "Sammlungen",
     "shopping": "Einkaufsliste",
@@ -186,6 +187,7 @@
     "reviewLead": "Sie enthalten importierte Daten, die nicht sicher erkannt wurden.",
     "reviewAction": "Jetzt prüfen",
     "recentTitle": "Neueste Rezepte",
+    "favoritesTitle": "Deine Favoriten",
     "seeAll": "Alle ansehen",
     "recentEmptyTitle": "Dein Rezeptbuch ist leer",
     "recentEmpty": "Fang mit dem Rezept an, das du am häufigsten kochst, oder importiere eins von einer Website.",
@@ -231,7 +233,8 @@
     "servings": "{n, plural, one {# Portion} other {# Portionen}}",
     "needsReview": "Zu prüfen",
     "aiImage": "KI-Bild",
-    "by": "von {name}"
+    "by": "von {name}",
+    "favoriteToggle": "Favorit: {title}"
   },
   "recipes": {
     "title": "Rezeptbuch",

@@ -5,6 +5,7 @@ export const PRIMARY_NAV = [
 ] as const;
 
 export const SECONDARY_NAV = [
+  { href: '/recipes?fav=1', key: 'favorites', icon: 'heart' },
   { href: '/collections', key: 'collections', icon: 'folder' },
   { href: '/shopping', key: 'shopping', icon: 'cart' },
   { href: '/pantry', key: 'pantry', icon: 'pantry' },

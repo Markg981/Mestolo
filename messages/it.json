@@ -33,6 +33,7 @@
     "main": "Navigazione principale",
     "home": "Home",
     "recipes": "Ricettario",
+    "favorites": "Preferiti",
     "discover": "Scopri",
     "collections": "Raccolte",
     "shopping": "Lista della spesa",
@@ -186,6 +187,7 @@
     "reviewLead": "Contengono dati importati che non sono stati rilevati con certezza.",
     "reviewAction": "Verifica ora",
     "recentTitle": "Ultime ricette",
+    "favoritesTitle": "Le tue preferite",
     "seeAll": "Vedi tutte",
     "recentEmptyTitle": "Il tuo ricettario è vuoto",
     "recentEmpty": "Inizia con la ricetta che cucini più spesso, oppure importane una da un sito.",
@@ -231,7 +233,8 @@
     "servings": "{n, plural, one {# porzione} other {# porzioni}}",
     "needsReview": "Da verificare",
     "aiImage": "Immagine AI",
-    "by": "di {name}"
+    "by": "di {name}",
+    "favoriteToggle": "Preferita: {title}"
   },
   "recipes": {
     "title": "Ricettario",

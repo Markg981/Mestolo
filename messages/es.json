@@ -33,6 +33,7 @@
     "main": "Navegación principal",
     "home": "Inicio",
     "recipes": "Recetario",
+    "favorites": "Favoritas",
     "discover": "Descubrir",
     "collections": "Colecciones",
     "shopping": "Lista de la compra",
@@ -186,6 +187,7 @@
     "reviewLead": "Contienen datos importados que no se han detectado con certeza.",
     "reviewAction": "Revisar ahora",
     "recentTitle": "Últimas recetas",
+    "favoritesTitle": "Tus favoritas",
     "seeAll": "Ver todas",
     "recentEmptyTitle": "Tu recetario está vacío",
     "recentEmpty": "Empieza por la receta que más cocinas o importa una desde una web.",
@@ -231,7 +233,8 @@
     "servings": "{n, plural, one {# ración} other {# raciones}}",
     "needsReview": "Por revisar",
     "aiImage": "Imagen IA",
-    "by": "de {name}"
+    "by": "de {name}",
+    "favoriteToggle": "Favorita: {title}"
   },
   "recipes": {
     "title": "Recetario",

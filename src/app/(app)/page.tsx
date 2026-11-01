@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Camera, Compass, Link2, Plus } from 'lucide-react';
 import { getProfile, createClient, getUser, getUserTimeZone } from '@/lib/supabase/server';
-import { listCategories, listCollections, listMyRecipes } from '@/lib/data/recipes';
+import { favoriteIdsAmong, listCategories, listCollections, listMyRecipes } from '@/lib/data/recipes';
 import { todayIso } from '@/lib/plan/week';
 import { discover } from '@/lib/data/discover';
 import { categoryLabel } from '@/lib/recipes/categories';
@@ -15,12 +15,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const t = await getTranslations();
   const { password } = await searchParams;
   const [profile, user, categories, timeZone] = await Promise.all([getProfile(), getUser(), listCategories(), getUserTimeZone()]);
-  const [recent, review, collections, community] = await Promise.all([
+  const [recent, favorites, review, collections, community] = await Promise.all([
     listMyRecipes({ limit: 6 }),
+    listMyRecipes({ favorites: true, limit: 6 }),
     listMyRecipes({ review: true, limit: 50 }),
     listCollections(),
     discover(categories, { limit: 6 }),
   ]);
+  const recentFavs = await favoriteIdsAmong(recent.map((r) => r.id));
   const supabase = await createClient();
   const today = todayIso(new Date(), timeZone);
   const { data: todayPlan } = await supabase
@@ -116,6 +118,24 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </Alert>
       )}
 
+      {favorites.length > 0 && (
+        <section aria-labelledby="fav-title" className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="fav-title" className="text-2xl font-bold">
+              {t('home.favoritesTitle')}
+            </h2>
+            <Link href="/recipes?fav=1" className="inline-flex min-h-11 items-center text-terracotta-deep underline underline-offset-4">
+              {t('home.seeAll')}
+            </Link>
+          </div>
+          <RecipeGrid>
+            {favorites.map((r) => (
+              <RecipeCard key={r.id} recipe={r} categories={categories} favorite />
+            ))}
+          </RecipeGrid>
+        </section>
+      )}
+
       <SeasonalSection />
 
       <section aria-labelledby="recent-title" className="flex flex-col gap-4">
@@ -132,7 +152,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         {recent.length ? (
           <RecipeGrid>
             {recent.map((r) => (
-              <RecipeCard key={r.id} recipe={r} categories={categories} />
+              <RecipeCard key={r.id} recipe={r} categories={categories} favorite={recentFavs.has(r.id)} />
             ))}
           </RecipeGrid>
         ) : (

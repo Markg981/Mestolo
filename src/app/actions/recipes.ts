@@ -231,6 +231,8 @@ export async function toggleFavorite(recipeId: string, favorite: boolean): Promi
   if (error) return dbFailure(error, 'toggleFavorite');
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath('/recipes');
+  // the home page lists the favourites too
+  revalidatePath('/');
   return ok();
 }
 
