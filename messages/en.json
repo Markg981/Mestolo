@@ -1059,7 +1059,34 @@
     "costTitle": "Costs",
     "costText": "The basic service is paid for by the app operator and limited to a few requests per user per day; it can be turned off at any time. With your own key, each request (analysis, photo reading, translation, image) may incur a cost on your account with the provider: before every action, we tell you which key will be used.",
     "privacyTitle": "Privacy",
-    "privacyText": "When you use an AI feature, the necessary content (recipe text or page photos) is sent to the listed provider, which handles it under its own terms. Photos for OCR aren't stored by Mestolo. Your key is used only for actions you start."
+    "privacyText": "When you use an AI feature, the necessary content (recipe text or page photos) is sent to the listed provider, which handles it under its own terms. Photos for OCR aren't stored by Mestolo. Your key is used only for actions you start.",
+    "openrouter": {
+      "kicker": "Recommended",
+      "title": "Connect your AI account",
+      "lead": "Use AI without Mestolo's daily limits. You only pay for what you use, directly to OpenRouter.",
+      "step1": "Press the button and sign in to OpenRouter, Google works too",
+      "step2": "Add a little credit ($5 is plenty)",
+      "step3": "Authorize Mestolo: you come back already connected",
+      "connect": "Connect with OpenRouter →",
+      "connecting": "Opening OpenRouter…",
+      "privacy": "Mestolo never sees your password: it only receives a key, stored encrypted.",
+      "connectedTitle": "AI account connected",
+      "connectedMeta": "OpenRouter · key {hint} · since {date}",
+      "imagesNote": "Analysis, photo reading and translations go through your account. Image generation and dictation stay on the basic service or an OpenAI key: OpenRouter doesn't offer them.",
+      "manage": "Credit and limits",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect your AI account?",
+      "disconnectConfirm": "Mestolo will delete the key and go back to the basic service. To revoke it completely, also delete it from your",
+      "keysPage": "OpenRouter keys.",
+      "disconnected": "AI account disconnected.",
+      "flash": {
+        "connected": "Done! Your AI account is connected.",
+        "cancelled": "Connection cancelled: nothing changed.",
+        "error": "We couldn't connect the account. Please try again in a few minutes."
+      },
+      "advancedTitle": "I already have an API key",
+      "advancedLead": "Anthropic or OpenAI · for advanced users"
+    }
   },
   "account": {
     "title": "Account and data",

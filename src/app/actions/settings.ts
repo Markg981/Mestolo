@@ -8,6 +8,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptSecret, keyAad, keyHint, loadEncryptionKey } from '@/lib/crypto/secrets';
+import { authorizeUrl, createPkce, OPENROUTER_CALLBACK_PATH, OPENROUTER_PKCE_COOKIE, OPENROUTER_PKCE_MAX_AGE } from '@/lib/ai/openrouter';
 import { deleteAccountData, type DeletionAdmin } from '@/lib/account-deletion';
 import { env } from '@/lib/env';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -82,7 +83,7 @@ export async function saveApiKey(input: unknown): Promise<ActionResult> {
 export async function deleteApiKey(provider: string): Promise<ActionResult> {
   try {
     const user = await getUser();
-    if (!user || (provider !== 'anthropic' && provider !== 'openai')) return fail('invalid_input');
+    if (!user || (provider !== 'anthropic' && provider !== 'openai' && provider !== 'openrouter')) return fail('invalid_input');
     await enforceRateLimit('api_key_change', user.id);
     const { error } = await createAdminClient().from('user_api_keys').delete().eq('user_id', user.id).eq('provider', provider);
     if (error) return dbFailure(error, 'deleteApiKey');
@@ -90,6 +91,32 @@ export async function deleteApiKey(provider: string): Promise<ActionResult> {
     return ok();
   } catch (e) {
     return toFailure(e, 'deleteApiKey');
+  }
+}
+
+/**
+ * Starts «Collega il tuo account AI»: PKCE verifier and state go into a short-lived httpOnly cookie
+ * readable only by the callback; the client then navigates to the returned OpenRouter URL.
+ */
+export async function startOpenRouterConnect(): Promise<ActionResult<{ url: string }>> {
+  try {
+    const user = await getUser();
+    if (!user) return fail('forbidden');
+    const { siteUrl, encryptionKey } = env();
+    // senza chiave di cifratura la chiave ottenuta non si potrebbe salvare: meglio fermarsi prima di OpenRouter
+    loadEncryptionKey(encryptionKey);
+    const pkce = createPkce();
+    (await cookies()).set(OPENROUTER_PKCE_COOKIE, JSON.stringify({ v: pkce.verifier, s: pkce.state, u: user.id }), {
+      httpOnly: true,
+      secure: siteUrl.startsWith('https://'),
+      // lax: il ritorno da openrouter.ai e' una navigazione top-level GET, il cookie viene inviato
+      sameSite: 'lax',
+      path: OPENROUTER_CALLBACK_PATH,
+      maxAge: OPENROUTER_PKCE_MAX_AGE,
+    });
+    return ok({ url: authorizeUrl(siteUrl, pkce.challenge, pkce.state) });
+  } catch (e) {
+    return toFailure(e, 'startOpenRouterConnect');
   }
 }
 

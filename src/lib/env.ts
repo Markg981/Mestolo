@@ -30,6 +30,7 @@ export function env() {
       userAnthropicModel: e.AI_USER_ANTHROPIC_MODEL || 'claude-sonnet-5-5',
       userOpenaiTextModel: e.AI_USER_OPENAI_TEXT_MODEL || 'gpt-5-mini',
       userOpenaiImageModel: e.AI_USER_OPENAI_IMAGE_MODEL || 'gpt-image-1',
+      userOpenrouterModel: e.AI_USER_OPENROUTER_MODEL || 'openai/gpt-5-mini',
     },
   };
 }

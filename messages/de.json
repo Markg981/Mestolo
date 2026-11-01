@@ -1059,7 +1059,34 @@
     "costTitle": "Kosten",
     "costText": "Der Basisdienst wird vom Betreiber der App bezahlt und ist auf wenige Anfragen pro Tag und Nutzer begrenzt; er kann jederzeit abgeschaltet werden. Mit deinem eigenen Schlüssel kann jede Anfrage (Analyse, Fotos lesen, Übersetzung, Bild) Kosten auf deinem Konto beim Anbieter verursachen: Vor jeder Aktion sagen wir dir, welcher Schlüssel genutzt wird.",
     "privacyTitle": "Datenschutz",
-    "privacyText": "Wenn du eine KI-Funktion nutzt, werden die nötigen Inhalte (Rezepttext oder Fotos der Seiten) an den angegebenen Anbieter gesendet, der sie nach seinen eigenen Bedingungen verarbeitet. Fotos für die Texterkennung speichert Mestolo nicht. Dein Schlüssel wird nur für Aktionen genutzt, die du selbst startest."
+    "privacyText": "Wenn du eine KI-Funktion nutzt, werden die nötigen Inhalte (Rezepttext oder Fotos der Seiten) an den angegebenen Anbieter gesendet, der sie nach seinen eigenen Bedingungen verarbeitet. Fotos für die Texterkennung speichert Mestolo nicht. Dein Schlüssel wird nur für Aktionen genutzt, die du selbst startest.",
+    "openrouter": {
+      "kicker": "Empfohlen",
+      "title": "Verbinde dein KI-Konto",
+      "lead": "Nutze KI ohne die Tageslimits von Mestolo. Du zahlst nur, was du verbrauchst, direkt an OpenRouter.",
+      "step1": "Tippe auf den Button und melde dich bei OpenRouter an, auch mit Google",
+      "step2": "Lade etwas Guthaben auf (5 € reichen)",
+      "step3": "Autorisiere Mestolo: Du kommst bereits verbunden zurück",
+      "connect": "Mit OpenRouter verbinden →",
+      "connecting": "OpenRouter wird geöffnet…",
+      "privacy": "Mestolo sieht nie dein Passwort: Es erhält nur einen Schlüssel, der verschlüsselt gespeichert wird.",
+      "connectedTitle": "KI-Konto verbunden",
+      "connectedMeta": "OpenRouter · Schlüssel {hint} · seit {date}",
+      "imagesNote": "Analyse, Fotoerkennung und Übersetzungen laufen über dein Konto. Bildgenerierung und Diktat bleiben beim Basisdienst oder einem OpenAI-Schlüssel: OpenRouter bietet sie nicht an.",
+      "manage": "Guthaben und Limits",
+      "disconnect": "Trennen",
+      "disconnectTitle": "KI-Konto trennen?",
+      "disconnectConfirm": "Mestolo löscht den Schlüssel und kehrt zum Basisdienst zurück. Um ihn vollständig zu widerrufen, lösche ihn auch in deinen",
+      "keysPage": "OpenRouter-Schlüsseln.",
+      "disconnected": "KI-Konto getrennt.",
+      "flash": {
+        "connected": "Fertig! Dein KI-Konto ist verbunden.",
+        "cancelled": "Verbindung abgebrochen: Es hat sich nichts geändert.",
+        "error": "Das Konto konnte nicht verbunden werden. Versuche es in ein paar Minuten erneut."
+      },
+      "advancedTitle": "Ich habe schon einen API-Schlüssel",
+      "advancedLead": "Anthropic oder OpenAI · für Fortgeschrittene"
+    }
   },
   "account": {
     "title": "Konto und Daten",

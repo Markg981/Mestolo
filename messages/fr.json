@@ -1059,7 +1059,34 @@
     "costTitle": "Coûts",
     "costText": "Le service de base est payé par l'exploitant de l'application et limité à quelques demandes par jour et par utilisateur ; il peut être désactivé à tout moment. Avec votre clé, chaque demande (analyse, lecture de photos, traduction, image) peut entraîner un coût sur votre compte chez le fournisseur : avant chaque action, nous vous indiquons quelle clé sera utilisée.",
     "privacyTitle": "Confidentialité",
-    "privacyText": "Lorsque vous utilisez une fonctionnalité IA, le contenu nécessaire (texte de la recette ou photos des pages) est envoyé au fournisseur indiqué, qui le traite selon ses propres conditions. Les photos destinées à l'OCR ne sont pas conservées par Mestolo. Votre clé n'est utilisée que pour les actions que vous lancez."
+    "privacyText": "Lorsque vous utilisez une fonctionnalité IA, le contenu nécessaire (texte de la recette ou photos des pages) est envoyé au fournisseur indiqué, qui le traite selon ses propres conditions. Les photos destinées à l'OCR ne sont pas conservées par Mestolo. Votre clé n'est utilisée que pour les actions que vous lancez.",
+    "openrouter": {
+      "kicker": "Recommandé",
+      "title": "Connectez votre compte IA",
+      "lead": "Utilisez l'IA sans les limites quotidiennes de Mestolo. Vous ne payez que ce que vous consommez, directement à OpenRouter.",
+      "step1": "Appuyez sur le bouton et connectez-vous à OpenRouter, même avec Google",
+      "step2": "Ajoutez un peu de crédit (5 € suffisent)",
+      "step3": "Autorisez Mestolo : vous revenez ici déjà connecté",
+      "connect": "Connecter avec OpenRouter →",
+      "connecting": "Ouverture d'OpenRouter…",
+      "privacy": "Mestolo ne voit jamais votre mot de passe : il reçoit seulement une clé, conservée chiffrée.",
+      "connectedTitle": "Compte IA connecté",
+      "connectedMeta": "OpenRouter · clé {hint} · depuis le {date}",
+      "imagesNote": "L'analyse, la lecture des photos et les traductions passent par votre compte. La génération d'images et la dictée restent sur le service de base ou une clé OpenAI : OpenRouter ne les propose pas.",
+      "manage": "Crédit et limites",
+      "disconnect": "Déconnecter",
+      "disconnectTitle": "Déconnecter le compte IA ?",
+      "disconnectConfirm": "Mestolo supprimera la clé et reviendra au service de base. Pour la révoquer complètement, supprimez-la aussi de vos",
+      "keysPage": "clés OpenRouter.",
+      "disconnected": "Compte IA déconnecté.",
+      "flash": {
+        "connected": "C'est fait ! Votre compte IA est connecté.",
+        "cancelled": "Connexion annulée : rien n'a changé.",
+        "error": "Impossible de connecter le compte. Réessayez dans quelques minutes."
+      },
+      "advancedTitle": "J'ai déjà une clé API",
+      "advancedLead": "Anthropic ou OpenAI · pour les utilisateurs avancés"
+    }
   },
   "account": {
     "title": "Compte et données",
