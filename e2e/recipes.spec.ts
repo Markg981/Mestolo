@@ -62,7 +62,7 @@ test.describe('ricette, spesa e piano pasti', () => {
     await page.getByRole('link', { name: editedTitle }).click();
     await page.getByRole('button', { name: 'Aggiungi al piano' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Pasto').selectOption('dinner');
+    await dialog.getByLabel('Pasto', { exact: true }).selectOption('dinner');
     await dialog.getByRole('button', { name: 'Aggiungi al piano' }).click();
     await expect(page.getByText('Aggiunta al piano pasti.')).toBeVisible();
 

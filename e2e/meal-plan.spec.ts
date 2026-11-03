@@ -25,7 +25,7 @@ test.describe('piano pasti', () => {
     await page.goto('/plan');
     await page.getByRole('button', { name: `Sposta ${title} in un altro giorno o pasto` }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Pasto').selectOption('lunch');
+    await dialog.getByLabel('Pasto', { exact: true }).selectOption('lunch');
     await dialog.getByRole('button', { name: 'Sposta', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: new RegExp(`${title} spostato in Pranzo`) })).toBeVisible();
     await expect(page.locator('[data-cell-slot="lunch"]').filter({ hasText: title })).toHaveCount(1);
